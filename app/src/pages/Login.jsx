@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLang } from '../context/LangContext';
 import { IconMoon } from '../components/icons';
+import Logo from '../components/Logo';
 
 function mapAuthError(code) {
   const m = {
@@ -54,23 +55,8 @@ export default function Login() {
   return (
     <div className="screen">
       <div className="screen-content" style={{ paddingTop: 52, gap: 28 }}>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-          <div
-            style={{
-              width: 60,
-              height: 60,
-              borderRadius: '50%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              background: 'var(--primary)',
-            }}
-          >
-            <IconMoon width="26" height="26" style={{ color: '#fff' }} />
-          </div>
-          <span style={{ fontSize: 19, fontWeight: 800, letterSpacing: '-0.01em', color: 'var(--primary)' }}>
-            airmoon
-          </span>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <Logo size={30} />
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, textAlign: 'center' }}>
