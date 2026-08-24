@@ -10,6 +10,7 @@ import PilihQari from './pages/PilihQari';
 import JadwalSholat from './pages/JadwalSholat';
 import PilihAdzan from './pages/PilihAdzan';
 import Donasi from './pages/Donasi';
+import AskMe from './pages/AskMe';
 import Umroh from './pages/Umroh';
 import Pengaturan from './pages/Pengaturan';
 import Lainnya from './pages/Lainnya';
@@ -39,6 +40,7 @@ export default function App() {
       <Route path="/jadwal-sholat" element={<P><JadwalSholat /></P>} />
       <Route path="/jadwal-sholat/adzan" element={<P><PilihAdzan /></P>} />
       <Route path="/donasi" element={<P><Donasi /></P>} />
+      <Route path="/ask-me" element={<P><AskMe /></P>} />
       <Route path="/umroh" element={<P><Umroh /></P>} />
       <Route path="/pengaturan" element={<P><Pengaturan /></P>} />
 

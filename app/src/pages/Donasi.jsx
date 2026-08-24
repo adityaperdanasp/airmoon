@@ -22,6 +22,21 @@ export default function Donasi() {
       <div className="screen-content">
         <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800 }}>Donasi</h1>
 
+        <div
+          style={{
+            padding: '10px 14px',
+            borderRadius: 12,
+            border: '1px dashed var(--border)',
+            fontSize: 11,
+            fontWeight: 700,
+            letterSpacing: '0.02em',
+            color: 'var(--muted)',
+            textAlign: 'center',
+          }}
+        >
+          MENUNGGU ARAHAN MAMAS
+        </div>
+
         {!donation && <div className="center" style={{ minHeight: 200 }}><div className="spinner" /></div>}
 
         {donation && (

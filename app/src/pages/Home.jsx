@@ -8,7 +8,7 @@ import { usePrayerTimes } from '../lib/usePrayerTimes';
 import { getOrSeedDonation, contribute } from '../lib/donations';
 import { formatRupiah } from '../lib/zakat';
 import BottomNav from '../components/BottomNav';
-import { IconBell, IconSearch, IconMoon, IconBook, IconKaaba, IconHeart } from '../components/icons';
+import { IconBell, IconSearch, IconMoon } from '../components/icons';
 
 function Wallet() {
   return (
@@ -26,22 +26,11 @@ function Star() {
   );
 }
 
-function IconJadwal(p) {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" {...p}>
-      <path d="M4 20h16" strokeWidth="1.7" strokeLinecap="round" />
-      <path d="M6 20v-5.5a6 6 0 0 1 12 0V20" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M12 8.5V4" strokeWidth="1.7" strokeLinecap="round" />
-      <circle cx="12" cy="3" r="0.9" fill="var(--primary)" stroke="none" />
-    </svg>
-  );
-}
-
 const SVC = [
-  { to: '/quran', Icon: IconBook, key: 'nav_quran', bg: 'var(--cream)', color: 'var(--gold-ink)' },
-  { to: '/jadwal-sholat', Icon: IconJadwal, label: 'Jadwal', bg: 'var(--mint)', color: 'var(--primary)' },
-  { to: '/donasi', Icon: IconHeart, key: 'nav_donasi', bg: 'var(--peach)', color: '#a9622f' },
-  { to: '/umroh', Icon: IconKaaba, key: 'nav_umroh', bg: 'var(--blue-gray)', color: '#3f5c68' },
+  { to: '/quran', emoji: '📖', key: 'nav_quran', bg: 'linear-gradient(160deg, #fdf3df, #fbe4b0)' },
+  { to: '/jadwal-sholat', emoji: '🕌', label: 'Jadwal', bg: 'linear-gradient(160deg, #e2f1ec, #bfe2d4)' },
+  { to: '/donasi', emoji: '🤲', key: 'nav_donasi', bg: 'linear-gradient(160deg, #fbe6da, #f3c9ab)' },
+  { to: '/umroh', emoji: '🕋', key: 'nav_umroh', bg: 'linear-gradient(160deg, #e3e9ee, #c3d1dc)' },
 ];
 
 export default function Home() {
@@ -117,11 +106,11 @@ export default function Home() {
           {t('headline')}
         </h1>
 
-        <div className="input-row" style={{ borderRadius: 999 }}>
-          <IconMoon width="16" height="16" />
-          <span style={{ flex: 1, fontSize: 13, fontWeight: 500, color: 'var(--muted)' }}>{t('search_placeholder')}</span>
-          <IconSearch style={{ opacity: 0.6 }} />
-        </div>
+        <Link to="/ask-me" className="input-row" style={{ borderRadius: 999, textDecoration: 'none' }}>
+          <IconMoon width="16" height="16" style={{ color: 'var(--ink)' }} />
+          <span style={{ flex: 1, fontSize: 13, fontWeight: 500, color: 'var(--muted)' }}>Ask me…</span>
+          <IconSearch style={{ opacity: 0.6, color: 'var(--ink)' }} />
+        </Link>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 7, borderRadius: 20, padding: '14px 15px', background: 'var(--mint)' }}>
@@ -178,13 +167,26 @@ export default function Home() {
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--primary)"><path d="m9 6 6 6-6 6" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
             </Link>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 6 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 8 }}>
             {SVC.map((s) => (
               <Link key={s.to} to={s.to} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, textDecoration: 'none', color: 'inherit' }}>
-                <div style={{ width: 54, height: 54, borderRadius: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', background: s.bg }}>
-                  {s.Icon ? <s.Icon width="22" height="22" style={{ color: s.color }} /> : <span style={{ fontSize: 18 }}>🕌</span>}
+                <div
+                  style={{
+                    width: 68,
+                    height: 68,
+                    borderRadius: 22,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: s.bg,
+                    boxShadow: '0 8px 16px rgba(15,32,25,0.14), inset 0 1px 0 rgba(255,255,255,0.5)',
+                    fontSize: 32,
+                    lineHeight: 1,
+                  }}
+                >
+                  {s.emoji}
                 </div>
-                <span style={{ fontSize: 10, fontWeight: 700, textAlign: 'center' }}>{s.label || t(s.key)}</span>
+                <span style={{ fontSize: 10.5, fontWeight: 700, textAlign: 'center' }}>{s.label || t(s.key)}</span>
               </Link>
             ))}
           </div>

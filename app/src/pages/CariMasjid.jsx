@@ -51,13 +51,7 @@ export default function CariMasjid() {
         {status === 'ready' && filtered.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {filtered.map((m) => (
-              <a
-                key={m.id}
-                href={`https://www.openstreetmap.org/?mlat=${m.lat}&mlon=${m.lng}#map=17/${m.lat}/${m.lng}`}
-                target="_blank"
-                rel="noreferrer"
-                style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 13, borderRadius: 16, background: 'var(--card)', textDecoration: 'none', color: 'inherit' }}
-              >
+              <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 13, borderRadius: 16, background: 'var(--card)' }}>
                 <div style={{ width: 42, height: 42, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: 'var(--mint)' }}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)"><path d="M12 21s-6.5-6.1-6.5-11A6.5 6.5 0 0 1 18.5 10c0 4.9-6.5 11-6.5 11Z" strokeWidth="1.7" strokeLinejoin="round" /></svg>
                 </div>
@@ -68,7 +62,32 @@ export default function CariMasjid() {
                     {m.address ? ` · ${m.address}` : ''}
                   </span>
                 </div>
-              </a>
+                <a
+                  href={
+                    origin
+                      ? `https://www.google.com/maps/dir/?api=1&origin=${origin.lat},${origin.lng}&destination=${m.lat},${m.lng}&travelmode=walking`
+                      : `https://www.google.com/maps/search/?api=1&query=${m.lat},${m.lng}`
+                  }
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: 38,
+                    height: 38,
+                    borderRadius: '50%',
+                    flexShrink: 0,
+                    background: 'var(--primary)',
+                    textDecoration: 'none',
+                  }}
+                  aria-label="Buka arah di Google Maps"
+                >
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff">
+                    <path d="M3 11 20 4l-7 17-3-7-7-3Z" strokeWidth="1.7" strokeLinejoin="round" />
+                  </svg>
+                </a>
+              </div>
             ))}
           </div>
         )}

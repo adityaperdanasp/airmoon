@@ -1,19 +1,26 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useLang } from '../context/LangContext';
+import { fetchQuoteByIndex, todaysQuoteIndex } from '../lib/quotesApi';
+import { QUOTE_REFS } from '../data/quoteRefs';
 import TopBar from '../components/TopBar';
 
-// Low-risk, well-known quotes — verify against a mu'tabar source before production.
-const QUOTES = [
-  { arabic: 'فَإِنَّ مَعَ الْعُسْرِ يُسْرًا', translation: 'Maka sesungguhnya bersama kesulitan ada kemudahan.', source: 'QS. Al-Insyirah: 6' },
-  { arabic: 'لَا يُكَلِّفُ اللَّهُ نَفْسًا إِلَّا وُسْعَهَا', translation: 'Allah tidak membebani seseorang melainkan sesuai dengan kesanggupannya.', source: 'QS. Al-Baqarah: 286' },
-  { arabic: 'خَيْرُ النَّاسِ أَنْفَعُهُمْ لِلنَّاسِ', translation: 'Sebaik-baik manusia adalah yang paling bermanfaat bagi manusia lain.', source: 'Hadits' },
-];
-
 export default function KutipanInspirasi() {
-  const [idx, setIdx] = useState(0);
-  const q = QUOTES[idx];
+  const { lang } = useLang();
+  const [idx, setIdx] = useState(todaysQuoteIndex());
+  const [quote, setQuote] = useState(null);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    setQuote(null);
+    setError('');
+    fetchQuoteByIndex(idx)
+      .then(setQuote)
+      .catch(() => setError('Gagal memuat kutipan. Coba lagi.'));
+  }, [idx]);
 
   async function handleShare() {
-    const text = `"${q.translation}" — ${q.source}`;
+    if (!quote) return;
+    const text = `"${quote[lang]}" — ${quote.source}`;
     if (navigator.share) await navigator.share({ text, title: 'Kutipan dari airmoon' });
     else await navigator.clipboard.writeText(text);
   }
@@ -21,52 +28,59 @@ export default function KutipanInspirasi() {
   return (
     <div className="screen">
       <div className="screen-content">
-        <TopBar title="Kutipan Inspirasi" />
+        <TopBar title={lang === 'en' ? 'Daily Quote' : 'Kutipan Inspirasi'} subtitle={lang === 'en' ? '100 quotes, one new each day' : '100 kutipan, gonta-ganti tiap hari'} />
 
-        <div
-          style={{
-            position: 'relative',
-            overflow: 'hidden',
-            borderRadius: 24,
-            padding: '32px 26px',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 18,
-            textAlign: 'center',
-            background: `linear-gradient(160deg, var(--primary), var(--primary-dark))`,
-            minHeight: 300,
-            justifyContent: 'center',
-          }}
-        >
-          <span style={{ fontFamily: "'Amiri', serif", fontSize: 26, lineHeight: 1.9, color: '#fff', direction: 'rtl' }}>{q.arabic}</span>
-          <span style={{ fontSize: 13.5, lineHeight: 1.6, color: 'rgba(255,255,255,0.85)', fontStyle: 'italic' }}>"{q.translation}"</span>
-          <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--accent)' }}>{q.source}</span>
-        </div>
+        {error && <p className="state-msg">{error}</p>}
 
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-          {QUOTES.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setIdx(i)}
+        {!quote && !error && (
+          <div className="center" style={{ minHeight: 260 }}>
+            <div className="spinner" />
+          </div>
+        )}
+
+        {quote && (
+          <>
+            <div
               style={{
-                width: i === idx ? 18 : 5,
-                height: 5,
-                borderRadius: 999,
-                border: 'none',
-                cursor: 'pointer',
-                padding: 0,
-                background: i === idx ? 'var(--primary)' : 'var(--border)',
+                position: 'relative',
+                overflow: 'hidden',
+                borderRadius: 24,
+                padding: '32px 26px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 18,
+                textAlign: 'center',
+                background: `linear-gradient(160deg, var(--primary), var(--primary-dark))`,
+                minHeight: 300,
+                justifyContent: 'center',
               }}
-              aria-label={`Kutipan ${i + 1}`}
-            />
-          ))}
-        </div>
+            >
+              <span style={{ fontFamily: "'Amiri', serif", fontSize: 26, lineHeight: 1.9, color: '#fff', direction: 'rtl' }}>
+                {quote.arabic}
+              </span>
+              <span style={{ fontSize: 13.5, lineHeight: 1.6, color: 'rgba(255,255,255,0.85)', fontStyle: 'italic' }}>
+                "{quote[lang]}"
+              </span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--accent)' }}>{quote.source}</span>
+            </div>
 
-        <div style={{ display: 'flex', gap: 10 }}>
-          <button className="btn-outline" onClick={() => setIdx((i) => (i + 1) % QUOTES.length)}>Berikutnya</button>
-          <button className="btn" onClick={handleShare}>Bagikan</button>
-        </div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, flexWrap: 'wrap' }}>
+              <span style={{ fontSize: 11, color: 'var(--muted)' }}>
+                {lang === 'en' ? `Quote ${idx + 1} of ${QUOTE_REFS.length}` : `Kutipan ke-${idx + 1} dari ${QUOTE_REFS.length}`}
+              </span>
+            </div>
+
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button className="btn-outline" onClick={() => setIdx((i) => (i + 1) % QUOTE_REFS.length)}>
+                {lang === 'en' ? 'Next' : 'Berikutnya'}
+              </button>
+              <button className="btn" onClick={handleShare}>
+                {lang === 'en' ? 'Share' : 'Bagikan'}
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
