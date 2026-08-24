@@ -1,0 +1,12 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Locked down by default — no collections are defined yet.
+    // Add explicit match blocks per collection as the data model is built,
+    // scoping reads/writes to authenticated, authorized users.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

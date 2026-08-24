@@ -2,21 +2,33 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## What this directory is
+## What this repo is
 
-`airmoon` is a Muslim app project (working name from the founder's earlier pitch decks). Core planned features: Qur'an reader, prayer times (location-based), mosque electricity donation routed directly to a PLN customer ID (not a committee bank account), and lighter "dunia umroh" content (Badal Umrah, Umrah savings, manasik guides).
+`airmoon` is a Muslim app project. Core planned features: Qur'an reader, prayer times (location-based), mosque electricity donation routed directly to a PLN customer ID (not a committee bank account), and lighter "dunia umroh" content (Badal Umrah, Umrah savings, manasik guides).
 
-Most of this directory is the founder's reference material, not app code: `Deck/` (pitch decks — see below), `Doc/`, `Grab FR 2023/`, `Grab Important FS/`, `Baznaz & Muslim Populations/`, `Consultant/`, `Pricing/`, and the loose screenshots/PDFs at the top level are financial-modeling and market-research references, unrelated to any build step. The actual product work lives in `mockup/` and `design-canvas/`.
+This repo is deliberately just the buildable product surface — prototype UI and Firebase config. Business/reference material (pitch decks, financial models, market research) lives outside this repo and is intentionally not published here.
 
 ## Structure & how to run things
 
-- **`mockup/`** — static HTML/CSS home-screen prototype (`index.html` + `style.css`). No dependencies, no build step. It fetches Google Fonts and relies on a same-origin stylesheet link, so open it through a local server, not as a `file://` URL:
+- **`mockup/`** — static HTML/CSS home-screen prototype (`index.html` + `style.css`). No dependencies, no build step. Also deployed as the Firebase Hosting public directory (see below), so it doubles as the live site's source. It fetches Google Fonts and relies on a same-origin stylesheet link, so for local work open it through a server, not as a `file://` URL:
   ```
   cd mockup && python3 -m http.server 8743
   ```
   then browse to `http://localhost:8743/index.html`.
 
 - **`design-canvas/`** — source for the editable Claude Design canvas (`Main.dc.html`, `canvas.json`). This is authored through the `design` skill (invoke `/design` in a Claude Code session), not hand-edited after seeding. To change the design: edit `Main.dc.html` (and `canvas.json` if artboard layout changes), then re-run the skill to re-seed and republish to the same artifact URL. `airmoon-home.html` in this folder is the seeded/published output — never edit it directly; it's regenerated wholesale from `Main.dc.html` on every re-seed.
+
+## Firebase
+
+Project: **airmoon-d9620** (`.firebaserc` sets it as default — `firebase` CLI commands in this repo target it without `--project`).
+
+- **Hosting** serves `mockup/` as static files, live at https://airmoon-d9620.web.app. Deploy after changing anything in `mockup/`:
+  ```
+  firebase deploy --only hosting
+  ```
+- **Firestore** exists but has no data model yet — `firestore.rules` denies all reads/writes by default (`allow read, write: if false`). Add explicit `match` blocks per collection as real features (wallet, donations, prayer log) are built; don't loosen the default blanket rule.
+- **Auth** has not been configured yet — no sign-in providers are enabled in the console. Decide which providers this app needs (email/password, Google, phone/OTP are the common choices for an Indonesian consumer app) before wiring any login UI, then enable them at console.firebase.google.com/project/airmoon-d9620/authentication.
+- **`firebase-config.js`** — the Web SDK config (apiKey, authDomain, etc.) for the registered `airmoon-web` app. This is a client identifier, not a secret; it's fine committed. Import it wherever the app initializes the Firebase SDK — don't regenerate/duplicate it inline elsewhere.
 
 ## Design decisions already settled
 
