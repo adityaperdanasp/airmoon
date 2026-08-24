@@ -1,7 +1,27 @@
-// OpenStreetMap Overpass API — free, public, no key needed. Real (if
-// incomplete) mosque data: coverage depends on what's been mapped in OSM
-// for a given area, but nothing here is fabricated.
-export async function fetchNearbyMosques(lat, lng, radiusM = 3000) {
+// Primary source: Google Places API (New) via the Vercel serverless proxy
+// (api/nearby-mosques.js) — real ratings, real names, much better coverage
+// for Indonesia than OSM. Requires GOOGLE_MAPS_API_KEY set in Vercel; falls
+// back to OpenStreetMap Overpass (free, no key, but sparser data) if that
+// isn't configured yet or the request fails.
+const NEARBY_ENDPOINT = 'https://airmoon.vercel.app/api/nearby-mosques';
+
+async function fetchFromGoogleMaps(lat, lng, radiusM) {
+  const res = await fetch(`${NEARBY_ENDPOINT}?lat=${lat}&lng=${lng}&radius=${radiusM}`);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Gagal memuat data masjid dari Google Maps');
+  return data.places.map((p) => ({
+    id: p.id,
+    name: p.name,
+    lat: p.lat,
+    lng: p.lng,
+    address: p.address,
+    rating: p.rating,
+    ratingCount: p.ratingCount,
+    openNow: p.openNow,
+  }));
+}
+
+async function fetchFromOverpass(lat, lng, radiusM) {
   const query = `[out:json][timeout:15];
     node["amenity"="place_of_worship"]["religion"="muslim"](around:${radiusM},${lat},${lng});
     out body 25;`;
@@ -20,6 +40,16 @@ export async function fetchNearbyMosques(lat, lng, radiusM = 3000) {
       lng: el.lon,
       address: [el.tags['addr:street'], el.tags['addr:city']].filter(Boolean).join(', '),
     }));
+}
+
+export async function fetchNearbyMosques(lat, lng, radiusM = 3000) {
+  try {
+    const places = await fetchFromGoogleMaps(lat, lng, radiusM);
+    return { places, source: 'google' };
+  } catch {
+    const places = await fetchFromOverpass(lat, lng, radiusM);
+    return { places, source: 'osm' };
+  }
 }
 
 export function haversineKm(lat1, lng1, lat2, lng2) {
