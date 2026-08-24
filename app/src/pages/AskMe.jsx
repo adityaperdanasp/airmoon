@@ -8,7 +8,7 @@ const ASK_ME_ENDPOINT = 'https://airmoon.vercel.app/api/ask-me';
 
 export default function AskMe() {
   const [messages, setMessages] = useState([
-    { role: 'assistant', content: 'Assalamu\'alaikum! Tanya apa aja seputar Islam — sholat, puasa, zakat, Qur\'an, atau fitur di airmoon.' },
+    { role: 'assistant', content: 'Assalamu\'alaikum! Saya Ust. Rewin. Tanya apa aja seputar Islam — sholat, puasa, zakat, Qur\'an, atau fitur di airmoon.' },
   ]);
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
@@ -40,7 +40,7 @@ export default function AskMe() {
       if (!res.ok) throw new Error(data.error || 'Gagal dapat jawaban.');
       setMessages((m) => [...m, { role: 'assistant', content: data.reply }]);
     } catch (err) {
-      setError(err.message || 'Gagal menghubungi Ask me. Coba lagi.');
+      setError(err.message || 'Gagal menghubungi Ust. Rewin. Coba lagi.');
     } finally {
       setBusy(false);
     }
@@ -49,7 +49,7 @@ export default function AskMe() {
   return (
     <div className="screen" style={{ height: '100vh' }}>
       <div style={{ padding: '28px 20px 12px' }}>
-        <TopBar title="Ask me" subtitle="Asisten AI seputar Islam" />
+        <TopBar title="Ust. Rewin" subtitle="Asisten AI seputar Islam" />
       </div>
 
       <div ref={listRef} style={{ flex: 1, overflowY: 'auto', padding: '0 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>

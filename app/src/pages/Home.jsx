@@ -108,7 +108,7 @@ export default function Home() {
 
         <Link to="/ask-me" className="input-row" style={{ borderRadius: 999, textDecoration: 'none' }}>
           <IconMoon width="16" height="16" style={{ color: 'var(--ink)' }} />
-          <span style={{ flex: 1, fontSize: 13, fontWeight: 500, color: 'var(--muted)' }}>Ask me…</span>
+          <span style={{ flex: 1, fontSize: 13, fontWeight: 500, color: 'var(--muted)' }}>Tanya Ust. Rewin…</span>
           <IconSearch style={{ opacity: 0.6, color: 'var(--ink)' }} />
         </Link>
 
