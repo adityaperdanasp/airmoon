@@ -1,0 +1,216 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: 'Plus Jakarta Sans', -apple-system, sans-serif; }
+    a { color: #0d4d47; }
+    a:hover { color: #0a3630; }
+  </style>
+</helmet>
+
+<div style="width: 390px; background: #ffffff; border-radius: 28px; box-shadow: 0 24px 60px rgba(15,32,25,0.16); overflow: hidden; color: #0f2019;">
+  <div style="display: flex; flex-direction: column; gap: 20px; padding: 32px 20px 40px;">
+
+    <div style="display: flex; align-items: center; justify-content: space-between;">
+      <div style="display: flex; align-items: center; gap: 11px;">
+        <div style="width: 46px; height: 46px; border-radius: 50%; padding: 2.5px; display: flex; align-items: center; justify-content: center; background: conic-gradient(from 180deg, {{primary}}, {{accent}}, {{primary}});">
+          <div style="width: 100%; height: 100%; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px; color: #ffffff; background: {{primary}};">E</div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 1px;">
+          <span style="font-size: 12px; color: #5c6b67;">Assalamu'alaikum</span>
+          <span style="font-size: 15.5px; font-weight: 700;">Mas Erwin</span>
+        </div>
+      </div>
+      <div style="position: relative; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #eef5f3;">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#0f2019">
+          <path d="M12 2a6 6 0 0 0-6 6v3.09c0 .58-.2 1.14-.57 1.59L4 15h16l-1.43-2.32a2.6 2.6 0 0 1-.57-1.59V8a6 6 0 0 0-6-6Z" stroke-width="1.7" stroke-linejoin="round"/>
+          <path d="M9.5 19a2.5 2.5 0 0 0 5 0" stroke-width="1.7" stroke-linecap="round"/>
+        </svg>
+        <span style="position: absolute; top: 8px; right: 9px; width: 7px; height: 7px; border-radius: 50%; border: 2px solid #ffffff; background: {{accent}};"></span>
+      </div>
+    </div>
+
+    <h1 style="margin: 0; font-size: 25px; font-weight: 800; line-height: 1.25; letter-spacing: -0.01em;">Sedekah hari ini,<br>berkah esok hari</h1>
+
+    <div style="display: flex; align-items: center; gap: 9px; border-radius: 999px; padding: 12px 16px; background: #eef5f3;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0f2019">
+        <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 1 0 10.5 10.5Z" stroke-width="1.6" stroke-linejoin="round"/>
+      </svg>
+      <span style="flex: 1; font-size: 13px; font-weight: 500; color: #5c6b67;">Tanya AI Sedekah&hellip;</span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0f2019" style="opacity: 0.55;">
+        <circle cx="11" cy="11" r="7" stroke-width="2"/>
+        <path d="m20 20-3.5-3.5" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px;">
+      <div style="display: flex; flex-direction: column; gap: 7px; border-radius: 20px; padding: 14px 15px; background: #e2f1ec;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="{{primary}}">
+          <rect x="2.5" y="5.5" width="19" height="13" rx="2.5" stroke-width="1.7"/>
+          <path d="M2.5 9.5h19" stroke-width="1.7"/>
+        </svg>
+        <span style="font-size: 10.5px; font-weight: 600; color: #4b6059;">Wallet Sedekah</span>
+        <span style="font-size: 14.5px; font-weight: 800; color: {{primary}};">Rp 1.250.000</span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 7px; border-radius: 20px; padding: 14px 15px; background: #fbf0d9;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a9761f">
+          <path d="M12 2.5 14 9l6.5.4-5.1 4.2 1.8 6.4L12 16.7 6.8 20l1.8-6.4L3.5 9.4 10 9 12 2.5Z" stroke-width="1.5" stroke-linejoin="round"/>
+        </svg>
+        <span style="font-size: 10.5px; font-weight: 600; color: #8a5f1f;">Poin Ibadah</span>
+        <span style="font-size: 14.5px; font-weight: 800; color: #a9761f;">8.420 pts</span>
+      </div>
+    </div>
+
+    <div style="position: relative; overflow: hidden; border-radius: 22px; padding: 22px 20px; background: linear-gradient(135deg, {{primary}}, {{primaryDark}}); color: #ffffff;">
+      <svg style="position: absolute; top: 0; right: 0; width: 160px; height: 160px; pointer-events: none;" viewBox="0 0 300 160" preserveAspectRatio="xMaxYMin slice">
+        <g stroke="rgba(255,255,255,0.14)" stroke-width="1.3" fill="none">
+          <path d="M320 -10 C 285 20,285 50,320 80 C285 110,285 140,320 170"/>
+          <path d="M300 -10 C 265 20,265 50,300 80 C265 110,265 140,300 170"/>
+          <path d="M280 -10 C 245 20,245 50,280 80 C245 110,245 140,280 170"/>
+        </g>
+      </svg>
+      <div style="position: relative; font-size: 10px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 12px; color: {{accent}};">Ayat Hari Ini &middot; QS. Al-Baqarah 286</div>
+      <div style="position: relative; font-family: 'Amiri', serif; font-size: 22px; line-height: 1.8; margin-bottom: 10px; direction: rtl;">لَا يُكَلِّفُ اللَّهُ نَفْسًا إِلَّا وُسْعَهَا</div>
+      <div style="position: relative; font-size: 11.5px; line-height: 1.5; font-style: italic; opacity: 0.85;">&ldquo;Allah tidak membebani seseorang melainkan sesuai dengan kesanggupannya.&rdquo;</div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      <div style="font-size: 13px; font-weight: 800;">Layanan</div>
+      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px;">
+
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+          <div style="width: 54px; height: 54px; border-radius: 18px; display: flex; align-items: center; justify-content: center; background: #fbf0d9;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a9761f">
+              <path d="M5 4.5C5 3.7 5.7 3 6.5 3H17a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6.5A1.5 1.5 0 0 1 5 19.5v-15Z" stroke-width="1.8" stroke-linejoin="round"/>
+              <path d="M8 7h7M8 10.5h7M8 14h4" stroke-width="1.6" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <span style="font-size: 10px; font-weight: 700; text-align: center;">Qur'an</span>
+        </div>
+
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+          <div style="width: 54px; height: 54px; border-radius: 18px; display: flex; align-items: center; justify-content: center; background: #e2f1ec;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="{{primary}}">
+              <path d="M4 20h16" stroke-width="1.7" stroke-linecap="round"/>
+              <path d="M6 20v-5.5a6 6 0 0 1 12 0V20" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M12 8.5V4" stroke-width="1.7" stroke-linecap="round"/>
+              <circle cx="12" cy="3" r="0.9" fill="{{primary}}" stroke="none"/>
+            </svg>
+          </div>
+          <span style="font-size: 10px; font-weight: 700; text-align: center;">Jadwal</span>
+        </div>
+
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+          <div style="width: 54px; height: 54px; border-radius: 18px; display: flex; align-items: center; justify-content: center; background: #f3e0d2;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a9622f">
+              <path d="M12 21s-7-4.4-9.6-8.8C.7 8.8 2 5 5.6 4.2c2-.5 3.8.4 4.9 2C11.6 4.6 13.4 3.7 15.4 4.2 19 5 20.3 8.8 18.6 12.2 16 16.6 12 21 12 21Z" stroke-width="1.6" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <span style="font-size: 10px; font-weight: 700; text-align: center;">Donasi</span>
+        </div>
+
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+          <div style="width: 54px; height: 54px; border-radius: 18px; display: flex; align-items: center; justify-content: center; background: #dde8ec;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3f5c68">
+              <circle cx="9" cy="8.5" r="3" stroke-width="1.8"/>
+              <circle cx="17" cy="9.5" r="2.3" stroke-width="1.8"/>
+              <path d="M3 19c.6-2.7 2.8-4.3 6-4.3s5.4 1.6 6 4.3M15 19c.4-1.9 1.8-3.2 3.6-3.2 1.5 0 2.7.9 3.4 2.3" stroke-width="1.7" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <span style="font-size: 10px; font-weight: 700; text-align: center;">Komunitas</span>
+        </div>
+
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      <div style="font-size: 13px; font-weight: 800;">Donasi Kamu</div>
+
+      <div style="display: flex; align-items: center; gap: 12px; padding: 13px 15px; border-radius: 22px; background: #f5f8f7;">
+        <div style="width: 38px; height: 38px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: #fbf0d9;">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="#a9761f" stroke="none">
+            <path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z"/>
+          </svg>
+        </div>
+        <div style="display: flex; flex-direction: column; flex: 1; min-width: 0;">
+          <span style="font-size: 12.5px; font-weight: 700;">Listrik Masjid Al-Ikhlas</span>
+          <span style="font-size: 10px; opacity: 0.55; margin-top: 2px;">#PLN-5312 0044 219</span>
+        </div>
+        <span style="font-size: 12.5px; font-weight: 800; flex-shrink: 0;">Rp 480rb</span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 13px; padding: 18px 18px 20px; border-radius: 22px; border: 1px solid #e5edeb; background: #f5f8f7;">
+        <span style="align-self: flex-start; font-size: 10px; font-weight: 700; padding: 6px 11px; border-radius: 999px; background: #e2f1ec; color: {{primary}};">Connect ke PLN Mobile</span>
+
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <div style="width: 100%; height: 7px; border-radius: 999px; overflow: hidden; background: #e2f1ec;">
+            <div style="width: 64%; height: 100%; border-radius: 999px; background: linear-gradient(90deg, {{accent}}, #f0cd7b);"></div>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 10.5px; opacity: 0.6;">
+            <span><strong style="opacity: 1;">Rp 480.000</strong>&nbsp;terkumpul</span>
+            <span>dari Rp 750.000</span>
+          </div>
+        </div>
+
+        <button style="width: 100%; padding: 14px; border: none; border-radius: 999px; font-family: inherit; font-weight: 700; font-size: 13.5px; cursor: pointer; color: #ffffff; background: {{primary}};">Sedekah Sekarang</button>
+      </div>
+    </div>
+
+    <div style="display: flex; justify-content: space-around; align-items: center; padding: 12px 6px; border-radius: 999px; box-shadow: 0 16px 40px rgba(13,77,71,0.16); background: #ffffff; margin-top: 8px;">
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 3px; color: {{primary}};">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="M4 11.5 12 4l8 7.5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M6 10v9a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span style="font-size: 9px; font-weight: 700;">Home</span>
+      </div>
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 3px; color: #a9b8b5;">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="M5 4.5C5 3.7 5.7 3 6.5 3H17a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6.5A1.5 1.5 0 0 1 5 19.5v-15Z" stroke-width="1.8" stroke-linejoin="round"/>
+          <path d="M8 7h7M8 10.5h7M8 14h4" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+        <span style="font-size: 9px; font-weight: 700;">Qur'an</span>
+      </div>
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 3px; color: #a9b8b5;">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="M12 21s-7-4.4-9.6-8.8C.7 8.8 2 5 5.6 4.2c2-.5 3.8.4 4.9 2C11.6 4.6 13.4 3.7 15.4 4.2 19 5 20.3 8.8 18.6 12.2 16 16.6 12 21 12 21Z" stroke-width="1.7" stroke-linejoin="round"/>
+        </svg>
+        <span style="font-size: 9px; font-weight: 700;">Donasi</span>
+      </div>
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 3px; color: #a9b8b5;">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <circle cx="9" cy="8.5" r="3" stroke-width="1.8"/>
+          <circle cx="17" cy="9.5" r="2.3" stroke-width="1.8"/>
+          <path d="M3 19c.6-2.7 2.8-4.3 6-4.3s5.4 1.6 6 4.3M15 19c.4-1.9 1.8-3.2 3.6-3.2 1.5 0 2.7.9 3.4 2.3" stroke-width="1.7" stroke-linecap="round"/>
+        </svg>
+        <span style="font-size: 9px; font-weight: 700;">Komunitas</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</x-dc>
+<script data-dc-script data-props='{"primary":{"editor":"color","default":"#0d4d47","section":"Colors"},"primaryDark":{"editor":"color","default":"#0a3630","section":"Colors"},"accent":{"editor":"color","default":"#e8b84b","section":"Colors"}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      primary: this.props.primary ?? '#0d4d47',
+      primaryDark: this.props.primaryDark ?? '#0a3630',
+      accent: this.props.accent ?? '#e8b84b'
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,233 @@
+*{ box-sizing: border-box; margin:0; padding:0; }
+
+body{
+  font-family: 'Plus Jakarta Sans', -apple-system, 'SF Pro Display', sans-serif;
+  background: #eef1f0;
+  min-height: 100vh;
+  padding: 48px 24px;
+}
+
+.gallery{
+  display:flex;
+  flex-wrap:wrap;
+  gap: 48px;
+  justify-content:center;
+  align-items:flex-start;
+}
+
+.stage-item{ display:flex; flex-direction:column; align-items:center; gap:14px; }
+
+.caption{ font-size:13px; color:#6b7674; font-weight:600; letter-spacing:0.01em; }
+
+.phone{
+  width: 380px;
+  height: 822px;
+  border-radius: 52px;
+  border: 9px solid #0b0b0c;
+  box-shadow: 0 40px 70px rgba(10,20,18,0.22), 0 6px 18px rgba(0,0,0,0.12);
+  position: relative;
+  overflow: hidden;
+}
+
+.notch{
+  position:absolute; top:9px; left:50%; transform: translateX(-50%);
+  width: 110px; height: 24px; background:#0b0b0c; border-radius: 14px; z-index: 30;
+}
+
+.screen{ height:100%; position:relative; overflow:hidden; }
+
+.statusbar{
+  display:flex; justify-content:space-between; align-items:center;
+  padding: 16px 26px 4px;
+  font-size: 14px; font-weight: 700;
+  position:relative; z-index:5;
+}
+.sb-icons{ display:flex; align-items:center; gap:5px; }
+
+.content{
+  height:100%;
+  overflow-y:auto;
+  padding: 8px 20px 130px;
+  display:flex;
+  flex-direction:column;
+  gap: 18px;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.content::-webkit-scrollbar{ display:none; }
+.content > *{ flex-shrink:0; }
+
+.topbar{ display:flex; align-items:center; justify-content:space-between; margin-top: 6px; }
+.avatar-row{ display:flex; align-items:center; gap:11px; }
+
+.avatar-ring{
+  width:46px; height:46px; border-radius:50%;
+  padding: 2.5px;
+  display:flex; align-items:center; justify-content:center;
+}
+.avatar{
+  width:100%; height:100%; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-weight:800; font-size:16px;
+}
+
+.greet{ display:flex; flex-direction:column; }
+.greet-sub{ font-size:12px; opacity:0.6; }
+.greet-name{ font-size:15.5px; font-weight:700; }
+
+.bell{
+  position:relative; width:38px; height:38px; border-radius:50%;
+  border:none; display:flex; align-items:center; justify-content:center;
+}
+.bell .dot{ position:absolute; top:8px; right:9px; width:7px; height:7px; border-radius:50%; }
+
+.headline{ font-size: 25px; font-weight: 800; line-height:1.25; letter-spacing:-0.01em; }
+
+.search{
+  display:flex; align-items:center; gap:9px;
+  border-radius: 999px; padding: 12px 16px;
+}
+.search-avatar{ font-size:15px; }
+.search span{ flex:1; font-size:13px; font-weight:500; opacity:0.55; }
+.search-icon{ opacity:0.55; }
+
+.stats{ display:flex; gap:10px; }
+.stat{
+  flex:1; border-radius: 20px; padding: 14px 15px;
+  display:flex; flex-direction:column; gap:7px;
+}
+.stat-label{ font-size:10.5px; font-weight:600; opacity:0.65; }
+.stat-value{ font-size:14.5px; font-weight:800; }
+
+.card{ border-radius: 22px; position:relative; overflow:hidden; }
+
+.verse-card{ padding: 22px 20px; }
+.verse-pattern{ position:absolute; top:0; right:0; width:160px; height:160px; pointer-events:none; }
+.verse-label{ font-size:10px; font-weight:700; letter-spacing:0.05em; text-transform:uppercase; margin-bottom:12px; position:relative; z-index:1; }
+.verse-arabic{ font-family:'Amiri', serif; font-size:22px; line-height:1.8; margin-bottom:10px; position:relative; z-index:1; }
+.verse-translation{ font-size:11.5px; line-height:1.5; font-style:italic; position:relative; z-index:1; opacity:0.85; }
+
+.section-label{ font-size:13px; font-weight:800; margin-bottom:-8px; }
+
+.services{ display:flex; justify-content:space-between; gap:6px; }
+.service{ flex:1; display:flex; flex-direction:column; align-items:center; gap:8px; }
+.service span{ font-size:10px; font-weight:700; text-align:center; }
+.service-icon{ width:54px; height:54px; border-radius:18px; display:flex; align-items:center; justify-content:center; font-size:22px; }
+
+.donation-item{ display:flex; align-items:center; gap:12px; padding: 13px 15px; }
+.donation-icon{ width:38px; height:38px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
+.donation-info{ display:flex; flex-direction:column; flex:1; min-width:0; }
+.donation-title{ font-size:12.5px; font-weight:700; }
+.donation-id{ font-size:10px; opacity:0.55; margin-top:2px; }
+.donation-amount{ font-size:12.5px; font-weight:800; flex-shrink:0; }
+
+.donasi-card{ padding: 18px 18px 20px; display:flex; flex-direction:column; gap:13px; }
+.donasi-badge{ align-self:flex-start; font-size:10px; font-weight:700; padding: 6px 11px; border-radius: 999px; }
+.progress-bar{ width:100%; height:7px; border-radius:999px; overflow:hidden; }
+.progress-fill{ height:100%; border-radius:999px; }
+.progress-meta{ display:flex; justify-content:space-between; font-size:10.5px; opacity:0.6; margin-top:-6px; }
+.progress-meta strong{ opacity:1; }
+.donasi-btn{ width:100%; padding: 14px; border:none; border-radius: 999px; font-family:inherit; font-weight:700; font-size:13.5px; cursor:pointer; }
+
+.spacer{ height:4px; }
+
+.floatnav{
+  position:absolute; left:16px; right:16px; bottom:22px;
+  border-radius: 999px;
+  display:flex; justify-content:space-around; align-items:center;
+  padding: 12px 6px;
+  z-index: 20;
+}
+.nav-item{ display:flex; flex-direction:column; align-items:center; gap:3px; opacity:0.45; }
+.nav-item span{ font-size:9px; font-weight:700; }
+.nav-item.active{ opacity:1; }
+
+/* ============================================= */
+/* VARIANT 1 — Clean Light                        */
+/* ============================================= */
+.v1{ background:#ffffff; color:#12241f; }
+.v1 .statusbar, .v1 .greet-name, .v1 .headline{ color:#0f2019; }
+.v1 .greet-sub{ color:#0f2019; }
+.v1 .avatar-ring{ background: conic-gradient(from 180deg, #0d4d47, #d9a441, #0d4d47); }
+.v1 .avatar{ background:#0d4d47; color:#fff; }
+.v1 .bell{ background:#f2f5f4; color:#12241f; }
+.v1 .bell .dot{ background:#d9a441; border:2px solid #fff; }
+.v1 .search{ background:#f2f5f4; color:#12241f; }
+.v1 .search-icon path, .v1 .search-icon circle{ stroke:#12241f; }
+.v1 .stat-mint{ background:#e7f4ef; color:#0d4d47; }
+.v1 .stat-gold{ background:#fdf3df; color:#a9761f; }
+.v1 .verse-card{ background: linear-gradient(135deg,#0d4d47,#0a3630); color:#fff; }
+.v1 .verse-label{ color:#e8c471; }
+.v1 .svc-a{ background:#fdecd2; } .v1 .svc-b{ background:#dcecea; } .v1 .svc-c{ background:#fde3d8; } .v1 .svc-d{ background:#e3e6fb; }
+.v1 .donation-item{ background:#f7f9f8; color:#12241f; }
+.v1 .donation-icon{ background:#fdecd2; }
+.v1 .donation-id{ color:#67746f; }
+.v1 .donasi-card{ background:#f7f9f8; border:1px solid #e9eeec; color:#12241f; }
+.v1 .donasi-badge{ background:#e7f4ef; color:#0d4d47; }
+.v1 .progress-bar{ background:#e7f4ef; }
+.v1 .progress-fill{ background: linear-gradient(90deg,#d9a441,#f0cd7b); }
+.v1 .donasi-btn{ background:#0d4d47; color:#fff; }
+.v1 .floatnav{ background:#ffffff; box-shadow: 0 16px 40px rgba(13,77,71,0.18); }
+.v1 .nav-item{ color:#8a9c99; }
+.v1 .nav-item.active{ color:#0d4d47; }
+
+/* ============================================= */
+/* VARIANT 2 — Moon Deck Tone                     */
+/* ============================================= */
+.v2{ background:#ffffff; color:#0f2019; }
+.v2 .statusbar, .v2 .greet-name, .v2 .headline{ color:#0f2019; }
+.v2 .avatar-ring{ background: conic-gradient(from 180deg, #0d4d47, #e8b84b, #0d4d47); }
+.v2 .avatar{ background:#0d4d47; color:#fff; }
+.v2 .bell{ background:#eef5f3; color:#0f2019; }
+.v2 .bell .dot{ background:#e8b84b; border:2px solid #fff; }
+.v2 .search{ background:#eef5f3; color:#0f2019; }
+.v2 .search-icon path, .v2 .search-icon circle{ stroke:#0f2019; }
+.v2 .stat-mint{ background:#e2f1ec; color:#0d4d47; }
+.v2 .stat-gold{ background:#fbf0d9; color:#a9761f; }
+.v2 .verse-card{ background: linear-gradient(135deg,#0d4d47,#0a3630); color:#fff; }
+.v2 .verse-label{ color:#e8c471; }
+.v2 .svc-a{ background:#fbf0d9; } .v2 .svc-b{ background:#e2f1ec; } .v2 .svc-c{ background:#f3e0d2; } .v2 .svc-d{ background:#dde8ec; }
+.v2 .donation-item{ background:#f5f8f7; color:#0f2019; }
+.v2 .donation-icon{ background:#fbf0d9; }
+.v2 .donation-id{ color:#647672; }
+.v2 .donasi-card{ background:#f5f8f7; border:1px solid #e5edeb; color:#0f2019; }
+.v2 .donasi-badge{ background:#e2f1ec; color:#0d4d47; }
+.v2 .progress-bar{ background:#e2f1ec; }
+.v2 .progress-fill{ background: linear-gradient(90deg,#e8b84b,#f0cd7b); }
+.v2 .donasi-btn{ background:#0d4d47; color:#fff; }
+.v2 .floatnav{ background:#ffffff; box-shadow: 0 16px 40px rgba(13,77,71,0.18); }
+.v2 .nav-item{ color:#8fa19e; }
+.v2 .nav-item.active{ color:#0d4d47; }
+
+/* ============================================= */
+/* VARIANT 3 — Midnight Glass                     */
+/* ============================================= */
+.v3{ background: radial-gradient(120% 90% at 20% 0%, #123c37 0%, #071612 55%, #030807 100%); color:#eef7f2; }
+.v3 .statusbar, .v3 .greet-name, .v3 .headline{ color:#f4faf7; }
+.v3 .greet-sub{ color:#c9ded7; }
+.v3 .avatar-ring{ background: conic-gradient(from 180deg, #6ee7c9, #f0cd7b, #6ee7c9); }
+.v3 .avatar{ background:#0f2b26; color:#6ee7c9; }
+.v3 .bell{ background: rgba(255,255,255,0.08); color:#eef7f2; backdrop-filter: blur(10px); }
+.v3 .bell .dot{ background:#f0cd7b; border:2px solid #0c211d; }
+.v3 .search{ background: rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px); }
+.v3 .search span{ color:#cfe3dd; }
+.v3 .search-icon path, .v3 .search-icon circle{ stroke:#cfe3dd; }
+.v3 .stat{ background: rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); backdrop-filter: blur(14px); }
+.v3 .stat-mint span, .v3 .stat-gold span{ color:#eef7f2; }
+.v3 .stat svg{ stroke:#6ee7c9; }
+.v3 .stat-gold svg{ stroke:#f0cd7b; }
+.v3 .verse-card{ background: linear-gradient(135deg, rgba(110,231,201,0.16), rgba(255,255,255,0.05)); border:1px solid rgba(255,255,255,0.12); color:#f4faf7; backdrop-filter: blur(16px); }
+.v3 .verse-label{ color:#f0cd7b; }
+.v3 .verse-translation{ color:#cfe3dd; }
+.v3 .svc-a,.v3 .svc-b,.v3 .svc-c,.v3 .svc-d{ background: rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.1); }
+.v3 .donation-item{ background: rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); color:#f4faf7; backdrop-filter: blur(12px); }
+.v3 .donation-icon{ background: rgba(240,205,123,0.18); }
+.v3 .donation-id{ color:#a9c2ba; }
+.v3 .donasi-card{ background: rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:#f4faf7; backdrop-filter: blur(16px); }
+.v3 .donasi-badge{ background: rgba(110,231,201,0.16); color:#6ee7c9; }
+.v3 .progress-bar{ background: rgba(255,255,255,0.1); }
+.v3 .progress-fill{ background: linear-gradient(90deg,#6ee7c9,#f0cd7b); }
+.v3 .donasi-btn{ background: linear-gradient(90deg,#6ee7c9,#4fd3b0); color:#04211c; }
+.v3 .floatnav{ background: rgba(10,25,22,0.55); border:1px solid rgba(255,255,255,0.12); backdrop-filter: blur(20px); box-shadow: 0 16px 40px rgba(0,0,0,0.4); }
+.v3 .nav-item{ color:#7fa79c; }
+.v3 .nav-item.active{ color:#6ee7c9; }
