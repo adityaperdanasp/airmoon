@@ -1,0 +1,80 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: 'Poppins', -apple-system, sans-serif; }
+  </style>
+</helmet>
+
+<div style="width: 390px; background: #ffffff; border-radius: 28px; box-shadow: 0 24px 60px rgba(15,32,25,0.16); overflow: hidden; color: #0f2019;">
+  <div style="display: flex; flex-direction: column; gap: 20px; padding: 32px 20px 36px;">
+
+    <div style="display: flex; align-items: center; justify-content: space-between;">
+      <div style="width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #eef5f3;">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#0f2019">
+          <path d="M15 5 8 12l7 7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <span style="font-size: 15px; font-weight: 800;">Kutipan Inspirasi</span>
+      <div style="width: 38px; height: 38px;"></div>
+    </div>
+
+    <div style="position: relative; overflow: hidden; border-radius: 24px; padding: 32px 26px; display: flex; flex-direction: column; align-items: center; gap: 18px; text-align: center; background: linear-gradient(160deg, {{primary}}, {{primaryDark}}); min-height: 320px; justify-content: center;">
+      <svg style="position: absolute; top: -20px; right: -30px; width: 180px; height: 180px; pointer-events: none;" viewBox="0 0 300 160" preserveAspectRatio="xMaxYMin slice">
+        <g stroke="rgba(255,255,255,0.14)" stroke-width="1.3" fill="none">
+          <path d="M320 -10 C 285 20,285 50,320 80 C285 110,285 140,320 170"/>
+          <path d="M300 -10 C 265 20,265 50,300 80 C265 110,265 140,300 170"/>
+        </g>
+      </svg>
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="{{accent}}" stroke="none" style="position: relative;">
+        <path d="M7 7C4.8 7 3 8.8 3 11s1.8 4 4 4c.4 0 .8-.1 1.1-.2C7.6 16.8 6 18.5 4 19.3l.6 1.6c3.8-1.5 6.4-4.9 6.4-9.4C11 9 9.2 7 7 7Zm10 0c-2.2 0-4 1.8-4 4s1.8 4 4 4c.4 0 .8-.1 1.1-.2-.5 2-2.1 3.7-4.1 4.5l.6 1.6c3.8-1.5 6.4-4.9 6.4-9.4 0-2.5-1.8-4.5-4-4.5Z"/>
+      </svg>
+      <span style="position: relative; font-family: 'Amiri', serif; font-size: 26px; line-height: 1.9; color: #ffffff; direction: rtl;">فَإِنَّ مَعَ الْعُسْرِ يُسْرًا</span>
+      <span style="position: relative; font-size: 13.5px; line-height: 1.6; color: rgba(255,255,255,0.85); font-style: italic;">"Maka sesungguhnya bersama kesulitan ada kemudahan."</span>
+      <span style="position: relative; font-size: 11px; font-weight: 700; color: {{accent}};">QS. Al-Insyirah: 6</span>
+    </div>
+
+    <div style="display: flex; align-items: center; justify-content: center; gap: 6px;">
+      <div style="width: 18px; height: 5px; border-radius: 999px; background: {{primary}};"></div>
+      <div style="width: 5px; height: 5px; border-radius: 999px; background: #d7ddda;"></div>
+      <div style="width: 5px; height: 5px; border-radius: 999px; background: #d7ddda;"></div>
+    </div>
+
+    <div style="display: flex; gap: 10px;">
+      <button style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 14px; border: 1px solid #e5edeb; border-radius: 999px; font-family: inherit; font-weight: 700; font-size: 13px; cursor: pointer; color: #0f2019; background: #ffffff;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0f2019"><path d="M7 3.5h10a1 1 0 0 1 1 1V21l-6-3.5L6 21V4.5a1 1 0 0 1 1-1Z" stroke-width="1.6" stroke-linejoin="round"/></svg>
+        Simpan
+      </button>
+      <button style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 14px; border: none; border-radius: 999px; font-family: inherit; font-weight: 700; font-size: 13px; cursor: pointer; color: #ffffff; background: {{primary}};">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ffffff"><circle cx="18" cy="5" r="2.4" stroke-width="1.7"/><circle cx="6" cy="12" r="2.4" stroke-width="1.7"/><circle cx="18" cy="19" r="2.4" stroke-width="1.7"/><path d="m8.2 10.7 7.6-4.4M8.2 13.3l7.6 4.4" stroke-width="1.7"/></svg>
+        Bagikan
+      </button>
+    </div>
+
+  </div>
+</div>
+
+</x-dc>
+<script data-dc-script data-props='{"primary":{"editor":"color","default":"#0d4d47","section":"Colors"},"primaryDark":{"editor":"color","default":"#0a3630","section":"Colors"},"accent":{"editor":"color","default":"#e8b84b","section":"Colors"}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      primary: this.props.primary ?? '#0d4d47',
+      primaryDark: this.props.primaryDark ?? '#0a3630',
+      accent: this.props.accent ?? '#e8b84b'
+    };
+  }
+}
+</script>
+</body>
+</html>

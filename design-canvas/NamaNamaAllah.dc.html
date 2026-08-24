@@ -1,0 +1,100 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: 'Poppins', -apple-system, sans-serif; }
+  </style>
+</helmet>
+
+<div style="width: 390px; background: #ffffff; border-radius: 28px; box-shadow: 0 24px 60px rgba(15,32,25,0.16); overflow: hidden; color: #0f2019;">
+  <div style="display: flex; flex-direction: column; gap: 18px; padding: 32px 20px 36px;">
+
+    <div style="display: flex; align-items: center; justify-content: space-between;">
+      <div style="width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #eef5f3;">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#0f2019">
+          <path d="M15 5 8 12l7 7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div style="display: flex; flex-direction: column; align-items: center;">
+        <span style="font-size: 15px; font-weight: 800;">Asmaul Husna</span>
+        <span style="font-size: 11px; color: #5c6b67;">99 Nama-Nama Allah</span>
+      </div>
+      <div style="width: 38px; height: 38px;"></div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px;">
+
+      <div style="display: flex; flex-direction: column; gap: 6px; padding: 14px; border-radius: 16px; background: #f5f8f7;">
+        <span style="font-size: 10px; font-weight: 700; color: {{primary}};">01</span>
+        <span style="font-family: 'Amiri', serif; font-size: 20px; font-weight: 700;">الرحمن</span>
+        <span style="font-size: 11.5px; font-weight: 700;">Ar-Rahman</span>
+        <span style="font-size: 10px; color: #5c6b67;">Yang Maha Pengasih</span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 6px; padding: 14px; border-radius: 16px; background: #f5f8f7;">
+        <span style="font-size: 10px; font-weight: 700; color: {{primary}};">02</span>
+        <span style="font-family: 'Amiri', serif; font-size: 20px; font-weight: 700;">الرحيم</span>
+        <span style="font-size: 11.5px; font-weight: 700;">Ar-Rahim</span>
+        <span style="font-size: 10px; color: #5c6b67;">Yang Maha Penyayang</span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 6px; padding: 14px; border-radius: 16px; background: #f5f8f7;">
+        <span style="font-size: 10px; font-weight: 700; color: {{primary}};">03</span>
+        <span style="font-family: 'Amiri', serif; font-size: 20px; font-weight: 700;">الملك</span>
+        <span style="font-size: 11.5px; font-weight: 700;">Al-Malik</span>
+        <span style="font-size: 10px; color: #5c6b67;">Yang Maha Merajai</span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 6px; padding: 14px; border-radius: 16px; background: #f5f8f7;">
+        <span style="font-size: 10px; font-weight: 700; color: {{primary}};">04</span>
+        <span style="font-family: 'Amiri', serif; font-size: 20px; font-weight: 700;">القدوس</span>
+        <span style="font-size: 11.5px; font-weight: 700;">Al-Quddus</span>
+        <span style="font-size: 10px; color: #5c6b67;">Yang Maha Suci</span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 6px; padding: 14px; border-radius: 16px; background: #f5f8f7;">
+        <span style="font-size: 10px; font-weight: 700; color: {{primary}};">05</span>
+        <span style="font-family: 'Amiri', serif; font-size: 20px; font-weight: 700;">السلام</span>
+        <span style="font-size: 11.5px; font-weight: 700;">As-Salam</span>
+        <span style="font-size: 10px; color: #5c6b67;">Yang Maha Sejahtera</span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 6px; padding: 14px; border-radius: 16px; background: #f5f8f7;">
+        <span style="font-size: 10px; font-weight: 700; color: {{primary}};">06</span>
+        <span style="font-family: 'Amiri', serif; font-size: 20px; font-weight: 700;">المؤمن</span>
+        <span style="font-size: 11.5px; font-weight: 700;">Al-Mu'min</span>
+        <span style="font-size: 10px; color: #5c6b67;">Yang Maha Pemberi Aman</span>
+      </div>
+
+    </div>
+
+    <div style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 13px; border-radius: 999px; background: #eef5f3;">
+      <span style="font-size: 12.5px; font-weight: 700; color: {{primary}};">Lihat Semua 99 Nama</span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="{{primary}}"><path d="m9 6 6 6-6 6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+
+  </div>
+</div>
+
+</x-dc>
+<script data-dc-script data-props='{"primary":{"editor":"color","default":"#0d4d47","section":"Colors"}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      primary: this.props.primary ?? '#0d4d47'
+    };
+  }
+}
+</script>
+</body>
+</html>

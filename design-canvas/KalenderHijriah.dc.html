@@ -1,0 +1,114 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: 'Poppins', -apple-system, sans-serif; }
+    .cell { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 8px 2px; border-radius: 10px; }
+  </style>
+</helmet>
+
+<div style="width: 390px; background: #ffffff; border-radius: 28px; box-shadow: 0 24px 60px rgba(15,32,25,0.16); overflow: hidden; color: #0f2019;">
+  <div style="display: flex; flex-direction: column; gap: 18px; padding: 32px 20px 36px;">
+
+    <div style="display: flex; align-items: center; justify-content: space-between;">
+      <div style="width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #eef5f3;">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#0f2019">
+          <path d="M15 5 8 12l7 7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <span style="font-size: 15px; font-weight: 800;">Kalender Hijriah</span>
+      <div style="width: 38px; height: 38px;"></div>
+    </div>
+
+    <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-radius: 16px; background: {{primary}};">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff"><path d="m15 5-7 7 7 7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div style="display: flex; flex-direction: column; align-items: center;">
+        <span style="font-size: 15px; font-weight: 800; color: #ffffff;">Safar 1448 H</span>
+        <span style="font-size: 11px; color: {{accent}};">Agustus &ndash; September 2026</span>
+      </div>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff"><path d="m9 5 7 7-7 7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px;">
+      <div class="cell"><span style="font-size: 10px; font-weight: 700; color: #8a9c99;">Min</span></div>
+      <div class="cell"><span style="font-size: 10px; font-weight: 700; color: #8a9c99;">Sen</span></div>
+      <div class="cell"><span style="font-size: 10px; font-weight: 700; color: #8a9c99;">Sel</span></div>
+      <div class="cell"><span style="font-size: 10px; font-weight: 700; color: #8a9c99;">Rab</span></div>
+      <div class="cell"><span style="font-size: 10px; font-weight: 700; color: #8a9c99;">Kam</span></div>
+      <div class="cell"><span style="font-size: 10px; font-weight: 700; color: #8a9c99;">Jum</span></div>
+      <div class="cell"><span style="font-size: 10px; font-weight: 700; color: #8a9c99;">Sab</span></div>
+
+      <div class="cell" style="background: #f5f8f7;"><span style="font-size: 13px; font-weight: 700;">1</span><span style="font-size: 8.5px; color: #8a9c99;">15 Ags</span></div>
+      <div class="cell" style="background: #f5f8f7;"><span style="font-size: 13px; font-weight: 700;">2</span><span style="font-size: 8.5px; color: #8a9c99;">16 Ags</span></div>
+      <div class="cell" style="background: #f5f8f7;"><span style="font-size: 13px; font-weight: 700;">3</span><span style="font-size: 8.5px; color: #8a9c99;">17 Ags</span></div>
+      <div class="cell" style="background: #f5f8f7;"><span style="font-size: 13px; font-weight: 700;">4</span><span style="font-size: 8.5px; color: #8a9c99;">18 Ags</span></div>
+      <div class="cell" style="background: #f5f8f7;"><span style="font-size: 13px; font-weight: 700;">5</span><span style="font-size: 8.5px; color: #8a9c99;">19 Ags</span></div>
+      <div class="cell" style="background: #f5f8f7;"><span style="font-size: 13px; font-weight: 700;">6</span><span style="font-size: 8.5px; color: #8a9c99;">20 Ags</span></div>
+      <div class="cell" style="background: {{primary}};"><span style="font-size: 13px; font-weight: 800; color: #ffffff;">7</span><span style="font-size: 8.5px; color: {{accent}};">21 Ags</span></div>
+
+      <div class="cell" style="background: #f5f8f7;"><span style="font-size: 13px; font-weight: 700;">8</span><span style="font-size: 8.5px; color: #8a9c99;">22 Ags</span></div>
+      <div class="cell" style="background: #f5f8f7;"><span style="font-size: 13px; font-weight: 700;">9</span><span style="font-size: 8.5px; color: #8a9c99;">23 Ags</span></div>
+      <div class="cell" style="background: #f5f8f7;"><span style="font-size: 13px; font-weight: 700;">10</span><span style="font-size: 8.5px; color: #8a9c99;">24 Ags</span></div>
+      <div class="cell" style="background: #f5f8f7;"><span style="font-size: 13px; font-weight: 700;">11</span><span style="font-size: 8.5px; color: #8a9c99;">25 Ags</span></div>
+      <div class="cell" style="background: #f5f8f7;"><span style="font-size: 13px; font-weight: 700;">12</span><span style="font-size: 8.5px; color: #8a9c99;">26 Ags</span></div>
+      <div class="cell" style="background: #f5f8f7;"><span style="font-size: 13px; font-weight: 700;">13</span><span style="font-size: 8.5px; color: #8a9c99;">27 Ags</span></div>
+      <div class="cell" style="background: #f5f8f7;"><span style="font-size: 13px; font-weight: 700;">14</span><span style="font-size: 8.5px; color: #8a9c99;">28 Ags</span></div>
+
+      <div class="cell" style="background: #f5f8f7;"><span style="font-size: 13px; font-weight: 700;">15</span><span style="font-size: 8.5px; color: #8a9c99;">29 Ags</span></div>
+      <div class="cell" style="background: #f5f8f7;"><span style="font-size: 13px; font-weight: 700;">16</span><span style="font-size: 8.5px; color: #8a9c99;">30 Ags</span></div>
+      <div class="cell" style="background: #f5f8f7;"><span style="font-size: 13px; font-weight: 700;">17</span><span style="font-size: 8.5px; color: #8a9c99;">31 Ags</span></div>
+      <div class="cell" style="background: #f5f8f7;"><span style="font-size: 13px; font-weight: 700;">18</span><span style="font-size: 8.5px; color: #8a9c99;">1 Sep</span></div>
+      <div class="cell" style="background: #f5f8f7;"><span style="font-size: 13px; font-weight: 700;">19</span><span style="font-size: 8.5px; color: #8a9c99;">2 Sep</span></div>
+      <div class="cell" style="background: #f5f8f7;"><span style="font-size: 13px; font-weight: 700;">20</span><span style="font-size: 8.5px; color: #8a9c99;">3 Sep</span></div>
+      <div class="cell" style="background: #f5f8f7;"><span style="font-size: 13px; font-weight: 700;">21</span><span style="font-size: 8.5px; color: #8a9c99;">4 Sep</span></div>
+
+      <div class="cell" style="background: #f5f8f7;"><span style="font-size: 13px; font-weight: 700;">22</span><span style="font-size: 8.5px; color: #8a9c99;">5 Sep</span></div>
+      <div class="cell" style="background: #f5f8f7;"><span style="font-size: 13px; font-weight: 700;">23</span><span style="font-size: 8.5px; color: #8a9c99;">6 Sep</span></div>
+      <div class="cell" style="background: #f5f8f7;"><span style="font-size: 13px; font-weight: 700;">24</span><span style="font-size: 8.5px; color: #8a9c99;">7 Sep</span></div>
+      <div class="cell" style="background: #f5f8f7;"><span style="font-size: 13px; font-weight: 700;">25</span><span style="font-size: 8.5px; color: #8a9c99;">8 Sep</span></div>
+      <div class="cell" style="background: #f5f8f7;"><span style="font-size: 13px; font-weight: 700;">26</span><span style="font-size: 8.5px; color: #8a9c99;">9 Sep</span></div>
+      <div class="cell" style="background: #f5f8f7;"><span style="font-size: 13px; font-weight: 700;">27</span><span style="font-size: 8.5px; color: #8a9c99;">10 Sep</span></div>
+      <div class="cell" style="background: #f5f8f7;"><span style="font-size: 13px; font-weight: 700;">28</span><span style="font-size: 8.5px; color: #8a9c99;">11 Sep</span></div>
+
+      <div class="cell" style="background: #f5f8f7;"><span style="font-size: 13px; font-weight: 700;">29</span><span style="font-size: 8.5px; color: #8a9c99;">12 Sep</span></div>
+      <div class="cell" style="background: #f5f8f7;"><span style="font-size: 13px; font-weight: 700;">30</span><span style="font-size: 8.5px; color: #8a9c99;">13 Sep</span></div>
+      <div class="cell"><span style="font-size: 13px; font-weight: 500; color: #d7ddda;">1</span></div>
+      <div class="cell"><span style="font-size: 13px; font-weight: 500; color: #d7ddda;">2</span></div>
+      <div class="cell"><span style="font-size: 13px; font-weight: 500; color: #d7ddda;">3</span></div>
+      <div class="cell"><span style="font-size: 13px; font-weight: 500; color: #d7ddda;">4</span></div>
+      <div class="cell"><span style="font-size: 13px; font-weight: 500; color: #d7ddda;">5</span></div>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 12px; padding: 13px 16px; border-radius: 16px; background: #fbf0d9;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a9761f" style="flex-shrink: 0;">
+        <path d="M12 21s-6.5-6.1-6.5-11A6.5 6.5 0 0 1 18.5 10c0 4.9-6.5 11-6.5 11Z" stroke-width="1.6" stroke-linejoin="round"/>
+      </svg>
+      <span style="font-size: 12px; color: #7a5a1a;">30 Safar &middot; Awal Rabiul Awal, siapkan catatan bulan baru.</span>
+    </div>
+
+  </div>
+</div>
+
+</x-dc>
+<script data-dc-script data-props='{"primary":{"editor":"color","default":"#0d4d47","section":"Colors"},"accent":{"editor":"color","default":"#e8b84b","section":"Colors"}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      primary: this.props.primary ?? '#0d4d47',
+      accent: this.props.accent ?? '#e8b84b'
+    };
+  }
+}
+</script>
+</body>
+</html>

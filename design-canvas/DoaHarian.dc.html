@@ -1,0 +1,83 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: 'Poppins', -apple-system, sans-serif; }
+  </style>
+</helmet>
+
+<div style="width: 390px; background: #ffffff; border-radius: 28px; box-shadow: 0 24px 60px rgba(15,32,25,0.16); overflow: hidden; color: #0f2019;">
+  <div style="display: flex; flex-direction: column; gap: 18px; padding: 32px 20px 36px;">
+
+    <div style="display: flex; align-items: center; justify-content: space-between;">
+      <div style="width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #eef5f3;">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#0f2019">
+          <path d="M15 5 8 12l7 7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <span style="font-size: 15px; font-weight: 800;">Do'a Harian</span>
+      <div style="width: 38px; height: 38px;"></div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+
+      <div style="display: flex; flex-direction: column; gap: 10px; padding: 16px; border-radius: 18px; background: #f5f8f7;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div style="width: 26px; height: 26px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: #e2f1ec;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="{{primary}}"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 1 0 10.5 10.5Z" stroke-width="1.8"/></svg>
+          </div>
+          <span style="font-size: 12.5px; font-weight: 700;">Do'a Bangun Tidur</span>
+        </div>
+        <div style="font-family: 'Amiri', serif; font-size: 19px; line-height: 1.9; direction: rtl; text-align: right;">الْحَمْدُ لِلَّهِ الَّذِي أَحْيَانَا بَعْدَ مَا أَمَاتَنَا وَإِلَيْهِ النُّشُورُ</div>
+        <p style="margin: 0; font-size: 12px; line-height: 1.55; color: #495954;">"Segala puji bagi Allah yang telah menghidupkan kami setelah mematikan kami (tidur), dan hanya kepada-Nya kami kembali."</p>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 10px; padding: 16px; border-radius: 18px; background: #f5f8f7;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div style="width: 26px; height: 26px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: #fbf0d9;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#a9761f"><path d="M6 3v6a3 3 0 0 0 6 0V3M12 3v18M18 3v7a3 3 0 0 1-3 3" stroke-width="1.7" stroke-linecap="round"/></svg>
+          </div>
+          <span style="font-size: 12.5px; font-weight: 700;">Do'a Sebelum Makan</span>
+        </div>
+        <div style="font-family: 'Amiri', serif; font-size: 19px; line-height: 1.9; direction: rtl; text-align: right;">اللَّهُمَّ بَارِكْ لَنَا فِيمَا رَزَقْتَنَا وَقِنَا عَذَابَ النَّارِ</div>
+        <p style="margin: 0; font-size: 12px; line-height: 1.55; color: #495954;">"Ya Allah, berkahilah kami dalam rezeki yang Engkau berikan kepada kami, dan peliharalah kami dari siksa api neraka."</p>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 10px; padding: 16px; border-radius: 18px; background: #f5f8f7;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div style="width: 26px; height: 26px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: #f3e0d2;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#a9622f"><path d="M9 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h4M16 17l5-5-5-5M21 12H9" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <span style="font-size: 12.5px; font-weight: 700;">Do'a Keluar Rumah</span>
+        </div>
+        <div style="font-family: 'Amiri', serif; font-size: 19px; line-height: 1.9; direction: rtl; text-align: right;">بِسْمِ اللَّهِ تَوَكَّلْتُ عَلَى اللَّهِ وَلَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ</div>
+        <p style="margin: 0; font-size: 12px; line-height: 1.55; color: #495954;">"Dengan nama Allah, aku bertawakal kepada Allah, tiada daya dan kekuatan kecuali dengan pertolongan Allah."</p>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+</x-dc>
+<script data-dc-script data-props='{"primary":{"editor":"color","default":"#0d4d47","section":"Colors"}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      primary: this.props.primary ?? '#0d4d47'
+    };
+  }
+}
+</script>
+</body>
+</html>

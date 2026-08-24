@@ -1,6 +1,24 @@
 {
   "artboards": [
-    { "file": "Main.dc.html", "x": 0, "y": 0, "w": 390, "h": 1220 }
+    { "file": "Main.dc.html", "x": 0, "y": 0, "w": 390, "h": 1080 },
+    { "file": "Login.dc.html", "x": 450, "y": 0, "w": 390, "h": 660 },
+    { "file": "SignUp.dc.html", "x": 900, "y": 0, "w": 390, "h": 760 },
+    { "file": "SurahList.dc.html", "x": 0, "y": 1180, "w": 390, "h": 880 },
+    { "file": "SurahReader.dc.html", "x": 450, "y": 1180, "w": 390, "h": 1500 },
+    { "file": "JadwalSholat.dc.html", "x": 900, "y": 1180, "w": 390, "h": 850 },
+    { "file": "PilihQari.dc.html", "x": 0, "y": 2760, "w": 390, "h": 560 },
+    { "file": "PilihAdzan.dc.html", "x": 450, "y": 2760, "w": 390, "h": 480 },
+    { "file": "PreviewNotifikasi.dc.html", "x": 900, "y": 2760, "w": 390, "h": 620 },
+    { "file": "Pengaturan.dc.html", "x": 1350, "y": 2760, "w": 390, "h": 460 },
+    { "file": "Lainnya.dc.html", "x": 0, "y": 3440, "w": 390, "h": 600 },
+    { "file": "NamaNamaAllah.dc.html", "x": 450, "y": 3440, "w": 390, "h": 580 },
+    { "file": "KalenderHijriah.dc.html", "x": 900, "y": 3440, "w": 390, "h": 680 },
+    { "file": "KalkulatorZakat.dc.html", "x": 1350, "y": 3440, "w": 390, "h": 750 },
+    { "file": "KartuUcapan.dc.html", "x": 1800, "y": 3440, "w": 390, "h": 820 },
+    { "file": "DoaHarian.dc.html", "x": 0, "y": 4320, "w": 390, "h": 680 },
+    { "file": "KutipanInspirasi.dc.html", "x": 450, "y": 4320, "w": 390, "h": 620 },
+    { "file": "CariMasjid.dc.html", "x": 900, "y": 4320, "w": 390, "h": 650 },
+    { "file": "MakkahLive.dc.html", "x": 1350, "y": 4320, "w": 390, "h": 600 }
   ],
-  "launch": { "view": "focused", "file": "Main.dc.html" }
+  "launch": { "view": "canvas" }
 }

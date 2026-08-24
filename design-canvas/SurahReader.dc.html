@@ -1,0 +1,221 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: 'Poppins', -apple-system, sans-serif; }
+    a { color: #0d4d47; }
+    a:hover { color: #0a3630; }
+  </style>
+</helmet>
+
+<div style="position: relative; width: 390px; background: #ffffff; border-radius: 28px; box-shadow: 0 24px 60px rgba(15,32,25,0.16); color: #0f2019;">
+  <div style="display: flex; flex-direction: column; gap: 18px; padding: 32px 20px 110px; border-radius: 28px; overflow: hidden;">
+
+    <div style="display: flex; align-items: center; justify-content: space-between;">
+      <div style="width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #eef5f3;">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#0f2019">
+          <path d="M15 5 8 12l7 7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div style="display: flex; flex-direction: column; align-items: center;">
+        <span style="font-size: 15px; font-weight: 800;">Al-Fatihah</span>
+        <span style="font-size: 11px; color: #5c6b67;">Makkiyah &middot; 7 Ayat</span>
+      </div>
+      <div style="width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #eef5f3;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="{{primary}}">
+          <path d="M7 3.5h10a1 1 0 0 1 1 1V21l-6-3.5L6 21V4.5a1 1 0 0 1 1-1Z" stroke-width="1.7" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </div>
+
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; border-radius: 14px; background: #eef5f3;">
+      <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
+        <div style="width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: {{primary}};">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff">
+            <path d="M12 2a4 4 0 0 0-4 4v5a4 4 0 0 0 8 0V6a4 4 0 0 0-4-4Z" stroke-width="1.6"/>
+            <path d="M6 11a6 6 0 0 0 12 0M12 17v4M9 21h6" stroke-width="1.6" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 1px; min-width: 0;">
+          <span style="font-size: 10px; color: #5c6b67;">Qari</span>
+          <span style="font-size: 12.5px; font-weight: 700;">Syaikh Mishari Rasyid</span>
+        </div>
+      </div>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5c6b67" style="flex-shrink: 0;">
+        <path d="m9 6 6 6-6 6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+
+    <div style="position: relative; overflow: hidden; border-radius: 22px; padding: 24px 20px; text-align: center; background: linear-gradient(135deg, {{primary}}, {{primaryDark}});">
+      <svg style="position: absolute; top: -10px; right: -20px; width: 140px; height: 140px; pointer-events: none;" viewBox="0 0 300 160" preserveAspectRatio="xMaxYMin slice">
+        <g stroke="rgba(255,255,255,0.14)" stroke-width="1.3" fill="none">
+          <path d="M320 -10 C 285 20,285 50,320 80 C285 110,285 140,320 170"/>
+          <path d="M300 -10 C 265 20,265 50,300 80 C265 110,265 140,300 170"/>
+          <path d="M280 -10 C 245 20,245 50,280 80 C245 110,245 140,280 170"/>
+        </g>
+      </svg>
+      <div style="position: relative; font-family: 'Amiri', serif; font-size: 21px; font-weight: 700; color: #ffffff; margin-bottom: 6px;">الفاتحة</div>
+      <div style="position: relative; font-size: 12px; color: {{accent}};">Pembukaan &middot; Turun di Makkah</div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 22px;">
+
+      <div style="display: flex; flex-direction: column; gap: 10px; padding-bottom: 18px; border-bottom: 1px solid #eef2f1;">
+        <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;">
+          <div style="width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1.5px solid {{primary}};">
+            <span style="font-size: 11px; font-weight: 800; color: {{primary}};">1</span>
+          </div>
+          <div style="flex: 1; font-family: 'Amiri', serif; font-size: 24px; line-height: 2; direction: rtl; text-align: right;">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>
+        </div>
+        <p style="margin: 0; font-size: 13px; line-height: 1.6; color: #495954;">Dengan nama Allah Yang Maha Pengasih, Maha Penyayang.</p>
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="{{primary}}" stroke="none"><path d="M8 5.5v13l11-6.5-11-6.5Z"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8a9c99"><path d="M7 3.5h10a1 1 0 0 1 1 1V21l-6-3.5L6 21V4.5a1 1 0 0 1 1-1Z" stroke-width="1.6" stroke-linejoin="round"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8a9c99"><circle cx="12" cy="12" r="9" stroke-width="1.6"/><path d="M12 11v5.5M12 8v.01" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 10px; padding-bottom: 18px; border-bottom: 1px solid #eef2f1;">
+        <div style="display: flex; align-items: center; gap: 5px;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="{{primary}}" stroke="none"><path d="M7 3.5h10a1 1 0 0 1 1 1V21l-6-3.5L6 21V4.5a1 1 0 0 1 1-1Z"/></svg>
+          <span style="font-size: 10.5px; font-weight: 700; color: {{primary}};">Terakhir dibaca</span>
+        </div>
+        <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;">
+          <div style="width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1.5px solid {{primary}};">
+            <span style="font-size: 11px; font-weight: 800; color: {{primary}};">2</span>
+          </div>
+          <div style="flex: 1; font-family: 'Amiri', serif; font-size: 24px; line-height: 2; direction: rtl; text-align: right;">الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ</div>
+        </div>
+        <p style="margin: 0; font-size: 13px; line-height: 1.6; color: #495954;">Segala puji bagi Allah, Tuhan seluruh alam,</p>
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="{{primary}}" stroke="none"><path d="M8 5.5v13l11-6.5-11-6.5Z"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="{{primary}}" stroke="none"><path d="M7 3.5h10a1 1 0 0 1 1 1V21l-6-3.5L6 21V4.5a1 1 0 0 1 1-1Z"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8a9c99"><circle cx="12" cy="12" r="9" stroke-width="1.6"/><path d="M12 11v5.5M12 8v.01" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 10px; padding-bottom: 18px; border-bottom: 1px solid #eef2f1;">
+        <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;">
+          <div style="width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1.5px solid {{primary}};">
+            <span style="font-size: 11px; font-weight: 800; color: {{primary}};">3</span>
+          </div>
+          <div style="flex: 1; font-family: 'Amiri', serif; font-size: 24px; line-height: 2; direction: rtl; text-align: right;"><span style="color: #147a43;">الرَّحْمَٰنِ</span> <span>الرَّحِيمِ</span></div>
+        </div>
+        <p style="margin: 0; font-size: 13px; line-height: 1.6; color: #495954;">Yang Maha Pengasih, Maha Penyayang,</p>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 10px; font-weight: 700; color: #147a43;">Sedang dibacakan&hellip;</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="{{primary}}" stroke="none"><path d="M8 5.5v13l11-6.5-11-6.5Z"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8a9c99"><path d="M7 3.5h10a1 1 0 0 1 1 1V21l-6-3.5L6 21V4.5a1 1 0 0 1 1-1Z" stroke-width="1.6" stroke-linejoin="round"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8a9c99"><circle cx="12" cy="12" r="9" stroke-width="1.6"/><path d="M12 11v5.5M12 8v.01" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 10px; padding-bottom: 18px; border-bottom: 1px solid #eef2f1;">
+        <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;">
+          <div style="width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1.5px solid {{primary}};">
+            <span style="font-size: 11px; font-weight: 800; color: {{primary}};">4</span>
+          </div>
+          <div style="flex: 1; font-family: 'Amiri', serif; font-size: 24px; line-height: 2; direction: rtl; text-align: right;">مَالِكِ يَوْمِ الدِّينِ</div>
+        </div>
+        <p style="margin: 0; font-size: 13px; line-height: 1.6; color: #495954;">Pemilik hari pembalasan.</p>
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="{{primary}}" stroke="none"><path d="M8 5.5v13l11-6.5-11-6.5Z"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8a9c99"><path d="M7 3.5h10a1 1 0 0 1 1 1V21l-6-3.5L6 21V4.5a1 1 0 0 1 1-1Z" stroke-width="1.6" stroke-linejoin="round"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8a9c99"><circle cx="12" cy="12" r="9" stroke-width="1.6"/><path d="M12 11v5.5M12 8v.01" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 10px; padding-bottom: 18px; border-bottom: 1px solid #eef2f1;">
+        <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;">
+          <div style="width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1.5px solid {{primary}};">
+            <span style="font-size: 11px; font-weight: 800; color: {{primary}};">5</span>
+          </div>
+          <div style="flex: 1; font-family: 'Amiri', serif; font-size: 24px; line-height: 2; direction: rtl; text-align: right;">إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ</div>
+        </div>
+        <p style="margin: 0; font-size: 13px; line-height: 1.6; color: #495954;">Hanya kepada Engkaulah kami menyembah dan hanya kepada Engkaulah kami mohon pertolongan.</p>
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="{{primary}}" stroke="none"><path d="M8 5.5v13l11-6.5-11-6.5Z"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8a9c99"><path d="M7 3.5h10a1 1 0 0 1 1 1V21l-6-3.5L6 21V4.5a1 1 0 0 1 1-1Z" stroke-width="1.6" stroke-linejoin="round"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8a9c99"><circle cx="12" cy="12" r="9" stroke-width="1.6"/><path d="M12 11v5.5M12 8v.01" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 10px; padding-bottom: 18px; border-bottom: 1px solid #eef2f1; position: relative;">
+        <div style="position: absolute; left: -20px; right: -20px; top: -10px; bottom: -8px; background: #fbf0d9; border-radius: 16px; z-index: 0;"></div>
+        <div style="position: relative; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;">
+          <div style="width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: {{accent}};">
+            <span style="font-size: 11px; font-weight: 800; color: {{primaryDark}};">6</span>
+          </div>
+          <div style="flex: 1; font-family: 'Amiri', serif; font-size: 24px; line-height: 2; direction: rtl; text-align: right;">اهْدِنَا الصِّرَاطَ الْمُسْتَقِيمَ</div>
+        </div>
+        <p style="position: relative; margin: 0; font-size: 13px; line-height: 1.6; color: #495954;">Tunjukilah kami jalan yang lurus,</p>
+        <div style="position: relative; display: flex; align-items: center; gap: 14px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="{{primary}}" stroke="none"><path d="M8 5.5v13l11-6.5-11-6.5Z"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8a9c99"><path d="M7 3.5h10a1 1 0 0 1 1 1V21l-6-3.5L6 21V4.5a1 1 0 0 1 1-1Z" stroke-width="1.6" stroke-linejoin="round"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8a9c99"><circle cx="12" cy="12" r="9" stroke-width="1.6"/><path d="M12 11v5.5M12 8v.01" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;">
+          <div style="width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1.5px solid {{primary}};">
+            <span style="font-size: 11px; font-weight: 800; color: {{primary}};">7</span>
+          </div>
+          <div style="flex: 1; font-family: 'Amiri', serif; font-size: 24px; line-height: 2; direction: rtl; text-align: right;">صِرَاطَ الَّذِينَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ الْمَغْضُوبِ عَلَيْهِمْ وَلَا الضَّالِّينَ</div>
+        </div>
+        <p style="margin: 0; font-size: 13px; line-height: 1.6; color: #495954;">(yaitu) jalan orang-orang yang telah Engkau beri nikmat kepadanya, bukan (jalan) mereka yang dimurkai, dan bukan (pula jalan) mereka yang sesat.</p>
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="{{primary}}" stroke="none"><path d="M8 5.5v13l11-6.5-11-6.5Z"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8a9c99"><path d="M7 3.5h10a1 1 0 0 1 1 1V21l-6-3.5L6 21V4.5a1 1 0 0 1 1-1Z" stroke-width="1.6" stroke-linejoin="round"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8a9c99"><circle cx="12" cy="12" r="9" stroke-width="1.6"/><path d="M12 11v5.5M12 8v.01" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <div style="position: absolute; left: 16px; right: 16px; bottom: 22px; display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 999px; box-shadow: 0 16px 40px rgba(13,77,71,0.2); background: #ffffff;">
+    <div style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: {{primary}};">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="#ffffff" stroke="none"><path d="M8 5.5v13l11-6.5-11-6.5Z"/></svg>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 0;">
+      <span style="font-size: 12px; font-weight: 700;">Al-Fatihah &middot; Ayat 3</span>
+      <div style="width: 100%; height: 4px; border-radius: 999px; overflow: hidden; background: #eef5f3;">
+        <div style="width: 38%; height: 100%; border-radius: 999px; background: {{accent}};"></div>
+      </div>
+    </div>
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5c6b67" style="flex-shrink: 0;">
+      <path d="M13 5v14l-9-7 9-7Z" stroke-width="1.6" stroke-linejoin="round"/>
+      <path d="M20 5v14" stroke-width="1.6" stroke-linecap="round"/>
+    </svg>
+  </div>
+
+</div>
+
+</x-dc>
+<script data-dc-script data-props='{"primary":{"editor":"color","default":"#0d4d47","section":"Colors"},"primaryDark":{"editor":"color","default":"#0a3630","section":"Colors"},"accent":{"editor":"color","default":"#e8b84b","section":"Colors"}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      primary: this.props.primary ?? '#0d4d47',
+      primaryDark: this.props.primaryDark ?? '#0a3630',
+      accent: this.props.accent ?? '#e8b84b'
+    };
+  }
+}
+</script>
+</body>
+</html>

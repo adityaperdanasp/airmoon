@@ -1,0 +1,258 @@
+:root,
+[data-theme='light'] {
+  --primary: #0d4d47;
+  --primary-dark: #0a3630;
+  --accent: #e8b84b;
+  --bg: #ffffff;
+  --ink: #0f2019;
+  --muted: #5c6b67;
+  --muted-soft: #8a9c99;
+  --border: #e5edeb;
+  --card: #f5f8f7;
+  --mint: #e2f1ec;
+  --mint-soft: #eef5f3;
+  --cream: #fbf0d9;
+  --peach: #f3e0d2;
+  --blue-gray: #dde8ec;
+  --gold-ink: #a9761f;
+  --gold-ink-dark: #6b4a12;
+  --success: #178f4c;
+  --success-bg: #e3f5ea;
+  --danger: #d92d2d;
+  --shadow-card: 0 24px 60px rgba(15, 32, 25, 0.12);
+  --shadow-pill: 0 16px 40px rgba(13, 77, 71, 0.16);
+}
+
+[data-theme='dark'] {
+  --primary: #6ee7c9;
+  --primary-dark: #4fd3b0;
+  --accent: #f0cd7b;
+  --bg: #071612;
+  --ink: #f4faf7;
+  --muted: #a9c2ba;
+  --muted-soft: #7fa79c;
+  --border: rgba(255, 255, 255, 0.12);
+  --card: rgba(255, 255, 255, 0.06);
+  --mint: rgba(110, 231, 201, 0.14);
+  --mint-soft: rgba(255, 255, 255, 0.07);
+  --cream: rgba(240, 205, 123, 0.16);
+  --peach: rgba(240, 160, 123, 0.14);
+  --blue-gray: rgba(140, 170, 190, 0.14);
+  --gold-ink: #f0cd7b;
+  --gold-ink-dark: #f0cd7b;
+  --success: #6ee7c9;
+  --success-bg: rgba(110, 231, 201, 0.14);
+  --danger: #ff6b6b;
+  --shadow-card: 0 24px 60px rgba(0, 0, 0, 0.45);
+  --shadow-pill: 0 16px 40px rgba(0, 0, 0, 0.5);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Poppins', -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+a {
+  color: var(--primary);
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.screen {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+}
+
+.screen-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 28px 20px 110px;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.icon-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--mint-soft);
+  border: none;
+  cursor: pointer;
+  color: var(--ink);
+  flex-shrink: 0;
+}
+
+.title {
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.card {
+  border-radius: 20px;
+  background: var(--card);
+  border: 1px solid var(--border);
+}
+
+.btn {
+  width: 100%;
+  padding: 15px;
+  border: none;
+  border-radius: 999px;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  color: #ffffff;
+  background: var(--primary);
+}
+
+[data-theme='dark'] .btn {
+  color: #04211c;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-outline {
+  width: 100%;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 13.5px;
+  cursor: pointer;
+  color: var(--ink);
+  background: var(--bg);
+}
+
+.input-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 14px;
+  padding: 13px 15px;
+  background: var(--mint-soft);
+}
+
+.input-row input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 13.5px;
+  color: var(--ink);
+  outline: none;
+  min-width: 0;
+}
+
+.input-row input::placeholder {
+  color: var(--muted-soft);
+}
+
+.bottomnav {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 22px;
+  width: calc(100% - 32px);
+  max-width: 448px;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 12px 6px;
+  border-radius: 999px;
+  box-shadow: var(--shadow-pill);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  z-index: 20;
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  color: var(--muted-soft);
+  text-decoration: none;
+  background: none;
+  border: none;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.nav-item.active {
+  color: var(--primary);
+}
+
+.nav-item span {
+  font-size: 8.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.section-label {
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.spinner {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 3px solid var(--border);
+  border-top-color: var(--primary);
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.state-msg {
+  text-align: center;
+  font-size: 12.5px;
+  color: var(--muted);
+  padding: 24px 0;
+}

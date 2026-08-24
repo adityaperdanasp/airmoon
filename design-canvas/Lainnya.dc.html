@@ -1,0 +1,130 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: 'Poppins', -apple-system, sans-serif; }
+  </style>
+</helmet>
+
+<div style="width: 390px; background: #ffffff; border-radius: 28px; box-shadow: 0 24px 60px rgba(15,32,25,0.16); overflow: hidden; color: #0f2019;">
+  <div style="display: flex; flex-direction: column; gap: 20px; padding: 32px 20px 36px;">
+
+    <div style="display: flex; align-items: center; justify-content: space-between;">
+      <div style="width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #eef5f3;">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#0f2019">
+          <path d="M15 5 8 12l7 7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <span style="font-size: 15px; font-weight: 800;">Lainnya</span>
+      <div style="width: 38px; height: 38px;"></div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px;">
+
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 18px 8px; border-radius: 18px; background: #f5f8f7;">
+        <div style="width: 48px; height: 48px; border-radius: 16px; display: flex; align-items: center; justify-content: center; background: #e2f1ec;">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="{{primary}}">
+            <circle cx="12" cy="12" r="8.5" stroke-width="1.6"/>
+            <path d="M12 7.5v9M8.5 12h7" stroke-width="1.6" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <span style="font-size: 11.5px; font-weight: 700; text-align: center;">Nama-Nama Allah</span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 18px 8px; border-radius: 18px; background: #f5f8f7;">
+        <div style="width: 48px; height: 48px; border-radius: 16px; display: flex; align-items: center; justify-content: center; background: #fbf0d9;">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#a9761f">
+            <rect x="4" y="5.5" width="16" height="15" rx="2.3" stroke-width="1.6"/>
+            <path d="M4 9.5h16M8 3.5v3.5M16 3.5v3.5" stroke-width="1.6" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <span style="font-size: 11.5px; font-weight: 700; text-align: center;">Kalender Hijriah</span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 18px 8px; border-radius: 18px; background: #f5f8f7;">
+        <div style="width: 48px; height: 48px; border-radius: 16px; display: flex; align-items: center; justify-content: center; background: #f3e0d2;">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#a9622f">
+            <rect x="5" y="4" width="14" height="16" rx="2.3" stroke-width="1.6"/>
+            <path d="M8.5 8.5h1.4M14 8.5h1.4M8.5 13h7M8.5 16h4.5" stroke-width="1.7" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <span style="font-size: 11.5px; font-weight: 700; text-align: center;">Kalkulator Zakat</span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 18px 8px; border-radius: 18px; background: #f5f8f7;">
+        <div style="width: 48px; height: 48px; border-radius: 16px; display: flex; align-items: center; justify-content: center; background: #dde8ec;">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#3f5c68">
+            <rect x="4" y="6" width="16" height="12.5" rx="2" stroke-width="1.6"/>
+            <path d="m4.5 7 7.5 6 7.5-6" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <span style="font-size: 11.5px; font-weight: 700; text-align: center;">Kartu Ucapan</span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 18px 8px; border-radius: 18px; background: #f5f8f7;">
+        <div style="width: 48px; height: 48px; border-radius: 16px; display: flex; align-items: center; justify-content: center; background: #e2f1ec;">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="{{primary}}">
+            <path d="M6 4.5c3-1.5 5-1 6 0 1-1 3-1.5 6 0v13c-3-1.5-5-1-6 0-1-1-3-1.5-6 0Z" stroke-width="1.6" stroke-linejoin="round"/>
+            <path d="M12 4.5v13" stroke-width="1.6"/>
+          </svg>
+        </div>
+        <span style="font-size: 11.5px; font-weight: 700; text-align: center;">Do'a Harian</span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 18px 8px; border-radius: 18px; background: #f5f8f7;">
+        <div style="width: 48px; height: 48px; border-radius: 16px; display: flex; align-items: center; justify-content: center; background: #f3e0d2;">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#a9622f">
+            <path d="M7 8.5c0-2 1.5-3.5 3.5-3.5S14 6.5 14 8.5c0 1.7-1 2.3-2 3-.7.5-1.5 1-1.5 2.3" stroke-width="1.6" stroke-linecap="round"/>
+            <circle cx="10.5" cy="17" r="0.9" fill="#a9622f" stroke="none"/>
+          </svg>
+        </div>
+        <span style="font-size: 11.5px; font-weight: 700; text-align: center;">Kutipan Inspirasi</span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 18px 8px; border-radius: 18px; background: #f5f8f7;">
+        <div style="width: 48px; height: 48px; border-radius: 16px; display: flex; align-items: center; justify-content: center; background: #dde8ec;">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#3f5c68">
+            <path d="M12 21s-6.5-6.1-6.5-11A6.5 6.5 0 0 1 18.5 10c0 4.9-6.5 11-6.5 11Z" stroke-width="1.6" stroke-linejoin="round"/>
+            <circle cx="12" cy="10" r="2.2" stroke-width="1.5"/>
+          </svg>
+        </div>
+        <span style="font-size: 11.5px; font-weight: 700; text-align: center;">Cari Masjid</span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 18px 8px; border-radius: 18px; background: #f5f8f7;">
+        <div style="width: 48px; height: 48px; border-radius: 16px; display: flex; align-items: center; justify-content: center; background: #fbf0d9;">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#a9761f">
+            <rect x="4.5" y="6.5" width="15" height="11" rx="2" stroke-width="1.6"/>
+            <path d="m10.5 10 4 2-4 2Z" fill="#a9761f" stroke="none"/>
+          </svg>
+        </div>
+        <span style="font-size: 11.5px; font-weight: 700; text-align: center;">Makkah Live</span>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+</x-dc>
+<script data-dc-script data-props='{"primary":{"editor":"color","default":"#0d4d47","section":"Colors"}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      primary: this.props.primary ?? '#0d4d47'
+    };
+  }
+}
+</script>
+</body>
+</html>

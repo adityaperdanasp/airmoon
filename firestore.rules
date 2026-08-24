@@ -2,9 +2,21 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Locked down by default — no collections are defined yet.
-    // Add explicit match blocks per collection as the data model is built,
-    // scoping reads/writes to authenticated, authorized users.
+    // Each user's own profile: wallet balance, points, display name.
+    match /users/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // Donation campaigns (e.g. "Listrik Masjid Al-Ikhlas") are public read
+    // so the home feed works signed-out; write is any signed-in user for
+    // now (client bootstraps the seed doc on first load) — tighten this to
+    // admin-only via a Cloud Function once there's a real back office.
+    match /donations/{id} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // Everything else stays locked until it has a real data model.
     match /{document=**} {
       allow read, write: if false;
     }
