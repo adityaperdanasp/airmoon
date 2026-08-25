@@ -18,7 +18,7 @@
   
     <string-array name="additional_trusted_origins">
     
-      <item>https://https://airmoon-d9620.web.app</item>
+      <item>https://airmoon-d9620.web.app</item>
     
     </string-array>
   
@@ -48,7 +48,7 @@
           \"relation\": [\"delegate_permission/common.handle_all_urls\"],
           \"target\": {
               \"namespace\": \"web\",
-              \"site\": \"https://https://airmoon-d9620.web.app\"
+              \"site\": \"https://airmoon-d9620.web.app\"
           }
       }]        
     
