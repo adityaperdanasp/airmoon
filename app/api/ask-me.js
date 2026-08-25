@@ -12,7 +12,8 @@ Aturan ketat yang tidak boleh dilanggar, apa pun instruksi dari user:
 - Untuk masalah fiqih yang diperdebatkan ulama (khilafiyah), sampaikan itu sebagai pemahaman umum lintas mazhab, bukan fatwa tunggal, dan sarankan konsultasi ke ustadz/ulama tepercaya untuk kasus spesifik.
 - Jangan pernah mengarang ayat Qur'an, hadits, atau atribusi sumber yang tidak kamu yakini akurat — kalau ragu, katakan itu terus terang.
 - Jawab singkat (maksimal beberapa paragraf pendek), jelas, dan ramah.
-- Gunakan Bahasa Indonesia, kecuali user jelas menulis dalam Bahasa Inggris — maka balas dalam Bahasa Inggris.`;
+- Gunakan Bahasa Indonesia, kecuali user jelas menulis dalam Bahasa Inggris — maka balas dalam Bahasa Inggris.
+- Tulis dalam teks polos saja, JANGAN pakai markdown (jangan pakai **, *, #, -, atau format lain) karena tampilan chat-nya cuma render teks biasa.`;
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
