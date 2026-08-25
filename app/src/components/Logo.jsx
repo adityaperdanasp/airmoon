@@ -1,20 +1,23 @@
 export default function Logo({ size = 26, showWordmark = true, color = 'var(--primary)' }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: size * 0.32 }}>
-      <svg width={size} height={size} viewBox="2.192 -0.883 22.667 22.667" fill="none">
-        {/* Two full circles + fill-rule="evenodd" — NOT a stroked single
-            outline. An earlier version stroked this whole compound path to
-            round the tips, which also stroked the INNER hole's boundary and
-            made it look like two crescents stacked together. The two small
-            circles below round just the two real corners (the tip points),
-            without touching the hole. */}
+      <svg width={size} height={size} viewBox="2.382 1.732 18.861 18.861" fill="none">
+        {/* Two full circles + fill-rule="evenodd", with the inner "bite"
+            circle sized/positioned so it's fully INSIDE the outer one
+            (internally tangent: offset + innerRadius == outerRadius,
+            checked, not eyeballed). An earlier version let the inner circle
+            poke outside the outer one — evenodd fills anything inside the
+            inner circle but outside the outer one too, which showed up as
+            a second crescent-shaped sliver stacked on top (reported and
+            reproduced before this fix). Full containment also means this
+            shape has no sharp corners anywhere (the inner circle just
+            touches the outer one at a single tangent point), so unlike the
+            star below it needs no corner-rounding trick at all. */}
         <path
           fillRule="evenodd"
           fill={color}
-          d="M3.3238250223200936,12.176174977679906 A8.5,8.5 0 1,0 20.323825022320094,12.176174977679906 A8.5,8.5 0 1,0 3.3238250223200936,12.176174977679906 Z M8.907009549925586,7.668369247615666 A7.424621202458749,7.424621202458749 0 1,0 23.756251954843083,7.668369247615666 A7.424621202458749,7.424621202458749 0 1,0 8.907009549925586,7.668369247615666 Z"
+          d="M3.3238250223200936,12.176174977679906 A8.5,8.5 0 1,0 20.323825022320094,12.176174977679906 A8.5,8.5 0 1,0 3.3238250223200936,12.176174977679906 Z M7.5915919752864625,10.408408024713538 A6.0,6.0 0 1,0 19.591591975286462,10.408408024713538 A6.0,6.0 0 1,0 7.5915919752864625,10.408408024713538 Z"
         />
-        <circle cx="20.113" cy="14.058" r="0.42" fill={color} />
-        <circle cx="9.942" cy="3.887" r="0.42" fill={color} />
         <path
           d="M14.22,8.34 14.69,9.29 15.74,9.45 14.98,10.19 15.16,11.23 14.22,10.74 13.28,11.23 13.46,10.19 12.7,9.45 13.75,9.29Z"
           fill={color}
