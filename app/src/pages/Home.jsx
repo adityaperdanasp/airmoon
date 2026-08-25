@@ -26,14 +26,46 @@ function Star() {
   );
 }
 
-// icon: real 3D renders lifted from the pitch deck's design system
-// (screen-order.png), cropped per-icon and upscaled. quran/cari-masjid
-// don't have a matching icon in that asset pack yet, so they stay emoji
-// for now rather than forcing a mismatched substitute.
+// Hand-drawn vector (not a cropped raster) so it stays crisp at any size —
+// a donation box with a coin mid-drop, in the app's own teal/gold palette.
+function DonationBoxIcon() {
+  return (
+    <svg width="34" height="34" viewBox="0 0 42 42" fill="none">
+      <defs>
+        <linearGradient id="svcBoxG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#1c8577" />
+          <stop offset="1" stopColor="#0a4a43" />
+        </linearGradient>
+        <linearGradient id="svcLidG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#2fa190" />
+          <stop offset="1" stopColor="#186d61" />
+        </linearGradient>
+        <radialGradient id="svcCoinG" cx="0.35" cy="0.3" r="0.85">
+          <stop offset="0" stopColor="#fff2cf" />
+          <stop offset="0.55" stopColor="#f0c04d" />
+          <stop offset="1" stopColor="#c98f22" />
+        </radialGradient>
+      </defs>
+      <ellipse cx="21" cy="34.5" rx="11" ry="2" fill="#04302b" opacity="0.18" />
+      <rect x="10" y="19" width="22" height="14" rx="3.2" fill="url(#svcBoxG)" />
+      <rect x="8.5" y="15.5" width="25" height="6.2" rx="2.6" fill="url(#svcLidG)" />
+      <rect x="18.3" y="17.3" width="5.4" height="2.2" rx="1.1" fill="#04302b" />
+      <path d="M16.6 31 v-3.6 a4.4 4.4 0 0 1 8.8 0 V31" stroke="#e8c877" strokeWidth="1.4" fill="none" strokeLinecap="round" />
+      <circle cx="21" cy="9" r="5.1" fill="url(#svcCoinG)" />
+      <path d="M18.6 9 h4.8 M21 6.6 v4.8" stroke="#a9701a" strokeWidth="1" strokeLinecap="round" />
+      <path d="M31 8.5 32.3 8 31.8 6.4 33.1 7.4 34.2 6 34 7.7 35.6 8.3 33.8 8.7 34.2 10.3 32.9 9.2Z" fill="#f6d879" />
+    </svg>
+  );
+}
+
+// icon: real 3D render lifted from the pitch deck's design system
+// (screen-order.png), cropped and upscaled. quran/cari-masjid don't have
+// a matching icon in that asset pack yet, so they stay emoji for now
+// rather than forcing a mismatched substitute.
 const SVC = [
   { to: '/quran', emoji: '📖', key: 'nav_quran', bg: 'linear-gradient(160deg, #fdf3df, #fbe4b0)' },
-  { to: '/jadwal-sholat', icon: '/icons-3d/jadwal.png', label: 'Jadwal', bg: 'linear-gradient(160deg, #e2f1ec, #bfe2d4)' },
-  { to: '/donasi', icon: '/icons-3d/donasi.png', key: 'nav_donasi', bg: 'linear-gradient(160deg, #fbe6da, #f3c9ab)' },
+  { to: '/jadwal-sholat', emoji: '⏰', label: 'Jadwal', bg: 'linear-gradient(160deg, #e2f1ec, #bfe2d4)' },
+  { to: '/donasi', node: <DonationBoxIcon />, key: 'nav_donasi', bg: 'linear-gradient(160deg, #fbe6da, #f3c9ab)' },
   { to: '/lainnya/cari-masjid', emoji: '🕌', label: 'Cari Masjid', bg: 'linear-gradient(160deg, #e3e9ee, #c3d1dc)' },
 ];
 
@@ -189,7 +221,7 @@ export default function Home() {
                     lineHeight: 1,
                   }}
                 >
-                  {s.icon ? <img src={s.icon} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : s.emoji}
+                  {s.node ?? (s.icon ? <img src={s.icon} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : s.emoji)}
                 </div>
                 <span style={{ fontSize: 10.5, fontWeight: 700, textAlign: 'center' }}>{s.label || t(s.key)}</span>
               </Link>
