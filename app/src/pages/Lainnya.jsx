@@ -8,8 +8,8 @@ const ITEMS = [
   { to: '/lainnya/kartu-ucapan', label: 'Kartu Ucapan', bg: 'var(--blue-gray)', color: '#3f5c68' },
   { to: '/lainnya/doa-harian', label: "Do'a Harian", bg: 'var(--mint)', color: 'var(--primary)' },
   { to: '/lainnya/kutipan-inspirasi', label: 'Kutipan Inspirasi', bg: 'var(--peach)', color: '#a9622f' },
-  { to: '/lainnya/cari-masjid', label: 'Cari Masjid', bg: 'var(--blue-gray)', color: '#3f5c68' },
   { to: '/lainnya/makkah-live', label: 'Makkah Live', bg: 'var(--cream)', color: 'var(--gold-ink)' },
+  { to: '/umroh', label: 'Umroh Needs', bg: 'var(--blue-gray)', color: '#3f5c68' },
 ];
 
 export default function Lainnya() {

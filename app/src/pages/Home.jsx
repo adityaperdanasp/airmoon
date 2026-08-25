@@ -28,9 +28,9 @@ function Star() {
 
 const SVC = [
   { to: '/quran', emoji: '📖', key: 'nav_quran', bg: 'linear-gradient(160deg, #fdf3df, #fbe4b0)' },
-  { to: '/jadwal-sholat', emoji: '🕌', label: 'Jadwal', bg: 'linear-gradient(160deg, #e2f1ec, #bfe2d4)' },
+  { to: '/jadwal-sholat', emoji: '⏰', label: 'Jadwal', bg: 'linear-gradient(160deg, #e2f1ec, #bfe2d4)' },
   { to: '/donasi', emoji: '🤲', key: 'nav_donasi', bg: 'linear-gradient(160deg, #fbe6da, #f3c9ab)' },
-  { to: '/umroh', emoji: '🕋', key: 'nav_umroh', bg: 'linear-gradient(160deg, #e3e9ee, #c3d1dc)' },
+  { to: '/lainnya/cari-masjid', emoji: '🕌', label: 'Cari Masjid', bg: 'linear-gradient(160deg, #e3e9ee, #c3d1dc)' },
 ];
 
 export default function Home() {
