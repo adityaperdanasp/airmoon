@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLang } from '../context/LangContext';
-import { IconMoon } from '../components/icons';
+import { IconMoon, GoogleLogo } from '../components/icons';
 import Logo from '../components/Logo';
 
 function mapAuthError(code) {
@@ -103,7 +103,8 @@ export default function Login() {
             <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
           </div>
 
-          <button type="button" className="btn-outline" onClick={handleGoogle} disabled={busy}>
+          <button type="button" className="btn-outline btn-google" onClick={handleGoogle} disabled={busy}>
+            <GoogleLogo />
             {t('google_masuk')}
           </button>
         </form>
