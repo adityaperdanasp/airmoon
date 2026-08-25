@@ -2,26 +2,29 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TopBar from '../components/TopBar';
 
-// Real preview audio — served via jsDelivr's CDN from the open-source
-// achaudhry/adhan repo (github.com/achaudhry/adhan), verified reachable
-// and fast. An earlier version pointed at archive.org's /download/
-// redirector, which turned out to 503 intermittently — jsDelivr is a
-// proper CDN and doesn't have that problem.
+// Preview clips are ~14s trims of the real adzan recordings (source:
+// github.com/achaudhry/adhan), re-encoded to 80kbps mono and bundled as
+// static assets under public/adzan-preview/ instead of streamed from
+// jsDelivr. The full tracks are ~5MB each — fine for actual playback at
+// prayer time, but way too much just to preview a voice: jsDelivr's edge
+// cache also has to fetch cold from GitHub on a miss, so the "listen
+// first" tap could take up to ~5s before any sound came out. Same-origin
+// 140KB clips start in well under a second.
 const SOUNDS = [
   {
     name: 'Adzan Makkah',
     sub: 'Masjidil Haram',
-    preview: 'https://cdn.jsdelivr.net/gh/achaudhry/adhan@master/Adhan-Makkah.mp3',
+    preview: '/adzan-preview/makkah.mp3',
   },
   {
     name: 'Adzan Madinah',
     sub: 'Masjid Nabawi',
-    preview: 'https://cdn.jsdelivr.net/gh/achaudhry/adhan@master/Adhan-Madinah.mp3',
+    preview: '/adzan-preview/madinah.mp3',
   },
   {
     name: 'Adzan Mishary Rasyid',
     sub: 'Al-Afasy',
-    preview: 'https://cdn.jsdelivr.net/gh/achaudhry/adhan@master/Adhan-Mishary-Rashid-Al-Afasy.mp3',
+    preview: '/adzan-preview/mishary-rasyid.mp3',
   },
   {
     name: 'Nada Pengingat',
