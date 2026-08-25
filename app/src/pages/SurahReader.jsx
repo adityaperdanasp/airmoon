@@ -4,6 +4,7 @@ import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
 import { fetchSurahDetail, RECITERS } from '../lib/quranApi';
+import { hasWordSync, fetchChapterTiming } from '../lib/quranTimingApi';
 import TopBar from '../components/TopBar';
 
 function getReciterId() {
@@ -18,8 +19,14 @@ export default function SurahReader() {
   const [playing, setPlaying] = useState(null); // ayat number currently playing
   const [bookmarked, setBookmarked] = useState(null);
   const [reciterId, setReciterId] = useState(getReciterId());
+  const [timing, setTiming] = useState(null); // fetchChapterTiming() result, or null if unavailable
+  const [activeWord, setActiveWord] = useState(null); // 1-based word index within the playing ayat
   const audioRef = useRef(null);
   const reciter = RECITERS.find((r) => r.id === reciterId) || RECITERS[4];
+  // Word-sync only actually applies once the timing data has loaded — a
+  // fetch failure (or a reciter with no Quran.com match at all) falls back
+  // to the plain per-ayat playback below rather than blocking anything.
+  const wordSyncReady = hasWordSync(reciterId) && !!timing;
 
   useEffect(() => {
     setSurah(null);
@@ -33,15 +40,58 @@ export default function SurahReader() {
     setReciterId(getReciterId());
   }, []);
 
+  useEffect(() => {
+    setTiming(null);
+    setActiveWord(null);
+    if (!nomor || !hasWordSync(reciterId)) return;
+    let cancelled = false;
+    fetchChapterTiming(reciterId, nomor)
+      .then((t) => {
+        if (!cancelled) setTiming(t);
+      })
+      .catch(() => {
+        /* silently falls back to per-ayat playback below */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [nomor, reciterId]);
+
   function playAyat(ayat) {
+    if (!audioRef.current) return;
+    if (wordSyncReady) {
+      const v = timing.verses[ayat.nomorAyat];
+      if (!v) return;
+      if (audioRef.current.src !== timing.audioUrl) audioRef.current.src = timing.audioUrl;
+      audioRef.current.currentTime = v.fromMs / 1000;
+      audioRef.current.play();
+      setPlaying(ayat.nomorAyat);
+      return;
+    }
     const url = ayat.audio?.[reciterId];
-    if (!url || !audioRef.current) return;
+    if (!url) return;
     audioRef.current.src = url;
     audioRef.current.play();
     setPlaying(ayat.nomorAyat);
   }
 
+  function handleTimeUpdate() {
+    if (!wordSyncReady || !audioRef.current) return;
+    const ms = audioRef.current.currentTime * 1000;
+    const verseEntry = Object.entries(timing.verses).find(([, v]) => ms >= v.fromMs && ms < v.toMs);
+    if (!verseEntry) return;
+    const [verseNumber, v] = verseEntry;
+    setPlaying(Number(verseNumber));
+    const word = v.words.find((w) => ms >= w.fromMs && ms < w.toMs);
+    setActiveWord(word ? word.index : null);
+  }
+
   function handleEnded() {
+    if (wordSyncReady) {
+      setPlaying(null);
+      setActiveWord(null);
+      return;
+    }
     if (!surah) return;
     const idx = surah.ayat.findIndex((a) => a.nomorAyat === playing);
     const nextAyat = surah.ayat[idx + 1];
@@ -157,7 +207,20 @@ export default function SurahReader() {
                     </span>
                   </div>
                   <div style={{ flex: 1, fontFamily: "'Amiri', serif", fontSize: 24, lineHeight: 2, direction: 'rtl', textAlign: 'right' }}>
-                    {a.teksArab}
+                    {wordSyncReady && isPlaying
+                      ? a.teksArab.split(' ').map((word, i) => (
+                          <span
+                            key={i}
+                            style={{
+                              color: activeWord === i + 1 ? 'var(--primary)' : 'inherit',
+                              transition: 'color 0.15s ease',
+                            }}
+                          >
+                            {word}
+                            {i < a.teksArab.split(' ').length - 1 ? ' ' : ''}
+                          </span>
+                        ))
+                      : a.teksArab}
                   </div>
                 </div>
                 <p style={{ margin: 0, fontSize: 13, lineHeight: 1.6, color: 'var(--muted)' }}>{a.teksIndonesia}</p>
@@ -189,7 +252,7 @@ export default function SurahReader() {
         </div>
       </div>
 
-      <audio ref={audioRef} onEnded={handleEnded} style={{ display: 'none' }} />
+      <audio ref={audioRef} onEnded={handleEnded} onTimeUpdate={handleTimeUpdate} style={{ display: 'none' }} />
 
       {playing && (
         <div

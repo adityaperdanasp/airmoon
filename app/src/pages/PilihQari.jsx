@@ -1,5 +1,6 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { RECITERS } from '../lib/quranApi';
+import { hasWordSync } from '../lib/quranTimingApi';
 import TopBar from '../components/TopBar';
 
 export default function PilihQari() {
@@ -57,7 +58,12 @@ export default function PilihQari() {
                       .join('')}
                   </span>
                 </div>
-                <span style={{ fontSize: 13.5, fontWeight: 700, flex: 1 }}>{r.name}</span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1 }}>
+                  <span style={{ fontSize: 13.5, fontWeight: 700 }}>{r.name}</span>
+                  {hasWordSync(r.id) && (
+                    <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--primary)' }}>Highlight kata saat dibaca</span>
+                  )}
+                </div>
                 <div
                   style={{
                     width: 22,
