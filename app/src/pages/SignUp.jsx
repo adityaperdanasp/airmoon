@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLang } from '../context/LangContext';
-import { IconMoon, GoogleLogo } from '../components/icons';
+import { IconMoon, GoogleLogo, FacebookLogo } from '../components/icons';
 import Logo from '../components/Logo';
 
 function mapAuthError(code) {
@@ -10,12 +10,15 @@ function mapAuthError(code) {
     'auth/email-already-in-use': 'Email ini sudah terdaftar.',
     'auth/invalid-email': 'Format email tidak valid.',
     'auth/weak-password': 'Password minimal 6 karakter.',
+    'auth/account-exists-with-different-credential':
+      'Email ini udah kedaftar pakai cara masuk lain (misal Google). Coba masuk pakai itu dulu.',
+    'auth/popup-closed-by-user': 'Popup ditutup sebelum selesai. Coba lagi.',
   };
   return m[code] || 'Gagal daftar, coba lagi.';
 }
 
 export default function SignUp() {
-  const { signUpWithEmail, signInWithGoogle } = useAuth();
+  const { signUpWithEmail, signInWithGoogle, signInWithFacebook } = useAuth();
   const { t } = useLang();
   const navigate = useNavigate();
   const [name, setName] = useState('');
@@ -43,6 +46,19 @@ export default function SignUp() {
     setBusy(true);
     try {
       await signInWithGoogle();
+      navigate('/');
+    } catch (err) {
+      setError(mapAuthError(err.code));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleFacebook() {
+    setError('');
+    setBusy(true);
+    try {
+      await signInWithFacebook();
       navigate('/');
     } catch (err) {
       setError(mapAuthError(err.code));
@@ -113,6 +129,11 @@ export default function SignUp() {
           <button type="button" className="btn-outline btn-google" onClick={handleGoogle} disabled={busy}>
             <GoogleLogo />
             {t('google_daftar')}
+          </button>
+
+          <button type="button" className="btn-outline btn-google" onClick={handleFacebook} disabled={busy}>
+            <FacebookLogo />
+            {t('facebook_daftar')}
           </button>
         </form>
 

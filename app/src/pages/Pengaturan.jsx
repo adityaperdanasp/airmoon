@@ -1,7 +1,7 @@
 import { useAuth } from '../context/AuthContext';
 import { useLang } from '../context/LangContext';
 import { useTheme } from '../context/ThemeContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import TopBar from '../components/TopBar';
 
 function SegButton({ active, onClick, children }) {
@@ -77,6 +77,23 @@ export default function Pengaturan() {
             <SegButton active={theme === 'dark'} onClick={() => setTheme('dark')}>{t('dark')}</SegButton>
           </div>
         </div>
+
+        <Link
+          to="/privacy-policy"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '14px 16px',
+            borderRadius: 18,
+            border: '1px solid var(--border)',
+            textDecoration: 'none',
+            color: 'inherit',
+          }}
+        >
+          <span style={{ fontSize: 13, fontWeight: 700 }}>Kebijakan Privasi</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)"><path d="m9 6 6 6-6 6" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+        </Link>
 
         <button
           className="btn-outline"

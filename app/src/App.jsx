@@ -11,6 +11,7 @@ import JadwalSholat from './pages/JadwalSholat';
 import PilihAdzan from './pages/PilihAdzan';
 import Donasi from './pages/Donasi';
 import AskMe from './pages/AskMe';
+import PrivacyPolicy from './pages/PrivacyPolicy';
 import Umroh from './pages/Umroh';
 import Pengaturan from './pages/Pengaturan';
 import Lainnya from './pages/Lainnya';
@@ -32,6 +33,7 @@ export default function App() {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<SignUp />} />
+      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
 
       <Route path="/" element={<P><Home /></P>} />
       <Route path="/quran" element={<P><SurahList /></P>} />

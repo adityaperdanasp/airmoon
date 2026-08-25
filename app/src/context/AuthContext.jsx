@@ -8,7 +8,7 @@ import {
   updateProfile,
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
-import { auth, db, googleProvider } from '../lib/firebase';
+import { auth, db, googleProvider, facebookProvider } from '../lib/firebase';
 
 const AuthContext = createContext(null);
 
@@ -53,11 +53,16 @@ export function AuthProvider({ children }) {
     return cred.user;
   }
 
+  async function signInWithFacebook() {
+    const cred = await signInWithPopup(auth, facebookProvider);
+    return cred.user;
+  }
+
   async function logOut() {
     await signOut(auth);
   }
 
-  const value = { user, signUpWithEmail, signInWithEmail, signInWithGoogle, logOut };
+  const value = { user, signUpWithEmail, signInWithEmail, signInWithGoogle, signInWithFacebook, logOut };
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 

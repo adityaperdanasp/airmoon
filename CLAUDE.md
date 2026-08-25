@@ -21,9 +21,9 @@ This repo is deliberately just the buildable product surface — app code, desig
   Deploy after a `build`:
   ```
   firebase deploy --only hosting   # from repo root — firebase.json's hosting.public points at app/dist
-  vercel --prod                    # from app/ — picks up app/vercel.json + api/
+  vercel --prod                    # from repo root (not app/!) — see the Vercel section below for why
   ```
-  Do both when `app/` changes — they're independent deploys, not automatically in sync.
+  Do both when `app/` changes — they're independent deploys, not automatically in sync. The Vercel project is also Git-connected, so a `git push` to `main` triggers its own auto-deploy on top of any manual `vercel --prod` you run — expect two deployments per push, both landing on the same production alias.
 
   Routing is client-side (`react-router-dom`, `BrowserRouter`) — both `firebase.json` and `app/vercel.json` have a catch-all rewrite to `index.html` so deep links work on either host.
 
@@ -61,7 +61,7 @@ This repo is deliberately just the buildable product surface — app code, desig
 Project: **airmoon-d9620** (`.firebaserc` sets it as default).
 
 - **Hosting**: serves `app/dist`, live at https://airmoon-d9620.web.app.
-- **Auth**: Email/Password and Google sign-in are enabled (console → Authentication). `AuthContext.jsx` wires both.
+- **Auth**: Email/Password and Google sign-in are enabled (console → Authentication). Facebook sign-in has the client code wired (`AuthContext.jsx`, `lib/firebase.js`, buttons on Login/SignUp) but **needs a Facebook Developer App's App ID + App Secret pasted into Firebase Console → Authentication → Sign-in method → Facebook** before it actually works — that's a manual step nobody's done yet, same shape as the other "code's ready, needs a credential only the founder can create" gaps below. Facebook also requires a public Privacy Policy URL before its app can go Live — that's `pages/PrivacyPolicy.jsx` at `/privacy-policy`, public (not behind `ProtectedRoute`) so Facebook's review crawler can reach it signed out.
 - **Firestore**: real (small) data model now —
   - `users/{uid}`: `displayName`, `email`, `walletBalance`, `points`, `lastRead` (Qur'an bookmark). Read/write scoped to the owning user only.
   - `donations/{id}`: public read (home feed works signed-out), write open to any signed-in user for now — see the client-seed note above; tighten this once there's an admin path.
@@ -70,7 +70,13 @@ Project: **airmoon-d9620** (`.firebaserc` sets it as default).
 
 ## Vercel
 
-Project: **airmoon** under the `ellilo` scope, linked via `app/.vercel` (gitignored). Deploy from `app/`: `vercel --prod`. Exists specifically to host `api/ask-me.js` — Firebase Hosting is static-only and can't run it. See the `ANTHROPIC_API_KEY` note above; that's the one manual step nobody's done yet.
+Project: **airmoon** under the `ellilo` scope. Also Git-connected to this GitHub repo (auto-deploys on push to `main`), on top of manual CLI deploys — see the deploy note above.
+
+**Deploy from the repo root, not `app/`.** The project's Root Directory setting is `app` (so the Git-connected auto-deploy can find `package.json` after cloning the whole monorepo-style repo). That means CLI deploys must also run from the repo root — `.vercel/project.json` at the repo root links it to the `airmoon` project. Running `vercel --prod` from inside `app/` instead will look for a nonexistent `app/app` and error. Don't `vercel link` a fresh directory to "fix" this — that creates a **second, separate project** (this happened once already, named `airmoon-app`, since deleted) that has none of the domain/env var config the real one does.
+
+Custom domain: **jalanmenujusurga.web.id**, registered elsewhere (SumoPod) with a plain `A` record → `76.76.21.21` (no nameserver delegation) — Vercel confirmed this config valid via `vercel domains verify`.
+
+Exists specifically to host the serverless functions (`api/ask-me.js`, `api/nearby-mosques.js`) — Firebase Hosting is static-only and can't run them; Firebase Hosting keeps serving the same static frontend independently. See the `ANTHROPIC_API_KEY` / `GOOGLE_MAPS_API_KEY` notes above for what's configured.
 
 ## Design decisions already settled
 

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLang } from '../context/LangContext';
-import { IconMoon, GoogleLogo } from '../components/icons';
+import { IconMoon, GoogleLogo, FacebookLogo } from '../components/icons';
 import Logo from '../components/Logo';
 
 function mapAuthError(code) {
@@ -12,12 +12,15 @@ function mapAuthError(code) {
     'auth/wrong-password': 'Password salah.',
     'auth/invalid-credential': 'Email atau password salah.',
     'auth/too-many-requests': 'Terlalu banyak percobaan, coba lagi nanti.',
+    'auth/account-exists-with-different-credential':
+      'Email ini udah kedaftar pakai cara masuk lain (misal Google). Coba masuk pakai itu dulu.',
+    'auth/popup-closed-by-user': 'Popup ditutup sebelum selesai. Coba lagi.',
   };
   return m[code] || 'Gagal masuk, coba lagi.';
 }
 
 export default function Login() {
-  const { signInWithEmail, signInWithGoogle } = useAuth();
+  const { signInWithEmail, signInWithGoogle, signInWithFacebook } = useAuth();
   const { t } = useLang();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
@@ -44,6 +47,19 @@ export default function Login() {
     setBusy(true);
     try {
       await signInWithGoogle();
+      navigate('/');
+    } catch (err) {
+      setError(mapAuthError(err.code));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleFacebook() {
+    setError('');
+    setBusy(true);
+    try {
+      await signInWithFacebook();
       navigate('/');
     } catch (err) {
       setError(mapAuthError(err.code));
@@ -106,6 +122,11 @@ export default function Login() {
           <button type="button" className="btn-outline btn-google" onClick={handleGoogle} disabled={busy}>
             <GoogleLogo />
             {t('google_masuk')}
+          </button>
+
+          <button type="button" className="btn-outline btn-google" onClick={handleFacebook} disabled={busy}>
+            <FacebookLogo />
+            {t('facebook_masuk')}
           </button>
         </form>
 
