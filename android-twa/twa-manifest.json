@@ -1,0 +1,41 @@
+{
+  "packageId": "id.web.jalanmenujusurga.twa",
+  "host": "jalanmenujusurga.web.id",
+  "name": "airmoon",
+  "launcherName": "airmoon",
+  "display": "standalone",
+  "themeColor": "#0d4d47",
+  "themeColorDark": "#071612",
+  "navigationColor": "#0d4d47",
+  "navigationColorDark": "#071612",
+  "navigationDividerColor": "#0d4d47",
+  "navigationDividerColorDark": "#071612",
+  "backgroundColor": "#faf8f4",
+  "enableNotifications": false,
+  "startUrl": "/",
+  "iconUrl": "https://jalanmenujusurga.web.id/icons/icon-512.png",
+  "maskableIconUrl": "https://jalanmenujusurga.web.id/icons/maskable-512.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "./android.keystore",
+    "alias": "airmoon"
+  },
+  "appVersionCode": 1,
+  "appVersion": "1.0.0",
+  "shortcuts": [],
+  "generatorApp": "manual",
+  "webManifestUrl": "https://jalanmenujusurga.web.id/manifest.json",
+  "fallbackType": "customtabs",
+  "features": {},
+  "alphaDependencies": { "enabled": false },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "minSdkVersion": 21,
+  "orientation": "portrait",
+  "fingerprints": [],
+  "additionalTrustedOrigins": [
+    "https://airmoon-d9620.web.app"
+  ],
+  "retainedBundles": []
+}

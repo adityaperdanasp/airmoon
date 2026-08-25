@@ -1,0 +1,16 @@
+# Signing key — NEVER commit this. Losing it is recoverable via Play App
+# Signing key-reset support, but it should never live in a shared repo.
+android.keystore
+
+# Build outputs — regenerate with `bubblewrap build` (or ./scaffold.mjs
+# then bubblewrap build if the project itself needs regenerating).
+*.apk
+*.apk.idsig
+*.aab
+app/build/
+.gradle/
+build/
+local.properties
+manifest-checksum.txt
+
+node_modules/
