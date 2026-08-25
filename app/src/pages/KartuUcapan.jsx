@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useLang } from '../context/LangContext';
 import TopBar from '../components/TopBar';
 
 const TEMPLATES = [
@@ -62,6 +63,7 @@ function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
 }
 
 export default function KartuUcapan() {
+  const { t } = useLang();
   const canvasRef = useRef(null);
   const [tplId, setTplId] = useState(0);
   const tpl = TEMPLATES[tplId];
@@ -93,7 +95,7 @@ export default function KartuUcapan() {
   return (
     <div className="screen">
       <div className="screen-content">
-        <TopBar title="Kartu Ucapan" />
+        <TopBar title={t('item_kartu_ucapan')} />
 
         <canvas
           ref={canvasRef}
@@ -103,7 +105,7 @@ export default function KartuUcapan() {
         />
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <span className="section-label">Pilih Template</span>
+          <span className="section-label">{t('pilih_template')}</span>
           <div style={{ display: 'flex', gap: 10 }}>
             {TEMPLATES.map((t) => (
               <button
@@ -123,8 +125,8 @@ export default function KartuUcapan() {
         </div>
 
         <div style={{ display: 'flex', gap: 10 }}>
-          <button className="btn-outline" onClick={handleDownload}>Simpan</button>
-          <button className="btn" onClick={handleShare}>Bagikan</button>
+          <button className="btn-outline" onClick={handleDownload}>{t('simpan')}</button>
+          <button className="btn" onClick={handleShare}>{t('bagikan')}</button>
         </div>
       </div>
     </div>

@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
+import { useLang } from '../context/LangContext';
 import TopBar from '../components/TopBar';
 
-const WEEKDAYS = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+const WEEKDAY_KEYS = ['weekday_min', 'weekday_sen', 'weekday_sel', 'weekday_rab', 'weekday_kam', 'weekday_jum', 'weekday_sab'];
 
 export default function KalenderHijriah() {
+  const { t, lang } = useLang();
   const [cursor, setCursor] = useState(() => {
     const d = new Date();
     return { month: d.getMonth() + 1, year: d.getFullYear() };
@@ -14,10 +16,16 @@ export default function KalenderHijriah() {
   useEffect(() => {
     setDays(null);
     setError('');
-    fetch(`https://api.aladhan.com/v1/gToHCalendar/${cursor.month}/${cursor.year}`)
+    // Routed through /api/aladhan (Vercel) — api.aladhan.com's IPv6 endpoint
+    // hangs/times out for clients on IPv6-preferring networks (verified with
+    // curl -6 vs -4); the proxy calls it from Vercel's own network instead.
+    fetch(`https://airmoon.vercel.app/api/aladhan?type=hijri-calendar&month=${cursor.month}&year=${cursor.year}`)
       .then((r) => r.json())
       .then((json) => setDays(json.data))
-      .catch(() => setError('Gagal memuat kalender.'));
+      // eslint-disable-next-line react-hooks/exhaustive-deps -- t() is re-created every
+      // render (LangContext doesn't memoize it); including it here would refire this
+      // fetch on every render instead of only when the month/year cursor changes.
+      .catch(() => setError(t('kalender_error')));
   }, [cursor]);
 
   function shiftMonth(delta) {
@@ -39,7 +47,7 @@ export default function KalenderHijriah() {
   return (
     <div className="screen">
       <div className="screen-content">
-        <TopBar title="Kalender Hijriah" />
+        <TopBar title={t('item_kalender_hijriah')} />
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderRadius: 16, background: 'var(--primary)' }}>
           <button onClick={() => shiftMonth(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#fff' }}>
@@ -50,7 +58,7 @@ export default function KalenderHijriah() {
               {monthLabel ? `${monthLabel} ${hijriYear} H` : '…'}
             </span>
             <span style={{ fontSize: 11, color: 'var(--accent)' }}>
-              {new Date(cursor.year, cursor.month - 1).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })}
+              {new Date(cursor.year, cursor.month - 1).toLocaleDateString(lang === 'en' ? 'en-US' : 'id-ID', { month: 'long', year: 'numeric' })}
             </span>
           </div>
           <button onClick={() => shiftMonth(1)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#fff' }}>
@@ -62,9 +70,9 @@ export default function KalenderHijriah() {
 
         {days && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: 4 }}>
-            {WEEKDAYS.map((w) => (
-              <div key={w} className="center" style={{ padding: '8px 2px' }}>
-                <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted-soft)' }}>{w}</span>
+            {WEEKDAY_KEYS.map((wk) => (
+              <div key={wk} className="center" style={{ padding: '8px 2px' }}>
+                <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted-soft)' }}>{t(wk)}</span>
               </div>
             ))}
             {Array.from({ length: leadingBlanks }).map((_, i) => <div key={`b${i}`} />)}

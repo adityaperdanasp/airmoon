@@ -1,5 +1,9 @@
 // Aladhan API — public, no key needed. method=20 is Kementerian Agama RI.
-const METHOD = 20;
+// Routed through /api/aladhan (Vercel) instead of calling api.aladhan.com
+// directly: its IPv6 endpoint hangs/times out (verified with curl -6 vs -4),
+// which breaks this for anyone on an IPv6-preferring network. The proxy
+// calls it from Vercel's own network instead.
+const ALADHAN_PROXY = 'https://airmoon.vercel.app/api/aladhan';
 
 export function getLocation() {
   return new Promise((resolve, reject) => {
@@ -17,7 +21,7 @@ export function getLocation() {
 
 export async function fetchPrayerTimes(lat, lng, date = new Date()) {
   const timestamp = Math.floor(date.getTime() / 1000);
-  const url = `https://api.aladhan.com/v1/timings/${timestamp}?latitude=${lat}&longitude=${lng}&method=${METHOD}`;
+  const url = `${ALADHAN_PROXY}?type=timings&timestamp=${timestamp}&lat=${lat}&lng=${lng}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error('Gagal memuat jadwal sholat');
   const json = await res.json();

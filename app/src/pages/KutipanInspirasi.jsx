@@ -15,7 +15,7 @@ export default function KutipanInspirasi() {
     setError('');
     fetchQuoteByIndex(idx)
       .then(setQuote)
-      .catch(() => setError('Gagal memuat kutipan. Coba lagi.'));
+      .catch(() => setError(lang === 'en' ? 'Failed to load the quote. Try again.' : 'Gagal memuat kutipan. Coba lagi.'));
   }, [idx]);
 
   async function handleShare() {

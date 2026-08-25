@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { getLocation } from '../lib/prayerApi';
 import { fetchNearbyMosques, haversineKm } from '../lib/mosqueApi';
+import { useLang } from '../context/LangContext';
 import TopBar from '../components/TopBar';
 import { IconSearch } from '../components/icons';
 
 export default function CariMasjid() {
+  const { t } = useLang();
   const [status, setStatus] = useState('loading');
   const [origin, setOrigin] = useState(null);
   const [mosques, setMosques] = useState([]);
@@ -39,21 +41,21 @@ export default function CariMasjid() {
 
         <div className="input-row" style={{ borderRadius: 999 }}>
           <IconSearch style={{ color: 'var(--muted)' }} />
-          <input placeholder="Cari nama masjid…" value={query} onChange={(e) => setQuery(e.target.value)} />
+          <input placeholder={t('cari_masjid_placeholder')} value={query} onChange={(e) => setQuery(e.target.value)} />
         </div>
 
         {source === 'osm' && (
           <div style={{ padding: '9px 14px', borderRadius: 12, background: 'var(--cream)', fontSize: 11, color: 'var(--gold-ink-dark)' }}>
-            Pakai data OpenStreetMap — Google Maps belum aktif (set <code>GOOGLE_MAPS_API_KEY</code> di Vercel buat data lebih lengkap).
+            {t('osm_fallback_banner_pre')} <code>GOOGLE_MAPS_API_KEY</code> {t('osm_fallback_banner_post')}
           </div>
         )}
 
         {status === 'loading' && <div className="center" style={{ minHeight: 200 }}><div className="spinner" /></div>}
-        {status === 'denied' && <p className="state-msg">Izinkan akses lokasi buat cari masjid terdekat.</p>}
-        {status === 'error' && <p className="state-msg">Gagal memuat data masjid. Coba lagi.</p>}
+        {status === 'denied' && <p className="state-msg">{t('loc_denied')}</p>}
+        {status === 'error' && <p className="state-msg">{t('loc_error')}</p>}
 
         {status === 'ready' && filtered.length === 0 && (
-          <p className="state-msg">Belum ada masjid yang terdaftar sekitar lokasi kamu.</p>
+          <p className="state-msg">{t('no_mosques')}</p>
         )}
 
         {status === 'ready' && filtered.length > 0 && (
@@ -97,7 +99,7 @@ export default function CariMasjid() {
                     background: 'var(--primary)',
                     textDecoration: 'none',
                   }}
-                  aria-label="Buka arah di Google Maps"
+                  aria-label={t('buka_arah_aria')}
                 >
                   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff">
                     <path d="M3 11 20 4l-7 17-3-7-7-3Z" strokeWidth="1.7" strokeLinejoin="round" />

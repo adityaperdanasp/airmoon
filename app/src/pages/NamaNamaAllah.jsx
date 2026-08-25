@@ -1,15 +1,17 @@
 import { useState } from 'react';
 import { asmaulHusna } from '../data/asmaulHusna';
+import { useLang } from '../context/LangContext';
 import TopBar from '../components/TopBar';
 
 export default function NamaNamaAllah() {
+  const { t } = useLang();
   const [showAll, setShowAll] = useState(false);
   const list = showAll ? asmaulHusna : asmaulHusna.slice(0, 6);
 
   return (
     <div className="screen">
       <div className="screen-content">
-        <TopBar title="Asmaul Husna" subtitle="99 Nama-Nama Allah" />
+        <TopBar title="Asmaul Husna" subtitle={t('asmaul_husna_subtitle')} />
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
           {list.map((n) => (
             <div key={n.no} className="card" style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: 14 }}>
@@ -25,7 +27,7 @@ export default function NamaNamaAllah() {
             onClick={() => setShowAll(true)}
             style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: 13, borderRadius: 999, background: 'var(--mint-soft)', border: 'none', cursor: 'pointer', font: 'inherit' }}
           >
-            <span style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--primary)' }}>Lihat Semua 99 Nama</span>
+            <span style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--primary)' }}>{t('lihat_semua_99')}</span>
           </button>
         )}
       </div>

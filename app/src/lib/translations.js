@@ -43,6 +43,50 @@ export const translations = {
     dark: 'Dark',
     loading: 'Memuat…',
     error_generic: 'Ada yang salah, coba lagi ya.',
+
+    // Lainnya hub + its 7 feature pages
+    lainnya_title: 'Lainnya',
+    item_asmaul_husna: 'Nama-Nama Allah',
+    item_kalender_hijriah: 'Kalender Hijriah',
+    item_kalkulator_zakat: 'Kalkulator Zakat',
+    item_kartu_ucapan: 'Kartu Ucapan',
+    item_doa_harian: "Do'a Harian",
+    item_kutipan_inspirasi: 'Kutipan Inspirasi',
+    item_makkah_live: 'Makkah Live',
+
+    asmaul_husna_subtitle: '99 Nama-Nama Allah',
+    lihat_semua_99: 'Lihat Semua 99 Nama',
+
+    kalender_error: 'Gagal memuat kalender.',
+    weekday_min: 'Min',
+    weekday_sen: 'Sen',
+    weekday_sel: 'Sel',
+    weekday_rab: 'Rab',
+    weekday_kam: 'Kam',
+    weekday_jum: 'Jum',
+    weekday_sab: 'Sab',
+
+    penghasilan_label: 'Penghasilan per Bulan',
+    kebutuhan_label: 'Kebutuhan Pokok per Bulan',
+    zakat_wajib_label: 'Zakat yang Wajib Dibayar',
+    bayar_zakat_btn: 'Bayar Zakat Sekarang',
+    zakat_info: 'Perhitungan zakat penghasilan pakai standar 2.5% dari sisa penghasilan setelah kebutuhan pokok. Konsultasikan ke amil zakat buat kondisi khusus.',
+
+    pilih_template: 'Pilih Template',
+    simpan: 'Simpan',
+    bagikan: 'Bagikan',
+
+    cari_masjid_placeholder: 'Cari nama masjid…',
+    osm_fallback_banner_pre: 'Pakai data OpenStreetMap — Google Maps belum aktif (set',
+    osm_fallback_banner_post: 'di Vercel buat data lebih lengkap).',
+    loc_denied: 'Izinkan akses lokasi buat cari masjid terdekat.',
+    loc_error: 'Gagal memuat data masjid. Coba lagi.',
+    no_mosques: 'Belum ada masjid yang terdaftar sekitar lokasi kamu.',
+    buka_arah_aria: 'Buka arah di Google Maps',
+
+    siaran_langsung: 'Siaran Langsung Masjidil Haram',
+    makkah_location: 'Makkah, Arab Saudi',
+    makkah_info: 'Siaran ditampilkan lewat embed YouTube publik. Ganti dengan channel resmi pilihan kamu kalau ada kerja sama khusus.',
   },
   en: {
     nav_home: 'Home',
@@ -88,5 +132,49 @@ export const translations = {
     dark: 'Dark',
     loading: 'Loading…',
     error_generic: 'Something went wrong, please try again.',
+
+    // Lainnya hub + its 7 feature pages
+    lainnya_title: 'More',
+    item_asmaul_husna: 'Names of Allah',
+    item_kalender_hijriah: 'Hijri Calendar',
+    item_kalkulator_zakat: 'Zakat Calculator',
+    item_kartu_ucapan: 'Greeting Cards',
+    item_doa_harian: 'Daily Duas',
+    item_kutipan_inspirasi: 'Daily Quote',
+    item_makkah_live: 'Makkah Live',
+
+    asmaul_husna_subtitle: 'The 99 Names of Allah',
+    lihat_semua_99: 'View All 99 Names',
+
+    kalender_error: 'Failed to load the calendar.',
+    weekday_min: 'Sun',
+    weekday_sen: 'Mon',
+    weekday_sel: 'Tue',
+    weekday_rab: 'Wed',
+    weekday_kam: 'Thu',
+    weekday_jum: 'Fri',
+    weekday_sab: 'Sat',
+
+    penghasilan_label: 'Monthly Income',
+    kebutuhan_label: 'Monthly Basic Needs',
+    zakat_wajib_label: 'Zakat Due',
+    bayar_zakat_btn: 'Pay Zakat Now',
+    zakat_info: 'Income zakat is calculated at the standard 2.5% of income remaining after basic needs. Consult a zakat officer (amil) for special cases.',
+
+    pilih_template: 'Choose Template',
+    simpan: 'Save',
+    bagikan: 'Share',
+
+    cari_masjid_placeholder: 'Search mosque name…',
+    osm_fallback_banner_pre: 'Using OpenStreetMap data — Google Maps isn’t active yet (set',
+    osm_fallback_banner_post: 'in Vercel for richer data).',
+    loc_denied: 'Allow location access to find nearby mosques.',
+    loc_error: 'Failed to load mosque data. Try again.',
+    no_mosques: 'No mosques registered near your location yet.',
+    buka_arah_aria: 'Open directions in Google Maps',
+
+    siaran_langsung: 'Live Broadcast — Masjid al-Haram',
+    makkah_location: 'Makkah, Saudi Arabia',
+    makkah_info: 'This broadcast is shown via a public YouTube embed. Swap it for your preferred official channel if there’s a specific partnership.',
   },
 };

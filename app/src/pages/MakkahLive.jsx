@@ -1,3 +1,4 @@
+import { useLang } from '../context/LangContext';
 import TopBar from '../components/TopBar';
 
 // Video id verified via web search (not guessed) — a public 24/7 Kaaba/
@@ -6,6 +7,7 @@ import TopBar from '../components/TopBar';
 const YOUTUBE_ID = 'gReqANyDHCE';
 
 export default function MakkahLive() {
+  const { t } = useLang();
   return (
     <div className="screen">
       <div className="screen-content">
@@ -24,8 +26,8 @@ export default function MakkahLive() {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <span style={{ fontSize: 15, fontWeight: 800 }}>Siaran Langsung Masjidil Haram</span>
-          <span style={{ fontSize: 12, color: 'var(--muted)' }}>Makkah, Arab Saudi</span>
+          <span style={{ fontSize: 15, fontWeight: 800 }}>{t('siaran_langsung')}</span>
+          <span style={{ fontSize: 12, color: 'var(--muted)' }}>{t('makkah_location')}</span>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '13px 14px', borderRadius: 14, background: 'var(--cream)' }}>
@@ -33,7 +35,7 @@ export default function MakkahLive() {
             <circle cx="12" cy="12" r="9" strokeWidth="1.6" /><path d="M12 11v5.5M12 8v.01" strokeWidth="1.8" strokeLinecap="round" />
           </svg>
           <span style={{ fontSize: 11, lineHeight: 1.5, color: 'var(--gold-ink-dark)' }}>
-            Siaran ditampilkan lewat embed YouTube publik. Ganti dengan channel resmi pilihan kamu kalau ada kerja sama khusus.
+            {t('makkah_info')}
           </span>
         </div>
       </div>

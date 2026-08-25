@@ -1,11 +1,13 @@
 import { doaHarian } from '../data/doaHarian';
+import { useLang } from '../context/LangContext';
 import TopBar from '../components/TopBar';
 
 export default function DoaHarian() {
+  const { t } = useLang();
   return (
     <div className="screen">
       <div className="screen-content">
-        <TopBar title="Do'a Harian" />
+        <TopBar title={t('item_doa_harian')} />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {doaHarian.map((d) => (
             <div key={d.title} className="card" style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: 16 }}>
