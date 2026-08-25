@@ -26,20 +26,47 @@ async function ensureUserDoc(user) {
   }
 }
 
+// Right after a popup sign-in the Firestore client can still be holding the
+// pre-auth token, so the first read of /users/{uid} comes back
+// permission-denied. Retry a couple of times before giving up.
+async function ensureUserDocWithRetry(user, attempts = 3) {
+  for (let i = 0; i < attempts; i += 1) {
+    try {
+      await ensureUserDoc(user);
+      return;
+    } catch (err) {
+      if (i === attempts - 1) throw err;
+      await new Promise((r) => setTimeout(r, 400 * (i + 1)));
+    }
+  }
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(undefined); // undefined = loading, null = signed out
 
   useEffect(() => {
-    return onAuthStateChanged(auth, async (u) => {
-      if (u) await ensureUserDoc(u);
+    return onAuthStateChanged(auth, (u) => {
+      // Publish the auth state first — creating the profile document must
+      // never gate signing in, or a Firestore hiccup locks the user out.
       setUser(u);
+      if (u) {
+        ensureUserDocWithRetry(u).catch((err) => {
+          console.error('Gagal menyiapkan profil pengguna:', err);
+        });
+      }
     });
   }, []);
 
   async function signUpWithEmail(name, email, password) {
     const cred = await createUserWithEmailAndPassword(auth, email, password);
     await updateProfile(cred.user, { displayName: name });
-    await ensureUserDoc({ ...cred.user, displayName: name });
+    // The account already exists at this point, so a failure here must not
+    // bubble up as "gagal daftar" — onAuthStateChanged retries it anyway.
+    try {
+      await ensureUserDocWithRetry({ ...cred.user, displayName: name });
+    } catch (err) {
+      console.error('Gagal menyiapkan profil pengguna:', err);
+    }
     return cred.user;
   }
 
