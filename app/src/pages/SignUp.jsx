@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLang } from '../context/LangContext';
@@ -18,7 +18,7 @@ function mapAuthError(code) {
 }
 
 export default function SignUp() {
-  const { signUpWithEmail, signInWithGoogle, signInWithFacebook } = useAuth();
+  const { user, signUpWithEmail, signInWithGoogle, signInWithFacebook } = useAuth();
   const { t } = useLang();
   const navigate = useNavigate();
   const [name, setName] = useState('');
@@ -27,13 +27,16 @@ export default function SignUp() {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
+  useEffect(() => {
+    if (user) navigate('/');
+  }, [user, navigate]);
+
   async function handleSubmit(e) {
     e.preventDefault();
     setError('');
     setBusy(true);
     try {
       await signUpWithEmail(name, email, password);
-      navigate('/');
     } catch (err) {
       setError(mapAuthError(err.code));
     } finally {
@@ -46,7 +49,6 @@ export default function SignUp() {
     setBusy(true);
     try {
       await signInWithGoogle();
-      navigate('/');
     } catch (err) {
       setError(mapAuthError(err.code));
     } finally {
@@ -59,7 +61,6 @@ export default function SignUp() {
     setBusy(true);
     try {
       await signInWithFacebook();
-      navigate('/');
     } catch (err) {
       setError(mapAuthError(err.code));
     } finally {
