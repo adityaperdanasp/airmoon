@@ -9,7 +9,7 @@ const ITEMS = [
   { to: '/lainnya/doa-harian', label: "Do'a Harian", bg: 'var(--mint)', color: 'var(--primary)' },
   { to: '/lainnya/kutipan-inspirasi', label: 'Kutipan Inspirasi', bg: 'var(--peach)', color: '#a9622f' },
   { to: '/lainnya/makkah-live', label: 'Makkah Live', bg: 'var(--cream)', color: 'var(--gold-ink)' },
-  { to: '/umroh', label: 'Umroh Needs', bg: 'var(--blue-gray)', color: '#3f5c68' },
+  { to: '/umroh', label: 'Umroh Needs', bg: 'var(--blue-gray)', color: '#3f5c68', icon: '/icons-3d/umroh-needs.png' },
 ];
 
 export default function Lainnya() {
@@ -34,8 +34,8 @@ export default function Lainnya() {
                 color: 'inherit',
               }}
             >
-              <div style={{ width: 48, height: 48, borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', background: it.bg, color: it.color, fontSize: 20, fontWeight: 800 }}>
-                {it.label[0]}
+              <div style={{ width: 48, height: 48, borderRadius: 16, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: it.bg, color: it.color, fontSize: 20, fontWeight: 800 }}>
+                {it.icon ? <img src={it.icon} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : it.label[0]}
               </div>
               <span style={{ fontSize: 11.5, fontWeight: 700, textAlign: 'center' }}>{it.label}</span>
             </Link>

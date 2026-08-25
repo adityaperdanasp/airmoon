@@ -26,10 +26,14 @@ function Star() {
   );
 }
 
+// icon: real 3D renders lifted from the pitch deck's design system
+// (screen-order.png), cropped per-icon and upscaled. quran/cari-masjid
+// don't have a matching icon in that asset pack yet, so they stay emoji
+// for now rather than forcing a mismatched substitute.
 const SVC = [
   { to: '/quran', emoji: '📖', key: 'nav_quran', bg: 'linear-gradient(160deg, #fdf3df, #fbe4b0)' },
-  { to: '/jadwal-sholat', emoji: '⏰', label: 'Jadwal', bg: 'linear-gradient(160deg, #e2f1ec, #bfe2d4)' },
-  { to: '/donasi', emoji: '🤲', key: 'nav_donasi', bg: 'linear-gradient(160deg, #fbe6da, #f3c9ab)' },
+  { to: '/jadwal-sholat', icon: '/icons-3d/jadwal.png', label: 'Jadwal', bg: 'linear-gradient(160deg, #e2f1ec, #bfe2d4)' },
+  { to: '/donasi', icon: '/icons-3d/donasi.png', key: 'nav_donasi', bg: 'linear-gradient(160deg, #fbe6da, #f3c9ab)' },
   { to: '/lainnya/cari-masjid', emoji: '🕌', label: 'Cari Masjid', bg: 'linear-gradient(160deg, #e3e9ee, #c3d1dc)' },
 ];
 
@@ -175,6 +179,7 @@ export default function Home() {
                     width: 68,
                     height: 68,
                     borderRadius: 22,
+                    overflow: 'hidden',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -184,7 +189,7 @@ export default function Home() {
                     lineHeight: 1,
                   }}
                 >
-                  {s.emoji}
+                  {s.icon ? <img src={s.icon} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : s.emoji}
                 </div>
                 <span style={{ fontSize: 10.5, fontWeight: 700, textAlign: 'center' }}>{s.label || t(s.key)}</span>
               </Link>
