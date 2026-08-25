@@ -33,6 +33,8 @@ export function usePrayerTimes() {
           hijri: times.date.hijri,
           gregorian: times.date.gregorian,
           locationLabel: label || 'Lokasi kamu',
+          lat,
+          lng,
         });
         setStatus('ready');
       } catch (err) {

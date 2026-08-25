@@ -1,46 +1,54 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { doc, onSnapshot } from 'firebase/firestore';
 import { usePrayerTimes } from '../lib/usePrayerTimes';
+import { useAuth } from '../context/AuthContext';
+import { enablePrayerNotifications, disablePrayerNotifications } from '../lib/notifications';
+import { db } from '../lib/firebase';
 import TopBar from '../components/TopBar';
 import BottomNav from '../components/BottomNav';
 
-function useNotifyToggle(next) {
-  const [enabled, setEnabled] = useState(() => localStorage.getItem('airmoon-adzan-notif') === '1');
-  const [scheduled, setScheduled] = useState(null);
+// Background push (works with the app closed) — Firestore's notifEnabled
+// flag is the source of truth, kept live via onSnapshot so a toggle flipped
+// on another device shows up here too. See lib/notifications.js for the
+// FCM registration itself and api/send-prayer-notifications.js for the
+// server side that actually fires the push at prayer time.
+function useNotifyToggle(uid, location) {
+  const [enabled, setEnabled] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    if (scheduled) clearTimeout(scheduled);
-    if (!enabled || !next || typeof Notification === 'undefined') return;
-    const [h, m, s] = next.countdown.split(':').map(Number);
-    const ms = (h * 3600 + m * 60 + s) * 1000;
-    const id = setTimeout(() => {
-      if (Notification.permission === 'granted') {
-        new Notification(`Waktunya Sholat ${next.label}`, {
-          body: `${next.label} telah masuk waktunya. Yuk tunaikan sholat.`,
-        });
-      }
-    }, ms);
-    setScheduled(id);
-    return () => clearTimeout(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabled, next?.key]);
+    if (!uid) return;
+    return onSnapshot(doc(db, 'users', uid), (snap) => setEnabled(!!snap.data()?.notifEnabled));
+  }, [uid]);
 
   async function toggle() {
-    if (!enabled && typeof Notification !== 'undefined' && Notification.permission !== 'granted') {
-      const perm = await Notification.requestPermission();
-      if (perm !== 'granted') return;
+    if (!uid || busy) return;
+    setBusy(true);
+    setError('');
+    try {
+      if (enabled) {
+        await disablePrayerNotifications(uid);
+      } else {
+        if (!location) throw new Error('Tunggu lokasi kedeteksi dulu ya.');
+        await enablePrayerNotifications(uid, location);
+      }
+    } catch (err) {
+      setError(err.message || 'Gagal mengubah notifikasi.');
+    } finally {
+      setBusy(false);
     }
-    const next2 = !enabled;
-    setEnabled(next2);
-    localStorage.setItem('airmoon-adzan-notif', next2 ? '1' : '0');
   }
 
-  return { enabled, toggle };
+  return { enabled, toggle, busy, error };
 }
 
 export default function JadwalSholat() {
+  const { user } = useAuth();
   const { status, data, next, prayerOrder, prayerLabel } = usePrayerTimes();
-  const { enabled, toggle } = useNotifyToggle(next);
+  const location = data ? { lat: data.lat, lng: data.lng } : null;
+  const { enabled, toggle, busy, error: notifError } = useNotifyToggle(user?.uid, location);
   const adzanSound = localStorage.getItem('airmoon-adzan-sound') || 'Adzan Makkah';
 
   return (
@@ -120,12 +128,13 @@ export default function JadwalSholat() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                   <span style={{ fontSize: 13, fontWeight: 700 }}>Notifikasi Adzan</span>
                   <span style={{ fontSize: 11, color: 'var(--muted)' }}>
-                    {enabled ? `Aktif untuk ${next.label} berikutnya` : 'Nonaktif'}
+                    {busy ? 'Memproses…' : enabled ? '5x sehari, jalan walau app ketutup' : 'Nonaktif'}
                   </span>
                 </div>
               </div>
               <button
                 onClick={toggle}
+                disabled={busy}
                 style={{
                   width: 42,
                   height: 24,
@@ -136,13 +145,18 @@ export default function JadwalSholat() {
                   flexShrink: 0,
                   background: enabled ? 'var(--primary)' : 'var(--border)',
                   border: 'none',
-                  cursor: 'pointer',
+                  cursor: busy ? 'default' : 'pointer',
+                  opacity: busy ? 0.6 : 1,
                 }}
                 aria-label="Toggle notifikasi adzan"
               >
                 <div style={{ width: 20, height: 20, borderRadius: '50%', background: '#fff' }} />
               </button>
             </div>
+
+            {notifError && (
+              <p style={{ margin: 0, fontSize: 11.5, color: 'var(--danger)' }}>{notifError}</p>
+            )}
 
             <Link
               to="/jadwal-sholat/adzan"
