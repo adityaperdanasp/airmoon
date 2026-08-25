@@ -36,9 +36,32 @@ export default function AskMe() {
           history: next.slice(0, -1).map((m) => ({ role: m.role, content: m.content })),
         }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Gagal dapat jawaban.');
-      setMessages((m) => [...m, { role: 'assistant', content: data.reply }]);
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Gagal dapat jawaban.');
+      }
+
+      // The answer streams in as plain text — append each chunk so the
+      // bubble fills in as it is written instead of after it is finished.
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let acc = '';
+      let started = false;
+
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        acc += decoder.decode(value, { stream: true });
+        if (!acc) continue;
+        if (!started) {
+          started = true;
+          setMessages((m) => [...m, { role: 'assistant', content: acc }]);
+        } else {
+          setMessages((m) => [...m.slice(0, -1), { role: 'assistant', content: acc }]);
+        }
+      }
+
+      if (!started) throw new Error('Gagal dapat jawaban.');
     } catch (err) {
       setError(err.message || 'Gagal menghubungi Ust. Rewin. Coba lagi.');
     } finally {
@@ -86,7 +109,7 @@ export default function AskMe() {
             </div>
           </div>
         ))}
-        {busy && (
+        {busy && messages[messages.length - 1]?.role === 'user' && (
           <div style={{ alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ width: 26, height: 26, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: 'var(--primary)' }}>
               <IconMoon width="13" height="13" style={{ color: '#fff' }} />

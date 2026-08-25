@@ -55,17 +55,52 @@ export default async function handler(req, res) {
         max_tokens: 500,
         system: SYSTEM_PROMPT,
         messages,
+        stream: true,
       }),
     });
 
-    const data = await upstream.json();
+    // Errors still come back as one JSON body, so report them the old way.
     if (!upstream.ok) {
+      const data = await upstream.json().catch(() => null);
       return res.status(upstream.status).json({ error: data?.error?.message || 'Gagal menghubungi Claude.' });
     }
 
-    const reply = data.content?.[0]?.text || '';
-    return res.status(200).json({ reply });
+    // Forward the text deltas as they arrive so the bubble fills in
+    // progressively instead of the user waiting for the whole answer.
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-cache, no-transform');
+    res.setHeader('X-Accel-Buffering', 'no');
+
+    const reader = upstream.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+
+      const lines = buffer.split('\n');
+      buffer = lines.pop() ?? '';
+
+      for (const line of lines) {
+        if (!line.startsWith('data:')) continue;
+        const payload = line.slice(5).trim();
+        if (!payload || payload === '[DONE]') continue;
+        try {
+          const evt = JSON.parse(payload);
+          if (evt.type === 'content_block_delta' && evt.delta?.type === 'text_delta') {
+            res.write(evt.delta.text);
+          }
+        } catch {
+          // A partial JSON chunk — the next read completes it.
+        }
+      }
+    }
+
+    return res.end();
   } catch {
+    if (res.headersSent) return res.end();
     return res.status(502).json({ error: 'Gagal menghubungi Claude, coba lagi.' });
   }
 }
