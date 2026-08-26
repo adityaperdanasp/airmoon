@@ -4,7 +4,7 @@
 // hiding this key. Safe to commit and ship in client bundles.
 export const firebaseConfig = {
   apiKey: "AIzaSyCabOhScJEoa96NrOuFBv6De_8zAi2Uh8E",
-  authDomain: "airmoon-d9620.firebaseapp.com",
+  authDomain: "auth.jalanmenujusurga.web.id",
   projectId: "airmoon-d9620",
   storageBucket: "airmoon-d9620.firebasestorage.app",
   messagingSenderId: "697264069553",
