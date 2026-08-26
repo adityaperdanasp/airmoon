@@ -30,7 +30,7 @@ function Star() {
 // a donation box with a coin mid-drop, in the app's own teal/gold palette.
 function DonationBoxIcon() {
   return (
-    <svg width="34" height="34" viewBox="0 0 42 42" fill="none">
+    <svg width="42" height="42" viewBox="0 0 42 42" fill="none">
       <defs>
         <linearGradient id="svcBoxG" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor="#1c8577" />
@@ -64,7 +64,7 @@ function DonationBoxIcon() {
 // rather than forcing a mismatched substitute.
 const SVC = [
   { to: '/quran', emoji: '📖', key: 'nav_quran', bg: 'linear-gradient(160deg, #fdf3df, #fbe4b0)' },
-  { to: '/jadwal-sholat', emoji: '⏰', label: 'Jadwal', bg: 'linear-gradient(160deg, #e2f1ec, #bfe2d4)' },
+  { to: '/jadwal-sholat', emoji: '⏰', label: 'Sholat', bg: 'linear-gradient(160deg, #e2f1ec, #bfe2d4)' },
   { to: '/donasi', node: <DonationBoxIcon />, key: 'nav_donasi', bg: 'linear-gradient(160deg, #fbe6da, #f3c9ab)' },
   { to: '/lainnya/cari-masjid', emoji: '🕌', label: 'Cari Masjid', bg: 'linear-gradient(160deg, #e3e9ee, #c3d1dc)' },
 ];
