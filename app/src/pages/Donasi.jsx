@@ -1,19 +1,32 @@
 import { useEffect, useState } from 'react';
-import { getOrSeedDonation, contribute } from '../lib/donations';
+import { getOrSeedDonation, contribute, recordContribution, watchMyContributions } from '../lib/donations';
 import { formatRupiah } from '../lib/zakat';
+import { useAuth } from '../context/AuthContext';
 import BottomNav from '../components/BottomNav';
 
+const dateFmt = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
 export default function Donasi() {
+  const { user } = useAuth();
   const [donation, setDonation] = useState(null);
+  const [myContributions, setMyContributions] = useState([]);
 
   useEffect(() => {
     getOrSeedDonation().then(setDonation);
   }, []);
 
+  useEffect(() => {
+    if (!user) return;
+    return watchMyContributions(user.uid, setMyContributions);
+  }, [user]);
+
   async function handleGive(amount) {
     await contribute(donation.id, amount);
     setDonation((d) => ({ ...d, collected: d.collected + amount }));
+    if (user) await recordContribution(user.uid, donation, amount);
   }
+
+  const myTotal = myContributions.reduce((sum, c) => sum + c.amount, 0);
 
   const pct = donation ? Math.min(100, Math.round((donation.collected / donation.target) * 100)) : 0;
 
@@ -66,6 +79,47 @@ export default function Donasi() {
                 </button>
               ))}
             </div>
+          </div>
+        )}
+
+        {user && donation && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: 14, fontWeight: 800 }}>Donasi Kamu</span>
+              {myContributions.length > 0 && (
+                <span style={{ fontSize: 12, color: 'var(--muted)' }}>
+                  Total <strong style={{ color: 'var(--primary)' }}>{formatRupiah(myTotal)}</strong>
+                </span>
+              )}
+            </div>
+
+            {myContributions.length === 0 ? (
+              <div className="card" style={{ padding: 16, fontSize: 12.5, color: 'var(--muted)', textAlign: 'center' }}>
+                Belum ada donasi. Yuk mulai sedekah hari ini.
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {myContributions.map((c) => (
+                  <div
+                    key={c.id}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '12px 14px',
+                      borderRadius: 14,
+                      background: 'var(--card)',
+                    }}
+                  >
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      <span style={{ fontSize: 13, fontWeight: 700 }}>{c.donationTitle}</span>
+                      <span style={{ fontSize: 11, color: 'var(--muted)' }}>{c.createdAt ? dateFmt.format(c.createdAt.toDate()) : 'Baru saja'}</span>
+                    </div>
+                    <span style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--primary)' }}>+{formatRupiah(c.amount)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>

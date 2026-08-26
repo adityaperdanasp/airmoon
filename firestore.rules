@@ -5,6 +5,13 @@ service cloud.firestore {
     // Each user's own profile: wallet balance, points, display name.
     match /users/{uid} {
       allow read, write: if request.auth != null && request.auth.uid == uid;
+
+      // Personal donation history — each contribution a user makes, kept
+      // under their own profile so it's naturally scoped to owner-only
+      // access without a separate uid field to check.
+      match /contributions/{contributionId} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+      }
     }
 
     // Donation campaigns (e.g. "Listrik Masjid Al-Ikhlas") are public read
