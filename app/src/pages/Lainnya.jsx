@@ -1,18 +1,19 @@
 import { Link } from 'react-router-dom';
 import { useLang } from '../context/LangContext';
 import TopBar from '../components/TopBar';
+import { QiblaCompassIcon } from '../components/serviceIcons';
 
 const ITEMS = [
-  { to: '/lainnya/asmaul-husna', key: 'item_asmaul_husna', bg: 'var(--mint)', color: 'var(--primary)' },
-  { to: '/lainnya/kalender-hijriah', key: 'item_kalender_hijriah', bg: 'var(--cream)', color: 'var(--gold-ink)' },
-  { to: '/lainnya/kalkulator-zakat', key: 'item_kalkulator_zakat', bg: 'var(--peach)', color: '#a9622f' },
-  { to: '/lainnya/kartu-ucapan', key: 'item_kartu_ucapan', bg: 'var(--blue-gray)', color: '#3f5c68' },
-  { to: '/lainnya/doa-harian', key: 'item_doa_harian', bg: 'var(--mint)', color: 'var(--primary)' },
-  { to: '/lainnya/kutipan-inspirasi', key: 'item_kutipan_inspirasi', bg: 'var(--peach)', color: '#a9622f' },
-  { to: '/lainnya/makkah-live', key: 'item_makkah_live', bg: 'var(--cream)', color: 'var(--gold-ink)' },
-  { to: '/lainnya/kiblat', key: 'item_kiblat', bg: 'var(--mint)', color: 'var(--primary)' },
-  { to: '/lainnya/mode-ramadan', key: 'item_ramadan', bg: 'var(--cream)', color: 'var(--gold-ink)' },
-  { to: '/umroh', key: 'nav_umroh', bg: 'var(--blue-gray)', color: '#3f5c68', icon: '/icons-3d/umroh-needs.png' },
+  { to: '/lainnya/asmaul-husna', key: 'item_asmaul_husna', bg: 'var(--mint)', emoji: '📿' },
+  { to: '/lainnya/kalender-hijriah', key: 'item_kalender_hijriah', bg: 'var(--cream)', emoji: '🗓️' },
+  { to: '/lainnya/kalkulator-zakat', key: 'item_kalkulator_zakat', bg: 'var(--peach)', emoji: '🧮' },
+  { to: '/lainnya/kartu-ucapan', key: 'item_kartu_ucapan', bg: 'var(--blue-gray)', emoji: '💌' },
+  { to: '/lainnya/doa-harian', key: 'item_doa_harian', bg: 'var(--mint)', emoji: '🤲' },
+  { to: '/lainnya/kutipan-inspirasi', key: 'item_kutipan_inspirasi', bg: 'var(--peach)', emoji: '📜' },
+  { to: '/lainnya/makkah-live', key: 'item_makkah_live', bg: 'var(--cream)', emoji: '🎥' },
+  { to: '/lainnya/kiblat', key: 'item_kiblat', bg: 'var(--mint)', node: <QiblaCompassIcon size={30} /> },
+  { to: '/lainnya/mode-ramadan', key: 'item_ramadan', bg: 'var(--cream)', emoji: '🌙' },
+  { to: '/umroh', key: 'nav_umroh', bg: 'var(--blue-gray)', icon: '/icons-3d/umroh-needs.png' },
 ];
 
 export default function Lainnya() {
@@ -40,8 +41,8 @@ export default function Lainnya() {
                   color: 'inherit',
                 }}
               >
-                <div style={{ width: 48, height: 48, borderRadius: 16, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: it.bg, color: it.color, fontSize: 20, fontWeight: 800 }}>
-                  {it.icon ? <img src={it.icon} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : label[0]}
+                <div style={{ width: 48, height: 48, borderRadius: 16, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: it.bg, fontSize: 24, lineHeight: 1 }}>
+                  {it.node ?? (it.icon ? <img src={it.icon} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : it.emoji)}
                 </div>
                 <span style={{ fontSize: 11.5, fontWeight: 700, textAlign: 'center' }}>{label}</span>
               </Link>
