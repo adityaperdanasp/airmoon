@@ -24,6 +24,7 @@ import KutipanInspirasi from './pages/KutipanInspirasi';
 import CariMasjid from './pages/CariMasjid';
 import MakkahLive from './pages/MakkahLive';
 import QiblaCompass from './pages/QiblaCompass';
+import ModeRamadan from './pages/ModeRamadan';
 
 function P({ children }) {
   return <ProtectedRoute>{children}</ProtectedRoute>;
@@ -57,6 +58,7 @@ export default function App() {
       <Route path="/lainnya/cari-masjid" element={<P><CariMasjid /></P>} />
       <Route path="/lainnya/makkah-live" element={<P><MakkahLive /></P>} />
       <Route path="/lainnya/kiblat" element={<P><QiblaCompass /></P>} />
+      <Route path="/lainnya/mode-ramadan" element={<P><ModeRamadan /></P>} />
     </Routes>
   );
 }

@@ -12,6 +12,11 @@ service cloud.firestore {
       match /contributions/{contributionId} {
         allow read, write: if request.auth != null && request.auth.uid == uid;
       }
+
+      // Ramadan Mode's fasting/tarawih tracker — one doc per Hijri year.
+      match /ramadanTracker/{hijriYear} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+      }
     }
 
     // Donation campaigns (e.g. "Listrik Masjid Al-Ikhlas") are public read

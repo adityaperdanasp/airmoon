@@ -11,6 +11,7 @@ const ITEMS = [
   { to: '/lainnya/kutipan-inspirasi', key: 'item_kutipan_inspirasi', bg: 'var(--peach)', color: '#a9622f' },
   { to: '/lainnya/makkah-live', key: 'item_makkah_live', bg: 'var(--cream)', color: 'var(--gold-ink)' },
   { to: '/lainnya/kiblat', key: 'item_kiblat', bg: 'var(--mint)', color: 'var(--primary)' },
+  { to: '/lainnya/mode-ramadan', key: 'item_ramadan', bg: 'var(--cream)', color: 'var(--gold-ink)' },
   { to: '/umroh', key: 'nav_umroh', bg: 'var(--blue-gray)', color: '#3f5c68', icon: '/icons-3d/umroh-needs.png' },
 ];
 

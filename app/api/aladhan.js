@@ -34,8 +34,20 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'month/year tidak valid.' });
     }
     upstreamUrl = `https://api.aladhan.com/v1/gToHCalendar/${month}/${year}`;
+  } else if (type === 'h-to-g') {
+    // Hijri -> Gregorian for one specific date, e.g. finding which Gregorian
+    // day is 1 Ramadan of a given Hijri year (Ramadan Mode's countdown).
+    const day = Number(req.query.day);
+    const month = Number(req.query.month);
+    const year = Number(req.query.year);
+    if (!Number.isInteger(day) || day < 1 || day > 30 || !Number.isInteger(month) || month < 1 || month > 12 || !Number.isInteger(year)) {
+      return res.status(400).json({ error: 'day/month/year tidak valid.' });
+    }
+    const dd = String(day).padStart(2, '0');
+    const mm = String(month).padStart(2, '0');
+    upstreamUrl = `https://api.aladhan.com/v1/hToG/${dd}-${mm}-${year}`;
   } else {
-    return res.status(400).json({ error: 'type harus "timings" atau "hijri-calendar".' });
+    return res.status(400).json({ error: 'type harus "timings", "hijri-calendar", atau "h-to-g".' });
   }
 
   try {
