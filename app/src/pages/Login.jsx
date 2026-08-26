@@ -82,6 +82,54 @@ export default function Login() {
         </div>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button
+              type="button"
+              onClick={handleGoogle}
+              disabled={busy}
+              aria-label={t('google_masuk')}
+              style={{
+                flex: 1,
+                height: 52,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: '1px solid var(--border)',
+                borderRadius: 16,
+                background: 'var(--bg)',
+                cursor: busy ? 'default' : 'pointer',
+              }}
+            >
+              <GoogleLogo width={22} height={22} />
+            </button>
+
+            <button
+              type="button"
+              onClick={handleFacebook}
+              disabled={busy}
+              aria-label={t('facebook_masuk')}
+              style={{
+                flex: 1,
+                height: 52,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: '1px solid var(--border)',
+                borderRadius: 16,
+                background: 'var(--bg)',
+                cursor: busy ? 'default' : 'pointer',
+              }}
+            >
+              <FacebookLogo width={22} height={22} />
+            </button>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+            <span style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--muted-soft)' }}>{t('atau')}</span>
+            <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+          </div>
+
           <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
             <span style={{ fontSize: 12, fontWeight: 700 }}>{t('email')}</span>
             <div className="input-row">
@@ -112,22 +160,6 @@ export default function Login() {
 
           <button type="submit" className="btn" disabled={busy}>
             {busy ? t('loading') : t('masuk')}
-          </button>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-            <span style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--muted-soft)' }}>{t('atau')}</span>
-            <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-          </div>
-
-          <button type="button" className="btn-outline btn-google" onClick={handleGoogle} disabled={busy}>
-            <GoogleLogo />
-            {t('google_masuk')}
-          </button>
-
-          <button type="button" className="btn-outline btn-google" onClick={handleFacebook} disabled={busy}>
-            <FacebookLogo />
-            {t('facebook_masuk')}
           </button>
         </form>
 
