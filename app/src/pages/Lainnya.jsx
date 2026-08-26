@@ -1,17 +1,17 @@
 import { Link } from 'react-router-dom';
 import { useLang } from '../context/LangContext';
 import TopBar from '../components/TopBar';
-import { QiblaCompassIcon } from '../components/serviceIcons';
+import { QiblaCompassIcon, CalculatorIcon } from '../components/serviceIcons';
 
 const ITEMS = [
   { to: '/lainnya/asmaul-husna', key: 'item_asmaul_husna', bg: 'var(--mint)', emoji: '📿' },
   { to: '/lainnya/kalender-hijriah', key: 'item_kalender_hijriah', bg: 'var(--cream)', emoji: '🗓️' },
-  { to: '/lainnya/kalkulator-zakat', key: 'item_kalkulator_zakat', bg: 'var(--peach)', emoji: '🧮' },
+  { to: '/lainnya/kalkulator-zakat', key: 'item_kalkulator_zakat', bg: 'var(--peach)', node: <CalculatorIcon size={30} /> },
   { to: '/lainnya/kartu-ucapan', key: 'item_kartu_ucapan', bg: 'var(--blue-gray)', emoji: '💌' },
   { to: '/lainnya/doa-harian', key: 'item_doa_harian', bg: 'var(--mint)', emoji: '🤲' },
   { to: '/lainnya/kutipan-inspirasi', key: 'item_kutipan_inspirasi', bg: 'var(--peach)', emoji: '📜' },
   { to: '/lainnya/makkah-live', key: 'item_makkah_live', bg: 'var(--cream)', emoji: '🎥' },
-  { to: '/lainnya/kiblat', key: 'item_kiblat', bg: 'var(--mint)', node: <QiblaCompassIcon size={30} /> },
+  { to: '/lainnya/kiblat', key: 'item_kiblat', bg: 'var(--mint)', node: <QiblaCompassIcon size={33} /> },
   { to: '/lainnya/mode-ramadan', key: 'item_ramadan', bg: 'var(--cream)', emoji: '🌙' },
   { to: '/umroh', key: 'nav_umroh', bg: 'var(--blue-gray)', icon: '/icons-3d/umroh-needs.png' },
 ];

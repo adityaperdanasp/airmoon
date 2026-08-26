@@ -34,7 +34,7 @@ function Star() {
 const SVC = [
   { to: '/quran', emoji: '📖', key: 'nav_quran', bg: 'linear-gradient(160deg, #fdf3df, #fbe4b0)' },
   { to: '/jadwal-sholat', emoji: '⏰', label: 'Sholat', bg: 'linear-gradient(160deg, #e2f1ec, #bfe2d4)' },
-  { to: '/lainnya/kiblat', node: <QiblaCompassIcon />, key: 'item_kiblat', bg: 'linear-gradient(160deg, #fbe6da, #f3c9ab)' },
+  { to: '/lainnya/kiblat', node: <QiblaCompassIcon size={46} />, key: 'item_kiblat', bg: 'linear-gradient(160deg, #fbe6da, #f3c9ab)' },
   { to: '/lainnya/cari-masjid', emoji: '🕌', label: 'Cari Masjid', bg: 'linear-gradient(160deg, #e3e9ee, #c3d1dc)' },
 ];
 

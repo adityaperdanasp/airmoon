@@ -67,3 +67,41 @@ export function QiblaCompassIcon({ size = 42 }) {
     </svg>
   );
 }
+
+// A literal pocket calculator, not the abacus emoji (🧮) — Unicode has no
+// widely-supported "calculator" emoji (the closest, 🖩, isn't reliably
+// rendered across devices), so this is drawn rather than gambled on a glyph.
+export function CalculatorIcon({ size = 42 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 42 42" fill="none">
+      <defs>
+        <linearGradient id="calcBodyG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#2fa190" />
+          <stop offset="1" stopColor="#0a4a43" />
+        </linearGradient>
+        <linearGradient id="calcScreenG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#eaf6f0" />
+          <stop offset="1" stopColor="#cfe9db" />
+        </linearGradient>
+        <linearGradient id="calcGoldG" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor="#fff2cf" />
+          <stop offset="0.55" stopColor="#f0c04d" />
+          <stop offset="1" stopColor="#c98f22" />
+        </linearGradient>
+      </defs>
+      <rect x="8" y="4" width="26" height="34" rx="5" fill="url(#calcBodyG)" />
+      <rect x="11.5" y="7.5" width="19" height="8" rx="1.6" fill="url(#calcScreenG)" />
+      <g fill="#e9f4ef">
+        <rect x="11.5" y="19" width="4.6" height="4" rx="1" />
+        <rect x="17.2" y="19" width="4.6" height="4" rx="1" />
+        <rect x="22.9" y="19" width="4.6" height="4" rx="1" />
+        <rect x="11.5" y="24.5" width="4.6" height="4" rx="1" />
+        <rect x="17.2" y="24.5" width="4.6" height="4" rx="1" />
+        <rect x="22.9" y="24.5" width="4.6" height="4" rx="1" />
+        <rect x="11.5" y="30" width="4.6" height="4" rx="1" />
+        <rect x="17.2" y="30" width="4.6" height="4" rx="1" />
+      </g>
+      <rect x="22.9" y="30" width="4.6" height="4" rx="1" fill="url(#calcGoldG)" />
+    </svg>
+  );
+}
