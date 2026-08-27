@@ -116,6 +116,10 @@ export const translations = {
     ramadan_puasa_tercatat: 'Tercatat',
     ramadan_tarawih_malam_ini: 'Tarawih Malam Ini',
     ramadan_tarawih_tercatat: 'Tercatat',
+
+    doa_kategori_pagi: 'Dzikir Pagi',
+    doa_kategori_petang: 'Dzikir Petang',
+    doa_kategori_kegiatan: 'Kegiatan Sehari-hari',
   },
   en: {
     nav_home: 'Home',
@@ -234,5 +238,9 @@ export const translations = {
     ramadan_puasa_tercatat: 'Logged',
     ramadan_tarawih_malam_ini: 'Tarawih Tonight',
     ramadan_tarawih_tercatat: 'Logged',
+
+    doa_kategori_pagi: 'Morning Adhkar',
+    doa_kategori_petang: 'Evening Adhkar',
+    doa_kategori_kegiatan: 'Daily Activities',
   },
 };

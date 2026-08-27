@@ -1,6 +1,278 @@
-// Very well-known, low-risk daily duas — still verify against Hisnul
-// Muslim or a similarly authoritative reference before production.
-export const doaHarian = [
+// Dzikir Pagi & Petang: transcribed from bekalislam.online/dzikir-doa (a
+// curated selection by Syaikh Abdur Razzaq, published by Ustadz Firanda
+// Andirja's site) — fetched programmatically from that site's own per-item
+// HTML fragments (dzikirdoa_new/dzikir-{pagi,petang}/DzikirN.html, 19 pagi +
+// 18 petang items, confirmed exact counts by probing until the SPA's 404
+// fallback kicked in) rather than typed from memory, specifically to avoid
+// transcription errors in religious text. Two source data-quality issues
+// fixed here, not introduced by this transcription:
+// - petang item 3's title was left as "Dzikir Pagi 3" in the source (a
+//   leftover template artifact) even though its Arabic text is identical to
+//   pagi item 14 "Dzikir Mentauhidkan Allāh" — retitled to match.
+// - pagi's "Memohon Ampun Atau Istighfar" item had explanatory prose mixed
+//   into the transliteration field on the source site; trimmed to just the
+//   three transliterated phrases, kept the explanation out.
+// Still: verify against Hisnul Muslim or another mu'tabar reference before
+// treating as final, same caution as the rest of this file's content.
+export const dzikirPagi = [
+  {
+    title: 'Dzikir Bersyukur Di Atas Nikmat Tauhid',
+    arabic: 'أَصْبَحْنَا عَلَى فِطْرَةِ اْلإِسْلاَمِ وَعَلَى كَلِمَةِ اْلإِخْلاَصِ، وَعَلَى دِيْنِ نَبِيِّنَا مُحَمَّدٍ صَلَّى اللهُ عَلَيْهِ وَسَلَّمَ، وَعَلَى مِلَّةِ أَبِيْنَا إِبْرَاهِيْمَ، حَنِيْفًا مُسْلِمًا وَمَا كَانَ مِنَ الْمُشْرِكِيْنَ.',
+    latin: 'Ashbahnaa \'alaa fithrotil islam wa \'alaa kalimatil ikhlas wa \'alaa diini nabiyyinaa muhammad shallahu \'alaihi wasallam wa \'alaa millati abiinaa ibrohiim haniifam muslimaw wa maa kaana minal musyrikiin.',
+    translation: 'Artinya : "Di waktu pagi kami berada di atas fitrah Islam, di atas kalimat ikhlas (syahadatain), di atas agama Nabi kita Muhammad صلى الله عليه وسلم, dan di atas agama ayah kami Ibrahim, yang berdiri di atas jalan yang lurus, muslim dan tidak tergolong orang-orang musyrik.”(3)',
+  },
+  {
+    title: 'Dzikir Ridha Di Atas Agama Islam',
+    repeat: 'Dibaca 3x',
+    arabic: 'رَضِيْتُ بِاللهِ رَبًّا، وَبِاْلإِسْلاَمِ دِيْنًا، وَبِمُحَمَّدٍ صَلَّى اللهُ عَلَيْهِ وَسَلَّمَ نَبِيًّا.',
+    latin: 'Rodhitubillahi robbaa, wabil islaamidiinaa, wabi muhammadin shollahu\'alaihi wasallam nabiyyaa',
+    translation: 'Artinya : Aku ridho/senang Allah sebagai Rabb, Islam sebagai agama, dan Muhammad sebagai nabi (yang diutus oleh Allah).”(4)',
+  },
+  {
+    title: 'Doa Meminta Ilmu Yang Bermanfaat',
+    arabic: 'اَللَّهُمَّ إِنِّيْ أَسْأَلُكَ عِلْمًا نَافِعًا، وَرِزْقًا طَيِّبًا، وَعَمَلاً مُتَقَبَّلاً.',
+    latin: 'Allahumma inni asaluka \'ilman naafi\'an wa rizkqon toyyiban wa amalan mutaqobbala.',
+    translation: 'Artinya : “Ya Allah, sungguh aku memohon kepada-Mu ilmu yang bermanfaat, rizki yang baik, dan amal yang diterima.”(6)',
+  },
+  {
+    title: 'Dzikir Mengingatkan Kita Untuk Kembali Kepada Allāh',
+    arabic: 'اللَّهُمَّ بِكَ أَصْبَحْنَا وَبِكَ أَمْسَيْنَا، وَبِكَ نَحْيَا وَبِكَ نَمُوتُ، وَإِلَيْكَ النُّشُوْرُ',
+    latin: 'Allahumma bika ashbahnaa, wa bika amsainaa, wa bika nahyaa, wa bika namuutu wa ilaikannusyuur',
+    translation: 'Artinya : “Ya Allah, dengan Engkaulah kami memasuki waktu pagi, dan dengan Engkaulah kami memasuki waktu sore. Dengan Engkaulah kami hidup dan dengan Engkaulah kami mati. Dan kepada-Mu kami dibangkitkan.”(7)',
+  },
+  {
+    title: 'Doa Memohon Kebaikan Di Setiap Waktu',
+    arabic: 'أَصْبَحْنَا وَأَصْبَحَ الْمُلْكُ لِلَّهِ، وَالْحَمْدُ لِلَّهِ، لاَ إِلَـهَ إِلاَّ اللهُ وَحْدَهُ لاَ شَرِيْكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيْرُ. رَبِّ أَسْأَلُكَ خَيْرَ مَا فِيْ هَذَا الْيَوْمِ وَخَيْرَ مَا بَعْدَهُ، وَأَعُوْذُ بِكَ مِنْ شَرِّ مَا فِيْ هَذَا الْيَوْمِ وَشَرِّ مَا بَعْدَهُ، رَبِّ أَعُوْذُ بِكَ مِنَ الْكَسَلِ وَسُوْءِ الْكِبَرِ، رَبِّ أَعُوْذُ بِكَ مِنْ عَذَابٍ فِي النَّارِ وَعَذَابٍ فِي الْقَبْرِ',
+    latin: 'Ashbahnaa wa ashbahalmulku lillah, walhamdulillah, laa ilaha illallahu wahdahu laa syariikalah, lahulmulku walahulhamdu, wahuwa \'ala kuli syai in qodiir. Robbi asaluka khoiro maa fii hadzaal yaum wa khoiro maa ba\'dahu, wa a\'uudzubika min syarri maa fii hadzal yaum wa syarri maa ba\'dahu. Robbi a\'uudzubika minal kasali wa suu il kibar. Robbi a\'uudzubika min \'adzaabin fiinnaari wa \'adzaabin filqobr',
+    translation: 'Artinya : “Kami telah memasuki waktu pagi dan kerajaan hanya milik Allah, segala puji bagi Allah. Tidak ada Tuhan (yang berhak disembah) kecuali Allah Yang Maha Esa, tiada sekutu bagi-Nya. Bagi-Nya kerajaan dan bagi-Nya pujian. Dia-lah Yang Maha Kuasa atas segala sesuatu. Ya Rabb, aku mohon kepada-Mu kebaikan di hari ini dan kebaikan sesudahnya. Aku berlindung kepada-Mu dari kejahatan hari ini dan kejahatan sesudahnya. Ya Rabb, aku berlindung kepada-Mu dari kemalasan dan kejelekan di hari tua. Ya Rabb ku! Aku berlindung kepada-Mu dari siksaan di Neraka dan kubur.” (8)',
+  },
+  {
+    title: 'Sayyidul Istighfar',
+    arabic: 'اَللَّهُمَّ أَنْتَ رَبِّيْ لاَ إِلَـهَ إِلاَّ أَنْتَ، خَلَقْتَنِيْ وَأَنَا عَبْدُكَ، وَأَنَا عَلَى عَهْدِكَ وَوَعْدِكَ مَا اسْتَطَعْتُ، أَعُوْذُ بِكَ مِنْ شَرِّ مَا صَنَعْتُ، أَبُوْءُ لَكَ بِنِعْمَتِكَ عَلَيَّ، وَأَبُوْءُ بِذَنْبِيْ فَاغْفِرْ لِيْ فَإِنَّهُ لاَ يَغْفِرُ الذُّنُوْبَ إِلاَّ أَنْتَ',
+    latin: 'Allahumma anta rabbi la ilaha illa anta khalaqtani wa ana \'abduka Wa ana \'ala \'ahdika wa wa\'dika mastatha\'tu A\'udzu bika min syarri ma shana\'tu. Abu\'u laka bini\'matika \'alayya wa abu\'u laka bidzanbi Faghfirli innahu la yaghfirudz dzunuba illa anta',
+    translation: 'Artinya : “Ya Allah! Engkau adalah Rabb ku, tidak ada Ilah yang berhak disembah kecuali Engkau, Engkaulah yang menciptakanku. Aku adalah hamba-Mu. Aku akan setia pada perjanjianku dengan-Mu semampuku. Aku berlindung kepada-Mu dari kejelekan yang aku perbuat. Aku mengakui nikmat-Mu kepadaku dan aku mengakui memikul dosaku. Karena itu, ampunilah aku, sesungguhnya tiada yang mengampuni dosa kecuali Engkau."(9)',
+  },
+  {
+    title: 'Memohon Kebaikan Dunia Dan Akhirat',
+    arabic: 'اَللَّهُمَّ إِنِّيْ أَسْأَلُكَ الْعَافِيَةَ فِي الدُّنْيَا وَاْلآخِرَةِ، اَللَّهُمَّ إِنِّيْ أَسْأَلُكَ الْعَفْوَ وَالْعَافِيَةَ فِي دِيْنِيْ وَدُنْيَايَ وَأَهْلِيْ وَمَالِيْ. اللَّهُمَّ اسْتُرْ عَوْرَاتِى وَآمِنْ رَوْعَاتِى,اَللَّهُمَّ احْفَظْنِيْ مِنْ بَيْنِ يَدَيَّ، وَمِنْ خَلْفِيْ، وَعَنْ يَمِيْنِيْ وَعَنْ شِمَالِيْ، وَمِنْ فَوْقِيْ، وَأَعُوْذُ بِعَظَمَتِكَ أَنْ أُغْتَالَ مِنْ تَحْتِيْ',
+    latin: 'Allahumma inni asaluka al\'aafiyata fiiddunyaa wal akhiroh, Allahumma innii asalukal\'afwa wal\'aafiyata fii diinii wa dunyaaya wa ahlii wa maalii, Allahummastur \'aurootii wa aamin rou\'aatii, Allahummahfadznii minbainii yadayya, wamin kholfihii, wa \'anyamiinii, wa\'ansyimaalii, wamin fauqii, wa a\'uudzubi\'adzhomatika an ughtaala min tahtii',
+    translation: 'Artinya : “Ya Allah! Sesungguhnya aku mohon keselamatan di dunia dan akhirat. Ya Allah, sesungguhnya aku mohon kepada-Mu ampunan dan keselamatan dalam agamaku, (kehidupan) duniaku, keluargaku dan hartaku. Ya Allah, tutupilah auratku dan berilah ketenteraman dihatiku. Ya Allah! Peliharalah aku dari arah depan, belakang, kanan, kiri dan atasku. Aku berlindung dengan kebesaran-Mu, agar aku tidak mendapat bahaya dari bawahku.” (10)',
+  },
+  {
+    title: 'Memohon Keselamatan Badan',
+    repeat: 'Dibaca 3x',
+    arabic: 'اَللَّهُمَّ عَافِنِيْ فِيْ بَدَنِيْ، اَللَّهُمَّ عَافِنِيْ فِيْ سَمْعِيْ، اَللَّهُمَّ عَافِنِيْ فِيْ بَصَرِيْ، لاَ إِلَـهَ إِلاَّ أَنْتَ، اَللَّهُمَّ إِنِّي أَعُوْذُ بِكَ مِنَ الْكُفْرِ وَالْفَقْرِ، اَللَّهُمَّ إِنِّي أَعُوْذُ بِكَ مِنْ عَذَابِ الْقَبْرِ، لاَ إِلَـهَ إِلاَّ أَنْتَ.',
+    latin: 'Allahumma \'aafinii fii badanii, Allahumma \'aafinii fii sam\'ii, Allahumma \'aafinii fii bashorii, Laa ilaaha illa anta. Allahumma innii a\'uudzubika minal kufri wal faqr, Allahumma innii a\'uudzubika min\'adzabilqobr, Laa ilaha illa anta',
+    translation: '“Ya Allah, berilah keselematan pada badanku. Ya Allah, berilah keselamatan pada pendengaranku. Ya Allah berilah keselamatan pada penglihatanku, tiada Ilah (yang berhak disembah) kecuali Engkau. Ya Allah, sesungguhnya aku berlindung kepada-Mu dari kekufuran dan kefakiran. Aku berlindung kepada-Mu dari siksa kubur, tiada Ilah (yang berhak disembah) kecuali Engkau.” (11 )',
+  },
+  {
+    title: 'Memohon Perlindungan Dari Kejahatan Diri',
+    arabic: 'للَّهُمَّ فَاطِرَ السَّمَاوَاتِ وَاْلأَرْضِ، عَالِمَ الْغَيْبِ وَالشَّهَادَةِ رَبَّ كُلِّ شَيْءٍ وَمَلِيْكَهُ، أَشْهَدُ أَنْ لاَ إِلَـهَ إِلاَّ أَنْتَ، أَعُوْذُ بِكَ مِنْ شَرِّ نَفْسِيْ، وَمِنْ شَرِّ الشَّيْطَانِ وَشِرْكِهِ، وَأَنْ أَقْتَرِفَ عَلَى نَفْسِيْ سُوْءًا أَوْ أَجُرُّهُ إِلَى مُسْلِمٍ.',
+    latin: 'Allahumma faatirossamaawaati wal ard,\'aalimal ghoibi wasysyahaadati robbi kulli syai in wamaliikah. Asyhadu alla ilaha illa anta, a\'uudzubika min syarri nafsii, wamin syarrisysyaithoni wa syirkih, wa an aqtarifa \'ala nafsii suuan au ajurruhu ila muslim',
+    translation: 'Artinya : “Ya Allah! Rabb Pencipta langit dan bumi, Yang Maha Mengetahui yang ghaib dan yang nampak, Rabb segala sesuatu dan Pemiliknya. Aku bersaksi bahwa tidak ada Ilah yang berhak disembah kecuali Engkau. Aku berlindung kepada-Mu dari kejahatan diriku, dan setan dan kesyirikannya, atau aku menjalankan kejelekan terhadap diriku atau mendorong orang Islam kepadanya. ”(12)',
+  },
+  {
+    title: 'Dzikir Agar Terhindar Dari Kemudhāratan',
+    arabic: 'بِسْمِ اللَّهِ الَّذِى لاَ يَضُرُّ مَعَ اسْمِهِ شَىْءٌ فِى الأَرْضِ وَلاَ فِى السَّمَاءِ وَهُوَ السَّمِيعُ الْعَلِيمُ',
+    latin: 'Bismillahi laa yadhurru ma\'asmihi syai un fil ardi wa laa fiissamaai wahuwassamii\'ul \'aliim',
+    translation: 'Artinya : “Dengan nama Allah yang dengan nama-Nya segala sesuatu di bumi dan langit tidak akan berbahaya, dan Dia-lah Yang Maha Mendengar lagi Maha Mengetahui.”(13)',
+  },
+  {
+    title: 'Doa Memohon Diperbaiki Segala Urusan',
+    arabic: 'يَا حَيُّ يَا قَيُّوْمُ بِرَحْمَتِكَ أَسْتَغِيْثُ، أَصْلِحْ لِيْ شَأْنِيْ كُلَّهُ وَلاَ تَكِلْنِيْ إِلَى نَفْسِيْ طَرْفَةَ عَيْنٍ',
+    latin: 'Yaa hayyu yaa qoyyumu birohmatika astaghiitsu, ashlih lii sya\'nii kullahu walaa takilnii ilaa nafsii thorfata \'ain.',
+    translation: 'Artinya : “Wahai Tuhan Yang Maha Hidup, wahai Tuhan Yang Maha Tegak, dengan rahmat-Mu aku minta pertolongan-Mu, perbaikilah segala urusanku dan jangan Engkau limpahkan aku kepada diriku walau sekejap mata.”(13)',
+  },
+  {
+    title: 'Membaca Tasbih',
+    repeat: 'Dibaca 100x',
+    arabic: 'سُبْحَانَ اللهِ وَبِحَمْدِهِ.',
+    latin: 'Subhanallahi wabihamdihi.',
+    translation: 'Artinya : “Maha Suci Allah dan aku memuji-Nya”(14)',
+  },
+  {
+    title: 'Membaca Tasbih',
+    repeat: 'Dibaca 3x',
+    arabic: 'سُبْحَانَ اللهِ وَبِحَمْدِهِ: عَدَدَ خَلْقِهِ، وَرِضَا نَفْسِهِ، وَزِنَةَ عَرْشِهِ وَمِدَادَ كَلِمَاتِهِ.',
+    latin: 'Subhanallah wa bihamdih \'adada khalqihi wa ridho nafsihi wa zinata \'arsyihi wa midada kalimaatih',
+    translation: 'Artinya : “Maha Suci Allah, aku memuji-Nya sebanyak makhluk-Nya, sejauh keridhoan-Nya, seberat timbangan ‘arsy-Nya dan sebanyak tinta tulisan kalimat-Nya.” (15)',
+  },
+  {
+    title: 'Dzikir Mentauhidkan Allāh',
+    repeat: 'Dibaca 1x atau 10x atau 100x atau lebih 100x',
+    arabic: 'لاَ إِلَـهَ إِلاَّ اللهُ وَحْدَهُ لاَ شَرِيْكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيْرُ',
+    latin: 'Laa ilaaha illallahu wahdahu laa syariikalah, lahul mulku walahul hamdu wahuwa \'alaa kulli syaiin qodiir.',
+    translation: 'Artinya : “Tidak ada Ilah yang berhak untuk diibadahi selain Allah Yang Maha Esa, tidak ada sekutu bagi-Nya. Milik-Nya lah kerajaan dan segala pujian. Dia Maha kuasa atas segala sesuatu.” (16)(17)(18)(19)',
+  },
+  {
+    title: 'Memohon Ampun Atau Istighfar',
+    repeat: 'Dibaca 100x',
+    arabic: 'أسْتَغْفِرُ اللهَ atau أَسْتَغْفِرُ اللهَ وَأَتُوبُ إِلَيْهِ atau رَبِّ اغْفِرْ لي وتُبْ عليَّ إِنَّكَ أَنْتَ التَّوَّابُ الرَّحِيْمُ',
+    latin: 'Astaghfirullah, atau Astaghfirullah wa atuubu ilaihi, atau Robbighfirli watub \'alayya innaka antat tawwaaburrahiim',
+    translation: 'Artinya : “Aku memohon ampun kepada Allah.”(20) Artinya : "Aku memohon maghiroh Allah dan aku bertaubat kepadaNya."(21 ) Artinya : "Ya Rabbku ampunilah aku dan bimbinglah aku untuk bertaubat (atau terimalah taubatku) sesungguhnya Engkau adalah Maha penerima taubat dan Maha Rahmat."(22)',
+  },
+  {
+    title: 'Ayat Kursi',
+    repeat: 'Dibaca 1 x',
+    arabic: 'اللَّهُ لا إِلَهَ إِلا هُوَ الْحَيُّ الْقَيُّومُ لا تَأْخُذُهُ سِنَةٌ وَلا نَوْمٌ لَهُ مَا فِي السَّمَاوَاتِ وَمَا فِي الأرْضِ مَنْ ذَا الَّذِي يَشْفَعُ عِنْدَهُ إِلا بِإِذْنِهِ يَعْلَمُ مَا بَيْنَ أَيْدِيهِمْ وَمَا خَلْفَهُمْ وَلا يُحِيطُونَ بِشَيْءٍ مِنْ عِلْمِهِ إِلا بِمَا شَاءَ وَسِعَ كُرْسِيُّهُ السَّمَاوَاتِ وَالأرْضَ وَلا يَئُودُهُ حِفْظُهُمَا وَهُوَ الْعَلِيُّ الْعَظِيمُ',
+    latin: 'Allahulaa ilahaaillahuwal hayyul qoyyuum, laa ta khudzuhu sinatuwwalaanauum, lahu maa fissamaawaati wamaa fil ard, man dzalladzii yasy fa\'u \'indahu illaa bi idznih, ya\'lamumaa bayna aydiihim wamaa khulfahum, walaa yuhiithuuna bisyai immin \'ilmihi illa bimaasyaa, wa si\'a kursiyyuhussamaawaati wal ard, walaa yauudhuhu hifdzhuhuma wahuwal \'aliyyul \'adzhiim',
+    translation: 'Artinya : “Allah, tidak ada Ilah (yang berhak disembah) melainkan Dia Yang Hidup kekal lagi terus menerus mengurus (makhluk-Nya); tidak mengantuk dan tidak tidur. Kepunyaan-Nya apa yang di langit dan di bumi. Siapakah yang dapat memberi syafa\'at di sisi Allah tanpa izin-Nya. Allah mengetahui apa-apa yang di hadapan mereka dan di belakang mereka, dan mereka tidak mengetahui apa-apa dari ilmu Allah melainkan apa yang dikehendaki-Nya. Kursi Allah meliputi langit dan bumi. Dan Allah tidak merasa berat memelihara keduanya, dan Allah Maha Tinggi lagi Maha Besar.” (QS. Al-Baqarah: 255) (23)',
+  },
+  {
+    title: 'Membaca Surah Al-Ikhlas',
+    repeat: 'Dibaca 3x',
+    arabic: 'بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ : قُلْ هُوَ اللَّهُ أَحَدٌ ﴿١﴾ اللَّهُ الصَّمَدُ ﴿٢﴾ لَمْ يَلِدْ وَلَمْ يُولَدْ ﴿٣﴾ وَلَمْ يَكُنْ لَهُ كُفُوًا أَحَدٌ ﴿٤﴾',
+    latin: 'Bismillahirrohmaanirrohiim, Qul huwallahu ahad, Allahush shomad, Lam yalid walam yuulad, Walam yakullahu kufuwan ahad',
+    translation: 'Artinya : "Dengan menyebut nama Allah Yang Maha Pengasih lagi Maha Penyayang.” “Katakanlah: Dialah Allah, Yang Maha Esa. Allah adalah Ilah yang bergantung kepada- Nya segala urusan. Dia tidak beranak dan tiada pula diperanakkan, dan tidak ada seorang pun yang setara dengan Dia.”(QS. Al-Ikhlash: 1-4)(24)',
+  },
+  {
+    title: 'Membaca Surah Al-Falaq',
+    repeat: 'Dibaca 3x',
+    arabic: 'بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ : قُلْ أَعُوذُ بِرَبِّ الْفَلَقِ (١) مِنْ شَرِّ مَا خَلَقَ (٢) وَمِنْ شَرِّ غَاسِقٍ إِذَا وَقَبَ (٣) وَمِنْ شَرِّ النَّفَّاثَاتِ فِي الْعُقَدِ (٤) وَمِنْ شَرِّ حَاسِدٍ إِذَا حَسَدَ (٥)',
+    latin: 'Bismillahirrohmaanirrohiim, Qul a\'uudzu birobbil falaq, Min syarri maa kholaq, Wamin syarri ghoosiqin idzaa waqob, Wamin syarrinnaffaatsaati fil \'uqod, Wamin syarri haasidin idzaa hasad',
+    translation: 'Artinya : “Dengan menyebut nama Allah Yang Maha Pengasih lagi Maha Penyayang" “Aku berlindung kepada Rabb yang menguasai Subuh, dari kejahatan makhluk-Nya, dan dari kejahatan malam apabila telah gelap gulita, dan dari kejahatan-kejahatan wanita tukang sihir yang menghembus pada buhul-buhul, dan dari kejahatan orang yang dengki apabila ia dengki.”(QS. Al-Falaq: 1-5) (25)',
+  },
+  {
+    title: 'Membaca Surat An-Nas',
+    repeat: 'Dibaca 3x',
+    arabic: 'بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ: قُلْ أَعُوذُ بِرَبِّ النَّاسِ ﴿١﴾ مَلِكِ النَّاسِ ﴿٢﴾ إِلَهِ النَّاسِ ﴿٣﴾ مِنْ شَرِّ الْوَسْوَاسِ الْخَنَّاسِ ﴿٤﴾ الَّذِي يُوَسْوِسُ فِي صُدُورِ النَّاسِ ﴿٥﴾ مِنَ الْجِنَّةِ وَالنَّاسِ ﴿٦﴾',
+    latin: 'Bismillahirrohmaanirrohiim, Qul a\'uudzu birobbinnaas, Malikinnaas, Ilaahinnaas, Min syarril waswaasil khonnaas, Alladzii yuwaswisu fii shuduurinnaas, Minal jinnati wannaas',
+    translation: 'Artinya : “Dengan menyebut nama Allah Yang Maha Pengasih lagi Maha Penyayang.” “Katakanlah: Aku berlindung kepada Rabb manusia. Raja manusia. Sembahan manusia, dari kejahatan (bisikan) syaitan yang biasa bersembunyi, yang membisikkan (kejahatan) ke dalam dada manusia, dari jin dan manusia.” (QS. An-Naas: 1-6) (26)',
+  },
+];
+
+export const dzikirPetang = [
+  {
+    title: 'Dzikir Bersyukur Di Atas Nikmat Tauhid',
+    repeat: 'Dibaca 1x',
+    arabic: 'أَمْسَيْنَا عَلَى فِطْرَةِ اْلإِسْلاَمِ وَعَلَى كَلِمَةِ اْلإِخْلاَصِ، وَعَلَى دِيْنِ نَبِيِّنَا مُحَمَّدٍ صَلَّى اللهُ عَلَيْهِ وَسَلَّمَ، وَعَلَى مِلَّةِ أَبِيْنَا إِبْرَاهِيْمَ، حَنِيْفًا مُسْلِمًا وَمَا كَانَ مِنَ الْمُشْرِكِيْنَ.',
+    latin: 'Amsainaa \'alaa fithrotil islam wa \'alaa kalimatil ikhlas wa \'alaa diini nabiyyinaa muhammad shallahu \'alaihi wasallam wa \'alaa millati abiinaa ibrohiim haniifam muslimaw wa maa kaana minal musyrikiin.',
+    translation: 'Artinya : "Di waktu petang kami berada di atas fitrah Islam, di atas kalimat ikhlas (syahadatain), di atas agama Nabi kita Muhammad صلى الله عليه وسلم, dan di atas agama ayah kami, Ibrahim, yang berdiri di atas jalan yang lurus, muslim dan tidak tergolong orang-orang musyrik.”(27)',
+  },
+  {
+    title: 'Dzikir Ridha Di Atas Agama Islam',
+    repeat: 'Dibaca 3x',
+    arabic: 'رَضِيْتُ بِاللهِ رَبًّا، وَبِاْلإِسْلاَمِ دِيْنًا، وَبِمُحَمَّدٍ صَلَّى اللهُ عَلَيْهِ وَسَلَّمَ نَبِيًّا.',
+    latin: 'Rodhitubillahi robbaa, wabil islaamidiinaa, wabi muhammadin shollahu\'alaihi wasallam nabiyyaa',
+    translation: 'Artinya : Aku rido/senang Allah sebagai Rabb, Islam sebagai agama dan Muhammad sebagai nabi (yang diutus oleh Allah).”',
+  },
+  {
+    title: 'Dzikir Mentauhidkan Allāh',
+    repeat: 'Dibaca 1x Atau dibaca 10x Atau dibaca 100 Atau dibaca lebih dari 100 x',
+    arabic: 'لاَ إِلَـهَ إِلاَّ اللهُ وَحْدَهُ لاَ شَرِيْكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيْرُ',
+    latin: 'Laa ilaaha illallahu wahdahu laa syariikalah, lahul mulku walahul hamdu wahuwa \'alaa kulli syaiin qodiir.',
+    translation: 'Artinya : “Tidak ada Ilah yang berhak untuk diibadahi selain Allah Yang Maha Esa, tidak ada sekutu bagi-Nya. Milik-Nya lah kerajaan dan segala pujian. Dia Maha kuasa atas segala sesuatu.”',
+  },
+  {
+    title: 'Doa Memohon Kebaikan Di Setiap Waktu',
+    repeat: 'Dibaca 1x',
+    arabic: 'أَمْسَيْنَا وَأَمْسَى الْمُلْكُ لِلَّهِ، وَالْحَمْدُ لِلَّهِ، لاَ إِلَـهَ إِلاَّ اللهُ وَحْدَهُ لاَ شَرِيْكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيْرُ. رَبِّ أَسْأَلُكَ خَيْرَ مَا فِيْ هَذِهِ اللَّيْلَةِ وَخَيْرَ مَا بَعْدَهَا، وَأَعُوْذُ بِكَ مِنْ شَرِّ مَا فِي هَذِهِ اللَّيْلَةِ وَشَرِّ مَا بَعْدَهَا، رَبِّ أَعُوْذُ بِكَ مِنَ الْكَسَلِ وَسُوْءِ الْكِبَرِ، رَبِّ أَعُوْذُ بِكَ مِنْ عَذَابٍ فِي النَّارِ وَعَذَابٍ فِي الْقَبْرِ',
+    latin: 'Amsainaa wa amsalmulku lillah, walhamdulillah, laa ilaha illallahu wahdahu laa syariikalah, lahulmulku walahulhamdu, wahuwa \'ala kuli syai in qodiir. Robbi asaluka khoiro maa fii hadzihil lailah wa khoiro maa ba\'dahaa, wa a\'uudzubika min syarri maa fii hadzihil lailah wa syarri maa ba\'dahaa. Robbi a\'uudzubika minal kasali wa suu il kibar. Robbi a\'uudzubika min \'adzaabin fiinnaari wa \'adzaabin filqobri',
+    translation: 'Artinya : “Kami telah memasuki waktu petang dan kerajaan hanya milik Allah, segala puji bagi Allah. Tidak ada Tuhan (yang berhak disembah) kecuali Allah Yang Maha Esa, tiada sekutu bagi-Nya. Bagi-Nya kerajaan dan bagi-Nya pujian. Dia-lah Yang Maha Kuasa atas segala sesuatu. Ya Rabb, aku mohon kepada-Mu kebaikan di hari ini dan kebaikan sesudahnya. Aku berlindung kepada-Mu dari kejahatan hari ini dan kejahatan sesudahnya. Ya Rabb, aku berlindung kepada-Mu dari kemalasan dan kejelekan di hari tua. Ya Rabb ku! Aku berlindung kepada-Mu dari siksaan di Neraka dan kubur.”',
+  },
+  {
+    title: 'Sayyidul Istighfar',
+    repeat: 'Dibaca 1x',
+    arabic: 'اَللَّهُمَّ أَنْتَ رَبِّيْ لاَ إِلَـهَ إِلاَّ أَنْتَ، خَلَقْتَنِيْ وَأَنَا عَبْدُكَ، وَأَنَا عَلَى عَهْدِكَ وَوَعْدِكَ مَا اسْتَطَعْتُ، أَعُوْذُ بِكَ مِنْ شَرِّ مَا صَنَعْتُ، أَبُوْءُ لَكَ بِنِعْمَتِكَ عَلَيَّ، وَأَبُوْءُ بِذَنْبِيْ فَاغْفِرْ لِيْ فَإِنَّهُ لاَ يَغْفِرُ الذُّنُوْبَ إِلاَّ أَنْتَ',
+    latin: 'Allahumma anta robbii laa ilaha illa anta, kholaqtanii wa anaa \'abduka, wa anaa \'ala \'ahdika, wawa\'dika mastatho\'tu. A\'uudzubika min syarri maa shona\'tu, abuu u laka bini\'matika \'alayya, wa abuu u bidzanbi faghfirlii, fainnahu laa yaghfirudz dzunuuba illa anta Catatan : jika yang membaca dzikir adalah wanita maka lafal عَبْدُكَ lebih baik diganti dengan أَمَتُكَ (amatuka), dan jika tidak diganti juga tidak mengapa (sebagaimana penjelasan Ibnu Taimiyyah rahimahullah)',
+    translation: 'Artinya : “Ya Allah! Engkau adalah Rabb ku, tidak ada Ilah yang berhak disembah kecuali Engkau, Engkaulah yang menciptakanku. Aku adalah hamba-Mu. Aku akan setia pada perjanjianku dengan-Mu semampuku. Aku berlindung kepada-Mu dari kejelekan yang aku perbuat. Aku mengakui nikmat-Mu kepadaku dan aku mengakui memikul dosaku. Karena itu, ampunilah aku, sesungguhnya tiada yang mengampuni dosa kecuali Engkau.”',
+  },
+  {
+    title: 'Memohon Kebaikan Dunia Dan Akhirat',
+    repeat: 'Dibaca 1x',
+    arabic: 'اَللَّهُمَّ إِنِّيْ أَسْأَلُكَ الْعَافِيَةَ فِي الدُّنْيَا وَاْلآخِرَةِ، اَللَّهُمَّ إِنِّيْ أَسْأَلُكَ الْعَفْوَ وَالْعَافِيَةَ فِي دِيْنِيْ وَدُنْيَايَ وَأَهْلِيْ وَمَالِيْ. اللَّهُمَّ اسْتُرْ عَوْرَاتِى وَآمِنْ رَوْعَاتِى,اَللَّهُمَّ احْفَظْنِيْ مِنْ بَيْنِ يَدَيَّ، وَمِنْ خَلْفِيْ، وَعَنْ يَمِيْنِيْ وَعَنْ شِمَالِيْ، وَمِنْ فَوْقِيْ، وَأَعُوْذُ بِعَظَمَتِكَ أَنْ أُغْتَالَ مِنْ تَحْتِيْ',
+    latin: 'Allahumma inni asaluka al\'aafiyata fiiddunyaa wal akhiroh. Allahumma innii asalukal\'afwa wal\'aafiyata fii diinii wa dunyaaya wa ahlii wa maalii. Allahummastur \'aurootii wa aamin rou\'aatii. Allahummahfadznii minbainii yadayya, wamin kholfihii, wa \'anyamiinii, wa\'ansyimaalii, wamin fauqii, wa a\'uudzubi\'adzhomatika an ughtaala min tahtii',
+    translation: 'Artinya : “Ya Allah! Sesungguhnya aku mohon keselamatan di dunia dan akhirat. Ya Allah, sesungguhnya aku mohon kepada-Mu ampunan dan keselamatan dalam agamaku, (kehidupan) duniaku, keluargaku dan hartaku. Ya Allah, tutupilah auratku dan berilah ketenteraman dihatiku. Ya Allah! Peliharalah aku dari arah depan, belakang, kanan, kiri dan atasku. Aku berlindung dengan kebesaran-Mu, agar aku tidak mendapat bahaya dari bawahku.”',
+  },
+  {
+    title: 'Memohon Keselamatan Badan',
+    repeat: 'Dibaca 3x',
+    arabic: 'اَللَّهُمَّ عَافِنِيْ فِيْ بَدَنِيْ، اَللَّهُمَّ عَافِنِيْ فِيْ سَمْعِيْ، اَللَّهُمَّ عَافِنِيْ فِيْ بَصَرِيْ، لاَ إِلَـهَ إِلاَّ أَنْتَ، اَللَّهُمَّ إِنِّي أَعُوْذُ بِكَ مِنَ الْكُفْرِ وَالْفَقْرِ، اَللَّهُمَّ إِنِّي أَعُوْذُ بِكَ مِنْ عَذَابِ الْقَبْرِ، لاَ إِلَـهَ إِلاَّ أَنْتَ.',
+    latin: 'Allahumma \'aafinii fii badanii, Allahumma \'aafinii fii sam\'ii, Allahumma \'aafinii fii bashorii, Laa ilaaha illa anta. Allahumma innii a\'uudzubika minal kufri wal faqr, Allahumma innii a\'uudzubika min\'adzabilqobr, Laa ilaha illa anta',
+    translation: '“Ya Allah, berilah keselematan pada badanku. Ya Allah, berilah keselamatan pada pendengaranku. Ya Allah berilah keselamatan pada penglihatanku, tiada Ilah (yang berhak disembah) kecuali Engkau. Ya Allah, sesungguhnya aku berlindung kepada-Mu dari kekufuran dan kefakiran. Aku berlindung kepada-Mu dari siksa kubur, tiada Ilah (yang berhak disembah) kecuali Engkau.”',
+  },
+  {
+    title: 'Memohon Perlindungan Dari Kejahatan Diri',
+    repeat: 'Dibaca 1x',
+    arabic: 'اَللَّهُمَّ فَاطِرَ السَّمَاوَاتِ وَاْلأَرْضِ، عَالِمَ الْغَيْبِ وَالشَّهَادَةِ رَبَّ كُلِّ شَيْءٍ وَمَلِيْكَهُ، أَشْهَدُ أَنْ لاَ إِلَـهَ إِلاَّ أَنْتَ، أَعُوْذُ بِكَ مِنْ شَرِّ نَفْسِيْ، وَمِنْ شَرِّ الشَّيْطَانِ وَشِرْكِهِ، وَأَنْ أَقْتَرِفَ عَلَى نَفْسِيْ سُوْءًا أَوْ أَجُرُّهُ إِلَى مُسْلِمٍ.',
+    latin: 'Allahumma faatirossamaawaati wal ard,\'aalimal ghoibi wasysyahaadati robbi kulli syai in wamaliikah. Asyhadu alla ilaha illa anta, a\'uudzubika min syarri nafsii, wamin syarrisysyaithoni wa syirkih, wa an aqtarifa \'ala nafsii suuan au ajurruhu ila muslim',
+    translation: 'Artinya : “Ya Allah! Rabb Pencipta langit dan bumi, Yang Maha Mengetahui yang ghaib dan yang nampak, Rabb segala sesuatu dan Pemiliknya. Aku bersaksi bahwa tidak ada Ilah yang berhak disembah kecuali Engkau. Aku berlindung kepada-Mu dari kejahatan diriku, dan setan dan kesyirikannya, atau aku menjalankan kejelekan terhadap diriku atau mendorong orang Islam kepadanya. ”',
+  },
+  {
+    title: 'Dzikir Agar Terhindar Dari Kemudhāratan',
+    repeat: 'Dibaca 3x',
+    arabic: 'بِسْمِ اللَّهِ الَّذِى لاَ يَضُرُّ مَعَ اسْمِهِ شَىْءٌ فِى الأَرْضِ وَلاَ فِى السَّمَاءِ وَهُوَ السَّمِيعُ الْعَلِيمُ',
+    latin: 'Bismillahi laa yadhurru ma\'asmihi syai un fil ardi wa laa fiissamaa i wahuwassamii\'ul \'aliim',
+    translation: 'Artinya : “Dengan nama Allah yang dengan nama-Nya segala sesuatu di bumi dan langit tidak akan berbahaya, dan Dia-lah Yang Maha Mendengar lagi Maha Mengetahui.”',
+  },
+  {
+    title: 'Doa Memohon Diperbaiki Segala Urusan',
+    repeat: 'Dibaca 1x',
+    arabic: 'يَا حَيُّ يَا قَيُّوْمُ بِرَحْمَتِكَ أَسْتَغِيْثُ، أَصْلِحْ لِيْ شَأْنِيْ كُلَّهُ وَلاَ تَكِلْنِيْ إِلَى نَفْسِيْ طَرْفَةَ عَيْنٍ',
+    latin: 'Yaa hayyu yaa qoyyumu birohmatika astaghiitsu, ashlih lii sya\'nii kullahu walaa takilnii ilaa nafsii thorfata \'ain.',
+    translation: 'Artinya : “Wahai Tuhan Yang Maha Hidup, wahai Tuhan Yang Maha Tegak, dengan rahmat-Mu aku minta pertolongan-Mu, perbaikilah segala urusanku dan jangan Engkau limpahkan aku kepada diriku walau sekejap mata.”',
+  },
+  {
+    title: 'Membaca Tasbih',
+    repeat: 'Dibaca 100x',
+    arabic: 'سُبْحَانَ اللهِ وَبِحَمْدِهِ.',
+    latin: 'Subhanallahi wabihamdihi.',
+    translation: 'Artinya : “Maha Suci Allah dan aku memuji-Nya” (Dibaca 100x)',
+  },
+  {
+    title: 'Membaca Tasbih',
+    repeat: 'Dibaca 3x',
+    arabic: 'سُبْحَانَ اللهِ وَبِحَمْدِهِ: عَدَدَ خَلْقِهِ، وَرِضَا نَفْسِهِ، وَزِنَةَ عَرْشِهِ وَمِدَادَ كَلِمَاتِهِ.',
+    latin: 'Subhanallah wa bihamdih \'adada khalqihi wa ridho nafsihi wa zinata \'arsyihi wa midada kalimaatih',
+    translation: 'Artinya : “Maha Suci Allah, aku memuji-Nya sebanyak makhluk-Nya, sejauh keridhoan-Nya, seberat timbangan ‘arsy-Nya dan sebanyak tinta tulisan kalimat-Nya.” (15)',
+  },
+  {
+    title: 'Dzikir Mentauhidkan Allāh',
+    repeat: 'Dibaca 1x atau dibaca 10x atau dibaca 100x atau dibaca lebih dari 100x',
+    arabic: 'لاَ إِلَـهَ إِلاَّ اللهُ وَحْدَهُ لاَ شَرِيْكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيْرُ',
+    latin: 'Laa ilaaha illallahu wahdahu laa syariikalah, lahul mulku walahul hamdu wahuwa \'alaa kulli syaiin qodiir.',
+    translation: 'Artinya : “Tidak ada Ilah yang berhak untuk diibadahi selain Allah Yang Maha Esa, tidak ada sekutu bagi-Nya. Milik-Nya lah kerajaan dan segala pujian. Dia Maha kuasa atas segala sesuatu.”',
+  },
+  {
+    title: 'Membaca Ayat Kursi',
+    repeat: 'Dibaca 1x',
+    arabic: 'اللَّهُ لا إِلَهَ إِلا هُوَ الْحَيُّ الْقَيُّومُ لا تَأْخُذُهُ سِنَةٌ وَلا نَوْمٌ لَهُ مَا فِي السَّمَاوَاتِ وَمَا فِي الأرْضِ مَنْ ذَا الَّذِي يَشْفَعُ عِنْدَهُ إِلا بِإِذْنِهِ يَعْلَمُ مَا بَيْنَ أَيْدِيهِمْ وَمَا خَلْفَهُمْ وَلا يُحِيطُونَ بِشَيْءٍ مِنْ عِلْمِهِ إِلا بِمَا شَاءَ وَسِعَ كُرْسِيُّهُ السَّمَاوَاتِ وَالأرْضَ وَلا يَئُودُهُ حِفْظُهُمَا وَهُوَ الْعَلِيُّ الْعَظِيمُ',
+    latin: 'Allahulaa ilahaaillahuwal hayyul qoyyuum, laa ta khudzuhu sinatuwwalaanauum, lahu maa fissamaawaati wamaa fil ard, man dzalladzii yasy fa\'u \'indahu illaa bi idznih, ya\'lamumaa bayna aydiihim wamaa khulfahum, walaa yuhiithuuna bisyai immin \'ilmihi illa bimaasyaa, wa si\'a kursiyyuhussamaawaati wal ard, walaa yauudhuhu hifdzhuhuma wahuwal \'aliyyul \'adzhiim',
+    translation: 'Artinya : “Allah, tidak ada Ilah (yang berhak disembah) melainkan Dia Yang Hidup kekal lagi terus menerus mengurus (makhluk-Nya); tidak mengantuk dan tidak tidur. Kepunyaan-Nya apa yang di langit dan di bumi. Siapakah yang dapat memberi syafa\'at di sisi Allah tanpa izin-Nya. Allah mengetahui apa-apa yang di hadapan mereka dan di belakang mereka, dan mereka tidak mengetahui apa-apa dari ilmu Allah melainkan apa yang dikehendaki-Nya. Kursi Allah meliputi langit dan bumi. Dan Allah tidak merasa berat memelihara keduanya, dan Allah Maha Tinggi lagi Maha Besar.” (QS. Al-Baqarah: 255)',
+  },
+  {
+    title: 'Membaca Surat Al-Ikhlas',
+    repeat: 'Dibaca 3x',
+    arabic: 'بِبِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ : قُلْ هُوَ اللَّهُ أَحَدٌ ﴿١﴾ اللَّهُ الصَّمَدُ ﴿٢﴾ لَمْ يَلِدْ وَلَمْ يُولَدْ ﴿٣﴾ وَلَمْ يَكُنْ لَهُ كُفُوًا أَحَدٌ ﴿٤﴾',
+    latin: 'Bismillahirrohmaanirrohiim, Qul huwallahu ahad, Allahush shomad, Lam yalid walam yuulad, Walam yakullahu kufuwan ahad',
+    translation: 'Artinya : "Dengan menyebut nama Allah Yang Maha Pengasih lagi Maha Penyayang.” “Katakanlah: Dialah Allah, Yang Maha Esa. Allah adalah Ilah yang bergantung kepada- Nya segala urusan. Dia tidak beranak dan tiada pula diperanakkan, dan tidak ada seorang pun yang setara dengan Dia.”(QS. Al-Ikhlash: 1-4)',
+  },
+  {
+    title: 'Membaca Surat Al-Falaq',
+    repeat: 'Dibaca 3x',
+    arabic: 'بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ : قُلْ أَعُوذُ بِرَبِّ الْفَلَقِ ﴿١﴾ مِنْ شَرِّ مَا خَلَقَ ﴿٢﴾ وَمِنْ شَرِّ غَاسِقٍ إِذَا وَقَبَ ﴿٣﴾ وَمِنْ شَرِّ النَّفَّاثَاتِ فِي الْعُقَدِ ﴿٤﴾ وَمِنْ شَرِّ حَاسِدٍ إِذَا حَسَدَ ﴿٥﴾',
+    latin: 'Bismillahirrohmaanirrohiim, Qul a\'uudzu birobbil falaq, Min syarri maa kholaq, Wamin syarri ghoosiqin idzaa waqob, Wamin syarrinnaffaatsaati fil \'uqod, Wamin syarri haasidin idzaa hasad',
+    translation: 'Artinya : “Dengan menyebut nama Allah Yang Maha Pengasih lagi Maha Penyayang" “Aku berlindung kepada Rabb yang menguasai Subuh, dari kejahatan makhluk-Nya, dan dari kejahatan malam apabila telah gelap gulita, dan dari kejahatan-kejahatan wanita tukang sihir yang menghembus pada buhul-buhul, dan dari kejahatan orang yang dengki apabila ia dengki.”(QS. Al-Falaq: 1-5)',
+  },
+  {
+    title: 'Membaca Surat An-Nas',
+    repeat: 'Dibaca 3x',
+    arabic: 'بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ: قُلْ أَعُوذُ بِرَبِّ النَّاسِ ﴿١﴾ مَلِكِ النَّاسِ ﴿٢﴾ إِلَهِ النَّاسِ ﴿٣﴾ مِنْ شَرِّ الْوَسْوَاسِ الْخَنَّاسِ ﴿٤﴾ الَّذِي يُوَسْوِسُ فِي صُدُورِ النَّاسِ ﴿٥﴾ مِنَ الْجِنَّةِ وَالنَّاسِ ﴿٦﴾',
+    latin: 'Bismillahirrohmaanirrohiim, Qul a\'uudzu birobbinnaas, Malikinnaas, Ilaahinnaas, Min syarril waswaasil khonnaas, Alladzii yuwaswisu fii shuduurinnaas, Minal jinnati wannaas',
+    translation: 'Artinya : “Dengan menyebut nama Allah Yang Maha Pengasih lagi Maha Penyayang.” “Katakanlah: Aku berlindung kepada Rabb manusia. Raja manusia. Sembahan manusia, dari kejahatan (bisikan) syaitan yang biasa bersembunyi, yang membisikkan (kejahatan) ke dalam dada manusia, dari jin dan manusia.” (QS. An-Naas: 1-6)',
+  },
+  {
+    title: 'Dzikir Mengingatkan Kita Untuk Kembali Kepada Allāh',
+    repeat: 'Dibaca 1x',
+    arabic: 'اللَّهُمَّ بِكَ أَمْسَيْنَا وَبِكَ أَصْبَحْنَا ، وَبِكَ نَحْيَا وَبِكَ نَمُوتُ، وَإِلَيْكَ الْمَصِيْرُ',
+    latin: 'Allahumma bika amsainaa, wa bika ashbahnaa, wa bika nahyaa, wa bika namuutu wa ilaikal mashiir',
+    translation: 'Artinya: "Ya Allah, dengan Engkaulah kami memasuki waktu petang, dan dengan Engkaulah kami memasuki waktu pagi. Dengan Engkaulah kami hidup dan dengan Engkaulah kami mati. Dan kepada-Mu kami kembali."',
+  },
+];
+
+// Original hand-authored content — still needs verification against a
+// mu'tabar source, never pulled from a checked API.
+export const doaKegiatan = [
   {
     title: 'Do\'a Bangun Tidur',
     arabic: 'الْحَمْدُ لِلَّهِ الَّذِي أَحْيَانَا بَعْدَ مَا أَمَاتَنَا وَإِلَيْهِ النُّشُورُ',
@@ -19,4 +291,10 @@ export const doaHarian = [
     translation:
       'Dengan nama Allah, aku bertawakal kepada Allah, tiada daya dan kekuatan kecuali dengan pertolongan Allah.',
   },
+];
+
+export const doaCategories = [
+  { id: 'pagi', labelKey: 'doa_kategori_pagi', items: dzikirPagi },
+  { id: 'petang', labelKey: 'doa_kategori_petang', items: dzikirPetang },
+  { id: 'kegiatan', labelKey: 'doa_kategori_kegiatan', items: doaKegiatan },
 ];
