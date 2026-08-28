@@ -5,7 +5,7 @@ import { db } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
 import { useLang } from '../context/LangContext';
 import { usePrayerTimes } from '../lib/usePrayerTimes';
-import { getOrSeedDonation, contribute } from '../lib/donations';
+import { watchActiveDonations, contribute } from '../lib/donations';
 import { formatRupiah } from '../lib/zakat';
 import BottomNav from '../components/BottomNav';
 import { IconBell, IconSearch, IconMoon } from '../components/icons';
@@ -52,13 +52,15 @@ export default function Home() {
   }, [user]);
 
   useEffect(() => {
-    getOrSeedDonation().then(setDonation);
+    // Home's widget only has room for one featured campaign — the most
+    // recently approved one (watchActiveDonations already sorts
+    // newest-first), not a full list like Donasi.jsx shows.
+    return watchActiveDonations((rows) => setDonation(rows[0] || null));
   }, []);
 
   async function handleGive() {
     if (!donation) return;
     await contribute(donation.id, 25000);
-    setDonation((d) => ({ ...d, collected: d.collected + 25000 }));
   }
 
   const pct = donation ? Math.min(100, Math.round((donation.collected / donation.target) * 100)) : 0;

@@ -1,26 +1,27 @@
-import { doc, getDoc, setDoc, increment, collection, addDoc, serverTimestamp, query, orderBy, onSnapshot } from 'firebase/firestore';
+import { doc, setDoc, increment, collection, addDoc, serverTimestamp, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from './firebase';
 
-const SEED_DONATION = {
-  id: 'masjid-al-ikhlas',
-  title: 'Listrik Masjid Al-Ikhlas',
-  plnId: '5312 0044 219',
-  target: 750000,
-  collected: 480000,
-};
-
-export async function getOrSeedDonation() {
-  const ref = doc(db, 'donations', SEED_DONATION.id);
-  const snap = await getDoc(ref);
-  if (snap.exists()) return { id: snap.id, ...snap.data() };
-  // First load bootstraps the demo campaign — see the write-rule note in
-  // firestore.rules for why this is client-side for now.
-  await setDoc(ref, SEED_DONATION);
-  return SEED_DONATION;
+// Live-updating list of every campaign an admin has approved (see
+// api/approve-masjid.js — that's the only place `donations/{id}` docs get
+// created now; firestore.rules blocks client `create` entirely). Sorted
+// newest-first client-side rather than via `orderBy` in the query itself,
+// specifically to avoid needing a composite index for `where + orderBy` on
+// different fields — fine at this campaign count, revisit if this list
+// ever gets long enough that an unindexed sort becomes a real cost.
+export function watchActiveDonations(callback) {
+  const q = query(collection(db, 'donations'), where('status', '==', 'active'));
+  return onSnapshot(q, (snap) => {
+    const rows = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    rows.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+    callback(rows);
+  });
 }
 
 export async function contribute(donationId, amount) {
   const ref = doc(db, 'donations', donationId);
+  // firestore.rules only allows a signed-in client to touch this one field
+  // on an existing campaign doc — everything else (title, target,
+  // deadline, creating a brand new campaign) is admin-only now.
   await setDoc(ref, { collected: increment(amount) }, { merge: true });
 }
 
