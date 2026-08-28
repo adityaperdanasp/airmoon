@@ -11,7 +11,7 @@
   "navigationDividerColor": "#0d4d47",
   "navigationDividerColorDark": "#071612",
   "backgroundColor": "#faf8f4",
-  "enableNotifications": false,
+  "enableNotifications": true,
   "startUrl": "/",
   "iconUrl": "https://jalanmenujusurga.web.id/icons/icon-512.png",
   "maskableIconUrl": "https://jalanmenujusurga.web.id/icons/maskable-512.png",
