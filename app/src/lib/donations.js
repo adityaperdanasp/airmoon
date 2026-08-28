@@ -1,4 +1,4 @@
-import { doc, setDoc, increment, collection, addDoc, serverTimestamp, query, where, onSnapshot } from 'firebase/firestore';
+import { doc, setDoc, increment, collection, addDoc, serverTimestamp, query, where, orderBy, onSnapshot } from 'firebase/firestore';
 import { db } from './firebase';
 
 // Live-updating list of every campaign an admin has approved (see
