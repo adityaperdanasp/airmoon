@@ -1,5 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { db } from '../lib/firebase';
+import { useAuth } from '../context/AuthContext';
 import { fetchChapters, fetchMushafPage, layoutPage, TOTAL_MUSHAF_PAGES } from '../lib/mushafApi';
 import { IconBack } from '../components/icons';
 
@@ -40,9 +43,17 @@ function SurahBanner({ chapter }) {
   );
 }
 
-function AyahEndMark({ text }) {
+// Doubles as the "tandai sampai sini" control for Mode Mushaf — tapping an
+// ayah's end-mark bookmarks that exact ayah as lastReadMushaf. Deliberately
+// per-ayah, not per-page: a page can hold a dozen+ ayat, so "this page" on
+// its own doesn't say how far into it you actually got (see the CLAUDE.md/
+// commit note on why auto-save-per-page was rejected in favor of this).
+function AyahEndMark({ text, verseKey, isBookmarked, isTarget, onTap, forwardRef }) {
   return (
-    <span
+    <button
+      ref={forwardRef}
+      onClick={() => onTap(verseKey)}
+      aria-label={`Tandai ayat ${text} sebagai terakhir dibaca`}
       style={{
         display: 'inline-flex',
         alignItems: 'center',
@@ -51,15 +62,20 @@ function AyahEndMark({ text }) {
         height: 22,
         borderRadius: '50%',
         border: '1px solid var(--gold-ink)',
+        background: isBookmarked ? 'var(--gold-ink)' : 'transparent',
         fontSize: 11,
         fontFamily: "'Amiri', serif",
-        color: 'var(--gold-ink)',
+        color: isBookmarked ? '#fff' : 'var(--gold-ink)',
         margin: '0 2px',
         verticalAlign: 'middle',
+        padding: 0,
+        cursor: 'pointer',
+        boxShadow: isTarget ? '0 0 0 4px var(--mint)' : 'none',
+        transition: 'box-shadow 0.3s ease',
       }}
     >
       {text}
-    </span>
+    </button>
   );
 }
 
@@ -117,12 +133,46 @@ function MushafLine({ children, fontFamily, lineKey, fontReady }) {
 
 export default function MushafReader() {
   const { page: pageParam } = useParams();
+  const [searchParams] = useSearchParams();
+  const targetVerseKey = searchParams.get('ayat'); // set when arriving via "Lanjut Baca · Mode Mushaf"
   const navigate = useNavigate();
+  const { user } = useAuth();
   const page = Math.min(TOTAL_MUSHAF_PAGES, Math.max(1, Number(pageParam) || 1));
 
   const [chapters, setChapters] = useState(null);
   const [verses, setVerses] = useState(null);
   const [error, setError] = useState('');
+  const [bookmarkedVerseKey, setBookmarkedVerseKey] = useState(null);
+  const targetRef = useRef(null);
+
+  useEffect(() => {
+    // Scoped to this session's load, not synced live — just enough to know
+    // which ayah on THIS page (if any) is the saved bookmark, so its mark
+    // renders filled-in without a separate Firestore listener.
+    if (!user) return;
+    getDoc(doc(db, 'users', user.uid)).then((snap) => {
+      const lr = snap.data()?.lastReadMushaf;
+      if (lr) setBookmarkedVerseKey(lr.verseKey);
+    });
+  }, [user]);
+
+  useEffect(() => {
+    if (targetRef.current) {
+      targetRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [verses]);
+
+  async function bookmarkAyah(verseKey) {
+    setBookmarkedVerseKey(verseKey);
+    if (!user) return;
+    const [chapterId, verseNumber] = verseKey.split(':').map(Number);
+    const chapterName = chapters?.find((c) => c.id === chapterId)?.name_simple || '';
+    await setDoc(
+      doc(db, 'users', user.uid),
+      { lastReadMushaf: { page, chapterId, chapterName, verseKey, verseNumber } },
+      { merge: true }
+    );
+  }
 
   useEffect(() => {
     fetchChapters()
@@ -238,7 +288,15 @@ export default function MushafReader() {
                   <MushafLine fontFamily={`'${pageFontFamily}', 'Amiri', serif`} lineKey={`${page}-${ln}`} fontReady={fontReady}>
                     {lines.get(ln).map((w, i) =>
                       w.char_type_name === 'end' ? (
-                        <AyahEndMark key={i} text={w.text_uthmani} />
+                        <AyahEndMark
+                          key={i}
+                          text={w.text_uthmani}
+                          verseKey={w.verseKey}
+                          isBookmarked={bookmarkedVerseKey === w.verseKey}
+                          isTarget={targetVerseKey === w.verseKey}
+                          onTap={bookmarkAyah}
+                          forwardRef={targetVerseKey === w.verseKey ? targetRef : undefined}
+                        />
                       ) : (
                         <span key={i}>{w.code_v1} </span>
                       )
@@ -259,6 +317,17 @@ export default function MushafReader() {
             <button className="btn-outline" style={{ width: 'auto', padding: '10px 18px' }} onClick={() => goTo(page + 1)} disabled={page >= TOTAL_MUSHAF_PAGES}>
               Selanjutnya &rarr;
             </button>
+          </div>
+        )}
+
+        {verses && (
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '13px 14px', borderRadius: 14, background: 'var(--card)' }}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" style={{ flexShrink: 0, marginTop: 1 }}>
+              <circle cx="12" cy="12" r="9" strokeWidth="1.6" /><path d="M12 11v5.5M12 8v.01" strokeWidth="1.8" strokeLinecap="round" />
+            </svg>
+            <span style={{ fontSize: 11, lineHeight: 1.5, color: 'var(--muted)' }}>
+              Tap nomor ayat buat nandain "terakhir dibaca sampai sini" — nanti muncul di halaman Al-Qur'an sebagai jalan pintas balik ke sini.
+            </span>
           </div>
         )}
       </div>

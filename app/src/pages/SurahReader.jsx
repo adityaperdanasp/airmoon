@@ -102,9 +102,13 @@ export default function SurahReader() {
   async function markLastRead(ayat) {
     setBookmarked(ayat.nomorAyat);
     if (!user || !surah) return;
+    // Separate from lastReadMushaf — Mode Ayat and Mode Mushaf each keep
+    // their own bookmark so switching modes (e.g. out of boredom) doesn't
+    // force one to stand in for the other. See lastReadMushaf in
+    // MushafReader.jsx for why a mushaf-mode bookmark can't just reuse this.
     await setDoc(
       doc(db, 'users', user.uid),
-      { lastRead: { nomor: surah.nomor, namaLatin: surah.namaLatin, ayat: ayat.nomorAyat } },
+      { lastReadAyat: { nomor: surah.nomor, namaLatin: surah.namaLatin, ayat: ayat.nomorAyat } },
       { merge: true }
     );
   }

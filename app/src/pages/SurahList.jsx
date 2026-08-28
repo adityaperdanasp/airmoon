@@ -12,7 +12,8 @@ export default function SurahList() {
   const [surahs, setSurahs] = useState(null);
   const [error, setError] = useState('');
   const [query, setQuery] = useState('');
-  const [lastRead, setLastRead] = useState(null);
+  const [lastReadAyat, setLastReadAyat] = useState(null);
+  const [lastReadMushaf, setLastReadMushaf] = useState(null);
 
   useEffect(() => {
     fetchSurahList()
@@ -23,8 +24,13 @@ export default function SurahList() {
   useEffect(() => {
     if (!user) return;
     getDoc(doc(db, 'users', user.uid)).then((snap) => {
-      const lr = snap.data()?.lastRead;
-      if (lr) setLastRead(lr);
+      const data = snap.data();
+      // lastReadAyat replaces the older lastRead field name (split out once
+      // Mode Mushaf got its own separate bookmark) — fall back to it so
+      // bookmarks saved before that split don't just disappear.
+      const ayatBookmark = data?.lastReadAyat || data?.lastRead;
+      if (ayatBookmark) setLastReadAyat(ayatBookmark);
+      if (data?.lastReadMushaf) setLastReadMushaf(data.lastReadMushaf);
     });
   }, [user]);
 
@@ -78,9 +84,9 @@ export default function SurahList() {
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)"><path d="m9 6 6 6-6 6" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
         </Link>
 
-        {lastRead && (
+        {lastReadAyat && (
           <Link
-            to={`/quran/${lastRead.nomor}`}
+            to={`/quran/${lastReadAyat.nomor}`}
             style={{
               textDecoration: 'none',
               color: '#fff',
@@ -98,8 +104,35 @@ export default function SurahList() {
               <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff" stroke="none"><path d="M8 5.5v13l11-6.5-11-6.5Z" /></svg>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-              <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.03em', textTransform: 'uppercase', color: 'var(--accent)' }}>Lanjut Baca</span>
-              <span style={{ fontSize: 14.5, fontWeight: 800 }}>{lastRead.namaLatin} &middot; Ayat {lastRead.ayat}</span>
+              <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.03em', textTransform: 'uppercase', color: 'var(--accent)' }}>Lanjut Baca &middot; Mode Ayat</span>
+              <span style={{ fontSize: 14.5, fontWeight: 800 }}>{lastReadAyat.namaLatin} &middot; Ayat {lastReadAyat.ayat}</span>
+            </div>
+          </Link>
+        )}
+
+        {lastReadMushaf && (
+          <Link
+            to={`/quran/mushaf/${lastReadMushaf.page}?ayat=${lastReadMushaf.verseKey}`}
+            style={{
+              textDecoration: 'none',
+              color: 'inherit',
+              position: 'relative',
+              overflow: 'hidden',
+              borderRadius: 20,
+              padding: '16px 18px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 14,
+              border: '1.5px solid var(--gold-ink)',
+              background: 'var(--cream)',
+            }}
+          >
+            <div style={{ width: 42, height: 42, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: 'rgba(0,0,0,0.06)' }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--gold-ink)"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H12v18H6.5A2.5 2.5 0 0 1 4 18.5v-13Z" strokeWidth="1.6" strokeLinejoin="round" /><path d="M20 5.5A2.5 2.5 0 0 0 17.5 3H12v18h5.5a2.5 2.5 0 0 0 2.5-2.5v-13Z" strokeWidth="1.6" strokeLinejoin="round" /></svg>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+              <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.03em', textTransform: 'uppercase', color: 'var(--gold-ink)' }}>Lanjut Baca &middot; Mode Mushaf</span>
+              <span style={{ fontSize: 14.5, fontWeight: 800 }}>{lastReadMushaf.chapterName} &middot; Halaman {lastReadMushaf.page}</span>
             </div>
           </Link>
         )}
