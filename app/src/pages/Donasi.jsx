@@ -129,7 +129,7 @@ export default function Donasi() {
             textAlign: 'center',
           }}
         >
-          MENUNGGU ARAHAN MAMAS
+          Gimana mas udah ok gak?
         </div>
 
         <DaftarkanMasjidCard user={user} />
