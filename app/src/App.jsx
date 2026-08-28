@@ -6,6 +6,7 @@ import SignUp from './pages/SignUp';
 import Home from './pages/Home';
 import SurahList from './pages/SurahList';
 import SurahReader from './pages/SurahReader';
+import MushafReader from './pages/MushafReader';
 import PilihQari from './pages/PilihQari';
 import JadwalSholat from './pages/JadwalSholat';
 import PilihAdzan from './pages/PilihAdzan';
@@ -40,6 +41,7 @@ export default function App() {
       <Route path="/" element={<P><Home /></P>} />
       <Route path="/quran" element={<P><SurahList /></P>} />
       <Route path="/quran/:nomor" element={<P><SurahReader /></P>} />
+      <Route path="/quran/mushaf/:page" element={<P><MushafReader /></P>} />
       <Route path="/quran/:nomor/qari" element={<P><PilihQari /></P>} />
       <Route path="/jadwal-sholat" element={<P><JadwalSholat /></P>} />
       <Route path="/jadwal-sholat/adzan" element={<P><PilihAdzan /></P>} />

@@ -55,6 +55,29 @@ export default function SurahList() {
           <input placeholder="Cari surat…" value={query} onChange={(e) => setQuery(e.target.value)} />
         </div>
 
+        <Link
+          to="/quran/mushaf/1"
+          style={{
+            textDecoration: 'none',
+            color: 'inherit',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 10,
+            padding: '13px 16px',
+            borderRadius: 16,
+            border: '1px solid var(--border)',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 34, height: 34, borderRadius: 11, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: 'var(--cream)' }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--gold-ink)"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H12v18H6.5A2.5 2.5 0 0 1 4 18.5v-13Z" strokeWidth="1.6" strokeLinejoin="round" /><path d="M20 5.5A2.5 2.5 0 0 0 17.5 3H12v18h5.5a2.5 2.5 0 0 0 2.5-2.5v-13Z" strokeWidth="1.6" strokeLinejoin="round" /></svg>
+            </div>
+            <span style={{ fontSize: 13, fontWeight: 700 }}>Mode Mushaf</span>
+          </div>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)"><path d="m9 6 6 6-6 6" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+        </Link>
+
         {lastRead && (
           <Link
             to={`/quran/${lastRead.nomor}`}
