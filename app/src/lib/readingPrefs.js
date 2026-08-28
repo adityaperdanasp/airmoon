@@ -38,8 +38,16 @@ export const NIGHT_STYLE_VARS = {
   '--border': '#3a3a3a',
   '--cream': '#2a2410',
   '--gold-ink': '#f0cd7b',
-  '--mint': '#123328',
-  '--mint-soft': '#0f2620',
+  // A solid dark green (#123328) here reads as almost the same shade as
+  // --bg/--card, which is invisible for MushafReader's "resume here" ring
+  // (`boxShadow: 0 0 0 4px var(--mint)` on AyahEndMark) — confirmed via a
+  // side-by-side swatch test before/after. The app's own real dark theme
+  // (theme.css [data-theme='dark']) already solves this the same way: a
+  // translucent bright mint tint instead of a solid dark one. Matched that
+  // pattern here (slightly more opaque than theme.css's 0.14, since this
+  // also has to work as an attention ring, not just a card tint).
+  '--mint': 'rgba(110, 231, 201, 0.45)',
+  '--mint-soft': 'rgba(110, 231, 201, 0.12)',
   '--primary': '#6ee7c9',
   '--primary-dark': '#4fd3b0',
   color: 'var(--ink)',
