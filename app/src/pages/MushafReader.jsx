@@ -3,7 +3,8 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
-import { fetchChapters, fetchMushafPage, layoutPage, TOTAL_MUSHAF_PAGES } from '../lib/mushafApi';
+import { fetchChapters, fetchMushafPage, layoutPage, TOTAL_MUSHAF_PAGES, TAJWEED_COLORS, parseTajweedHtml } from '../lib/mushafApi';
+import { useNightMode, NIGHT_STYLE_VARS } from '../lib/readingPrefs';
 import { IconBack } from '../components/icons';
 
 // Same Bismillah text as Al-Fatihah's own first ayah, standard convention
@@ -79,6 +80,23 @@ function AyahEndMark({ text, verseKey, isBookmarked, isTarget, onTap, forwardRef
   );
 }
 
+// Tajwid mode can't use the QCF glyph fonts (each glyph is a whole
+// pre-shaped word, not individual letters, so there's nothing to recolor
+// per-rule) — renders real Unicode text_uthmani_tajweed with Amiri instead,
+// coloring each <rule class=X> segment per TAJWEED_COLORS.
+function TajweedWord({ html }) {
+  const parts = parseTajweedHtml(html);
+  return (
+    <>
+      {parts.map((p, i) => (
+        <span key={i} style={{ color: p.ruleClass ? TAJWEED_COLORS[p.ruleClass] : 'inherit' }}>
+          {p.text}
+        </span>
+      ))}
+    </>
+  );
+}
+
 const BASE_LINE_FONT_SIZE = 26;
 const MIN_LINE_FONT_SIZE = 15;
 
@@ -143,7 +161,13 @@ export default function MushafReader() {
   const [verses, setVerses] = useState(null);
   const [error, setError] = useState('');
   const [bookmarkedVerseKey, setBookmarkedVerseKey] = useState(null);
+  const [tajwidOn, setTajwidOn] = useState(() => localStorage.getItem('airmoon-mushaf-tajwid') === '1');
+  const [night, setNight] = useNightMode();
   const targetRef = useRef(null);
+
+  useEffect(() => {
+    localStorage.setItem('airmoon-mushaf-tajwid', tajwidOn ? '1' : '0');
+  }, [tajwidOn]);
 
   useEffect(() => {
     // Scoped to this session's load, not synced live — just enough to know
@@ -217,6 +241,13 @@ export default function MushafReader() {
   // of racing against whether the <style> tag happened to render first.
   const [fontReady, setFontReady] = useState(false);
   useEffect(() => {
+    // Tajwid mode never renders with the QCF glyph font (see TajweedWord
+    // above) — skip fetching the ~30-90KB page font entirely when it won't
+    // be used.
+    if (tajwidOn) {
+      setFontReady(true);
+      return;
+    }
     let cancelled = false;
     setFontReady(false);
     const face = new FontFace(pageFontFamily, `url(${pageFontUrl})`);
@@ -233,7 +264,7 @@ export default function MushafReader() {
     return () => {
       cancelled = true;
     };
-  }, [pageFontFamily, pageFontUrl]);
+  }, [pageFontFamily, pageFontUrl, tajwidOn]);
 
   const { lines, surahStarts } = verses ? layoutPage(verses) : { lines: new Map(), surahStarts: [] };
   const lineNumbers = [...lines.keys()].sort((a, b) => a - b);
@@ -245,7 +276,7 @@ export default function MushafReader() {
   const chapterNamesOnPage = chapterIdsOnPage.map((id) => chapterById(id)?.name_simple).filter(Boolean).join(' / ');
 
   return (
-    <div className="screen">
+    <div className="screen" style={night ? NIGHT_STYLE_VARS : undefined}>
       <div className="screen-content" style={{ paddingBottom: 130 }}>
         <div className="topbar">
           <button className="icon-btn" onClick={() => navigate('/quran')} aria-label="Kembali">
@@ -257,7 +288,33 @@ export default function MushafReader() {
               {juzNumber ? `Juz ${juzNumber} · ` : ''}Halaman {page}
             </span>
           </div>
-          <div className="icon-btn" style={{ visibility: 'hidden' }} />
+          <div style={{ display: 'flex', gap: 4 }}>
+            <button
+              className="icon-btn"
+              onClick={() => setTajwidOn((v) => !v)}
+              aria-label="Toggle tajwid berwarna"
+              style={{ color: tajwidOn ? 'var(--primary)' : 'var(--muted)' }}
+              title="Tajwid berwarna"
+            >
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M12 3a9 9 0 0 0 0 18c1.5 0 2-1 2-2s-.5-1.5-1-2 0-2 1-2h2a4 4 0 0 0 4-4c0-4.4-3.6-8-8-8Z" strokeWidth="1.6" strokeLinejoin="round" />
+                <circle cx="7.5" cy="11" r="1" fill="currentColor" stroke="none" />
+                <circle cx="10.5" cy="7.5" r="1" fill="currentColor" stroke="none" />
+                <circle cx="15" cy="8" r="1" fill="currentColor" stroke="none" />
+              </svg>
+            </button>
+            <button
+              className="icon-btn"
+              onClick={() => setNight((v) => !v)}
+              aria-label="Toggle mode malam"
+              style={{ color: night ? 'var(--primary)' : 'var(--muted)' }}
+              title="Mode malam"
+            >
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z" strokeWidth="1.6" strokeLinejoin="round" />
+              </svg>
+            </button>
+          </div>
         </div>
 
         {error && <p className="state-msg">{error}</p>}
@@ -285,7 +342,11 @@ export default function MushafReader() {
               return (
                 <div key={ln}>
                   {banner && <SurahBanner chapter={chapterById(banner.chapterId)} />}
-                  <MushafLine fontFamily={`'${pageFontFamily}', 'Amiri', serif`} lineKey={`${page}-${ln}`} fontReady={fontReady}>
+                  <MushafLine
+                    fontFamily={tajwidOn ? "'Amiri', serif" : `'${pageFontFamily}', 'Amiri', serif`}
+                    lineKey={`${page}-${ln}-${tajwidOn}`}
+                    fontReady={fontReady}
+                  >
                     {lines.get(ln).map((w, i) =>
                       w.char_type_name === 'end' ? (
                         <AyahEndMark
@@ -297,6 +358,10 @@ export default function MushafReader() {
                           onTap={bookmarkAyah}
                           forwardRef={targetVerseKey === w.verseKey ? targetRef : undefined}
                         />
+                      ) : tajwidOn ? (
+                        <span key={i}>
+                          <TajweedWord html={w.text_uthmani_tajweed} />{' '}
+                        </span>
                       ) : (
                         <span key={i}>{w.code_v1} </span>
                       )

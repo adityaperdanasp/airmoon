@@ -5,6 +5,7 @@ import { db } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
 import { fetchSurahDetail, RECITERS } from '../lib/quranApi';
 import { hasWordSync, fetchChapterTiming } from '../lib/quranTimingApi';
+import { useNightMode, NIGHT_STYLE_VARS } from '../lib/readingPrefs';
 import TopBar from '../components/TopBar';
 
 function getReciterId() {
@@ -20,6 +21,7 @@ export default function SurahReader() {
   const [bookmarked, setBookmarked] = useState(null);
   const [reciterId, setReciterId] = useState(getReciterId());
   const [timing, setTiming] = useState(null); // fetchChapterTiming() result, or null if unavailable
+  const [night, setNight] = useNightMode();
   const [activeWord, setActiveWord] = useState(null); // 1-based word index within the playing ayat
   const audioRef = useRef(null);
   const reciter = RECITERS.find((r) => r.id === reciterId) || RECITERS[4];
@@ -134,10 +136,24 @@ export default function SurahReader() {
     );
   }
 
+  const nightToggle = (
+    <button
+      className="icon-btn"
+      onClick={() => setNight((v) => !v)}
+      aria-label="Toggle mode malam"
+      style={{ color: night ? 'var(--primary)' : 'var(--muted)' }}
+      title="Mode malam"
+    >
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z" strokeWidth="1.6" strokeLinejoin="round" />
+      </svg>
+    </button>
+  );
+
   return (
-    <div className="screen">
+    <div className="screen" style={night ? NIGHT_STYLE_VARS : undefined}>
       <div className="screen-content" style={{ paddingBottom: 110 }}>
-        <TopBar title={surah.namaLatin} subtitle={`${surah.tempatTurun} · ${surah.jumlahAyat} Ayat`} />
+        <TopBar title={surah.namaLatin} subtitle={`${surah.tempatTurun} · ${surah.jumlahAyat} Ayat`} right={nightToggle} />
 
         <Link
           to={`/quran/${nomor}/qari`}
