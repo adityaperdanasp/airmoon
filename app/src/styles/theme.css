@@ -86,7 +86,7 @@ a {
   display: flex;
   flex-direction: column;
   gap: 18px;
-  padding: 28px 20px 110px;
+  padding: 28px 20px 130px;
 }
 
 .topbar {
@@ -188,6 +188,17 @@ a {
 
 .input-row input::placeholder {
   color: var(--muted-soft);
+}
+
+.bottomnav-scrim {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 130px;
+  background: linear-gradient(to bottom, transparent, var(--bg) 65%);
+  pointer-events: none;
+  z-index: 15;
 }
 
 .bottomnav {

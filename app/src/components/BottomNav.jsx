@@ -11,11 +11,16 @@ export default function BottomNav() {
     </NavLink>
   );
   return (
-    <nav className="bottomnav">
-      {item('/', IconHome, t('nav_home'))}
-      {item('/quran', IconBook, t('nav_quran'))}
-      {item('/donasi', IconHeart, t('nav_donasi'))}
-      {item('/umroh', IconKaaba, t('nav_umroh'))}
-    </nav>
+    <>
+      {/* Fades scrolled content out before it reaches the floating pill below,
+          instead of content getting sharply cut off behind it mid-scroll. */}
+      <div className="bottomnav-scrim" />
+      <nav className="bottomnav">
+        {item('/', IconHome, t('nav_home'))}
+        {item('/quran', IconBook, t('nav_quran'))}
+        {item('/donasi', IconHeart, t('nav_donasi'))}
+        {item('/umroh', IconKaaba, t('nav_umroh'))}
+      </nav>
+    </>
   );
 }
