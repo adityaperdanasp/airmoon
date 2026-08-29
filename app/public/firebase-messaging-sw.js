@@ -24,6 +24,17 @@ messaging.onBackgroundMessage((payload) => {
     icon: '/icons/icon-192.png',
     badge: '/icons/icon-192.png',
     tag: payload.data?.tag || 'airmoon-prayer',
+    // Each prayer reuses the same tag every day (adzan-Isha, adzan-Subuh, …)
+    // so today's notification replaces yesterday's leftover instead of
+    // piling up. Per the Notification API spec, replacing a same-tag
+    // notification is silent by default (no sound/vibration) unless
+    // renotify is explicitly set — without this, the user only gets a
+    // sound the very first time a given prayer's tag is ever used, then
+    // silently "updated" notifications forever after. This was a real
+    // reported bug (2026-08-29), not a phone settings issue — confirmed
+    // the user's iOS notification settings (Allow Notifications, Sounds,
+    // Immediate Delivery) were already correctly enabled.
+    renotify: true,
   });
 });
 
