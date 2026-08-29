@@ -4,9 +4,11 @@ import { useAuth } from '../context/AuthContext';
 import { useLang } from '../context/LangContext';
 import { usePrayerTimes } from '../lib/usePrayerTimes';
 import { watchActiveDonations, watchMyContributions } from '../lib/donations';
+import { watchDoas } from '../lib/doa';
 import { formatRupiah } from '../lib/zakat';
 import BottomNav from '../components/BottomNav';
 import DonationCard from '../components/DonationCard';
+import DoaCard from '../components/DoaCard';
 import { IconBell, IconSearch, IconMoon } from '../components/icons';
 import { QiblaCompassIcon } from '../components/serviceIcons';
 
@@ -39,8 +41,10 @@ export default function Home() {
   const [donations, setDonations] = useState(null);
   const [myContributions, setMyContributions] = useState([]);
   const [showSedekahHistory, setShowSedekahHistory] = useState(false);
+  const [doas, setDoas] = useState(null);
 
   useEffect(() => watchActiveDonations(setDonations), []);
+  useEffect(() => watchDoas(setDoas), []);
 
   useEffect(() => {
     if (!user) return;
@@ -103,28 +107,19 @@ export default function Home() {
           <IconSearch style={{ opacity: 0.6, color: 'var(--ink)' }} />
         </Link>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-          <button
-            onClick={() => setShowSedekahHistory((v) => !v)}
-            style={{ display: 'flex', flexDirection: 'column', gap: 7, borderRadius: 20, padding: '14px 15px', background: 'var(--mint)', border: 'none', textAlign: 'left', cursor: 'pointer', font: 'inherit', color: 'inherit' }}
-          >
-            <Wallet />
+        <button
+          onClick={() => setShowSedekahHistory((v) => !v)}
+          style={{ display: 'flex', alignItems: 'center', gap: 12, borderRadius: 20, padding: '14px 15px', background: 'var(--mint)', border: 'none', textAlign: 'left', cursor: 'pointer', font: 'inherit', color: 'inherit', width: '100%' }}
+        >
+          <Wallet />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1 }}>
             <span style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--muted)' }}>Total Sedekah</span>
-            <span style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--primary)' }}>
+            <span style={{ fontSize: 16, fontWeight: 800, color: 'var(--primary)' }}>
               {formatRupiah(mySedekahTotal)}
             </span>
-          </button>
-          <Link
-            to="/doa"
-            style={{ display: 'flex', flexDirection: 'column', gap: 7, borderRadius: 20, padding: '14px 15px', background: 'var(--cream)', textDecoration: 'none', color: 'inherit' }}
-          >
-            <span style={{ fontSize: 18, lineHeight: 1 }}>🤲</span>
-            <span style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--gold-ink)' }}>Doa & Aminkan</span>
-            <span style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--gold-ink-dark)' }}>
-              Kirim & aminkan doa →
-            </span>
-          </Link>
-        </div>
+          </div>
+          <span style={{ fontSize: 11, color: 'var(--muted)' }}>{showSedekahHistory ? 'Tutup' : 'Rincian'}</span>
+        </button>
 
         {showSedekahHistory && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -211,6 +206,28 @@ export default function Home() {
               </Link>
             ))}
           </div>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span className="section-label">🤲 Doa & Aminkan</span>
+            <Link to="/doa" style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 11, fontWeight: 700, color: 'var(--primary)', textDecoration: 'none' }}>
+              {t('lihat_semua')}
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--primary)"><path d="m9 6 6 6-6 6" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            </Link>
+          </div>
+          {doas && doas.length === 0 && (
+            <div className="card" style={{ padding: 16, fontSize: 12.5, color: 'var(--muted)', textAlign: 'center' }}>
+              Belum ada doa. Jadilah yang pertama.
+            </div>
+          )}
+          {doas && doas.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {doas.slice(0, 2).map((doa) => (
+                <DoaCard key={doa.id} doa={doa} />
+              ))}
+            </div>
+          )}
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
