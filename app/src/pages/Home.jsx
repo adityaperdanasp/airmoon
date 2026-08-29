@@ -1,29 +1,22 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { doc, onSnapshot } from 'firebase/firestore';
-import { db } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
 import { useLang } from '../context/LangContext';
 import { usePrayerTimes } from '../lib/usePrayerTimes';
-import { watchActiveDonations } from '../lib/donations';
+import { watchActiveDonations, watchMyContributions } from '../lib/donations';
 import { formatRupiah } from '../lib/zakat';
 import BottomNav from '../components/BottomNav';
 import DonationCard from '../components/DonationCard';
 import { IconBell, IconSearch, IconMoon } from '../components/icons';
 import { QiblaCompassIcon } from '../components/serviceIcons';
 
+const dateFmt = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
 function Wallet() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)">
       <rect x="2.5" y="5.5" width="19" height="13" rx="2.5" strokeWidth="1.7" />
       <path d="M2.5 9.5h19" strokeWidth="1.7" />
-    </svg>
-  );
-}
-function Star() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--gold-ink)">
-      <path d="M12 2.5 14 9l6.5.4-5.1 4.2 1.8 6.4L12 16.7 6.8 20l1.8-6.4L3.5 9.4 10 9 12 2.5Z" strokeWidth="1.5" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -43,16 +36,18 @@ export default function Home() {
   const { user } = useAuth();
   const { t } = useLang();
   const { next, status: prayerStatus } = usePrayerTimes();
-  const [profile, setProfile] = useState(null);
   const [donations, setDonations] = useState(null);
+  const [myContributions, setMyContributions] = useState([]);
+  const [showSedekahHistory, setShowSedekahHistory] = useState(false);
+
+  useEffect(() => watchActiveDonations(setDonations), []);
 
   useEffect(() => {
     if (!user) return;
-    const ref = doc(db, 'users', user.uid);
-    return onSnapshot(ref, (snap) => setProfile(snap.data()));
+    return watchMyContributions(user.uid, setMyContributions);
   }, [user]);
 
-  useEffect(() => watchActiveDonations(setDonations), []);
+  const mySedekahTotal = myContributions.reduce((sum, c) => sum + c.amount, 0);
 
   return (
     <div className="screen">
@@ -109,21 +104,50 @@ export default function Home() {
         </Link>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 7, borderRadius: 20, padding: '14px 15px', background: 'var(--mint)' }}>
+          <button
+            onClick={() => setShowSedekahHistory((v) => !v)}
+            style={{ display: 'flex', flexDirection: 'column', gap: 7, borderRadius: 20, padding: '14px 15px', background: 'var(--mint)', border: 'none', textAlign: 'left', cursor: 'pointer', font: 'inherit', color: 'inherit' }}
+          >
             <Wallet />
-            <span style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--muted)' }}>{t('wallet_sedekah')}</span>
+            <span style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--muted)' }}>Total Sedekah</span>
             <span style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--primary)' }}>
-              {formatRupiah(profile?.walletBalance ?? 0)}
+              {formatRupiah(mySedekahTotal)}
             </span>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 7, borderRadius: 20, padding: '14px 15px', background: 'var(--cream)' }}>
-            <Star />
-            <span style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--gold-ink)' }}>{t('poin_ibadah')}</span>
-            <span style={{ fontSize: 14.5, fontWeight: 800, color: 'var(--gold-ink-dark)' }}>
-              {(profile?.points ?? 0).toLocaleString('id-ID')} pts
+          </button>
+          <Link
+            to="/doa"
+            style={{ display: 'flex', flexDirection: 'column', gap: 7, borderRadius: 20, padding: '14px 15px', background: 'var(--cream)', textDecoration: 'none', color: 'inherit' }}
+          >
+            <span style={{ fontSize: 18, lineHeight: 1 }}>🤲</span>
+            <span style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--gold-ink)' }}>Doa & Aminkan</span>
+            <span style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--gold-ink-dark)' }}>
+              Kirim & aminkan doa →
             </span>
-          </div>
+          </Link>
         </div>
+
+        {showSedekahHistory && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {myContributions.length === 0 ? (
+              <div className="card" style={{ padding: 16, fontSize: 12.5, color: 'var(--muted)', textAlign: 'center' }}>
+                Belum ada donasi. Yuk mulai sedekah hari ini.
+              </div>
+            ) : (
+              myContributions.map((c) => (
+                <div
+                  key={c.id}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', borderRadius: 14, background: 'var(--card)' }}
+                >
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <span style={{ fontSize: 13, fontWeight: 700 }}>{c.donationTitle}</span>
+                    <span style={{ fontSize: 11, color: 'var(--muted)' }}>{c.createdAt ? dateFmt.format(c.createdAt.toDate()) : 'Baru saja'}</span>
+                  </div>
+                  <span style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--primary)' }}>+{formatRupiah(c.amount)}</span>
+                </div>
+              ))
+            )}
+          </div>
+        )}
 
         <Link
           to="/jadwal-sholat"

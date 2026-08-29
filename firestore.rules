@@ -56,6 +56,37 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Doa & Aminkan — a public amin wall. Deliberately trusts a normal
+    // client write here (unlike the donation flows, which route all writes
+    // through admin-only endpoints) since there's no money/fraud stakes in
+    // someone tapping "aminkan" or posting a doa — the worst case is a
+    // low-effort annoyance, not a financial exploit. `create` still checks
+    // ownership (uid must match the poster), a length cap, and that
+    // aminCount starts at 0 (can't post with a fake head start); `update`
+    // is scoped to only the aminCount field, so a client can bump the
+    // counter (via toggleAmin's transaction) but can't rewrite someone
+    // else's doa text or author.
+    match /doas/{id} {
+      allow read: if true;
+      allow create: if request.auth != null
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.text is string
+        && request.resource.data.text.size() > 0
+        && request.resource.data.text.size() <= 500
+        && request.resource.data.aminCount == 0;
+      allow update: if request.auth != null
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['aminCount']);
+      allow delete: if request.auth != null && request.auth.uid == resource.data.uid;
+
+      // One doc per user who has amin-ed this doa — existence (not
+      // content) is what matters, so the client can cheaply check "did I
+      // already amin this?" without reading everyone who has.
+      match /amins/{uid} {
+        allow read: if true;
+        allow write: if request.auth != null && request.auth.uid == uid;
+      }
+    }
+
     // Everything else stays locked until it has a real data model.
     match /{document=**} {
       allow read, write: if false;
