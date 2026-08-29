@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { contribute, recordContribution, watchMyContributions, watchActiveDonations } from '../lib/donations';
+import { createMidtransTransaction, loadSnapScript, watchMyContributions, watchActiveDonations } from '../lib/donations';
 import { formatRupiah } from '../lib/zakat';
 import { useAuth } from '../context/AuthContext';
 import BottomNav from '../components/BottomNav';
@@ -57,7 +57,7 @@ function DaftarkanMasjidCard({ user }) {
   );
 }
 
-function DonationCard({ donation, onGive }) {
+function DonationCard({ donation, onGive, paying }) {
   const pct = Math.min(100, Math.round((donation.collected / donation.target) * 100));
   return (
     <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 13, padding: 18 }}>
@@ -84,7 +84,13 @@ function DonationCard({ donation, onGive }) {
       </div>
       <div style={{ display: 'flex', gap: 8 }}>
         {[10000, 25000, 50000].map((amt) => (
-          <button key={amt} className="btn-outline" style={{ flex: 1, padding: '11px 0', fontSize: 12 }} onClick={() => onGive(donation, amt)}>
+          <button
+            key={amt}
+            className="btn-outline"
+            style={{ flex: 1, padding: '11px 0', fontSize: 12, opacity: paying ? 0.6 : 1 }}
+            disabled={paying}
+            onClick={() => onGive(donation, amt)}
+          >
             +{formatRupiah(amt).replace('Rp ', '')}
           </button>
         ))}
@@ -97,6 +103,8 @@ export default function Donasi() {
   const { user } = useAuth();
   const [donations, setDonations] = useState(null);
   const [myContributions, setMyContributions] = useState([]);
+  const [payStatus, setPayStatus] = useState(null); // { kind: 'info'|'success'|'error', text }
+  const [payingId, setPayingId] = useState(null);
 
   useEffect(() => watchActiveDonations(setDonations), []);
 
@@ -106,8 +114,26 @@ export default function Donasi() {
   }, [user]);
 
   async function handleGive(donation, amount) {
-    await contribute(donation.id, amount);
-    if (user) await recordContribution(user.uid, donation, amount);
+    if (!user) {
+      setPayStatus({ kind: 'error', text: 'Masuk dulu buat donasi.' });
+      return;
+    }
+    setPayingId(donation.id);
+    setPayStatus(null);
+    try {
+      await loadSnapScript();
+      const { token } = await createMidtransTransaction(donation, amount, user);
+      window.snap.pay(token, {
+        onSuccess: () => setPayStatus({ kind: 'success', text: 'Pembayaran berhasil! Terima kasih — angka terkumpul akan update sebentar lagi.' }),
+        onPending: () => setPayStatus({ kind: 'info', text: 'Pembayaran diproses (misal nunggu transfer VA). Angka terkumpul update begitu lunas.' }),
+        onError: () => setPayStatus({ kind: 'error', text: 'Pembayaran gagal. Coba lagi ya.' }),
+        onClose: () => setPayStatus((s) => s || { kind: 'error', text: 'Dibatalkan sebelum bayar.' }),
+      });
+    } catch (err) {
+      setPayStatus({ kind: 'error', text: err.message || 'Gagal memulai pembayaran.' });
+    } finally {
+      setPayingId(null);
+    }
   }
 
   const myTotal = myContributions.reduce((sum, c) => sum + c.amount, 0);
@@ -134,6 +160,21 @@ export default function Donasi() {
 
         <DaftarkanMasjidCard user={user} />
 
+        {payStatus && (
+          <div
+            className="card"
+            style={{
+              padding: '12px 14px',
+              fontSize: 12.5,
+              textAlign: 'center',
+              color: payStatus.kind === 'error' ? '#c0392b' : 'var(--ink)',
+              border: `1px solid ${payStatus.kind === 'success' ? 'var(--primary)' : payStatus.kind === 'error' ? '#c0392b' : 'var(--border)'}`,
+            }}
+          >
+            {payStatus.text}
+          </div>
+        )}
+
         {!donations && <div className="center" style={{ minHeight: 200 }}><div className="spinner" /></div>}
 
         {donations && donations.length === 0 && (
@@ -145,7 +186,7 @@ export default function Donasi() {
         {donations && donations.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {donations.map((donation) => (
-              <DonationCard key={donation.id} donation={donation} onGive={handleGive} />
+              <DonationCard key={donation.id} donation={donation} onGive={handleGive} paying={payingId === donation.id} />
             ))}
           </div>
         )}

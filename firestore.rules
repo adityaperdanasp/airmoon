@@ -20,20 +20,28 @@ service cloud.firestore {
     }
 
     // Donation campaigns (e.g. "Listrik Masjid Al-Ikhlas") are public read
-    // so the home feed works signed-out. Creating a campaign is admin-only
-    // now — api/approve-masjid.js does it via the Admin SDK (which bypasses
-    // these rules entirely), triggered from the Google Sheet review flow
-    // (see CLAUDE.md's "Daftarkan Masjid" note) — so `create` is closed to
-    // clients entirely. `update` stays open to any signed-in user, but only
-    // for the `collected` field: that's the one write real donors make
-    // (tapping +10rb/+25rb/+50rb in Donasi.jsx), everything else about a
-    // campaign (title, target, deadline, ...) is set once at creation and
-    // never edited by a client afterwards.
+    // so the home feed works signed-out. Fully closed to client writes now
+    // — creating one is admin-only (api/approve-masjid.js, via the Google
+    // Sheet review flow) and `collected` only moves once a real Midtrans
+    // payment is confirmed (api/midtrans-notify.js's signature-verified
+    // webhook). Both write server-side via the Admin SDK, which bypasses
+    // these rules entirely, so there's no client write case left to allow
+    // — tapping +10rb/+25rb/+50rb used to `update` this doc's `collected`
+    // field directly, back when that button just faked a donation; real
+    // money now flows through Midtrans first.
     match /donations/{id} {
       allow read: if true;
-      allow update: if request.auth != null
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['collected']);
-      allow create, delete: if false;
+      allow write: if false;
+    }
+
+    // One doc per Midtrans Snap transaction attempt, created by
+    // api/create-midtrans-transaction.js and only ever updated by
+    // api/midtrans-notify.js's webhook (both Admin SDK, bypasses this too)
+    // — a client can read its own (to poll "did my payment go through?"
+    // if that's ever built), never write.
+    match /paymentTransactions/{orderId} {
+      allow read: if request.auth != null && request.auth.uid == resource.data.uid;
+      allow write: if false;
     }
 
     // Everything else stays locked until it has a real data model.

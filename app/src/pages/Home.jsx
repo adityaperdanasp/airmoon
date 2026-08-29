@@ -5,7 +5,7 @@ import { db } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
 import { useLang } from '../context/LangContext';
 import { usePrayerTimes } from '../lib/usePrayerTimes';
-import { watchActiveDonations, contribute } from '../lib/donations';
+import { watchActiveDonations, createMidtransTransaction, loadSnapScript } from '../lib/donations';
 import { formatRupiah } from '../lib/zakat';
 import BottomNav from '../components/BottomNav';
 import { IconBell, IconSearch, IconMoon } from '../components/icons';
@@ -44,6 +44,8 @@ export default function Home() {
   const { next, status: prayerStatus } = usePrayerTimes();
   const [profile, setProfile] = useState(null);
   const [donation, setDonation] = useState(null);
+  const [giving, setGiving] = useState(false);
+  const [giveStatus, setGiveStatus] = useState('');
 
   useEffect(() => {
     if (!user) return;
@@ -60,7 +62,26 @@ export default function Home() {
 
   async function handleGive() {
     if (!donation) return;
-    await contribute(donation.id, 25000);
+    if (!user) {
+      setGiveStatus('Masuk dulu buat donasi.');
+      return;
+    }
+    setGiving(true);
+    setGiveStatus('');
+    try {
+      await loadSnapScript();
+      const { token } = await createMidtransTransaction(donation, 25000, user);
+      window.snap.pay(token, {
+        onSuccess: () => setGiveStatus('Berhasil! Terima kasih 🤍'),
+        onPending: () => setGiveStatus('Diproses, terima kasih 🤍'),
+        onError: () => setGiveStatus('Pembayaran gagal, coba lagi ya.'),
+        onClose: () => setGiveStatus((s) => s || 'Dibatalkan.'),
+      });
+    } catch (err) {
+      setGiveStatus(err.message || 'Gagal memulai pembayaran.');
+    } finally {
+      setGiving(false);
+    }
   }
 
   const pct = donation ? Math.min(100, Math.round((donation.collected / donation.target) * 100)) : 0;
@@ -228,7 +249,10 @@ export default function Home() {
                     <span>{t('dari')} {formatRupiah(donation.target)}</span>
                   </div>
                 </div>
-                <button className="btn" onClick={handleGive}>{t('sedekah_sekarang')} (+Rp 25rb)</button>
+                <button className="btn" onClick={handleGive} disabled={giving} style={{ opacity: giving ? 0.6 : 1 }}>
+                  {giving ? 'Memuat...' : `${t('sedekah_sekarang')} (+Rp 25rb)`}
+                </button>
+                {giveStatus && <span style={{ fontSize: 11, textAlign: 'center', color: 'var(--muted)' }}>{giveStatus}</span>}
               </div>
             </>
           )}

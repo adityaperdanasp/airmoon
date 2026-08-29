@@ -1,4 +1,4 @@
-import { doc, setDoc, increment, collection, addDoc, serverTimestamp, query, where, orderBy, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, orderBy, onSnapshot } from 'firebase/firestore';
 import { db } from './firebase';
 
 // Live-updating list of every campaign an admin has approved (see
@@ -17,24 +17,56 @@ export function watchActiveDonations(callback) {
   });
 }
 
-export async function contribute(donationId, amount) {
-  const ref = doc(db, 'donations', donationId);
-  // firestore.rules only allows a signed-in client to touch this one field
-  // on an existing campaign doc — everything else (title, target,
-  // deadline, creating a brand new campaign) is admin-only now.
-  await setDoc(ref, { collected: increment(amount) }, { merge: true });
+// Sandbox vs Production Snap.js is a different <script> URL entirely (not
+// just a different key) — VITE_MIDTRANS_IS_PRODUCTION flips both this and
+// the server-side base URL in api/create-midtrans-transaction.js together.
+// Not set yet, so this loads the sandbox script for now. Shared here
+// (rather than duplicated in Donasi.jsx and Home.jsx, both of which have
+// their own donate buttons) so the script is only ever injected once.
+const MIDTRANS_CLIENT_KEY = import.meta.env.VITE_MIDTRANS_CLIENT_KEY;
+const MIDTRANS_SNAP_URL = import.meta.env.VITE_MIDTRANS_IS_PRODUCTION === 'true'
+  ? 'https://app.midtrans.com/snap/snap.js'
+  : 'https://app.sandbox.midtrans.com/snap/snap.js';
+
+let snapScriptPromise = null;
+export function loadSnapScript() {
+  if (window.snap) return Promise.resolve();
+  if (!snapScriptPromise) {
+    snapScriptPromise = new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = MIDTRANS_SNAP_URL;
+      script.setAttribute('data-client-key', MIDTRANS_CLIENT_KEY);
+      script.onload = resolve;
+      script.onerror = () => reject(new Error('Gagal memuat Midtrans Snap.'));
+      document.head.appendChild(script);
+    });
+  }
+  return snapScriptPromise;
 }
 
-// Personal record of a single contribution, kept under the giver's own
-// profile (users/{uid}/contributions) — separate from the campaign's
-// aggregate `collected` counter above, which has no per-giver breakdown.
-export async function recordContribution(uid, donation, amount) {
-  await addDoc(collection(db, 'users', uid, 'contributions'), {
-    donationId: donation.id,
-    donationTitle: donation.title,
-    amount,
-    createdAt: serverTimestamp(),
+// Starts a real Midtrans Snap payment for a donate-button tap. Returns the
+// Snap `token` to hand to `window.snap.pay()` — the actual crediting of
+// `collected` and the personal contributions record both only happen
+// server-side once Midtrans confirms the payment via a signature-verified
+// webhook (api/midtrans-notify.js), never here and never from a client
+// callback, since a client can't be trusted to honestly report "it
+// worked" (closing the Snap popup early, or calling this with a fabricated
+// success). See CLAUDE.md's payment-flow note for the full reasoning.
+export async function createMidtransTransaction(donation, amount, user) {
+  const res = await fetch('https://airmoon.vercel.app/api/create-midtrans-transaction', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      donationId: donation.id,
+      amount,
+      uid: user?.uid || null,
+      name: user?.displayName || undefined,
+      email: user?.email || undefined,
+    }),
   });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Gagal memulai pembayaran.');
+  return data; // { token, orderId }
 }
 
 // Live-updating list of a user's own contributions, newest first.
