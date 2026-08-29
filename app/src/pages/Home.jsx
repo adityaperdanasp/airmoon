@@ -5,6 +5,7 @@ import { useLang } from '../context/LangContext';
 import { usePrayerTimes } from '../lib/usePrayerTimes';
 import { watchActiveDonations, watchMyContributions } from '../lib/donations';
 import { watchDoas } from '../lib/doa';
+import { HEADLINES, todaysHeadlineIndex } from '../data/headlines';
 import { formatRupiah } from '../lib/zakat';
 import BottomNav from '../components/BottomNav';
 import DonationCard from '../components/DonationCard';
@@ -36,7 +37,7 @@ const SVC = [
 
 export default function Home() {
   const { user } = useAuth();
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const { next, status: prayerStatus } = usePrayerTimes();
   const [donations, setDonations] = useState(null);
   const [myContributions, setMyContributions] = useState([]);
@@ -52,6 +53,7 @@ export default function Home() {
   }, [user]);
 
   const mySedekahTotal = myContributions.reduce((sum, c) => sum + c.amount, 0);
+  const headline = HEADLINES[todaysHeadlineIndex()][lang];
 
   return (
     <div className="screen">
@@ -98,7 +100,7 @@ export default function Home() {
         </div>
 
         <h1 style={{ margin: 0, fontSize: 25, fontWeight: 800, letterSpacing: '-0.01em', whiteSpace: 'pre-line' }}>
-          {t('headline')}
+          {headline}
         </h1>
 
         <Link to="/ask-me" className="input-row" style={{ borderRadius: 999, textDecoration: 'none' }}>
