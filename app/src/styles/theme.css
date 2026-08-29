@@ -23,25 +23,38 @@
   --shadow-pill: 0 16px 40px rgba(13, 77, 71, 0.16);
 }
 
+/* Dark theme: warm bronze-gold on near-black, not the old neon mint.
+   --primary/--primary-dark specifically double as (a) small icon/badge/
+   nav-active foreground colors AND (b) big gradient hero-card backgrounds
+   with hardcoded white text on top (see Home.jsx's Jadwal Sholat card,
+   SurahList/JadwalSholat/KutipanInspirasi/ModeRamadan/KalkulatorZakat's
+   equivalents) — that dual role is why these can't just be "a nice accent
+   color", they need to stay dark/muted enough for white text to read
+   clearly on top, which the previous bright mint (#6ee7c9) never was; it
+   read as a glowing neon-green screen instead of matching the app's
+   actual dark-teal/gold brand look in light mode. --success is now its
+   own calmer green, decoupled from --primary, since reusing the same
+   token for "brand accent" and "success state" is what made the old
+   dark theme feel like it was green everywhere. */
 [data-theme='dark'] {
-  --primary: #6ee7c9;
-  --primary-dark: #4fd3b0;
+  --primary: #a8823c;
+  --primary-dark: #6b4f22;
   --accent: #f0cd7b;
-  --bg: #071612;
-  --ink: #f4faf7;
-  --muted: #a9c2ba;
-  --muted-soft: #7fa79c;
+  --bg: #0b0c0a;
+  --ink: #f4f0e6;
+  --muted: #b3aa9c;
+  --muted-soft: #8a8172;
   --border: rgba(255, 255, 255, 0.12);
   --card: rgba(255, 255, 255, 0.06);
-  --mint: rgba(110, 231, 201, 0.14);
+  --mint: rgba(201, 154, 74, 0.14);
   --mint-soft: rgba(255, 255, 255, 0.07);
   --cream: rgba(240, 205, 123, 0.16);
   --peach: rgba(240, 160, 123, 0.14);
   --blue-gray: rgba(140, 170, 190, 0.14);
   --gold-ink: #f0cd7b;
   --gold-ink-dark: #f0cd7b;
-  --success: #6ee7c9;
-  --success-bg: rgba(110, 231, 201, 0.14);
+  --success: #4fbf82;
+  --success-bg: rgba(79, 191, 130, 0.14);
   --danger: #ff6b6b;
   --shadow-card: 0 24px 60px rgba(0, 0, 0, 0.45);
   --shadow-pill: 0 16px 40px rgba(0, 0, 0, 0.5);
