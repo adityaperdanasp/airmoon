@@ -222,9 +222,9 @@ export default function Home() {
             </div>
           )}
           {doas && doas.length > 0 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {doas.slice(0, 2).map((doa) => (
-                <DoaCard key={doa.id} doa={doa} />
+            <div style={{ display: 'flex', gap: 10, overflowX: 'auto', scrollSnapType: 'x mandatory', margin: '0 -20px', padding: '0 20px' }}>
+              {doas.map((doa) => (
+                <DoaCard key={doa.id} doa={doa} compact />
               ))}
             </div>
           )}

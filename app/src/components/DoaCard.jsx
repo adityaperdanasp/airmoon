@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 
 const dateFmt = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 
-function AminButton({ doaId, aminCount }) {
+function AminButton({ doaId, aminCount, compact }) {
   const { user } = useAuth();
   const [amined, setAmined] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -33,15 +33,16 @@ function AminButton({ doaId, aminCount }) {
         display: 'flex',
         alignItems: 'center',
         gap: 6,
-        padding: '7px 14px',
+        padding: compact ? '6px 12px' : '7px 14px',
         borderRadius: 999,
         border: amined ? 'none' : '1px solid var(--border)',
         background: amined ? 'var(--primary)' : 'transparent',
         color: amined ? '#fff' : 'var(--muted)',
-        fontSize: 12,
+        fontSize: compact ? 11 : 12,
         fontWeight: 700,
         cursor: 'pointer',
         opacity: busy ? 0.6 : 1,
+        alignSelf: compact ? 'flex-start' : undefined,
       }}
     >
       <span>🤲</span>
@@ -50,20 +51,39 @@ function AminButton({ doaId, aminCount }) {
   );
 }
 
-// Used both on the dedicated /doa feed and as a live preview directly on
-// Home — reading & aminkan shouldn't need an extra click to reach, so
-// Home renders real DoaCards inline rather than just a link to the page.
-export default function DoaCard({ doa }) {
+// Used both on the dedicated /doa feed (full-size, vertical list) and as a
+// compact horizontal-scroll preview on Home (`compact` — fixed width,
+// clamped to 3 lines so a long doa can't balloon the card and eat the
+// whole row) — reading & aminkan shouldn't need an extra click to reach,
+// so Home renders real DoaCards inline rather than just a link to the page.
+export default function DoaCard({ doa, compact }) {
   return (
-    <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: 16 }}>
-      <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: 'var(--ink)' }}>{doa.text}</p>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span style={{ fontSize: 11, color: 'var(--muted)' }}>
-          {doa.anonymous ? 'Hamba Allah' : doa.authorName || 'Sahabat airmoon'}
-          {doa.createdAt && ` · ${dateFmt.format(doa.createdAt.toDate())}`}
-        </span>
-        <AminButton doaId={doa.id} aminCount={doa.aminCount || 0} />
-      </div>
+    <div
+      className="card"
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 10,
+        padding: compact ? 14 : 16,
+        ...(compact ? { width: 220, flexShrink: 0, scrollSnapAlign: 'start' } : {}),
+      }}
+    >
+      <p
+        style={{
+          margin: 0,
+          fontSize: compact ? 13 : 14,
+          lineHeight: 1.5,
+          color: 'var(--ink)',
+          ...(compact ? { display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' } : {}),
+        }}
+      >
+        {doa.text}
+      </p>
+      <span style={{ fontSize: 10.5, color: 'var(--muted)' }}>
+        {doa.anonymous ? 'Hamba Allah' : doa.authorName || 'Sahabat airmoon'}
+        {doa.createdAt && !compact && ` · ${dateFmt.format(doa.createdAt.toDate())}`}
+      </span>
+      <AminButton doaId={doa.id} aminCount={doa.aminCount || 0} compact={compact} />
     </div>
   );
 }
