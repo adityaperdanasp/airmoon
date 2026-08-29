@@ -17,9 +17,40 @@ const dateFmt = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short
 
 function Wallet() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)">
-      <rect x="2.5" y="5.5" width="19" height="13" rx="2.5" strokeWidth="1.7" />
-      <path d="M2.5 9.5h19" strokeWidth="1.7" />
+    <div
+      style={{
+        width: 40,
+        height: 40,
+        borderRadius: 14,
+        flexShrink: 0,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(160deg, var(--card), var(--mint-soft))',
+        boxShadow: '0 6px 14px rgba(15,32,25,0.12), inset 0 1px 0 rgba(255,255,255,0.5)',
+      }}
+    >
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)">
+        <rect x="2.5" y="5.5" width="19" height="13" rx="2.5" strokeWidth="1.7" />
+        <path d="M2.5 9.5h19" strokeWidth="1.7" />
+      </svg>
+    </div>
+  );
+}
+
+// A tasteful, abstract Islamic-geometric lattice (diamonds + dots), not a
+// literal historical arabesque tessellation — used as a low-opacity
+// texture layer so the prayer-time card isn't just a flat gradient.
+function GeometricPattern({ id }) {
+  return (
+    <svg aria-hidden="true" style={{ position: 'absolute', inset: 0, opacity: 0.1, pointerEvents: 'none' }} width="100%" height="100%">
+      <defs>
+        <pattern id={id} width="30" height="30" patternUnits="userSpaceOnUse">
+          <path d="M15 1 L29 15 L15 29 L1 15 Z" fill="none" stroke="#fff" strokeWidth="1" />
+          <circle cx="15" cy="15" r="1.6" fill="#fff" />
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill={`url(#${id})`} />
     </svg>
   );
 }
@@ -57,8 +88,23 @@ export default function Home() {
 
   return (
     <div className="screen">
-      <div className="screen-content">
-        <div className="topbar">
+      <div className="screen-content" style={{ position: 'relative' }}>
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            top: -60,
+            right: -70,
+            width: 220,
+            height: 220,
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, var(--accent) 0%, transparent 70%)',
+            opacity: 0.22,
+            pointerEvents: 'none',
+            zIndex: 0,
+          }}
+        />
+        <div className="topbar" style={{ position: 'relative', zIndex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
             <div
               style={{
@@ -99,7 +145,7 @@ export default function Home() {
           </Link>
         </div>
 
-        <h1 style={{ margin: 0, fontSize: 25, fontWeight: 800, letterSpacing: '-0.01em', whiteSpace: 'pre-line' }}>
+        <h1 style={{ position: 'relative', zIndex: 1, margin: 0, fontSize: 25, fontWeight: 800, letterSpacing: '-0.01em', whiteSpace: 'pre-line' }}>
           {headline}
         </h1>
 
@@ -159,21 +205,24 @@ export default function Home() {
             color: '#fff',
           }}
         >
-          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--accent)' }}>
-            {t('jadwal_sholat')}
+          <GeometricPattern id="prayer-pattern" />
+          <div style={{ position: 'relative', zIndex: 1 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--accent)' }}>
+              {t('jadwal_sholat')}
+            </div>
+            {prayerStatus === 'ready' && next ? (
+              <>
+                <div style={{ fontSize: 22, fontWeight: 800, marginTop: 6 }}>
+                  {next.label} &middot; {next.time}
+                </div>
+                <div style={{ fontSize: 12, opacity: 0.75, marginTop: 2 }}>{next.countdown} lagi</div>
+              </>
+            ) : prayerStatus === 'denied' ? (
+              <div style={{ fontSize: 12, opacity: 0.8, marginTop: 8 }}>Izinkan akses lokasi buat lihat jadwal sholat</div>
+            ) : (
+              <div style={{ fontSize: 12, opacity: 0.8, marginTop: 8 }}>Memuat jadwal sholat…</div>
+            )}
           </div>
-          {prayerStatus === 'ready' && next ? (
-            <>
-              <div style={{ fontSize: 22, fontWeight: 800, marginTop: 6 }}>
-                {next.label} &middot; {next.time}
-              </div>
-              <div style={{ fontSize: 12, opacity: 0.75, marginTop: 2 }}>{next.countdown} lagi</div>
-            </>
-          ) : prayerStatus === 'denied' ? (
-            <div style={{ fontSize: 12, opacity: 0.8, marginTop: 8 }}>Izinkan akses lokasi buat lihat jadwal sholat</div>
-          ) : (
-            <div style={{ fontSize: 12, opacity: 0.8, marginTop: 8 }}>Memuat jadwal sholat…</div>
-          )}
         </Link>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -233,7 +282,7 @@ export default function Home() {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <span className="section-label">{t('donasi_kamu')}</span>
+          <span className="section-label">🕌 {t('donasi_kamu')}</span>
           {donations && donations.length === 0 && (
             <div className="card" style={{ padding: 16, fontSize: 12.5, color: 'var(--muted)', textAlign: 'center' }}>
               Belum ada campaign aktif saat ini.

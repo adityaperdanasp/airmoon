@@ -65,7 +65,13 @@ export default function DoaCard({ doa, compact }) {
         flexDirection: 'column',
         gap: 10,
         padding: compact ? 14 : 16,
-        ...(compact ? { width: 220, flexShrink: 0, scrollSnapAlign: 'start' } : {}),
+        // Compact (Home's carousel) gets a warm cream tint instead of the
+        // neutral card background — a deliberate bit of color variety per
+        // section (mint for Total Sedekah, cream for doa, ...) rather than
+        // every card on the page looking identical. The full /doa feed
+        // stays neutral since it's the page's only content, not one
+        // section among several.
+        ...(compact ? { width: 220, flexShrink: 0, scrollSnapAlign: 'start', background: 'var(--cream)', border: 'none' } : {}),
       }}
     >
       <p
