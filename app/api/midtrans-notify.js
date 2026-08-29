@@ -15,6 +15,7 @@
 import { createHash } from 'crypto';
 import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
+import { appendLedgerRow } from './_lib/sheetsLedger.js';
 
 function initAdmin() {
   if (getApps().length) return;
@@ -131,6 +132,20 @@ export default async function handler(req, res) {
       await sendTelegramNotification(
         `💰 Donasi masuk!\n\nCampaign: ${txn.donationTitle}\nJumlah: Rp ${txn.amount.toLocaleString('id-ID')}\nMetode: ${describePaymentMethod(body)}\nOrder ID: ${order_id}\nWaktu: ${body.transaction_time || '-'}`
       );
+      try {
+        await appendLedgerRow({
+          name: txn.name || txn.email || 'Anonim',
+          method: describePaymentMethod(body),
+          amount: txn.amount,
+          campaign: txn.donationTitle,
+          reference: order_id,
+        });
+      } catch (err) {
+        // Never let a Sheets hiccup fail the webhook -- the donation is
+        // already real and credited above regardless of whether it made
+        // it into the founder's report spreadsheet.
+        console.error('appendLedgerRow failed:', err);
+      }
     } else if (isFinalFailure(body)) {
       await txnRef.set({ status: 'failed', midtransStatus: body.transaction_status }, { merge: true });
     } else {

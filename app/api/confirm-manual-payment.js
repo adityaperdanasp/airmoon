@@ -12,6 +12,7 @@
 
 import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
+import { appendLedgerRow } from './_lib/sheetsLedger.js';
 
 function initAdmin() {
   if (getApps().length) return;
@@ -66,6 +67,20 @@ export default async function handler(req, res) {
       });
     }
     await ref.set({ status: 'confirmed', confirmedAt: FieldValue.serverTimestamp() }, { merge: true });
+
+    try {
+      await appendLedgerRow({
+        name: report.name || report.email || 'Anonim',
+        method: report.method === 'gopay' ? 'GoPay' : 'Mandiri',
+        amount: report.amount,
+        campaign: report.donationTitle,
+        reference: id,
+      });
+    } catch (err) {
+      // Same reasoning as midtrans-notify.js -- a Sheets hiccup shouldn't
+      // block the confirmation itself, which already succeeded above.
+      console.error('appendLedgerRow failed:', err);
+    }
 
     return res.status(200).send(
       page('Dikonfirmasi ✅', `Rp ${report.amount.toLocaleString('id-ID')} untuk "${report.donationTitle}" sudah ditambahkan ke angka terkumpul.`)

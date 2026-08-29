@@ -98,6 +98,8 @@ export default async function handler(req, res) {
       donationTitle: donation.title,
       amount: amountNum,
       uid: uid || null,
+      name: name || null,
+      email: email || null,
       status: 'pending',
       createdAt: FieldValue.serverTimestamp(),
     });
