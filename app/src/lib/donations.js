@@ -69,6 +69,29 @@ export async function createMidtransTransaction(donation, amount, user) {
   return data; // { token, orderId }
 }
 
+// Interim manual-transfer path (GoPay/Mandiri, the founder's own
+// accounts) while waiting on Midtrans Production approval — see
+// api/report-manual-payment.js for why this never credits `collected`
+// itself, just files a pending report and pings the founder on Telegram
+// to confirm after actually checking their bank/GoPay app.
+export async function reportManualPayment(donation, amount, method, user) {
+  const res = await fetch('https://airmoon.vercel.app/api/report-manual-payment', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      donationId: donation.id,
+      amount,
+      method,
+      uid: user?.uid || null,
+      name: user?.displayName || undefined,
+      email: user?.email || undefined,
+    }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Gagal melapor transfer.');
+  return data;
+}
+
 // Live-updating list of a user's own contributions, newest first.
 export function watchMyContributions(uid, callback) {
   const q = query(collection(db, 'users', uid, 'contributions'), orderBy('createdAt', 'desc'));

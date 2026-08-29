@@ -44,6 +44,18 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Interim manual-transfer path (GoPay/Mandiri) while waiting on
+    // Midtrans Production approval — same shape as paymentTransactions:
+    // created by api/report-manual-payment.js, only ever confirmed by
+    // api/confirm-manual-payment.js (the link the founder taps from the
+    // Telegram notification after checking their own bank/GoPay app), both
+    // Admin SDK. A client never marks its own report "confirmed" —
+    // otherwise anyone could claim they paid and self-credit.
+    match /manualPayments/{id} {
+      allow read: if request.auth != null && request.auth.uid == resource.data.uid;
+      allow write: if false;
+    }
+
     // Everything else stays locked until it has a real data model.
     match /{document=**} {
       allow read, write: if false;

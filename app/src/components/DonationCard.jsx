@@ -1,9 +1,125 @@
 import { useState } from 'react';
-import { createMidtransTransaction, loadSnapScript } from '../lib/donations';
+import { createMidtransTransaction, loadSnapScript, reportManualPayment } from '../lib/donations';
 import { formatRupiah } from '../lib/zakat';
 import { useAuth } from '../context/AuthContext';
 
 const dateFmt = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+// The founder's own accounts — interim path while waiting on Midtrans
+// Production approval (see api/report-manual-payment.js). Meant to be
+// shown publicly to donors, not a secret.
+const MANUAL_ACCOUNTS = {
+  gopay: { label: 'GoPay', value: '08129347661' },
+  mandiri: { label: 'Mandiri', value: '60014629962' },
+};
+
+function ManualTransferSection({ donation, user, amounts }) {
+  const [open, setOpen] = useState(false);
+  const [method, setMethod] = useState('gopay');
+  const [amount, setAmount] = useState(amounts[0]);
+  const [submitting, setSubmitting] = useState(false);
+  const [status, setStatus] = useState(null);
+  const [copied, setCopied] = useState(false);
+
+  async function copyNumber() {
+    try {
+      await navigator.clipboard.writeText(MANUAL_ACCOUNTS[method].value);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // clipboard permission denied or unsupported — the number is still
+      // visible on screen to copy by hand, so this isn't fatal.
+    }
+  }
+
+  async function handleReport() {
+    if (!user) {
+      setStatus({ kind: 'error', text: 'Masuk dulu buat lapor transfer.' });
+      return;
+    }
+    const amountNum = Number(amount);
+    if (!Number.isFinite(amountNum) || amountNum <= 0) {
+      setStatus({ kind: 'error', text: 'Isi jumlah yang valid dulu.' });
+      return;
+    }
+    setSubmitting(true);
+    setStatus(null);
+    try {
+      await reportManualPayment(donation, amountNum, method, user);
+      setStatus({ kind: 'success', text: 'Laporan terkirim! Admin bakal cek & konfirmasi manual — angka terkumpul update begitu dikonfirmasi.' });
+    } catch (err) {
+      setStatus({ kind: 'error', text: err.message || 'Gagal melapor transfer.' });
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  if (!open) {
+    return (
+      <button
+        onClick={() => setOpen(true)}
+        style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: 11.5, textDecoration: 'underline', cursor: 'pointer', padding: 0 }}
+      >
+        atau transfer manual (GoPay/Mandiri)
+      </button>
+    );
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '12px 14px', borderRadius: 12, background: 'var(--bg)' }}>
+      <div style={{ display: 'flex', gap: 8 }}>
+        {Object.entries(MANUAL_ACCOUNTS).map(([key, acc]) => (
+          <button
+            key={key}
+            onClick={() => setMethod(key)}
+            style={{
+              flex: 1,
+              padding: '8px 0',
+              borderRadius: 10,
+              fontSize: 12,
+              fontWeight: 700,
+              border: method === key ? '1.5px solid var(--primary)' : '1px solid var(--border)',
+              background: method === key ? 'var(--mint)' : 'transparent',
+              color: method === key ? 'var(--primary)' : 'var(--muted)',
+              cursor: 'pointer',
+            }}
+          >
+            {acc.label}
+          </button>
+        ))}
+      </div>
+
+      <div
+        onClick={copyNumber}
+        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', borderRadius: 10, background: 'var(--card)', cursor: 'pointer' }}
+      >
+        <span style={{ fontSize: 14, fontWeight: 700, fontFamily: 'monospace' }}>{MANUAL_ACCOUNTS[method].value}</span>
+        <span style={{ fontSize: 11, color: 'var(--primary)', fontWeight: 700 }}>{copied ? 'Tersalin!' : 'Salin'}</span>
+      </div>
+      <span style={{ fontSize: 10.5, color: 'var(--muted)' }}>
+        Transfer ke {MANUAL_ACCOUNTS[method].label} nomor di atas, isi jumlah yang beneran ditransfer, baru lapor.
+      </span>
+
+      <input
+        type="number"
+        value={amount}
+        onChange={(e) => setAmount(e.target.value)}
+        placeholder="Jumlah transfer (Rp)"
+        style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--ink)', fontSize: 13 }}
+      />
+
+      <button className="btn-outline" disabled={submitting} onClick={handleReport} style={{ opacity: submitting ? 0.6 : 1 }}>
+        {submitting ? 'Mengirim...' : 'Saya sudah transfer'}
+      </button>
+
+      {status && (
+        <div style={{ fontSize: 11.5, textAlign: 'center', color: status.kind === 'error' ? '#c0392b' : 'var(--muted)' }}>
+          {status.text}
+        </div>
+      )}
+    </div>
+  );
+}
 
 // Self-contained: owns its own Midtrans Snap flow (loading state + result
 // message) so any page can just render one of these per campaign without
@@ -90,6 +206,8 @@ export default function DonationCard({ donation, amounts = [10000, 25000, 50000]
           {status.text}
         </div>
       )}
+
+      <ManualTransferSection donation={donation} user={user} amounts={amounts} />
     </div>
   );
 }
