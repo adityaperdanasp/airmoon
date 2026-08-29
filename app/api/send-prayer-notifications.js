@@ -14,6 +14,7 @@
 import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { getMessaging } from 'firebase-admin/messaging';
+import { pickPrayerMessage } from './_lib/prayerMessages.js';
 
 const PRAYER_ORDER = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
 const PRAYER_LABEL = { Fajr: 'Subuh', Dhuhr: 'Dzuhur', Asr: 'Ashar', Maghrib: 'Maghrib', Isha: 'Isya' };
@@ -99,11 +100,12 @@ export default async function handler(req, res) {
           if (!due || alreadySent) continue;
 
           const label = PRAYER_LABEL[key];
+          const prayerIndex = PRAYER_ORDER.indexOf(key);
           const result = await messaging.sendEachForMulticast({
             tokens,
             notification: {
               title: `Waktunya Sholat ${label}`,
-              body: `${label} telah masuk waktunya. Yuk tunaikan sholat.`,
+              body: pickPrayerMessage(dateKey, prayerIndex, label),
             },
             data: { tag: `adzan-${key}` },
           });
