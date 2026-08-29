@@ -51,28 +51,30 @@ function SurahBanner({ chapter }) {
   );
 }
 
-// One rosette (4-petal quatrefoil, a simple recurring Islamic-manuscript
-// corner motif) rotated per corner — geometric shapes built from
-// ellipses/arcs, not hand-authored freeform floral path data.
+// A stepped double-bracket hugging each corner plus a small diamond accent
+// where the two arms meet — a geometric strapwork motif (nested right-angle
+// lines), the same family of ornament as classical Islamic manuscript
+// corner-pieces but built as an original shape from plain line/rect
+// primitives, not traced from any third-party asset.
 function CornerOrnament({ corner }) {
   const pos = {
-    tl: { top: -11, left: -11, rotate: 0 },
-    tr: { top: -11, right: -11, rotate: 90 },
-    br: { bottom: -11, right: -11, rotate: 180 },
-    bl: { bottom: -11, left: -11, rotate: 270 },
+    tl: { top: -1, left: -1, rotate: 0 },
+    tr: { top: -1, right: -1, rotate: 90 },
+    br: { bottom: -1, right: -1, rotate: 180 },
+    bl: { bottom: -1, left: -1, rotate: 270 },
   }[corner];
   return (
     <svg
-      width="22"
-      height="22"
-      viewBox="0 0 22 22"
+      width="34"
+      height="34"
+      viewBox="0 0 34 34"
       style={{ position: 'absolute', top: pos.top, left: pos.left, right: pos.right, bottom: pos.bottom, transform: `rotate(${pos.rotate}deg)`, pointerEvents: 'none' }}
     >
-      <g fill="var(--gold-ink)">
-        <ellipse cx="11" cy="6" rx="3.2" ry="5" />
-        <ellipse cx="6" cy="11" rx="5" ry="3.2" />
+      <g stroke="var(--gold-ink)" strokeWidth="1.4" fill="none" strokeLinecap="round">
+        <path d="M3 31 L3 12 L12 12 L12 3 L31 3" />
+        <path d="M3 23 L3 18 L18 18 L18 3 L23 3" />
       </g>
-      <circle cx="11" cy="11" r="2.4" fill="var(--card)" stroke="var(--gold-ink)" strokeWidth="1.3" />
+      <rect x="6.5" y="6.5" width="5" height="5" fill="var(--gold-ink)" transform="rotate(45 9 9)" />
     </svg>
   );
 }
