@@ -4,6 +4,7 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
 import { fetchChapters, fetchMushafPage, layoutPage, TOTAL_MUSHAF_PAGES, TAJWEED_COLORS, parseTajweedHtml } from '../lib/mushafApi';
+import { fetchSurahDetail } from '../lib/quranApi';
 import { useNightMode, NIGHT_STYLE_VARS } from '../lib/readingPrefs';
 import { IconBack } from '../components/icons';
 
@@ -44,17 +45,18 @@ function SurahBanner({ chapter }) {
   );
 }
 
-// Doubles as the "tandai sampai sini" control for Mode Mushaf — tapping an
-// ayah's end-mark bookmarks that exact ayah as lastReadMushaf. Deliberately
-// per-ayah, not per-page: a page can hold a dozen+ ayat, so "this page" on
-// its own doesn't say how far into it you actually got (see the CLAUDE.md/
-// commit note on why auto-save-per-page was rejected in favor of this).
+// Tapping an ayah's end-mark now opens AyahActionSheet (murotal/bagikan/
+// salin/tandai terakhir baca) instead of bookmarking directly — the direct-
+// bookmark-on-tap behavior moved into the sheet's own "Tandai Terakhir
+// Baca" row, per the same per-ayah (not per-page) reasoning as before: a
+// page can hold a dozen+ ayat, so "this page" alone doesn't say how far
+// into it you actually got.
 function AyahEndMark({ text, verseKey, isBookmarked, isTarget, onTap, forwardRef }) {
   return (
     <button
       ref={forwardRef}
       onClick={() => onTap(verseKey)}
-      aria-label={`Tandai ayat ${text} sebagai terakhir dibaca`}
+      aria-label={`Opsi ayat ${text}`}
       style={{
         display: 'inline-flex',
         alignItems: 'center',
@@ -77,6 +79,136 @@ function AyahEndMark({ text, verseKey, isBookmarked, isTarget, onTap, forwardRef
     >
       {text}
     </button>
+  );
+}
+
+function ActionRow({ icon, label, onClick, disabled }) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 14,
+        width: '100%',
+        padding: '14px 20px',
+        background: 'none',
+        border: 'none',
+        borderTop: '1px solid var(--border)',
+        color: disabled ? 'var(--muted)' : 'var(--ink)',
+        fontSize: 14,
+        fontWeight: 600,
+        textAlign: 'left',
+        cursor: disabled ? 'default' : 'pointer',
+        opacity: disabled ? 0.5 : 1,
+      }}
+    >
+      <span style={{ width: 20, textAlign: 'center', fontSize: 16 }}>{icon}</span>
+      {label}
+    </button>
+  );
+}
+
+// Bottom sheet of per-ayah actions — murotal, bagikan, salin, tandai
+// terakhir baca — replacing the old tap-to-bookmark-directly behavior.
+// Audio + Indonesian translation are fetched lazily here (only once a
+// specific ayah's sheet is opened) from EQuran.id via
+// lib/quranApi.js's fetchSurahDetail, reusing the same reciter
+// preference (`airmoon-qari`) already set in Mode Ayat's Pilih Qari
+// screen — Mode Mushaf doesn't need its own separate reciter setting.
+function AyahActionSheet({ verse, chapterName, isBookmarked, onClose, onBookmark }) {
+  const [audioUrl, setAudioUrl] = useState(null);
+  const [translation, setTranslation] = useState(null);
+  const [loadingExtra, setLoadingExtra] = useState(true);
+  const [playing, setPlaying] = useState(false);
+  const audioRef = useRef(null);
+  const [copied, setCopied] = useState(false);
+
+  const [chapterId, verseNumber] = verse.verse_key.split(':').map(Number);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoadingExtra(true);
+    fetchSurahDetail(chapterId)
+      .then((surah) => {
+        if (cancelled) return;
+        const ayat = surah.ayat.find((a) => a.nomorAyat === verseNumber);
+        const qariId = localStorage.getItem('airmoon-qari') || '05';
+        setAudioUrl(ayat?.audio?.[qariId] || null);
+        setTranslation(ayat?.teksIndonesia || null);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setLoadingExtra(false);
+      });
+    return () => {
+      cancelled = true;
+      audioRef.current?.pause();
+    };
+  }, [chapterId, verseNumber]);
+
+  function handlePlay() {
+    if (!audioUrl) return;
+    if (!audioRef.current) {
+      audioRef.current = new Audio(audioUrl);
+      audioRef.current.addEventListener('ended', () => setPlaying(false));
+    }
+    if (playing) {
+      audioRef.current.pause();
+      setPlaying(false);
+    } else {
+      audioRef.current.play();
+      setPlaying(true);
+    }
+  }
+
+  function buildShareText() {
+    return `${verse.text_uthmani}\n\n${translation ? translation + '\n\n' : ''}QS. ${chapterName} : ${verseNumber}`;
+  }
+
+  async function handleShare() {
+    const text = buildShareText();
+    if (navigator.share) {
+      try {
+        await navigator.share({ text });
+      } catch {
+        // user cancelled the share sheet — nothing to do
+      }
+    } else {
+      await handleCopy();
+    }
+  }
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(buildShareText());
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // clipboard permission denied/unsupported — nothing more we can do
+    }
+  }
+
+  return (
+    <div
+      onClick={onClose}
+      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 50, display: 'flex', alignItems: 'flex-end' }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{ width: '100%', maxWidth: 480, margin: '0 auto', background: 'var(--card)', borderRadius: '20px 20px 0 0', paddingBottom: 12 }}
+      >
+        <div style={{ width: 36, height: 4, borderRadius: 999, background: 'var(--border)', margin: '10px auto 12px' }} />
+        <div style={{ padding: '0 20px 14px', textAlign: 'center', fontSize: 12.5, fontWeight: 700, color: 'var(--gold-ink)' }}>
+          QS. {chapterName} : {verseNumber}
+        </div>
+        <ActionRow icon={playing ? '⏸' : '▶'} label={playing ? 'Hentikan Murotal' : 'Putar Murotal'} onClick={handlePlay} disabled={loadingExtra || !audioUrl} />
+        <ActionRow icon="↗" label="Bagikan Ayat" onClick={handleShare} />
+        <ActionRow icon="⧉" label={copied ? 'Tersalin!' : 'Salin Ayat'} onClick={handleCopy} />
+        <ActionRow icon={isBookmarked ? '★' : '☆'} label="Tandai Terakhir Baca" onClick={onBookmark} />
+      </div>
+    </div>
   );
 }
 
@@ -161,6 +293,7 @@ export default function MushafReader() {
   const [verses, setVerses] = useState(null);
   const [error, setError] = useState('');
   const [bookmarkedVerseKey, setBookmarkedVerseKey] = useState(null);
+  const [actionSheetVerseKey, setActionSheetVerseKey] = useState(null);
   const [tajwidOn, setTajwidOn] = useState(() => localStorage.getItem('airmoon-mushaf-tajwid') === '1');
   const [night, setNight] = useNightMode();
   const targetRef = useRef(null);
@@ -355,7 +488,7 @@ export default function MushafReader() {
                           verseKey={w.verseKey}
                           isBookmarked={bookmarkedVerseKey === w.verseKey}
                           isTarget={targetVerseKey === w.verseKey}
-                          onTap={bookmarkAyah}
+                          onTap={setActionSheetVerseKey}
                           forwardRef={targetVerseKey === w.verseKey ? targetRef : undefined}
                         />
                       ) : tajwidOn ? (
@@ -391,11 +524,24 @@ export default function MushafReader() {
               <circle cx="12" cy="12" r="9" strokeWidth="1.6" /><path d="M12 11v5.5M12 8v.01" strokeWidth="1.8" strokeLinecap="round" />
             </svg>
             <span style={{ fontSize: 11, lineHeight: 1.5, color: 'var(--muted)' }}>
-              Tap nomor ayat buat nandain "terakhir dibaca sampai sini" — nanti muncul di halaman Al-Qur'an sebagai jalan pintas balik ke sini.
+              Tap nomor ayat buat buka opsi — putar murotal, bagikan, salin, atau tandai "terakhir dibaca sampai sini".
             </span>
           </div>
         )}
       </div>
+
+      {actionSheetVerseKey && (
+        <AyahActionSheet
+          verse={verses.find((v) => v.verse_key === actionSheetVerseKey)}
+          chapterName={chapterById(Number(actionSheetVerseKey.split(':')[0]))?.name_simple || ''}
+          isBookmarked={bookmarkedVerseKey === actionSheetVerseKey}
+          onClose={() => setActionSheetVerseKey(null)}
+          onBookmark={() => {
+            bookmarkAyah(actionSheetVerseKey);
+            setActionSheetVerseKey(null);
+          }}
+        />
+      )}
     </div>
   );
 }
