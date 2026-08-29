@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { createMidtransTransaction, loadSnapScript, watchMyContributions, watchActiveDonations } from '../lib/donations';
+import { watchMyContributions, watchActiveDonations } from '../lib/donations';
 import { formatRupiah } from '../lib/zakat';
 import { useAuth } from '../context/AuthContext';
 import BottomNav from '../components/BottomNav';
+import DonationCard from '../components/DonationCard';
 
 const dateFmt = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
@@ -57,54 +58,10 @@ function DaftarkanMasjidCard({ user }) {
   );
 }
 
-function DonationCard({ donation, onGive, paying }) {
-  const pct = Math.min(100, Math.round((donation.collected / donation.target) * 100));
-  return (
-    <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 13, padding: 18 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <div style={{ width: 42, height: 42, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: 'var(--cream)' }}>
-          <svg width="19" height="19" viewBox="0 0 24 24" fill="var(--gold-ink)" stroke="none"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z" /></svg>
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <span style={{ fontSize: 14, fontWeight: 700 }}>{donation.title}</span>
-          <span style={{ fontSize: 11, color: 'var(--muted)' }}>#PLN-{donation.plnId} · Connect ke PLN Mobile</span>
-        </div>
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <div style={{ width: '100%', height: 7, borderRadius: 999, overflow: 'hidden', background: 'var(--mint)' }}>
-          <div style={{ width: `${pct}%`, height: '100%', background: 'var(--accent)' }} />
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--muted)' }}>
-          <span><strong style={{ color: 'var(--ink)' }}>{formatRupiah(donation.collected)}</strong> terkumpul</span>
-          <span>dari {formatRupiah(donation.target)}</span>
-        </div>
-        {donation.deadline && (
-          <span style={{ fontSize: 10.5, color: 'var(--muted)' }}>Batas waktu {dateFmt.format(new Date(donation.deadline))}</span>
-        )}
-      </div>
-      <div style={{ display: 'flex', gap: 8 }}>
-        {[10000, 25000, 50000].map((amt) => (
-          <button
-            key={amt}
-            className="btn-outline"
-            style={{ flex: 1, padding: '11px 0', fontSize: 12, opacity: paying ? 0.6 : 1 }}
-            disabled={paying}
-            onClick={() => onGive(donation, amt)}
-          >
-            +{formatRupiah(amt).replace('Rp ', '')}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 export default function Donasi() {
   const { user } = useAuth();
   const [donations, setDonations] = useState(null);
   const [myContributions, setMyContributions] = useState([]);
-  const [payStatus, setPayStatus] = useState(null); // { kind: 'info'|'success'|'error', text }
-  const [payingId, setPayingId] = useState(null);
 
   useEffect(() => watchActiveDonations(setDonations), []);
 
@@ -112,29 +69,6 @@ export default function Donasi() {
     if (!user) return;
     return watchMyContributions(user.uid, setMyContributions);
   }, [user]);
-
-  async function handleGive(donation, amount) {
-    if (!user) {
-      setPayStatus({ kind: 'error', text: 'Masuk dulu buat donasi.' });
-      return;
-    }
-    setPayingId(donation.id);
-    setPayStatus(null);
-    try {
-      await loadSnapScript();
-      const { token } = await createMidtransTransaction(donation, amount, user);
-      window.snap.pay(token, {
-        onSuccess: () => setPayStatus({ kind: 'success', text: 'Pembayaran berhasil! Terima kasih — angka terkumpul akan update sebentar lagi.' }),
-        onPending: () => setPayStatus({ kind: 'info', text: 'Pembayaran diproses (misal nunggu transfer VA). Angka terkumpul update begitu lunas.' }),
-        onError: () => setPayStatus({ kind: 'error', text: 'Pembayaran gagal. Coba lagi ya.' }),
-        onClose: () => setPayStatus((s) => s || { kind: 'error', text: 'Dibatalkan sebelum bayar.' }),
-      });
-    } catch (err) {
-      setPayStatus({ kind: 'error', text: err.message || 'Gagal memulai pembayaran.' });
-    } finally {
-      setPayingId(null);
-    }
-  }
 
   const myTotal = myContributions.reduce((sum, c) => sum + c.amount, 0);
 
@@ -160,21 +94,6 @@ export default function Donasi() {
 
         <DaftarkanMasjidCard user={user} />
 
-        {payStatus && (
-          <div
-            className="card"
-            style={{
-              padding: '12px 14px',
-              fontSize: 12.5,
-              textAlign: 'center',
-              color: payStatus.kind === 'error' ? '#c0392b' : 'var(--ink)',
-              border: `1px solid ${payStatus.kind === 'success' ? 'var(--primary)' : payStatus.kind === 'error' ? '#c0392b' : 'var(--border)'}`,
-            }}
-          >
-            {payStatus.text}
-          </div>
-        )}
-
         {!donations && <div className="center" style={{ minHeight: 200 }}><div className="spinner" /></div>}
 
         {donations && donations.length === 0 && (
@@ -186,7 +105,7 @@ export default function Donasi() {
         {donations && donations.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {donations.map((donation) => (
-              <DonationCard key={donation.id} donation={donation} onGive={handleGive} paying={payingId === donation.id} />
+              <DonationCard key={donation.id} donation={donation} />
             ))}
           </div>
         )}

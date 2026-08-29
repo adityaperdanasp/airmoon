@@ -5,9 +5,10 @@ import { db } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
 import { useLang } from '../context/LangContext';
 import { usePrayerTimes } from '../lib/usePrayerTimes';
-import { watchActiveDonations, createMidtransTransaction, loadSnapScript } from '../lib/donations';
+import { watchActiveDonations } from '../lib/donations';
 import { formatRupiah } from '../lib/zakat';
 import BottomNav from '../components/BottomNav';
+import DonationCard from '../components/DonationCard';
 import { IconBell, IconSearch, IconMoon } from '../components/icons';
 import { QiblaCompassIcon } from '../components/serviceIcons';
 
@@ -43,9 +44,7 @@ export default function Home() {
   const { t } = useLang();
   const { next, status: prayerStatus } = usePrayerTimes();
   const [profile, setProfile] = useState(null);
-  const [donation, setDonation] = useState(null);
-  const [giving, setGiving] = useState(false);
-  const [giveStatus, setGiveStatus] = useState('');
+  const [donations, setDonations] = useState(null);
 
   useEffect(() => {
     if (!user) return;
@@ -53,38 +52,7 @@ export default function Home() {
     return onSnapshot(ref, (snap) => setProfile(snap.data()));
   }, [user]);
 
-  useEffect(() => {
-    // Home's widget only has room for one featured campaign — the most
-    // recently approved one (watchActiveDonations already sorts
-    // newest-first), not a full list like Donasi.jsx shows.
-    return watchActiveDonations((rows) => setDonation(rows[0] || null));
-  }, []);
-
-  async function handleGive() {
-    if (!donation) return;
-    if (!user) {
-      setGiveStatus('Masuk dulu buat donasi.');
-      return;
-    }
-    setGiving(true);
-    setGiveStatus('');
-    try {
-      await loadSnapScript();
-      const { token } = await createMidtransTransaction(donation, 25000, user);
-      window.snap.pay(token, {
-        onSuccess: () => setGiveStatus('Berhasil! Terima kasih 🤍'),
-        onPending: () => setGiveStatus('Diproses, terima kasih 🤍'),
-        onError: () => setGiveStatus('Pembayaran gagal, coba lagi ya.'),
-        onClose: () => setGiveStatus((s) => s || 'Dibatalkan.'),
-      });
-    } catch (err) {
-      setGiveStatus(err.message || 'Gagal memulai pembayaran.');
-    } finally {
-      setGiving(false);
-    }
-  }
-
-  const pct = donation ? Math.min(100, Math.round((donation.collected / donation.target) * 100)) : 0;
+  useEffect(() => watchActiveDonations(setDonations), []);
 
   return (
     <div className="screen">
@@ -223,38 +191,17 @@ export default function Home() {
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <span className="section-label">{t('donasi_kamu')}</span>
-          {donation && (
-            <>
-              <div className="card" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '13px 15px' }}>
-                <div style={{ width: 38, height: 38, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: 'var(--cream)' }}>
-                  <svg width="17" height="17" viewBox="0 0 24 24" fill="var(--gold-ink)" stroke="none"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z" /></svg>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1, minWidth: 0 }}>
-                  <span style={{ fontSize: 12.5, fontWeight: 700 }}>{donation.title}</span>
-                  <span style={{ fontSize: 10, color: 'var(--muted)' }}>#PLN-{donation.plnId}</span>
-                </div>
-                <span style={{ fontSize: 12.5, fontWeight: 800 }}>{formatRupiah(donation.collected)}</span>
-              </div>
-
-              <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 13, padding: '18px 18px 20px' }}>
-                <span style={{ alignSelf: 'flex-start', fontSize: 10, fontWeight: 700, padding: '6px 11px', borderRadius: 999, background: 'var(--mint)', color: 'var(--primary)' }}>
-                  ⚡ Connect ke PLN Mobile
-                </span>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <div style={{ width: '100%', height: 7, borderRadius: 999, overflow: 'hidden', background: 'var(--mint)' }}>
-                    <div style={{ width: `${pct}%`, height: '100%', borderRadius: 999, background: `linear-gradient(90deg, var(--accent), var(--accent))` }} />
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10.5, color: 'var(--muted)' }}>
-                    <span><strong style={{ color: 'var(--ink)' }}>{formatRupiah(donation.collected)}</strong> {t('terkumpul')}</span>
-                    <span>{t('dari')} {formatRupiah(donation.target)}</span>
-                  </div>
-                </div>
-                <button className="btn" onClick={handleGive} disabled={giving} style={{ opacity: giving ? 0.6 : 1 }}>
-                  {giving ? 'Memuat...' : `${t('sedekah_sekarang')} (+Rp 25rb)`}
-                </button>
-                {giveStatus && <span style={{ fontSize: 11, textAlign: 'center', color: 'var(--muted)' }}>{giveStatus}</span>}
-              </div>
-            </>
+          {donations && donations.length === 0 && (
+            <div className="card" style={{ padding: 16, fontSize: 12.5, color: 'var(--muted)', textAlign: 'center' }}>
+              Belum ada campaign aktif saat ini.
+            </div>
+          )}
+          {donations && donations.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {donations.map((donation) => (
+                <DonationCard key={donation.id} donation={donation} />
+              ))}
+            </div>
           )}
         </div>
       </div>
