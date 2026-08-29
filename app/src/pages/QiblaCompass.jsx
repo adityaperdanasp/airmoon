@@ -1,15 +1,99 @@
+import { useState } from 'react';
 import { useLang } from '../context/LangContext';
 import { useQibla } from '../lib/useQibla';
 import TopBar from '../components/TopBar';
 
+function LocationSearch({ onPick, onUseGps, onClose }) {
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState(null);
+  const [searching, setSearching] = useState(false);
+  const [error, setError] = useState('');
+
+  async function handleSearch(e) {
+    e.preventDefault();
+    if (!query.trim()) return;
+    setSearching(true);
+    setError('');
+    try {
+      const res = await fetch(`https://airmoon.vercel.app/api/geocode-search?q=${encodeURIComponent(query.trim())}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Gagal mencari lokasi.');
+      setResults(data.results);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSearching(false);
+    }
+  }
+
+  return (
+    <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: 16 }}>
+      <form onSubmit={handleSearch} style={{ display: 'flex', gap: 8 }}>
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Cari kota atau tempat…"
+          autoFocus
+          style={{ flex: 1, padding: '10px 12px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--ink)', fontSize: 13.5 }}
+        />
+        <button className="btn" type="submit" disabled={searching} style={{ padding: '0 16px', opacity: searching ? 0.6 : 1 }}>
+          {searching ? '...' : 'Cari'}
+        </button>
+      </form>
+
+      {error && <span style={{ fontSize: 11.5, color: '#c0392b' }}>{error}</span>}
+
+      {results && results.length === 0 && (
+        <span style={{ fontSize: 12, color: 'var(--muted)', textAlign: 'center' }}>Ga ketemu, coba nama lain.</span>
+      )}
+
+      {results && results.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {results.map((r, i) => (
+            <button
+              key={i}
+              onClick={() => onPick(r)}
+              style={{
+                textAlign: 'left',
+                padding: '10px 12px',
+                borderRadius: 10,
+                border: 'none',
+                background: 'var(--bg)',
+                color: 'var(--ink)',
+                fontSize: 12.5,
+                cursor: 'pointer',
+              }}
+            >
+              📍 {r.label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <div style={{ display: 'flex', gap: 8 }}>
+        <button className="btn-outline" style={{ flex: 1 }} onClick={onUseGps}>Pakai Lokasi Saat Ini</button>
+        <button className="btn-outline" style={{ flex: 1 }} onClick={onClose}>Batal</button>
+      </div>
+    </div>
+  );
+}
+
 export default function QiblaCompass() {
   const { t } = useLang();
-  const { locStatus, qibla, heading, headingStatus, requestHeadingPermission } = useQibla();
+  const { locStatus, qibla, heading, headingAccuracy, headingStatus, requestHeadingPermission, override, setOverride } = useQibla();
+  const [searchOpen, setSearchOpen] = useState(false);
 
   const hasHeading = headingStatus === 'granted' && heading != null;
   // 0deg = arrow points straight up on screen. When the arrow points up,
   // the phone's top edge is aimed at the Kaaba.
   const needleRotation = qibla ? (hasHeading ? qibla.bearing - heading : qibla.bearing) : 0;
+
+  // webkitCompassAccuracy (iOS Safari only) is the one real sensor-quality
+  // signal available from the web — under ~15° is considered good per
+  // Apple's own guidance. No equivalent exists on Android/desktop browsers,
+  // so this whole status row simply doesn't render there rather than
+  // showing a fabricated "reliable" claim with no real data behind it.
+  const accuracyGood = headingAccuracy != null && headingAccuracy <= 15;
 
   return (
     <div className="screen">
@@ -36,24 +120,72 @@ export default function QiblaCompass() {
 
         {locStatus === 'ready' && qibla && (
           <>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18, padding: '12px 0' }}>
+            <button
+              onClick={() => setSearchOpen((v) => !v)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '11px 14px',
+                borderRadius: 999,
+                border: '1px solid var(--border)',
+                background: 'var(--card)',
+                color: 'var(--ink)',
+                fontSize: 12.5,
+                fontWeight: 600,
+                cursor: 'pointer',
+                alignSelf: 'center',
+              }}
+            >
+              📍 {override ? override.label : 'Lokasi Saat Ini (GPS)'}
+              <span style={{ color: 'var(--muted)' }}>{searchOpen ? '▲' : '▼'}</span>
+            </button>
+
+            {searchOpen && (
+              <LocationSearch
+                onPick={(loc) => { setOverride(loc); setSearchOpen(false); }}
+                onUseGps={() => { setOverride(null); setSearchOpen(false); }}
+                onClose={() => setSearchOpen(false)}
+              />
+            )}
+
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 20,
+                padding: '28px 0',
+                borderRadius: 28,
+                background: 'radial-gradient(circle at 50% 30%, var(--mint-soft), var(--bg) 72%)',
+              }}
+            >
+              <span style={{ fontSize: 30, filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.25))' }}>🕋</span>
+
               <div style={{ position: 'relative', width: 240, height: 240 }}>
                 <svg width="240" height="240" viewBox="0 0 240 240">
-                  <circle cx="120" cy="120" r="112" fill="var(--card)" stroke="var(--border)" strokeWidth="1.5" />
-                  {Array.from({ length: 12 }).map((_, i) => {
-                    const a = (i * 30 * Math.PI) / 180;
-                    const isCardinal = i % 3 === 0;
-                    const r1 = isCardinal ? 92 : 100;
+                  <defs>
+                    <radialGradient id="qibla-ring" cx="50%" cy="50%" r="50%">
+                      <stop offset="55%" stopColor="var(--card)" />
+                      <stop offset="100%" stopColor="var(--mint)" />
+                    </radialGradient>
+                  </defs>
+                  <circle cx="120" cy="120" r="115" fill="none" stroke="var(--gold-ink)" strokeWidth="2" opacity="0.55" />
+                  <circle cx="120" cy="120" r="104" fill="url(#qibla-ring)" stroke="var(--border)" strokeWidth="1" />
+                  {Array.from({ length: 24 }).map((_, i) => {
+                    const a = (i * 15 * Math.PI) / 180;
+                    const isCardinal = i % 6 === 0;
+                    const r1 = isCardinal ? 82 : 92;
                     const x1 = 120 + r1 * Math.sin(a);
                     const y1 = 120 - r1 * Math.cos(a);
-                    const x2 = 120 + 112 * Math.sin(a);
-                    const y2 = 120 - 112 * Math.cos(a);
+                    const x2 = 120 + 104 * Math.sin(a);
+                    const y2 = 120 - 104 * Math.cos(a);
                     return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="var(--muted-soft)" strokeWidth={isCardinal ? 2 : 1} />;
                   })}
-                  <text x="120" y="34" textAnchor="middle" fontSize="13" fontWeight="800" fill="var(--muted)">N</text>
-                  <text x="206" y="125" textAnchor="middle" fontSize="13" fontWeight="800" fill="var(--muted)">E</text>
-                  <text x="120" y="216" textAnchor="middle" fontSize="13" fontWeight="800" fill="var(--muted)">S</text>
-                  <text x="34" y="125" textAnchor="middle" fontSize="13" fontWeight="800" fill="var(--muted)">W</text>
+                  <text x="120" y="42" textAnchor="middle" fontSize="13" fontWeight="800" fill="var(--primary)">N</text>
+                  <text x="198" y="125" textAnchor="middle" fontSize="13" fontWeight="800" fill="var(--muted)">E</text>
+                  <text x="120" y="208" textAnchor="middle" fontSize="13" fontWeight="800" fill="var(--muted)">S</text>
+                  <text x="42" y="125" textAnchor="middle" fontSize="13" fontWeight="800" fill="var(--muted)">W</text>
                 </svg>
                 <div
                   style={{
@@ -67,18 +199,15 @@ export default function QiblaCompass() {
                   }}
                 >
                   <svg width="240" height="240" viewBox="0 0 240 240">
-                    <path d="M120 30 L133 76 L120 64 L107 76 Z" fill="var(--primary)" />
-                    <line x1="120" y1="64" x2="120" y2="176" stroke="var(--primary)" strokeWidth="2.5" strokeLinecap="round" />
-                    <circle cx="120" cy="120" r="7" fill="var(--primary)" />
-                    <text x="120" y="66" textAnchor="middle" fontSize="18" style={{ transform: `rotate(${-needleRotation}deg)`, transformOrigin: '120px 66px' }}>
-                      🕋
-                    </text>
+                    <path d="M120 26 L135 78 L120 64 L105 78 Z" fill="var(--accent)" stroke="var(--primary-dark)" strokeWidth="1" />
+                    <line x1="120" y1="64" x2="120" y2="180" stroke="var(--primary)" strokeWidth="3" strokeLinecap="round" />
+                    <circle cx="120" cy="120" r="9" fill="var(--primary)" stroke="var(--card)" strokeWidth="2" />
                   </svg>
                 </div>
               </div>
 
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 28, fontWeight: 800, color: 'var(--primary)' }}>{Math.round(qibla.bearing)}°</div>
+                <div style={{ fontSize: 32, fontWeight: 800, color: 'var(--primary)' }}>{Math.round(qibla.bearing)}°</div>
                 <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>
                   {t('kiblat_dari_utara')} · {Math.round(qibla.distanceKm).toLocaleString('id-ID')} km {t('kiblat_dari_kabah')}
                 </div>
@@ -100,6 +229,17 @@ export default function QiblaCompass() {
             {(headingStatus === 'unsupported' || (headingStatus === 'granted' && heading == null)) && (
               <div className="card" style={{ padding: 16, fontSize: 12.5, lineHeight: 1.5 }}>
                 {t('kiblat_kompas_unsupported')}
+              </div>
+            )}
+
+            {hasHeading && headingAccuracy != null && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '13px 14px', borderRadius: 14, background: 'var(--card)' }}>
+                <span style={{ width: 8, height: 8, borderRadius: '50%', flexShrink: 0, background: accuracyGood ? '#2ecc71' : '#e67e22' }} />
+                <span style={{ fontSize: 11.5, color: 'var(--muted)' }}>
+                  {accuracyGood
+                    ? 'Sensor kompas HP kamu cukup akurat.'
+                    : 'Akurasi kompas kurang stabil — gerakkan HP membentuk angka 8 buat kalibrasi ulang.'}
+                </span>
               </div>
             )}
 
