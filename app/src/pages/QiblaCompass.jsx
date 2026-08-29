@@ -162,35 +162,35 @@ export default function QiblaCompass() {
             >
               <span style={{ fontSize: 30, filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.25))' }}>🕋</span>
 
-              <div style={{ position: 'relative', width: 240, height: 240 }}>
-                <svg width="240" height="240" viewBox="0 0 240 240">
+              <div style={{ position: 'relative', width: 280, height: 280 }}>
+                <svg width="280" height="280" viewBox="0 0 280 280">
                   <defs>
                     <radialGradient id="qibla-ring" cx="50%" cy="50%" r="50%">
                       <stop offset="55%" stopColor="var(--card)" />
                       <stop offset="100%" stopColor="var(--mint)" />
                     </radialGradient>
                   </defs>
-                  <circle cx="120" cy="120" r="115" fill="none" stroke="var(--gold-ink)" strokeWidth="2" opacity="0.55" />
-                  <circle cx="120" cy="120" r="104" fill="url(#qibla-ring)" stroke="var(--border)" strokeWidth="1" />
+                  <circle cx="140" cy="140" r="115" fill="none" stroke="var(--gold-ink)" strokeWidth="2" opacity="0.55" />
+                  <circle cx="140" cy="140" r="104" fill="url(#qibla-ring)" stroke="var(--border)" strokeWidth="1" />
                   {Array.from({ length: 24 }).map((_, i) => {
                     const a = (i * 15 * Math.PI) / 180;
                     const isCardinal = i % 6 === 0;
                     const r1 = isCardinal ? 82 : 92;
-                    const x1 = 120 + r1 * Math.sin(a);
-                    const y1 = 120 - r1 * Math.cos(a);
-                    const x2 = 120 + 104 * Math.sin(a);
-                    const y2 = 120 - 104 * Math.cos(a);
+                    const x1 = 140 + r1 * Math.sin(a);
+                    const y1 = 140 - r1 * Math.cos(a);
+                    const x2 = 140 + 104 * Math.sin(a);
+                    const y2 = 140 - 104 * Math.cos(a);
                     return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="var(--muted-soft)" strokeWidth={isCardinal ? 2 : 1} />;
                   })}
                 </svg>
 
-                {/* North needle — thin, red, rotates with -heading so it always
-                    points at true north relative to the phone's current
-                    orientation. Falls back to a fixed "up" (0deg) when there's
-                    no live heading, matching the same no-heading assumption
-                    the qibla needle already makes (screen-up = north). This
-                    replaces the old static N/E/S/W ring labels, which never
-                    rotated and so falsely implied north was always "up". */}
+                {/* Cardinal ring — a thin outer ring with N/E/S/W that rotates
+                    with -heading, so it always shows real compass directions
+                    relative to the phone's current orientation (like a real
+                    compass rose). Falls back to a fixed "up" (0deg) when
+                    there's no live heading, matching the same no-heading
+                    assumption the qibla needle already makes (screen-up =
+                    north). Replaces the earlier single red North needle. */}
                 <div
                   style={{
                     position: 'absolute',
@@ -202,10 +202,36 @@ export default function QiblaCompass() {
                     transition: 'transform 0.15s linear',
                   }}
                 >
-                  <svg width="240" height="240" viewBox="0 0 240 240">
-                    <line x1="120" y1="120" x2="120" y2="48" stroke="#c0392b" strokeWidth="2" strokeLinecap="round" />
-                    <path d="M120 40 L126.5 54 L120 49.5 L113.5 54 Z" fill="#c0392b" />
-                    <text x="120" y="34" textAnchor="middle" fontSize="11" fontWeight="800" fill="#c0392b">N</text>
+                  <svg width="280" height="280" viewBox="0 0 280 280">
+                    <circle cx="140" cy="140" r="130" fill="none" stroke="var(--border)" strokeWidth="1.5" />
+                    {Array.from({ length: 12 }).map((_, i) => {
+                      if (i % 3 === 0) return null; // where a cardinal letter already sits
+                      const a = (i * 30 * Math.PI) / 180;
+                      const x1 = 140 + 122 * Math.sin(a);
+                      const y1 = 140 - 122 * Math.cos(a);
+                      const x2 = 140 + 130 * Math.sin(a);
+                      const y2 = 140 - 130 * Math.cos(a);
+                      return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="var(--muted-soft)" strokeWidth="1" />;
+                    })}
+                    {['N', 'E', 'S', 'W'].map((label, i) => {
+                      const a = (i * 90 * Math.PI) / 180;
+                      const x = 140 + 130 * Math.sin(a);
+                      const y = 140 - 130 * Math.cos(a);
+                      return (
+                        <text
+                          key={label}
+                          x={x}
+                          y={y}
+                          textAnchor="middle"
+                          dominantBaseline="central"
+                          fontSize="13"
+                          fontWeight="800"
+                          fill={label === 'N' ? '#c0392b' : 'var(--muted)'}
+                        >
+                          {label}
+                        </text>
+                      );
+                    })}
                   </svg>
                 </div>
 
@@ -223,8 +249,8 @@ export default function QiblaCompass() {
                   }}
                 >
                   <svg width="240" height="240" viewBox="0 0 240 240">
-                    <path d="M120 26 L135 78 L120 64 L105 78 Z" fill="var(--accent)" stroke="var(--primary-dark)" strokeWidth="1" />
-                    <line x1="120" y1="64" x2="120" y2="180" stroke="var(--primary)" strokeWidth="3" strokeLinecap="round" />
+                    <path d="M120 44 L129 70 L120 61 L111 70 Z" fill="var(--accent)" stroke="var(--primary-dark)" strokeWidth="1" />
+                    <line x1="120" y1="61" x2="120" y2="180" stroke="var(--primary)" strokeWidth="3" strokeLinecap="round" />
                     <circle cx="120" cy="120" r="9" fill="var(--primary)" stroke="var(--card)" strokeWidth="2" />
                   </svg>
                 </div>
@@ -236,8 +262,8 @@ export default function QiblaCompass() {
                   Arah Kiblat
                 </span>
                 <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                  <span style={{ width: 14, height: 3, borderRadius: 2, background: '#c0392b' }} />
-                  Arah Utara
+                  <span style={{ fontSize: 11, fontWeight: 800, color: '#c0392b' }}>N</span>
+                  Arah Utara (ikut kompas)
                 </span>
               </div>
 
