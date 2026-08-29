@@ -29,6 +29,18 @@ const IS_PROD = process.env.MIDTRANS_IS_PRODUCTION === 'true';
 const SNAP_BASE = IS_PROD ? 'https://app.midtrans.com' : 'https://app.sandbox.midtrans.com';
 
 export default async function handler(req, res) {
+  // The frontend calls the fixed https://airmoon.vercel.app/... URL
+  // regardless of which host served the page (see lib/donations.js) —
+  // same reasoning as api/ask-me.js — so this needs real CORS headers,
+  // not just same-origin defaults, or the browser blocks it before it
+  // ever reaches this handler (shows up as a bare "Failed to fetch").
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end();
+  }
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
