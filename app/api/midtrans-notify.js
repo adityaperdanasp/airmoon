@@ -32,6 +32,38 @@ function isFinalFailure(body) {
   return ['expire', 'cancel', 'deny'].includes(body.transaction_status);
 }
 
+function describePaymentMethod(body) {
+  if (body.payment_type === 'bank_transfer' && body.va_numbers?.[0]) {
+    return `Transfer VA ${body.va_numbers[0].bank.toUpperCase()} (${body.va_numbers[0].va_number})`;
+  }
+  if (body.payment_type === 'gopay') return 'GoPay';
+  if (body.payment_type === 'qris') return 'QRIS';
+  return body.payment_type || 'Tidak diketahui';
+}
+
+// Fire-and-check-logged, not fire-and-forget-silently: a Telegram failure
+// (wrong token, bot blocked, ...) must never make the whole webhook fail —
+// the donation is already real and credited by this point regardless of
+// whether the founder got pinged about it.
+async function sendTelegramNotification(text) {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = process.env.TELEGRAM_CHAT_ID;
+  if (!token || !chatId) {
+    console.error('Telegram not configured (TELEGRAM_BOT_TOKEN/TELEGRAM_CHAT_ID missing) — skipping notify.');
+    return;
+  }
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, text }),
+    });
+    if (!res.ok) console.error('Telegram send failed:', await res.text());
+  } catch (err) {
+    console.error('Telegram send error:', err);
+  }
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -87,7 +119,18 @@ export default async function handler(req, res) {
           createdAt: FieldValue.serverTimestamp(),
         });
       }
-      await txnRef.set({ status: 'paid', midtransStatus: body.transaction_status }, { merge: true });
+      // `midtransPayload` is the actual "bukti pembayaran" — Midtrans's own
+      // record of exactly what happened (payment_type, VA/bank used,
+      // transaction_time, transaction_id, gross_amount) kept verbatim, not
+      // just a summary — so it's there to check against later if a
+      // donor/admin ever disputes something.
+      await txnRef.set(
+        { status: 'paid', midtransStatus: body.transaction_status, midtransPayload: body },
+        { merge: true }
+      );
+      await sendTelegramNotification(
+        `💰 Donasi masuk!\n\nCampaign: ${txn.donationTitle}\nJumlah: Rp ${txn.amount.toLocaleString('id-ID')}\nMetode: ${describePaymentMethod(body)}\nOrder ID: ${order_id}\nWaktu: ${body.transaction_time || '-'}`
+      );
     } else if (isFinalFailure(body)) {
       await txnRef.set({ status: 'failed', midtransStatus: body.transaction_status }, { merge: true });
     } else {
