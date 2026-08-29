@@ -14,17 +14,23 @@ import { IconBack } from '../components/icons';
 // follows it.
 const BISMILLAH = 'بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ';
 
+// A pointed-end ribbon/cartouche shape ("unwan" in classical manuscript
+// terms) via CSS clip-path, not a hand-drawn illustration — a generic,
+// centuries-old Quran page convention (most printed Mushaf editions use
+// some variant of this), not specific artwork copied from any one app.
+const RIBBON_CLIP = 'polygon(0% 50%, 3% 0%, 97% 0%, 100% 50%, 97% 100%, 3% 100%)';
+
 function SurahBanner({ chapter }) {
   if (!chapter) return null;
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, margin: '4px 0 10px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, margin: '10px 0 14px' }}>
       <div
         style={{
           width: '100%',
-          padding: '10px 16px',
-          borderRadius: 10,
+          padding: '12px 30px',
+          clipPath: RIBBON_CLIP,
+          background: 'linear-gradient(180deg, var(--cream), var(--card))',
           border: '1.5px solid var(--gold-ink)',
-          background: 'var(--cream)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
@@ -41,6 +47,50 @@ function SurahBanner({ chapter }) {
       {chapter.bismillah_pre && (
         <div style={{ fontFamily: "'Amiri', serif", fontSize: 22, direction: 'rtl' }}>{BISMILLAH}</div>
       )}
+    </div>
+  );
+}
+
+// One rosette (4-petal quatrefoil, a simple recurring Islamic-manuscript
+// corner motif) rotated per corner — geometric shapes built from
+// ellipses/arcs, not hand-authored freeform floral path data.
+function CornerOrnament({ corner }) {
+  const pos = {
+    tl: { top: -11, left: -11, rotate: 0 },
+    tr: { top: -11, right: -11, rotate: 90 },
+    br: { bottom: -11, right: -11, rotate: 180 },
+    bl: { bottom: -11, left: -11, rotate: 270 },
+  }[corner];
+  return (
+    <svg
+      width="22"
+      height="22"
+      viewBox="0 0 22 22"
+      style={{ position: 'absolute', top: pos.top, left: pos.left, right: pos.right, bottom: pos.bottom, transform: `rotate(${pos.rotate}deg)`, pointerEvents: 'none' }}
+    >
+      <g fill="var(--gold-ink)">
+        <ellipse cx="11" cy="6" rx="3.2" ry="5" />
+        <ellipse cx="6" cy="11" rx="5" ry="3.2" />
+      </g>
+      <circle cx="11" cy="11" r="2.4" fill="var(--card)" stroke="var(--gold-ink)" strokeWidth="1.3" />
+    </svg>
+  );
+}
+
+// Wraps the whole page card in a double gold border (an outer thin line,
+// then a gap, then the card's own border) with a rosette at each corner —
+// the classical "framed manuscript page" look, built entirely from CSS +
+// simple SVG shapes rather than a raster/illustration asset.
+function PageFrame({ children }) {
+  return (
+    <div style={{ position: 'relative', padding: 6, borderRadius: 22, border: '1px solid var(--gold-ink)' }}>
+      <div style={{ position: 'relative', borderRadius: 16 }}>
+        {children}
+        <CornerOrnament corner="tl" />
+        <CornerOrnament corner="tr" />
+        <CornerOrnament corner="br" />
+        <CornerOrnament corner="bl" />
+      </div>
     </div>
   );
 }
@@ -459,9 +509,10 @@ export default function MushafReader() {
         )}
 
         {verses && (
+          <PageFrame>
           <div
             style={{
-              borderRadius: 18,
+              borderRadius: 16,
               border: '1.5px solid var(--border)',
               background: 'var(--card)',
               padding: '22px 18px',
@@ -504,6 +555,7 @@ export default function MushafReader() {
               );
             })}
           </div>
+          </PageFrame>
         )}
 
         {verses && (
