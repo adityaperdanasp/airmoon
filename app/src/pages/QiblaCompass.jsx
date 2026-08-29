@@ -182,11 +182,35 @@ export default function QiblaCompass() {
                     const y2 = 120 - 104 * Math.cos(a);
                     return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="var(--muted-soft)" strokeWidth={isCardinal ? 2 : 1} />;
                   })}
-                  <text x="120" y="42" textAnchor="middle" fontSize="13" fontWeight="800" fill="var(--primary)">N</text>
-                  <text x="198" y="125" textAnchor="middle" fontSize="13" fontWeight="800" fill="var(--muted)">E</text>
-                  <text x="120" y="208" textAnchor="middle" fontSize="13" fontWeight="800" fill="var(--muted)">S</text>
-                  <text x="42" y="125" textAnchor="middle" fontSize="13" fontWeight="800" fill="var(--muted)">W</text>
                 </svg>
+
+                {/* North needle — thin, red, rotates with -heading so it always
+                    points at true north relative to the phone's current
+                    orientation. Falls back to a fixed "up" (0deg) when there's
+                    no live heading, matching the same no-heading assumption
+                    the qibla needle already makes (screen-up = north). This
+                    replaces the old static N/E/S/W ring labels, which never
+                    rotated and so falsely implied north was always "up". */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transform: `rotate(${hasHeading ? -heading : 0}deg)`,
+                    transition: 'transform 0.15s linear',
+                  }}
+                >
+                  <svg width="240" height="240" viewBox="0 0 240 240">
+                    <line x1="120" y1="120" x2="120" y2="48" stroke="#c0392b" strokeWidth="2" strokeLinecap="round" />
+                    <path d="M120 40 L126.5 54 L120 49.5 L113.5 54 Z" fill="#c0392b" />
+                    <text x="120" y="34" textAnchor="middle" fontSize="11" fontWeight="800" fill="#c0392b">N</text>
+                  </svg>
+                </div>
+
+                {/* Qibla needle — points straight up on screen exactly when
+                    the phone's top edge is physically aimed at the Kaaba. */}
                 <div
                   style={{
                     position: 'absolute',
@@ -204,6 +228,17 @@ export default function QiblaCompass() {
                     <circle cx="120" cy="120" r="9" fill="var(--primary)" stroke="var(--card)" strokeWidth="2" />
                   </svg>
                 </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: 16, fontSize: 11, color: 'var(--muted)' }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <span style={{ width: 14, height: 3, borderRadius: 2, background: 'var(--accent)' }} />
+                  Arah Kiblat
+                </span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <span style={{ width: 14, height: 3, borderRadius: 2, background: '#c0392b' }} />
+                  Arah Utara
+                </span>
               </div>
 
               <div style={{ textAlign: 'center' }}>

@@ -97,7 +97,7 @@ export const translations = {
     kiblat_aktifkan_kompas: 'Aktifkan Kompas',
     kiblat_kompas_denied: 'Akses kompas ditolak. Kamu masih bisa pakai angka derajat di atas dengan kompas fisik.',
     kiblat_kompas_unsupported: 'Perangkat/browser ini tidak mendukung kompas otomatis. Gunakan kompas fisik dan arahkan ke derajat di atas dari Utara.',
-    kiblat_info: 'Putar HP kamu sampai panah mengarah lurus ke atas — itu artinya kamu sudah menghadap kiblat. Akurasi tergantung sensor kompas perangkat, jauhkan dari benda logam/magnet.',
+    kiblat_info: 'Panah kuning menunjuk arah kiblat, panah merah menunjuk Utara asli. Putar HP kamu sampai panah kuning mengarah lurus ke atas — itu artinya kamu sudah menghadap kiblat. Akurasi tergantung sensor kompas perangkat, jauhkan dari benda logam/magnet.',
 
     item_ramadan: 'Mode Ramadan',
     ramadan_title: 'Mode Ramadan',
@@ -219,7 +219,7 @@ export const translations = {
     kiblat_aktifkan_kompas: 'Enable Compass',
     kiblat_kompas_denied: 'Compass access denied. You can still use the degree reading above with a physical compass.',
     kiblat_kompas_unsupported: 'This device/browser doesn’t support an automatic compass. Use a physical compass and point it to the degree shown above, from North.',
-    kiblat_info: 'Turn your phone until the arrow points straight up — that means you’re facing the qibla. Accuracy depends on your device’s compass sensor, keep it away from metal or magnets.',
+    kiblat_info: 'The yellow arrow points to the qibla, the red arrow points to true North. Turn your phone until the yellow arrow points straight up — that means you’re facing the qibla. Accuracy depends on your device’s compass sensor, keep it away from metal or magnets.',
 
     item_ramadan: 'Ramadan Mode',
     ramadan_title: 'Ramadan Mode',
