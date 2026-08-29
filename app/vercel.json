@@ -1,5 +1,8 @@
 {
   "rewrites": [
     { "source": "/((?!api/|\\.well-known/).*)", "destination": "/index.html" }
+  ],
+  "crons": [
+    { "path": "/api/check-campaign-deadlines", "schedule": "0 1 * * *" }
   ]
 }
