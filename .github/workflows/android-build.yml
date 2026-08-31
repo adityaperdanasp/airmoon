@@ -30,6 +30,32 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      # Every GitHub Actions run is a fresh throwaway machine — without
+      # this, Android's default debug-signing behavior (auto-generate
+      # ~/.android/debug.keystore if it doesn't exist yet) would mean
+      # every single build gets signed with a brand new random key,
+      # and Android refuses to install a new APK over an existing one
+      # signed with a different key ("App not installed" / signature
+      # conflict) unless the old one is uninstalled first. Caching this
+      # one file across runs keeps every build's debug signature
+      # identical, so a fresh download can just install over the last
+      # one like a normal update.
+      - name: Restore cached debug keystore
+        id: keystore-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: android-debug-keystore-v1
+
+      - name: Generate debug keystore (first run only)
+        if: steps.keystore-cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p ~/.android
+          keytool -genkeypair -v -keystore ~/.android/debug.keystore \
+            -storepass android -keypass android -alias androiddebugkey \
+            -keyalg RSA -keysize 2048 -validity 10950 \
+            -dname "CN=Android Debug,O=Android,C=US"
+
       # Required at build time (the google-services Gradle plugin reads
       # it to wire up this app's Firebase project config) — stored as a
       # repo secret, never committed, since it identifies a specific

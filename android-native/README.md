@@ -52,7 +52,7 @@ This dev environment has no JDK/Android SDK, so building happens on GitHub's own
 4. Unzip it (GitHub always wraps artifacts in a zip) → you get `app-debug.apk`.
 5. Transfer that to an Android phone (email it to yourself, Google Drive, USB, whatever) and tap it to install. Android will warn about installing from an unknown source the first time — that's expected for a sideloaded app, not a red flag.
 
-This is a **debug** build (auto-signed with a throwaway key baked into every Android SDK install) — fine for sideloading to your own phone, not something to eventually publish to the Play Store as-is (that needs a real release signing key, a separate step for later if this ever needs to go that route).
+This is a **debug** build, signed with a keystore the workflow generates once and caches across runs (`android-build.yml`'s "Restore cached debug keystore" step) — every build from here on shares the same signature, so downloading and installing a newer build works like a normal app update. **One-time exception**: the very first couple of runs (before this caching was added) each got a random throwaway key, so a build from after this note was added may refuse to install over one from before it ("App not installed" / signature conflict) — uninstall the old one first if that happens, just this once. Not something to eventually publish to the Play Store as-is either way (that needs a real release signing key, a separate step for later if this ever needs to go that route).
 
 ## How notifications actually reach this app
 
