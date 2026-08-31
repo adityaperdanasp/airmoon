@@ -1,0 +1,7 @@
+<resources>
+    <style name="Theme.Airmoon" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/airmoon_primary</item>
+        <item name="colorPrimaryDark">@color/airmoon_primary</item>
+        <item name="android:windowBackground">@color/airmoon_background</item>
+    </style>
+</resources>
