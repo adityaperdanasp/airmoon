@@ -1,5 +1,5 @@
 <resources>
-    <!-- Matches app/src/styles/theme.css's light-mode --primary/--bg -->
+    <!-- Matches app/src/styles/theme.css's light-mode primary/bg tokens -->
     <color name="airmoon_primary">#0D4D47</color>
     <color name="airmoon_background">#FFFFFF</color>
 </resources>
