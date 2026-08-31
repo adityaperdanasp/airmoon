@@ -71,10 +71,12 @@ export default async function handler(req, res) {
     const preview = text.length > 100 ? text.slice(0, 100) + '…' : text;
     let successCount = 0;
     for (const batch of chunk(tokens, MULTICAST_CHUNK)) {
+      // Data-only, same reasoning as send-prayer-notifications.js — keeps
+      // display fully in our own hands (web service worker + native app)
+      // instead of the OS auto-showing it with default sound/channel.
       const result = await messaging.sendEachForMulticast({
         tokens: batch,
-        notification: { title: '🤲 Doa baru dari sesama muslim', body: preview },
-        data: { tag: `doa-${doaId}`, doaId },
+        data: { tag: `doa-${doaId}`, doaId, title: '🤲 Doa baru dari sesama muslim', body: preview },
       });
       successCount += result.successCount;
     }

@@ -101,13 +101,23 @@ export default async function handler(req, res) {
 
           const label = PRAYER_LABEL[key];
           const prayerIndex = PRAYER_ORDER.indexOf(key);
+          // Data-only (no top-level `notification` field) on purpose: a
+          // `notification` payload gets auto-displayed by the OS/browser
+          // using its own default sound/channel *before* our own code ever
+          // runs, on both Android's native FCM and web push — which is
+          // exactly what stops the native app's custom azan-sound
+          // notification channel (and would stop any future per-message
+          // customization) from ever taking effect. Data-only guarantees
+          // firebase-messaging-sw.js's onBackgroundMessage (web) and the
+          // native app's FirebaseMessagingService.onMessageReceived always
+          // run, so they can build the notification themselves.
           const result = await messaging.sendEachForMulticast({
             tokens,
-            notification: {
+            data: {
+              tag: `adzan-${key}`,
               title: `Waktunya Sholat ${label}`,
               body: pickPrayerMessage(dateKey, prayerIndex, label),
             },
-            data: { tag: `adzan-${key}` },
           });
 
           await docSnap.ref.update({ lastNotified: { date: dateKey, prayer: key } });

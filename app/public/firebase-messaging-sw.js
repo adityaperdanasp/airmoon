@@ -18,7 +18,11 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage((payload) => {
-  const { title, body } = payload.notification || {};
+  // Backend sends data-only messages now (no top-level `notification`
+  // field) so this handler always runs instead of the browser sometimes
+  // auto-displaying the push itself — see send-prayer-notifications.js's
+  // comment for why.
+  const { title, body } = payload.data || {};
   self.registration.showNotification(title || 'airmoon', {
     body: body || '',
     icon: '/icons/icon-192.png',
