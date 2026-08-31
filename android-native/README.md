@@ -9,9 +9,9 @@ ceiling here). The app itself is just a full-screen WebView pointed at
 web app already deployed; this project only adds real native notification
 handling on top.
 
-## Two things only the founder can do before this builds
+## One thing only the founder can do before this builds
 
-### 1. Register this app in Firebase and get `google-services.json`
+### Register this app in Firebase and get `google-services.json`
 
 This is a **new** Android app registration in the existing `airmoon-d9620`
 Firebase project (separate from the TWA, which never registered one):
@@ -27,11 +27,11 @@ Firebase project (separate from the TWA, which never registered one):
    ```
    Paste that into the secret's value field.
 
-### 2. Replace the placeholder notification sound
+### 2. Notification sound — already a real adzan recording
 
-`app/src/main/res/raw/azan.mp3` right now is a **1.2-second test tone**, not a real azan — it exists only so the project compiles and the whole custom-sound pipeline can be verified end-to-end. Replace that file with a real adzan recording you have the rights to use (record your own, or use a properly licensed/public-domain one — same licensing discipline as the Qur'an fonts and the Mushaf corner ornament elsewhere in this repo: don't just grab an unlicensed clip off the internet).
+`app/src/main/res/raw/azan.mp3` (2 min 34 s) is **"Beautiful adhan.ogg"** from Wikimedia Commons, uploaded by Adam-synagda as their own work and released under **CC0 1.0 (public domain)** — free to use, modify, and distribute, commercially or not, no attribution required (source page: `commons.wikimedia.org/wiki/File:Beautiful_adhan.ogg`; it's also the reference audio embedded in Wikipedia's own Japanese/Turkmen/Turkish articles on the adhan). Converted from `.ogg` to `.mp3` with `ffmpeg`, same duration, no re-encoding quality loss beyond that one conversion pass.
 
-**If you swap the file, also bump the channel id** in `FcmService.kt` (`CHANNEL_ID = "adzan_channel_v1"` → `"adzan_channel_v2"`) — Android locks a notification channel's sound in at creation and silently ignores changes to an existing channel, so anyone who already has the app installed would otherwise keep hearing the old file forever.
+**If this file is ever swapped for a different recording later, also bump the channel id** in `FcmService.kt` (currently `CHANNEL_ID = "adzan_channel_v2"` → next would be `"adzan_channel_v3"`) — Android locks a notification channel's sound in at creation and silently ignores changes to an existing channel, so anyone who already has the app installed would otherwise keep hearing the old file forever.
 
 ## Building the .apk
 
