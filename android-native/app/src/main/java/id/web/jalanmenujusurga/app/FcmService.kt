@@ -27,20 +27,15 @@ object TokenHolder {
 // on a channel with a bundled custom sound — something no web-push/TWA
 // path can do (see CLAUDE.md's Android app notes for the full story of
 // why the web/TWA route hit a hard ceiling here).
+//
+// There are 3 possible channels, one per AzanSound.ALL entry, not just
+// one — a NotificationChannel's sound is locked in at creation, so
+// letting someone switch between azan recordings means each recording
+// needs its own permanent channel; onMessageReceived picks whichever
+// channel matches the user's *currently saved* preference at the moment
+// each notification actually fires (not whatever was selected when the
+// channel was first created).
 class FcmService : FirebaseMessagingService() {
-
-    companion object {
-        private const val CHANNEL_ID = "adzan_channel_v3"
-        // NotificationChannel's sound can only be set once, at creation —
-        // Android silently ignores any attempt to change an existing
-        // channel's sound afterwards. v1 -> v2 -> v3 as azan.mp3 went
-        // placeholder tone -> generic CC0 adhan -> the real Masjidil Haram
-        // (Makkah) CC0 recording currently bundled (see README.md), all
-        // before this was ever built into an installed APK — but the same
-        // rule applies to any future swap: bump this id again, or
-        // returning users keep hearing whatever sound their existing
-        // channel was created with, not the new file.
-    }
 
     override fun onNewToken(token: String) {
         super.onNewToken(token)
@@ -61,7 +56,9 @@ class FcmService : FirebaseMessagingService() {
         val body = message.data["body"] ?: ""
         val tag = message.data["tag"] ?: "airmoon-default"
 
-        ensureChannel()
+        val soundId = AzanSound.getSelected(this)
+        val channelId = AzanSound.channelIdFor(soundId)
+        ensureChannel(soundId)
 
         val openIntent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
@@ -71,7 +68,7 @@ class FcmService : FirebaseMessagingService() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val notification = NotificationCompat.Builder(this, CHANNEL_ID)
+        val notification = NotificationCompat.Builder(this, channelId)
             .setSmallIcon(android.R.drawable.ic_dialog_info) // TODO: swap for a proper monochrome status-bar icon
             .setContentTitle(title)
             .setContentText(body)
@@ -89,19 +86,24 @@ class FcmService : FirebaseMessagingService() {
         NotificationManagerCompat.from(this).notify(tag, 0, notification)
     }
 
-    private fun ensureChannel() {
+    private fun ensureChannel(soundId: String) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
+        val channelId = AzanSound.channelIdFor(soundId)
         val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        if (manager.getNotificationChannel(CHANNEL_ID) != null) return
+        if (manager.getNotificationChannel(channelId) != null) return
 
-        val soundUri = Uri.parse("android.resource://$packageName/${R.raw.azan}")
+        val soundUri = Uri.parse("android.resource://$packageName/${AzanSound.rawResFor(soundId)}")
         val audioAttributes = AudioAttributes.Builder()
             .setUsage(AudioAttributes.USAGE_NOTIFICATION)
             .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
             .build()
 
-        val channel = NotificationChannel(CHANNEL_ID, "Pengingat Sholat", NotificationManager.IMPORTANCE_HIGH).apply {
-            description = "Notifikasi waktu sholat dengan suara adzan"
+        val channel = NotificationChannel(
+            channelId,
+            "Pengingat Sholat (${AzanSound.labelFor(soundId)})",
+            NotificationManager.IMPORTANCE_HIGH
+        ).apply {
+            description = "Notifikasi waktu sholat dengan suara ${AzanSound.labelFor(soundId)}"
             setSound(soundUri, audioAttributes)
             enableVibration(true)
         }

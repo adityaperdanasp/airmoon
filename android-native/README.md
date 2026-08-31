@@ -27,11 +27,19 @@ Firebase project (separate from the TWA, which never registered one):
    ```
    Paste that into the secret's value field.
 
-### 2. Notification sound — the real Makkah azan
+### 2. Notification sound — 3 real azan recordings, user picks one
 
-`app/src/main/res/raw/azan.mp3` (4 min 43 s) is **"Makkah Azan-Ramadan"** from the Internet Archive, uploaded by a dedicated Haramain-recordings account (`haramainstaff@gmail.com`, item id `MakkahAzan-ramadan`) and released under **CC0 1.0 (public domain)** — free to use, modify, and distribute, commercially or not, no attribution required (`archive.org/details/MakkahAzan-ramadan`). Picked over a generic/anonymous recording specifically because it's an actual Masjidil Haram (Makkah) azan with a clear, verifiable public-domain dedication, per an explicit ask to use a real, recognizable one rather than a placeholder tone. Converted to a standard 44.1kHz mp3 with `ffmpeg` (the source file was 16kHz; re-encoded up for broader device compatibility, same content/duration).
+There's a **picker**, not just one fixed sound — see `AzanSound.kt` (the single source of truth both `FcmService.kt` and `MainActivity.kt`'s bridge read from) and the "Suara Azan" card on the web app's Pengaturan page (only rendered inside this native shell — a regular browser/PWA has no way to attach a custom sound to a notification at all, so there's nothing to pick between there). All three are CC0/public domain, picked specifically for having a real, checkable license attached rather than being grabbed from a random unlicensed source:
 
-**If this file is ever swapped for a different recording later, also bump the channel id** in `FcmService.kt` (currently `CHANNEL_ID = "adzan_channel_v3"` → next would be `"adzan_channel_v4"`) — Android locks a notification channel's sound in at creation and silently ignores changes to an existing channel, so anyone who already has the app installed would otherwise keep hearing the old file forever.
+| File | Source | Length | License |
+|---|---|---|---|
+| `res/raw/azan_makkah.mp3` | "Makkah Azan-Ramadan", Internet Archive, uploaded by a dedicated Haramain-recordings account (`archive.org/details/MakkahAzan-ramadan`) | 4:43 | CC0 1.0 |
+| `res/raw/azan_madinah.mp3` | Trimmed (first 68s, faded out) from "MadinahFajr9thNov2011Audio" on the Internet Archive — a live Fajr recording from Masjid Nabawi led by Sheikh Ale Sheikh (`archive.org/details/MadinahFajr9thNov2011Audio`); trimming to just the azan portion is a permitted derivative use under CC0 | 1:08 | CC0 1.0 |
+| `res/raw/azan_lainnya.mp3` | "Beautiful adhan.ogg", Wikimedia Commons, uploaded by Adam-synagda — also the reference audio on Wikipedia's own Japanese/Turkmen/Turkish adhan articles (`commons.wikimedia.org/wiki/File:Beautiful_adhan.ogg`) | 2:34 | CC0 1.0 |
+
+Each has its **own permanent notification channel** (`AzanSound.channelIdFor()`, e.g. `adzan_channel_makkah_v1`) — Android locks a channel's sound in at creation, so a picker needs one channel per option, not one shared channel whose sound changes. `FcmService.onMessageReceived` reads whatever's currently saved (`AzanSound.getSelected()`, backed by `SharedPreferences`, default `makkah`) each time a notification actually fires, so a change in Pengaturan takes effect on the very next prayer notification, not just future app installs.
+
+**Adding a 4th option later**: drop the file in `res/raw/`, add one line to `AzanSound.ALL`/`rawResFor()`/`labelFor()` — nothing else needs to change. **Replacing one of the existing three**: also bump that id's version suffix (`_v1` → `_v2`) in `channelIdFor()`, or returning users keep hearing the old file forever on their already-created channel.
 
 ## Building the .apk
 

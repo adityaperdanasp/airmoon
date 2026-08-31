@@ -127,15 +127,28 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
-    // Exposed to the page's JS as `window.AndroidBridge`. Currently just
-    // lets the web app ask for a re-push of the current token (e.g. if the
-    // page loaded before Firebase finished handing one back) — kept
-    // narrow on purpose, not a general-purpose native API surface.
+    // Exposed to the page's JS as `window.AndroidBridge` — kept narrow on
+    // purpose (token bridging + the azan-sound picker), not a
+    // general-purpose native API surface.
     inner class AndroidBridge {
         @android.webkit.JavascriptInterface
         fun requestFcmToken() {
             TokenHolder.token?.let { runOnUiThread { injectToken(it) } }
         }
+
+        // The 3 bundled azan recordings a user can pick between — see
+        // AzanSound.kt. Returns a small JSON array ([{id,label}, ...])
+        // rather than a native object because addJavascriptInterface only
+        // marshals primitives/String across the bridge; the web side
+        // JSON.parses it (Pengaturan.jsx's azan-sound picker).
+        @android.webkit.JavascriptInterface
+        fun getAzanSoundOptions(): String = AzanSound.optionsJson()
+
+        @android.webkit.JavascriptInterface
+        fun getAzanSound(): String = AzanSound.getSelected(this@MainActivity)
+
+        @android.webkit.JavascriptInterface
+        fun setAzanSound(id: String) = AzanSound.setSelected(this@MainActivity, id)
     }
 
     override fun onBackPressed() {

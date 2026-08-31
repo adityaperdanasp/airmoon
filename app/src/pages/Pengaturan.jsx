@@ -1,8 +1,10 @@
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useLang } from '../context/LangContext';
 import { useTheme } from '../context/ThemeContext';
 import { useNavigate, Link } from 'react-router-dom';
 import TopBar from '../components/TopBar';
+import { isNativeApp } from '../lib/notifications';
 
 function SegButton({ active, onClick, children }) {
   return (
@@ -25,6 +27,61 @@ function SegButton({ active, onClick, children }) {
       }}
     >
       {children}
+    </div>
+  );
+}
+
+// Only rendered inside android-native/'s WebView shell (isNativeApp()) —
+// a regular browser/PWA has no way to attach a custom sound to a
+// notification at all, so there's nothing to pick between there. Reads/
+// writes the selection through window.AndroidBridge (MainActivity.kt's
+// AndroidBridge inner class), which is the source of truth — this
+// component holds no state of its own beyond what's needed to render it.
+function AzanSoundPicker() {
+  const [options, setOptions] = useState([]);
+  const [selected, setSelected] = useState(null);
+
+  useEffect(() => {
+    try {
+      setOptions(JSON.parse(window.AndroidBridge.getAzanSoundOptions()));
+      setSelected(window.AndroidBridge.getAzanSound());
+    } catch {
+      // AndroidBridge not ready yet or malformed response — picker just
+      // stays empty rather than crashing the settings page over it.
+    }
+  }, []);
+
+  if (!options.length) return null;
+
+  return (
+    <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 14, padding: 16 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ width: 36, height: 36, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: 'var(--cream)' }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gold-ink)">
+            <path d="M9 18V5l11-2v13" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+            <circle cx="6" cy="18" r="3" strokeWidth="1.6" />
+            <circle cx="17" cy="16" r="3" strokeWidth="1.6" />
+          </svg>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <span style={{ fontSize: 13, fontWeight: 700 }}>Suara Azan</span>
+          <span style={{ fontSize: 11, color: 'var(--muted)' }}>Dipakai untuk notifikasi waktu sholat</span>
+        </div>
+      </div>
+      <div style={{ display: 'flex', padding: 3, borderRadius: 999, background: 'var(--mint-soft)' }}>
+        {options.map((opt) => (
+          <SegButton
+            key={opt.id}
+            active={selected === opt.id}
+            onClick={() => {
+              window.AndroidBridge.setAzanSound(opt.id);
+              setSelected(opt.id);
+            }}
+          >
+            {opt.label}
+          </SegButton>
+        ))}
+      </div>
     </div>
   );
 }
@@ -77,6 +134,8 @@ export default function Pengaturan() {
             <SegButton active={theme === 'dark'} onClick={() => setTheme('dark')}>{t('dark')}</SegButton>
           </div>
         </div>
+
+        {isNativeApp() && <AzanSoundPicker />}
 
         <Link
           to="/privacy-policy"
