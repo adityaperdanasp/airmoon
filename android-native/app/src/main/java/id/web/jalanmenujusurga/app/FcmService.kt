@@ -30,15 +30,16 @@ object TokenHolder {
 class FcmService : FirebaseMessagingService() {
 
     companion object {
-        private const val CHANNEL_ID = "adzan_channel_v2"
+        private const val CHANNEL_ID = "adzan_channel_v3"
         // NotificationChannel's sound can only be set once, at creation —
         // Android silently ignores any attempt to change an existing
-        // channel's sound afterwards. Bumped v1 -> v2 here when azan.mp3
-        // was swapped from the placeholder test tone to the real CC0
-        // recording (see README.md), before this was ever built into an
-        // installed APK — but the same rule applies to any future swap:
-        // bump this id again, or returning users keep hearing whatever
-        // sound their existing channel was created with, not the new file.
+        // channel's sound afterwards. v1 -> v2 -> v3 as azan.mp3 went
+        // placeholder tone -> generic CC0 adhan -> the real Masjidil Haram
+        // (Makkah) CC0 recording currently bundled (see README.md), all
+        // before this was ever built into an installed APK — but the same
+        // rule applies to any future swap: bump this id again, or
+        // returning users keep hearing whatever sound their existing
+        // channel was created with, not the new file.
     }
 
     override fun onNewToken(token: String) {
