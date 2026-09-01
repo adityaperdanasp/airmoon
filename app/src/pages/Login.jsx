@@ -81,20 +81,25 @@ export default function Login() {
           padding — the photo needs to reach the screen edges. A different
           photo per theme (not the same one dimmed) per an explicit ask;
           see data/photos.js. */}
-      <div style={{ position: 'relative', height: 220, overflow: 'hidden', flexShrink: 0 }}>
+      <div style={{ position: 'relative', height: 300, overflow: 'hidden', flexShrink: 0 }}>
         <img
           src={heroPhoto}
           alt=""
-          style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 30%' }}
+          style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 25%' }}
         />
+        {/* Fade stretched out over a much longer stretch (45%→92%, was a
+            flat 60%→100%) — a short fade made the photo feel like it was
+            just abruptly cut off right above the headline; a slower fade
+            reads as one continuous surface instead of "photo card" +
+            "separate text block" stacked on top of each other. */}
         <div
           style={{
             position: 'absolute',
             inset: 0,
             background:
               theme === 'dark'
-                ? 'linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.4) 60%, var(--bg) 100%)'
-                : 'linear-gradient(180deg, rgba(10,20,15,0.08) 0%, rgba(10,20,15,0.18) 60%, var(--bg) 100%)',
+                ? 'linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.1) 45%, rgba(0,0,0,0.5) 70%, var(--bg) 94%)'
+                : 'linear-gradient(180deg, rgba(10,20,15,0.05) 0%, rgba(10,20,15,0.05) 45%, rgba(255,255,255,0.4) 70%, var(--bg) 94%)',
           }}
         />
         <div style={{ position: 'absolute', top: 22, left: 22 }}>
@@ -102,7 +107,11 @@ export default function Login() {
         </div>
       </div>
 
-      <div className="screen-content" style={{ paddingTop: 4, gap: 28 }}>
+      {/* Pulled up under the hero's long fade (negative margin) so the
+          headline sits right where the photo has already faded to
+          var(--bg) — the two blend into one surface instead of the
+          content area starting with a hard visible seam. */}
+      <div className="screen-content" style={{ paddingTop: 0, gap: 28, marginTop: -36, position: 'relative' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, letterSpacing: '-0.01em' }}>{t('login_title')}</h1>
           <p className="muted" style={{ margin: 0, fontSize: 13 }}>{t('login_sub')}</p>

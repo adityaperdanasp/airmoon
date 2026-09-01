@@ -75,12 +75,13 @@ export default function SignUp() {
 
   return (
     <div className="screen">
-      {/* See Login.jsx for why this sits outside .screen-content. */}
-      <div style={{ position: 'relative', height: 220, overflow: 'hidden', flexShrink: 0 }}>
+      {/* See Login.jsx for why this sits outside .screen-content, and for
+          why the fade is stretched out over a long stretch (45%→94%). */}
+      <div style={{ position: 'relative', height: 300, overflow: 'hidden', flexShrink: 0 }}>
         <img
           src={heroPhoto}
           alt=""
-          style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 30%' }}
+          style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 25%' }}
         />
         <div
           style={{
@@ -88,8 +89,8 @@ export default function SignUp() {
             inset: 0,
             background:
               theme === 'dark'
-                ? 'linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.4) 60%, var(--bg) 100%)'
-                : 'linear-gradient(180deg, rgba(10,20,15,0.08) 0%, rgba(10,20,15,0.18) 60%, var(--bg) 100%)',
+                ? 'linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.1) 45%, rgba(0,0,0,0.5) 70%, var(--bg) 94%)'
+                : 'linear-gradient(180deg, rgba(10,20,15,0.05) 0%, rgba(10,20,15,0.05) 45%, rgba(255,255,255,0.4) 70%, var(--bg) 94%)',
           }}
         />
         <div style={{ position: 'absolute', top: 22, left: 22 }}>
@@ -97,7 +98,7 @@ export default function SignUp() {
         </div>
       </div>
 
-      <div className="screen-content" style={{ paddingTop: 4, gap: 28 }}>
+      <div className="screen-content" style={{ paddingTop: 0, gap: 28, marginTop: -36, position: 'relative' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, letterSpacing: '-0.01em' }}>{t('signup_title')}</h1>
           <p className="muted" style={{ margin: 0, fontSize: 13 }}>{t('signup_sub')}</p>
