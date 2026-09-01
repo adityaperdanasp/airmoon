@@ -5,6 +5,8 @@ import { db } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
 import { fetchSurahList } from '../lib/quranApi';
 import BottomNav from '../components/BottomNav';
+import PageHeaderPhoto from '../components/PageHeaderPhoto';
+import { PAGE_PHOTOS } from '../data/photos';
 import { IconMenu, IconSearch } from '../components/icons';
 
 export default function SurahList() {
@@ -46,15 +48,17 @@ export default function SurahList() {
   return (
     <div className="screen">
       <div className="screen-content">
-        <div className="topbar">
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, letterSpacing: '-0.01em' }}>Al-Qur'an</h1>
-            <span style={{ fontSize: 12, color: 'var(--muted)' }}>
-              {surahs ? `${surahs.length} Surat` : 'Memuat…'}
-            </span>
-          </div>
-          <div className="icon-btn"><IconMenu /></div>
-        </div>
+        <PageHeaderPhoto
+          title="Al-Qur'an"
+          photo={PAGE_PHOTOS.quran}
+          showBack={false}
+          subtitle={surahs ? `${surahs.length} Surat` : 'Memuat…'}
+          right={
+            <div className="icon-btn" style={{ background: 'rgba(255,255,255,0.22)', color: '#fff' }}>
+              <IconMenu />
+            </div>
+          }
+        />
 
         <div className="input-row" style={{ borderRadius: 999 }}>
           <IconSearch style={{ color: 'var(--muted)' }} />

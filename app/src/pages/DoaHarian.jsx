@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { doaCategories } from '../data/doaHarian';
 import { useLang } from '../context/LangContext';
-import TopBar from '../components/TopBar';
+import PageHeaderPhoto from '../components/PageHeaderPhoto';
+import { PAGE_PHOTOS } from '../data/photos';
 
 export default function DoaHarian() {
   const { t } = useLang();
@@ -11,7 +12,7 @@ export default function DoaHarian() {
   return (
     <div className="screen">
       <div className="screen-content">
-        <TopBar title={t('item_doa_harian')} />
+        <PageHeaderPhoto title={t('item_doa_harian')} photo={PAGE_PHOTOS.doaHarian} />
 
         <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 2 }}>
           {doaCategories.map((c) => {

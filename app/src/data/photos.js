@@ -35,4 +35,8 @@ export const PAGE_PHOTOS = {
   jadwalSholat: '/photos/page-jadwal-sholat.jpg',
   cariMasjid: '/photos/page-cari-masjid.jpg',
   zakat: '/photos/page-zakat.jpg',
+  quran: '/photos/page-quran.jpg',
+  umroh: '/photos/page-umroh.jpg',
+  kalenderHijriah: '/photos/page-kalender.jpg',
+  doaHarian: '/photos/page-doa-harian.jpg',
 };

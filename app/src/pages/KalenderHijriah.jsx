@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLang } from '../context/LangContext';
-import TopBar from '../components/TopBar';
+import PageHeaderPhoto from '../components/PageHeaderPhoto';
+import { PAGE_PHOTOS } from '../data/photos';
 
 const WEEKDAY_KEYS = ['weekday_min', 'weekday_sen', 'weekday_sel', 'weekday_rab', 'weekday_kam', 'weekday_jum', 'weekday_sab'];
 
@@ -47,7 +48,7 @@ export default function KalenderHijriah() {
   return (
     <div className="screen">
       <div className="screen-content">
-        <TopBar title={t('item_kalender_hijriah')} />
+        <PageHeaderPhoto title={t('item_kalender_hijriah')} photo={PAGE_PHOTOS.kalenderHijriah} />
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderRadius: 16, background: 'var(--primary)' }}>
           <button onClick={() => shiftMonth(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#fff' }}>

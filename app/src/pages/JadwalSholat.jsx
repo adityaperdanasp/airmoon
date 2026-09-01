@@ -5,7 +5,8 @@ import { usePrayerTimes } from '../lib/usePrayerTimes';
 import { useAuth } from '../context/AuthContext';
 import { enablePrayerNotifications, disablePrayerNotifications } from '../lib/notifications';
 import { db } from '../lib/firebase';
-import TopBar from '../components/TopBar';
+import PageHeaderPhoto from '../components/PageHeaderPhoto';
+import { PAGE_PHOTOS } from '../data/photos';
 import BottomNav from '../components/BottomNav';
 
 // Background push (works with the app closed) — Firestore's notifEnabled
@@ -54,20 +55,23 @@ export default function JadwalSholat() {
   return (
     <div className="screen">
       <div className="screen-content">
-        <div className="topbar">
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, letterSpacing: '-0.01em' }}>Jadwal Sholat</h1>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--muted)">
+        <PageHeaderPhoto
+          title="Jadwal Sholat"
+          photo={PAGE_PHOTOS.jadwalSholat}
+          subtitle={
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)">
                 <path d="M12 21s-6.5-6.1-6.5-11A6.5 6.5 0 0 1 18.5 10c0 4.9-6.5 11-6.5 11Z" strokeWidth="1.7" strokeLinejoin="round" />
               </svg>
-              <span style={{ fontSize: 12, color: 'var(--muted)' }}>
-                {data ? data.locationLabel : status === 'denied' ? 'Lokasi tidak diizinkan' : 'Mendeteksi lokasi…'}
-              </span>
-              {data && <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 999, color: 'var(--primary)', background: 'var(--mint)' }}>GPS</span>}
+              <span>{data ? data.locationLabel : status === 'denied' ? 'Lokasi tidak diizinkan' : 'Mendeteksi lokasi…'}</span>
+              {data && (
+                <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 999, color: '#0d4d47', background: '#fff' }}>
+                  GPS
+                </span>
+              )}
             </div>
-          </div>
-        </div>
+          }
+        />
 
         {status === 'denied' && (
           <div className="card" style={{ padding: 16, fontSize: 12.5, lineHeight: 1.5 }}>

@@ -1,4 +1,6 @@
 import BottomNav from '../components/BottomNav';
+import PageHeaderPhoto from '../components/PageHeaderPhoto';
+import { PAGE_PHOTOS } from '../data/photos';
 
 const ITEMS = [
   { title: 'Tabungan Umroh', desc: 'Nabung rutin buat biaya umroh dengan target jelas.' },
@@ -11,7 +13,7 @@ export default function Umroh() {
   return (
     <div className="screen">
       <div className="screen-content">
-        <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800 }}>Umroh Needs</h1>
+        <PageHeaderPhoto title="Umroh Needs" photo={PAGE_PHOTOS.umroh} showBack={false} />
         <p className="muted" style={{ margin: 0, fontSize: 12.5 }}>
           Segera hadir — fitur-fitur ini masih dalam pengembangan.
         </p>
