@@ -2,3 +2,9 @@
 .DS_Store
 .vercel
 .env*
+
+# Raw high-res source photos (181MB, founder-supplied) — only the
+# resized/compressed derivatives actually used by the app live under
+# app/public/photos/, which IS committed. Keep the originals around
+# locally for future re-crops, but never commit them as-is.
+/airmoon-asset/

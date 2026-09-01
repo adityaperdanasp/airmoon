@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useLang } from '../context/LangContext';
 import { useQibla } from '../lib/useQibla';
-import TopBar from '../components/TopBar';
+import PageHeaderPhoto from '../components/PageHeaderPhoto';
+import { PAGE_PHOTOS } from '../data/photos';
 
 function LocationSearch({ onPick, onUseGps, onClose }) {
   const [query, setQuery] = useState('');
@@ -98,7 +99,7 @@ export default function QiblaCompass() {
   return (
     <div className="screen">
       <div className="screen-content">
-        <TopBar title={t('kiblat_title')} />
+        <PageHeaderPhoto title={t('kiblat_title')} photo={PAGE_PHOTOS.kiblat} />
 
         {locStatus === 'loading' && (
           <div className="center" style={{ minHeight: 240 }}>

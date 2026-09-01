@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { calcZakatPenghasilan, formatRupiah } from '../lib/zakat';
 import { useLang } from '../context/LangContext';
-import TopBar from '../components/TopBar';
+import PageHeaderPhoto from '../components/PageHeaderPhoto';
+import { PAGE_PHOTOS } from '../data/photos';
 
 export default function KalkulatorZakat() {
   const { t } = useLang();
@@ -15,7 +16,7 @@ export default function KalkulatorZakat() {
   return (
     <div className="screen">
       <div className="screen-content">
-        <TopBar title={t('item_kalkulator_zakat')} />
+        <PageHeaderPhoto title={t('item_kalkulator_zakat')} photo={PAGE_PHOTOS.zakat} />
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
           <span style={{ fontSize: 12, fontWeight: 700 }}>{t('penghasilan_label')}</span>

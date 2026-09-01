@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { getLocation } from '../lib/prayerApi';
 import { fetchNearbyMosques, haversineKm } from '../lib/mosqueApi';
 import { useLang } from '../context/LangContext';
-import TopBar from '../components/TopBar';
+import PageHeaderPhoto from '../components/PageHeaderPhoto';
+import { PAGE_PHOTOS } from '../data/photos';
 import { IconSearch } from '../components/icons';
 
 export default function CariMasjid() {
@@ -37,7 +38,7 @@ export default function CariMasjid() {
   return (
     <div className="screen">
       <div className="screen-content">
-        <TopBar title="Cari Masjid" />
+        <PageHeaderPhoto title="Cari Masjid" photo={PAGE_PHOTOS.cariMasjid} />
 
         <div className="input-row" style={{ borderRadius: 999 }}>
           <IconSearch style={{ color: 'var(--muted)' }} />

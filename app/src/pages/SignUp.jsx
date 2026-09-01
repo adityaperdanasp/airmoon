@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLang } from '../context/LangContext';
+import { useTheme } from '../context/ThemeContext';
 import { IconMoon, GoogleLogo, FacebookLogo } from '../components/icons';
 import Logo from '../components/Logo';
+import { AUTH_PHOTO_LIGHT, AUTH_PHOTO_DARK } from '../data/photos';
 
 function mapAuthError(code) {
   const m = {
@@ -20,6 +22,7 @@ function mapAuthError(code) {
 export default function SignUp() {
   const { user, signUpWithEmail, signInWithGoogle, signInWithFacebook } = useAuth();
   const { t } = useLang();
+  const { theme } = useTheme();
   const navigate = useNavigate();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -68,14 +71,34 @@ export default function SignUp() {
     }
   }
 
+  const heroPhoto = theme === 'dark' ? AUTH_PHOTO_DARK : AUTH_PHOTO_LIGHT;
+
   return (
     <div className="screen">
-      <div className="screen-content" style={{ paddingTop: 52, gap: 28 }}>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <Logo size={30} />
+      {/* See Login.jsx for why this sits outside .screen-content. */}
+      <div style={{ position: 'relative', height: 220, overflow: 'hidden', flexShrink: 0 }}>
+        <img
+          src={heroPhoto}
+          alt=""
+          style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 30%' }}
+        />
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background:
+              theme === 'dark'
+                ? 'linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.4) 60%, var(--bg) 100%)'
+                : 'linear-gradient(180deg, rgba(10,20,15,0.08) 0%, rgba(10,20,15,0.18) 60%, var(--bg) 100%)',
+          }}
+        />
+        <div style={{ position: 'absolute', top: 22, left: 22 }}>
+          <Logo size={26} color={theme === 'dark' ? 'var(--accent)' : '#fff'} />
         </div>
+      </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, textAlign: 'center' }}>
+      <div className="screen-content" style={{ paddingTop: 4, gap: 28 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, letterSpacing: '-0.01em' }}>{t('signup_title')}</h1>
           <p className="muted" style={{ margin: 0, fontSize: 13 }}>{t('signup_sub')}</p>
         </div>

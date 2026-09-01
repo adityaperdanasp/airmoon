@@ -2,10 +2,12 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLang } from '../context/LangContext';
+import { useTheme } from '../context/ThemeContext';
 import { usePrayerTimes } from '../lib/usePrayerTimes';
 import { watchActiveDonations, watchMyContributions } from '../lib/donations';
 import { watchDoas } from '../lib/doa';
 import { HEADLINES, todaysHeadlineIndex } from '../data/headlines';
+import { todaysHomePhoto } from '../data/photos';
 import { formatRupiah } from '../lib/zakat';
 import BottomNav from '../components/BottomNav';
 import DonationCard from '../components/DonationCard';
@@ -69,6 +71,7 @@ const SVC = [
 export default function Home() {
   const { user } = useAuth();
   const { t, lang } = useLang();
+  const { theme } = useTheme();
   const { next, status: prayerStatus } = usePrayerTimes();
   const [donations, setDonations] = useState(null);
   const [myContributions, setMyContributions] = useState([]);
@@ -85,69 +88,102 @@ export default function Home() {
 
   const mySedekahTotal = myContributions.reduce((sum, c) => sum + c.amount, 0);
   const headline = HEADLINES[todaysHeadlineIndex()][lang];
+  // A different photo pool per theme (not the same photo just dimmed —
+  // an explicit ask), one per day so it isn't the exact same picture
+  // every single visit, same day-of-year approach as the headline above.
+  const headerPhoto = todaysHomePhoto(theme);
 
   return (
     <div className="screen">
-      <div className="screen-content" style={{ position: 'relative' }}>
+      <div className="screen-content">
         <div
-          aria-hidden="true"
           style={{
-            position: 'absolute',
-            top: -60,
-            right: -70,
-            width: 220,
-            height: 220,
-            borderRadius: '50%',
-            background: 'radial-gradient(circle, var(--accent) 0%, transparent 70%)',
-            opacity: 0.22,
-            pointerEvents: 'none',
-            zIndex: 0,
+            position: 'relative',
+            borderRadius: 26,
+            overflow: 'hidden',
+            padding: '18px 20px 22px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 16,
           }}
-        />
-        <div className="topbar" style={{ position: 'relative', zIndex: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
-            <div
-              style={{
-                width: 46,
-                height: 46,
-                borderRadius: '50%',
-                padding: 2.5,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                background: `conic-gradient(from 180deg, var(--primary), var(--accent), var(--primary))`,
-              }}
-            >
+        >
+          <img
+            src={headerPhoto}
+            alt=""
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 40%' }}
+          />
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              background:
+                theme === 'dark'
+                  ? 'linear-gradient(160deg, rgba(11,12,10,0.55) 0%, rgba(11,12,10,0.88) 100%)'
+                  : 'linear-gradient(160deg, rgba(13,77,71,0.62) 0%, rgba(13,77,71,0.85) 100%)',
+            }}
+          />
+          <div className="topbar" style={{ position: 'relative', zIndex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
               <div
                 style={{
-                  width: '100%',
-                  height: '100%',
+                  width: 46,
+                  height: 46,
                   borderRadius: '50%',
+                  padding: 2.5,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontWeight: 800,
-                  fontSize: 16,
-                  color: '#fff',
-                  background: 'var(--primary)',
+                  background: 'rgba(255,255,255,0.3)',
                 }}
               >
-                {(user?.displayName || 'A')[0].toUpperCase()}
+                <div
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 800,
+                    fontSize: 16,
+                    color: '#fff',
+                    background: 'var(--primary)',
+                  }}
+                >
+                  {(user?.displayName || 'A')[0].toUpperCase()}
+                </div>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.75)' }}>{t('greeting')}</span>
+                <span style={{ fontSize: 15.5, fontWeight: 700, color: '#fff' }}>{user?.displayName || user?.email}</span>
               </div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <span style={{ fontSize: 12, color: 'var(--muted)' }}>{t('greeting')}</span>
-              <span style={{ fontSize: 15.5, fontWeight: 700 }}>{user?.displayName || user?.email}</span>
-            </div>
+            <Link
+              to="/pengaturan"
+              className="icon-btn"
+              aria-label={t('pengaturan')}
+              style={{ textDecoration: 'none', background: 'rgba(255,255,255,0.2)', color: '#fff' }}
+            >
+              <IconBell width="17" height="17" />
+            </Link>
           </div>
-          <Link to="/pengaturan" className="icon-btn" aria-label={t('pengaturan')} style={{ textDecoration: 'none' }}>
-            <IconBell width="17" height="17" />
-          </Link>
-        </div>
 
-        <h1 style={{ position: 'relative', zIndex: 1, margin: 0, fontSize: 25, fontWeight: 800, letterSpacing: '-0.01em', whiteSpace: 'pre-line' }}>
-          {headline}
-        </h1>
+          <h1
+            style={{
+              position: 'relative',
+              zIndex: 1,
+              margin: 0,
+              fontSize: 22,
+              fontWeight: 800,
+              letterSpacing: '-0.01em',
+              whiteSpace: 'pre-line',
+              color: '#fff',
+              textShadow: '0 2px 10px rgba(0,0,0,0.25)',
+            }}
+          >
+            {headline}
+          </h1>
+        </div>
 
         <Link to="/ask-me" className="input-row" style={{ borderRadius: 999, textDecoration: 'none' }}>
           <IconMoon width="16" height="16" style={{ color: 'var(--ink)' }} />
