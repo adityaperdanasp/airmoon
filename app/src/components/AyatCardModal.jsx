@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { drawAyatCard, canvasToFile } from '../lib/ayatCardCanvas';
 import { useTheme } from '../context/ThemeContext';
+import { shareFile } from '../lib/share';
 
 // A shareable "Ayat Card" preview — renders the same canvas used for
 // sharing/downloading directly on screen (scaled down via CSS width, the
@@ -28,14 +29,7 @@ export default function AyatCardModal({ ayat, onClose }) {
     setBusy(true);
     try {
       const file = await canvasToFile(canvasRef.current, `ayat-${ayat.chapter}-${ayat.verse}.png`);
-      if (navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ files: [file], title: 'Ayat dari airmoon' });
-      } else {
-        handleDownload();
-      }
-    } catch {
-      // Share sheet cancelled by the user, or unsupported — nothing to do,
-      // the card is still on screen and the download button still works.
+      await shareFile({ file, title: 'Ayat dari airmoon', onFallback: handleDownload });
     } finally {
       setBusy(false);
     }

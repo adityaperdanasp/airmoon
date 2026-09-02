@@ -7,6 +7,7 @@ import { DECORATIVE_PHOTOS_LIGHT, DECORATIVE_PHOTOS_DARK } from '../data/photos'
 import TopBar from '../components/TopBar';
 import ErrorRetry from '../components/ErrorRetry';
 import { SkeletonCard } from '../components/Skeleton';
+import { shareText } from '../lib/share';
 
 export default function KutipanInspirasi() {
   const { lang } = useLang();
@@ -26,9 +27,7 @@ export default function KutipanInspirasi() {
 
   async function handleShare() {
     if (!quote) return;
-    const text = `"${quote[lang]}" — ${quote.source}`;
-    if (navigator.share) await navigator.share({ text, title: 'Kutipan dari airmoon' });
-    else await navigator.clipboard.writeText(text);
+    await shareText({ text: `"${quote[lang]}" — ${quote.source}`, title: 'Kutipan dari airmoon' });
   }
 
   const photoPool = theme === 'dark' ? DECORATIVE_PHOTOS_DARK : DECORATIVE_PHOTOS_LIGHT;

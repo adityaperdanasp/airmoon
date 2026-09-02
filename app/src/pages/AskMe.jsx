@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
-import TopBar from '../components/TopBar';
-import { IconMoon } from '../components/icons';
+import { useNavigate } from 'react-router-dom';
+import { IconMoon, IconBack } from '../components/icons';
 
 // Filled in after the Vercel deploy — see CLAUDE.md. Absolute URL so this
 // works no matter which host (Firebase or Vercel) serves the frontend.
 const ASK_ME_ENDPOINT = 'https://airmoon.vercel.app/api/ask-me';
 
 export default function AskMe() {
+  const navigate = useNavigate();
   const [messages, setMessages] = useState([
     { role: 'assistant', content: 'Assalamu\'alaikum! Saya Ust. Rewin. Tanya apa aja seputar Islam — sholat, puasa, zakat, Qur\'an, atau fitur di airmoon.' },
   ]);
@@ -71,8 +72,25 @@ export default function AskMe() {
 
   return (
     <div className="screen" style={{ height: '100vh' }}>
-      <div style={{ padding: '28px 20px 12px' }}>
-        <TopBar title="Ust. Rewin" subtitle="Asisten AI seputar Islam" />
+      {/* A compact gradient header, not the full-height PageHeaderPhoto
+          banner every content page uses now — a chat UI's scrollable
+          message area is precious vertical space in a way a browsing page
+          isn't, so this deliberately stays a thin strip (matching the
+          same var(--primary)→var(--primary-dark) "hero card" language
+          JadwalSholat's next-prayer card and others already use — those
+          tokens alone resolve to the right per-theme colors, no photo or
+          JS theme-check needed) instead of the ~130px photo treatment. */}
+      <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 12, background: 'linear-gradient(135deg, var(--primary), var(--primary-dark))' }}>
+        <button onClick={() => navigate(-1)} aria-label="Kembali" style={{ background: 'rgba(255,255,255,0.16)', border: 'none', width: 32, height: 32, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--on-primary)', cursor: 'pointer', flexShrink: 0 }}>
+          <IconBack />
+        </button>
+        <div style={{ width: 34, height: 34, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: 'rgba(255,255,255,0.16)' }}>
+          <IconMoon width="16" height="16" style={{ color: 'var(--on-primary)' }} />
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 1, minWidth: 0 }}>
+          <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--on-primary)' }}>Ust. Rewin</span>
+          <span style={{ fontSize: 10.5, color: 'var(--on-primary)', opacity: 0.85 }}>Asisten AI seputar Islam</span>
+        </div>
       </div>
 
       <div ref={listRef} style={{ flex: 1, overflowY: 'auto', padding: '0 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>

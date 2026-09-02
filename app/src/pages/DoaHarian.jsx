@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { watchDzikirStreak, markDzikirDone, isDoneToday } from '../lib/dzikirStreak';
 import PageHeaderPhoto from '../components/PageHeaderPhoto';
 import { PAGE_PHOTOS } from '../data/photos';
+import { IconSearch } from '../components/icons';
 
 // pagi/petang are real daily habits worth a streak; kegiatan (doa per
 // situation — makan, keluar rumah, etc.) isn't a once-a-day thing, so it
@@ -17,10 +18,20 @@ export default function DoaHarian() {
   const [activeId, setActiveId] = useState('pagi');
   const [streaks, setStreaks] = useState({});
   const [marking, setMarking] = useState(false);
+  const [query, setQuery] = useState('');
   const active = doaCategories.find((c) => c.id === activeId) ?? doaCategories[0];
   const streak = streaks[activeId];
   const doneToday = isDoneToday(streak);
   const showStreak = STREAK_CATEGORIES.includes(activeId);
+
+  // Lists this long (19 dzikir pagi, 18 dzikir petang) didn't have any way
+  // to jump straight to a specific one — a plain title/translation filter,
+  // same pattern SurahList.jsx's local search already uses, rather than a
+  // separate "jump to" index that would need its own numbered UI.
+  const q = query.trim().toLowerCase();
+  const filteredItems = q
+    ? active.items.filter((d) => d.title.toLowerCase().includes(q) || d.translation.toLowerCase().includes(q))
+    : active.items;
 
   useEffect(() => watchDzikirStreak(user?.uid, setStreaks), [user?.uid]);
 
@@ -45,7 +56,10 @@ export default function DoaHarian() {
             return (
               <button
                 key={c.id}
-                onClick={() => setActiveId(c.id)}
+                onClick={() => {
+                  setActiveId(c.id);
+                  setQuery('');
+                }}
                 style={{
                   flexShrink: 0,
                   padding: '9px 16px',
@@ -107,8 +121,17 @@ export default function DoaHarian() {
           </div>
         )}
 
+        {active.items.length > 6 && (
+          <div className="input-row" style={{ borderRadius: 999 }}>
+            <IconSearch style={{ color: 'var(--muted)' }} />
+            <input placeholder="Cari judul dzikir…" value={query} onChange={(e) => setQuery(e.target.value)} />
+          </div>
+        )}
+
+        {q && filteredItems.length === 0 && <p className="state-msg">Gak ketemu dzikir yang cocok dengan "{query}".</p>}
+
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {active.items.map((d, i) => (
+          {filteredItems.map((d, i) => (
             <div key={`${active.id}-${i}`} className="card" style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: 16 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                 <span style={{ fontSize: 12.5, fontWeight: 700 }}>{d.title}</span>

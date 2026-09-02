@@ -5,6 +5,8 @@ import { useAuth } from '../context/AuthContext';
 import BottomNav from '../components/BottomNav';
 import DonationCard from '../components/DonationCard';
 import { markSeen } from '../lib/unseenBadges';
+import EmptyState from '../components/EmptyState';
+import { SkeletonCard } from '../components/Skeleton';
 
 const dateFmt = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
@@ -99,12 +101,15 @@ export default function Donasi() {
 
         <DaftarkanMasjidCard user={user} />
 
-        {!donations && <div className="center" style={{ minHeight: 200 }}><div className="spinner" /></div>}
+        {!donations && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <SkeletonCard height={140} />
+            <SkeletonCard height={140} />
+          </div>
+        )}
 
         {donations && donations.length === 0 && (
-          <div className="card" style={{ padding: 16, fontSize: 12.5, color: 'var(--muted)', textAlign: 'center' }}>
-            Belum ada campaign aktif saat ini.
-          </div>
+          <EmptyState icon="🕌" title="Belum ada campaign aktif" subtitle="Campaign donasi listrik masjid baru bakal muncul di sini begitu ada yang disetujui." />
         )}
 
         {donations && donations.length > 0 && (
@@ -127,9 +132,7 @@ export default function Donasi() {
             </div>
 
             {myContributions.length === 0 ? (
-              <div className="card" style={{ padding: 16, fontSize: 12.5, color: 'var(--muted)', textAlign: 'center' }}>
-                Belum ada donasi. Yuk mulai sedekah hari ini.
-              </div>
+              <EmptyState icon="💝" title="Belum ada riwayat sedekah" subtitle="Yuk mulai sedekah hari ini, sekecil apapun — pilih salah satu campaign di atas." />
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {myContributions.map((c) => (

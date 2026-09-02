@@ -9,7 +9,13 @@
 // stored location (via /api/aladhan, same IPv6-avoidance reasoning as the
 // client), compare against "now" in that location's own timezone, and send
 // through FCM once per prayer per day — tracked via lastNotified on the
-// user doc so re-running this every minute doesn't double-send.
+// user doc so re-running this every minute doesn't double-send. Also
+// carries two more per-user, per-local-time checks added later (2026-09-
+// 03) that fit naturally into this same loop since it already has each
+// user's own timezone-resolved "now" and Aladhan response on hand: the
+// Ramadan Imsak reminder and the Dzikir Petang streak-break reminder.
+// Neither needed its own scheduler — both ride this function's existing
+// 1-5 minute cadence.
 
 import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
@@ -18,10 +24,17 @@ import { pickPrayerMessage } from './_lib/prayerMessages.js';
 
 const PRAYER_ORDER = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
 const PRAYER_LABEL = { Fajr: 'Subuh', Dhuhr: 'Dzuhur', Asr: 'Ashar', Maghrib: 'Maghrib', Isha: 'Isya' };
+const RAMADAN_HIJRI_MONTH = 9; // matches lib/ramadan.js's RAMADAN_MONTH
 
 // Minutes a prayer stays "due" after its exact time — catches cron runs
 // that don't land on the exact minute, without needing a 1-minute cron.
 const WINDOW_MINUTES = 10;
+
+// How long after this user's own local Maghrib to check whether Dzikir
+// Petang is still undone — long enough that most people who were going to
+// do it right after Maghrib already have, short enough it's still evening
+// when the nudge arrives.
+const STREAK_REMINDER_DELAY_MINUTES = 90;
 
 function initAdmin() {
   if (getApps().length) return;
@@ -51,6 +64,16 @@ function nowInTimezone(timezone) {
     dateKey: `${get('year')}-${get('month')}-${get('day')}`,
     minutes: minutesSinceMidnight(`${get('hour')}:${get('minute')}`),
   };
+}
+
+// Prunes tokens FCM reports as dead (uninstalled app, expired
+// subscription) so fcmTokens doesn't grow unbounded with junk — shared by
+// all three notification checks below rather than repeated per-check.
+async function pruneDeadTokens(docRef, tokens, result) {
+  const deadTokens = result.responses.map((r, i) => (!r.success ? tokens[i] : null)).filter(Boolean);
+  if (deadTokens.length) {
+    await docRef.update({ fcmTokens: FieldValue.arrayRemove(...deadTokens) });
+  }
 }
 
 export default async function handler(req, res) {
@@ -89,7 +112,7 @@ export default async function handler(req, res) {
           continue;
         }
 
-        const { timings, meta } = alJson.data;
+        const { timings, meta, date } = alJson.data;
         const { dateKey, minutes: nowMin } = nowInTimezone(meta.timezone);
         const lastNotified = u.lastNotified || {};
 
@@ -121,17 +144,65 @@ export default async function handler(req, res) {
           });
 
           await docSnap.ref.update({ lastNotified: { date: dateKey, prayer: key } });
-
-          // Prune tokens FCM reports as dead (uninstalled app, expired
-          // subscription) so this array doesn't grow unbounded with junk.
-          const deadTokens = result.responses
-            .map((r, i) => (!r.success ? tokens[i] : null))
-            .filter(Boolean);
-          if (deadTokens.length) {
-            await docSnap.ref.update({ fcmTokens: FieldValue.arrayRemove(...deadTokens) });
-          }
-
+          await pruneDeadTokens(docSnap.ref, tokens, result);
           sent.push({ uid: docSnap.id, prayer: key, successCount: result.successCount });
+        }
+
+        // Ramadan Imsak reminder — Aladhan's own `timings.Imsak` (already
+        // in the response fetched above, no extra API call) is the
+        // standard "sahur ends soon" moment, conventionally ~10 min before
+        // Fajr. Gated on the Hijri month from this same response so it
+        // only ever fires during Ramadan, reusing the exact same
+        // due-window + lastNotified dedup pattern as the prayer loop above
+        // (Imsak always falls chronologically before Fajr, so there's no
+        // same-day ambiguity sharing one lastNotified field with it).
+        const hijriMonth = date?.hijri?.month?.number;
+        if (hijriMonth === RAMADAN_HIJRI_MONTH && timings.Imsak) {
+          const imsakMin = minutesSinceMidnight(timings.Imsak);
+          const due = nowMin >= imsakMin && nowMin < imsakMin + WINDOW_MINUTES;
+          const alreadySent = lastNotified.date === dateKey && lastNotified.prayer === 'Imsak';
+          if (due && !alreadySent) {
+            const result = await messaging.sendEachForMulticast({
+              tokens,
+              data: {
+                tag: 'imsak',
+                title: '🌙 Waktu Imsak',
+                body: 'Waktu sahur segera berakhir — siap-siap untuk Subuh.',
+              },
+            });
+            await docSnap.ref.update({ lastNotified: { date: dateKey, prayer: 'Imsak' } });
+            await pruneDeadTokens(docSnap.ref, tokens, result);
+            sent.push({ uid: docSnap.id, prayer: 'Imsak', successCount: result.successCount });
+          }
+        }
+
+        // Dzikir Petang streak-break reminder — fires once, Config
+        // STREAK_REMINDER_DELAY_MINUTES after this user's own local
+        // Maghrib, only for someone who already has an active streak
+        // worth protecting (current > 0) and hasn't marked today done yet.
+        // Reuses the same fcmTokens/notifEnabled population as prayer
+        // notifications rather than a separate opt-in — matching the same
+        // reasoning already applied to the zakat haul and Jumat reminders
+        // in api/check-campaign-deadlines.js.
+        const petangStreak = u.dzikirStreak?.petang;
+        if (petangStreak?.current > 0 && timings.Maghrib) {
+          const streakWindowStart = minutesSinceMidnight(timings.Maghrib) + STREAK_REMINDER_DELAY_MINUTES;
+          const due = nowMin >= streakWindowStart && nowMin < streakWindowStart + WINDOW_MINUTES;
+          const alreadyDoneToday = petangStreak.lastDate === dateKey;
+          const alreadyReminded = petangStreak.lastReminderDate === dateKey;
+          if (due && !alreadyDoneToday && !alreadyReminded) {
+            const result = await messaging.sendEachForMulticast({
+              tokens,
+              data: {
+                tag: 'dzikir-streak',
+                title: '🔥 Jangan Putus Rentetan Dzikir',
+                body: `Rentetan ${petangStreak.current} hari kamu bisa putus kalau belum Dzikir Petang hari ini.`,
+              },
+            });
+            await docSnap.ref.update({ 'dzikirStreak.petang.lastReminderDate': dateKey });
+            await pruneDeadTokens(docSnap.ref, tokens, result);
+            sent.push({ uid: docSnap.id, prayer: 'DzikirStreak', successCount: result.successCount });
+          }
         }
       } catch (err) {
         errors.push({ uid: docSnap.id, error: err.message });

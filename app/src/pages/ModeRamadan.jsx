@@ -4,7 +4,9 @@ import { useAuth } from '../context/AuthContext';
 import { usePrayerTimes } from '../lib/usePrayerTimes';
 import { useRamadanTracker } from '../lib/useRamadanTracker';
 import { isRamadan, nextRamadanYear, fetchRamadanStart, daysBetween } from '../lib/ramadan';
-import TopBar from '../components/TopBar';
+import PageHeaderPhoto from '../components/PageHeaderPhoto';
+import { PAGE_PHOTOS } from '../data/photos';
+import { SkeletonCard } from '../components/Skeleton';
 
 function Toggle({ checked, onChange }) {
   return (
@@ -136,12 +138,13 @@ export default function ModeRamadan() {
   return (
     <div className="screen">
       <div className="screen-content">
-        <TopBar title={t('ramadan_title')} />
+        <PageHeaderPhoto title={t('ramadan_title')} photo={PAGE_PHOTOS.modeRamadan} />
 
         {status === 'loading' && (
-          <div className="center" style={{ minHeight: 240 }}>
-            <div className="spinner" />
-          </div>
+          <>
+            <SkeletonCard height={200} radius={22} />
+            <SkeletonCard height={90} radius={18} />
+          </>
         )}
 
         {status === 'denied' && (

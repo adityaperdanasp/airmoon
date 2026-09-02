@@ -45,11 +45,12 @@ messaging.onBackgroundMessage((payload) => {
 // Routed by tag prefix (2026-09-03) — every notification used to open
 // /jadwal-sholat regardless of what it was actually about, which made
 // sense back when adzan reminders were the only push this app sent, but
-// stopped being right once doa broadcasts, the zakat haul reminder, and
-// now the Friday Al-Kahf reminder were added on top. See
+// stopped being right once doa broadcasts, the zakat haul reminder, the
+// Friday Al-Kahf reminder, the Ramadan Imsak reminder, and the Dzikir
+// Petang streak-break reminder were all added on top. See
 // api/broadcast-doa.js, api/check-campaign-deadlines.js's checkZakatHaul/
-// checkJumatReminder, and send-prayer-notifications.js for where each tag
-// is actually set.
+// checkJumatReminder, and send-prayer-notifications.js (Imsak + streak
+// checks) for where each tag is actually set.
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   const tag = event.notification.tag || '';
@@ -57,6 +58,8 @@ self.addEventListener('notificationclick', (event) => {
   if (tag.startsWith('doa-')) url = '/doa';
   else if (tag === 'zakat-haul') url = '/lainnya/kalkulator-zakat';
   else if (tag === 'jumat-al-kahf') url = '/quran/18'; // Al-Kahf
+  else if (tag === 'imsak') url = '/lainnya/mode-ramadan';
+  else if (tag === 'dzikir-streak') url = '/lainnya/doa-harian';
   event.waitUntil(clients.openWindow(url));
 });
 
@@ -73,10 +76,44 @@ self.addEventListener('notificationclick', (event) => {
 // ahead of time, so the very first visit still needs a network connection.
 // After that, whatever was actually opened (a surah, the app shell itself)
 // stays available offline until it's fetched fresh again.
-self.addEventListener('install', () => self.skipWaiting());
-self.addEventListener('activate', (event) => event.waitUntil(clients.claim()));
+// Two caches, not one, on purpose (2026-09-03 cleanup pass) — the original
+// single RUNTIME_CACHE let the app-shell side (every hashed JS/CSS
+// filename from every past deploy, since a content hash changes on every
+// build) accumulate forever with nothing ever evicting old entries. Split:
+// QURAN_CACHE for the actual Qur'an text/audio (safe to keep indefinitely,
+// that content never changes) and SHELL_CACHE for the app shell itself
+// (bounded below, and blown away wholesale on activate if its version
+// string is ever bumped).
+const QURAN_CACHE = 'airmoon-quran-v1';
+const SHELL_CACHE = 'airmoon-shell-v1';
+const CURRENT_CACHES = [QURAN_CACHE, SHELL_CACHE];
+const SHELL_CACHE_MAX_ENTRIES = 60; // generous for one deploy's worth of chunks, not unbounded across dozens
 
-const RUNTIME_CACHE = 'airmoon-runtime-v1';
+self.addEventListener('install', () => self.skipWaiting());
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    (async () => {
+      // Deletes any cache from a previous SHELL_CACHE/QURAN_CACHE version
+      // string wholesale — the mechanism for a deliberate full reset (bump
+      // the version above), separate from the day-to-day trimming below.
+      const keys = await caches.keys();
+      await Promise.all(keys.filter((k) => !CURRENT_CACHES.includes(k)).map((k) => caches.delete(k)));
+      await clients.claim();
+    })()
+  );
+});
+
+// Cache.keys() returns entries in insertion order in every engine this
+// app actually ships to (not spec-guaranteed, but true in practice) — good
+// enough to trim the oldest entries first without needing to hand-roll
+// timestamp bookkeeping just for this.
+async function trimCache(cacheName, maxEntries) {
+  const cache = await caches.open(cacheName);
+  const keys = await cache.keys();
+  if (keys.length <= maxEntries) return;
+  await Promise.all(keys.slice(0, keys.length - maxEntries).map((k) => cache.delete(k)));
+}
+
 // The Qur'an text/audio APIs this app reads from (lib/quranApi.js,
 // lib/mushafApi.js, lib/wordGlossApi.js, lib/quranSearchApi.js) — reading
 // is the offline use case that actually matters (bad signal at the
@@ -92,9 +129,11 @@ self.addEventListener('fetch', (event) => {
   if (OFFLINE_HOSTS.includes(url.hostname)) {
     // Cache-first: once a surah/search/gloss request has been made
     // successfully, re-opening the same thing works offline indefinitely
-    // (Qur'an text doesn't change) instead of re-hitting the network.
+    // (Qur'an text doesn't change) instead of re-hitting the network. No
+    // size cap here on purpose — this is bounded by how much of the
+    // Qur'an someone has actually read, which self-limits.
     event.respondWith(
-      caches.open(RUNTIME_CACHE).then(async (cache) => {
+      caches.open(QURAN_CACHE).then(async (cache) => {
         const cached = await cache.match(request);
         if (cached) return cached;
         const res = await fetch(request);
@@ -114,7 +153,10 @@ self.addEventListener('fetch', (event) => {
         .then((res) => {
           if (res.ok) {
             const clone = res.clone();
-            caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, clone));
+            caches.open(SHELL_CACHE).then((cache) => {
+              cache.put(request, clone);
+              trimCache(SHELL_CACHE, SHELL_CACHE_MAX_ENTRIES);
+            });
           }
           return res;
         })
