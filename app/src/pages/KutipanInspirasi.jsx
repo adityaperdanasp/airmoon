@@ -3,9 +3,10 @@ import { useLang } from '../context/LangContext';
 import { useTheme } from '../context/ThemeContext';
 import { fetchQuoteByIndex, todaysQuoteIndex } from '../lib/quotesApi';
 import { QUOTE_REFS } from '../data/quoteRefs';
-import { HOME_PHOTOS_LIGHT, HOME_PHOTOS_DARK } from '../data/photos';
+import { DECORATIVE_PHOTOS_LIGHT, DECORATIVE_PHOTOS_DARK } from '../data/photos';
 import TopBar from '../components/TopBar';
 import ErrorRetry from '../components/ErrorRetry';
+import { SkeletonCard } from '../components/Skeleton';
 
 export default function KutipanInspirasi() {
   const { lang } = useLang();
@@ -30,6 +31,8 @@ export default function KutipanInspirasi() {
     else await navigator.clipboard.writeText(text);
   }
 
+  const photoPool = theme === 'dark' ? DECORATIVE_PHOTOS_DARK : DECORATIVE_PHOTOS_LIGHT;
+
   return (
     <div className="screen">
       <div className="screen-content">
@@ -37,11 +40,7 @@ export default function KutipanInspirasi() {
 
         {error && <ErrorRetry message={error} onRetry={() => setRetryTick((n) => n + 1)} />}
 
-        {!quote && !error && (
-          <div className="center" style={{ minHeight: 260 }}>
-            <div className="spinner" />
-          </div>
-        )}
+        {!quote && !error && <SkeletonCard height={300} radius={24} />}
 
         {quote && (
           <>
@@ -58,16 +57,16 @@ export default function KutipanInspirasi() {
                 minHeight: 300,
               }}
             >
-              {/* A real photo backdrop instead of a flat gradient — reuses
-                  Home's own rotating pool (theme-aware, one per idx so
-                  browsing "Next" through quotes also cycles the backdrop)
-                  rather than a dedicated quote-only photo set. Same
-                  brand-tinted overlay gradient + opacity values Home.jsx's
-                  own header photo already uses for both themes, so this
-                  reads as "this app's card", not a stock photo with text
-                  pasted on top. */}
+              {/* A real photo backdrop instead of a flat gradient —
+                  data/photos.js's wider decorative pool (theme-aware, one
+                  per idx so browsing "Next" through quotes also cycles the
+                  backdrop) rather than a dedicated quote-only photo set.
+                  Same brand-tinted overlay gradient + opacity values
+                  Home.jsx's own header photo already uses for both
+                  themes, so this reads as "this app's card", not a stock
+                  photo with text pasted on top. */}
               <img
-                src={(theme === 'dark' ? HOME_PHOTOS_DARK : HOME_PHOTOS_LIGHT)[idx % (theme === 'dark' ? HOME_PHOTOS_DARK : HOME_PHOTOS_LIGHT).length]}
+                src={photoPool[idx % photoPool.length]}
                 alt=""
                 style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
               />

@@ -325,41 +325,41 @@ export default function Home() {
         {user && <AmalanHarianCard uid={user.uid} />}
 
         {(lastReadAyat || lastReadMushaf) && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          // Side-by-side when both bookmarks exist (Mode Ayat and Mode
+          // Mushaf keep separate bookmarks, see the fetch effect above) —
+          // Home was getting long enough that stacking two nearly-identical
+          // rows full-width just to resume reading was worth compacting.
+          <div style={{ display: 'grid', gridTemplateColumns: lastReadAyat && lastReadMushaf ? '1fr 1fr' : '1fr', gap: 8 }}>
             {lastReadAyat && (
               <Link
                 to={`/quran/${lastReadAyat.nomor}`}
-                style={{ display: 'flex', alignItems: 'center', gap: 12, borderRadius: 18, padding: '12px 15px', background: 'var(--cream)', textDecoration: 'none', color: 'inherit' }}
+                style={{ display: 'flex', alignItems: 'center', gap: 10, borderRadius: 18, padding: '12px 13px', background: 'var(--cream)', textDecoration: 'none', color: 'inherit', minWidth: 0 }}
               >
-                <div style={{ width: 34, height: 34, borderRadius: 11, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: 'rgba(255,255,255,0.55)' }}>
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--gold-ink)"><path d="M8 5.5v13l11-6.5-11-6.5Z" /></svg>
+                <div style={{ width: 30, height: 30, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: 'rgba(255,255,255,0.55)' }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--gold-ink)"><path d="M8 5.5v13l11-6.5-11-6.5Z" /></svg>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 1, flex: 1, minWidth: 0 }}>
-                  <span style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--muted)' }}>Lanjut Baca &middot; Mode Ayat</span>
-                  <span style={{ fontSize: 13, fontWeight: 800 }}>{lastReadAyat.namaLatin} &middot; Ayat {lastReadAyat.ayat}</span>
+                  <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--muted)' }}>Lanjut Baca</span>
+                  <span style={{ fontSize: 12.5, fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{lastReadAyat.namaLatin} : {lastReadAyat.ayat}</span>
                 </div>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)"><path d="m9 6 6 6-6 6" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
               </Link>
             )}
             {lastReadMushaf && (
               <Link
                 to={`/quran/mushaf/${lastReadMushaf.page}?ayat=${lastReadMushaf.verseKey}`}
-                style={{ display: 'flex', alignItems: 'center', gap: 12, borderRadius: 18, padding: '12px 15px', background: 'var(--mint)', textDecoration: 'none', color: 'inherit' }}
+                style={{ display: 'flex', alignItems: 'center', gap: 10, borderRadius: 18, padding: '12px 13px', background: 'var(--mint)', textDecoration: 'none', color: 'inherit', minWidth: 0 }}
               >
-                <div style={{ width: 34, height: 34, borderRadius: 11, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: 'rgba(255,255,255,0.55)' }}>
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--primary)"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H12v18H6.5A2.5 2.5 0 0 1 4 18.5v-13Z" strokeWidth="1.6" strokeLinejoin="round" /><path d="M20 5.5A2.5 2.5 0 0 0 17.5 3H12v18h5.5a2.5 2.5 0 0 0 2.5-2.5v-13Z" strokeWidth="1.6" strokeLinejoin="round" /></svg>
+                <div style={{ width: 30, height: 30, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: 'rgba(255,255,255,0.55)' }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--primary)"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H12v18H6.5A2.5 2.5 0 0 1 4 18.5v-13Z" strokeWidth="1.6" strokeLinejoin="round" /><path d="M20 5.5A2.5 2.5 0 0 0 17.5 3H12v18h5.5a2.5 2.5 0 0 0 2.5-2.5v-13Z" strokeWidth="1.6" strokeLinejoin="round" /></svg>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 1, flex: 1, minWidth: 0 }}>
-                  <span style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--muted)' }}>Lanjut Baca &middot; Mode Mushaf</span>
-                  <span style={{ fontSize: 13, fontWeight: 800 }}>{lastReadMushaf.chapterName} &middot; Halaman {lastReadMushaf.page}</span>
+                  <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--muted)' }}>Lanjut Mushaf</span>
+                  <span style={{ fontSize: 12.5, fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{lastReadMushaf.chapterName} : {lastReadMushaf.page}</span>
                 </div>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)"><path d="m9 6 6 6-6 6" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
               </Link>
             )}
           </div>
         )}
-
-        <InstallAppCard variant="banner" />
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -426,6 +426,12 @@ export default function Home() {
             </div>
           )}
         </div>
+
+        {/* Moved below the core content (was near the top, right after
+            Amalan Harian) — this is a low-priority, dismiss-once nudge,
+            not something that should compete with actual ibadah content
+            for the first screenful of Home. */}
+        <InstallAppCard variant="banner" />
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <span className="section-label">🕌 {t('donasi_kamu')}</span>

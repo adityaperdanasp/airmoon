@@ -5,7 +5,7 @@
 // rendering already goes through the browser's normal font-shaping
 // engine, so Arabic joining/ligatures render correctly as long as the
 // font itself is loaded first — see ensureFontsReady below.
-import { HOME_PHOTOS_LIGHT, HOME_PHOTOS_DARK } from '../data/photos';
+import { DECORATIVE_PHOTOS_LIGHT, DECORATIVE_PHOTOS_DARK } from '../data/photos';
 
 const W = 1080;
 const H = 1350;
@@ -67,14 +67,15 @@ export async function drawAyatCard(canvas, { arabic, translation, chapterName, c
 
   await ensureFontsReady();
 
-  // Same rotating photo pool Home.jsx's own header uses (theme-aware),
-  // picked deterministically from chapter+verse rather than randomly — the
-  // same ayat always gets the same backdrop instead of a different one
-  // every time the card is regenerated, and a variety of ayat shared to
-  // the same feed don't all show the identical photo. Same-origin images
-  // (served from this app's own /photos/) never taint the canvas, so no
-  // crossOrigin dance is needed before toBlob()/toDataURL() later.
-  const pool = theme === 'dark' ? HOME_PHOTOS_DARK : HOME_PHOTOS_LIGHT;
+  // data/photos.js's wider decorative pool (Home's rotating set + every
+  // PAGE_PHOTOS entry, theme-aware), picked deterministically from
+  // chapter+verse rather than randomly — the same ayat always gets the
+  // same backdrop instead of a different one every time the card is
+  // regenerated, and a variety of ayat shared to the same feed don't all
+  // show the identical photo. Same-origin images (served from this app's
+  // own /photos/) never taint the canvas, so no crossOrigin dance is
+  // needed before toBlob()/toDataURL() later.
+  const pool = theme === 'dark' ? DECORATIVE_PHOTOS_DARK : DECORATIVE_PHOTOS_LIGHT;
   const photoSrc = pool[(chapter * 31 + verse) % pool.length];
 
   try {

@@ -1,14 +1,15 @@
 // Vercel serverless function — the daily admin/user checks that don't need
 // anything finer-grained than once a day: (1) campaign deadlines that just
-// passed (admin Telegram alert), and (2) zakat maal haul countdowns that
-// just completed (a real FCM push to the user themselves). Both live in
-// one function/one cron entry deliberately — the Hobby plan caps a
-// deployment at 12 Serverless Functions total, and this repo was already
-// at that cap, so a second daily-cron function for the haul check alone
-// would have pushed a `vercel --prod` deploy over the limit (hit for real,
-// 2026-09-02: "No more than 12 Serverless Functions can be added...").
-// Neither check is time-sensitive enough to need its own schedule, so
-// merging them costs nothing.
+// passed (admin Telegram alert), (2) zakat maal haul countdowns that just
+// completed, and (3) the Friday Al-Kahf reminder — both (2) and (3) are
+// real FCM pushes to the user themselves. All three live in one function/
+// one cron entry deliberately — the Hobby plan caps a deployment at 12
+// Serverless Functions total, and this repo was already at that cap, so a
+// second daily-cron function for any one of these alone would have pushed
+// a `vercel --prod` deploy over the limit (hit for real, 2026-09-02: "No
+// more than 12 Serverless Functions can be added..."). None of the three
+// is time-sensitive enough to need its own schedule, so merging them
+// costs nothing.
 //
 // Triggered once a day by Vercel's own native Cron Jobs (see the `crons`
 // entry in vercel.json) rather than the external cron-job.org pinger
@@ -81,6 +82,65 @@ async function checkZakatHaul(db) {
   return { notified, errors };
 }
 
+// Sunnah Jumat reminder — surah Al-Kahf. Only fires when this cron's own
+// run date (Asia/Jakarta, matching how the rest of this app reasons about
+// "today" — see lib/prayerApi.js/nowInTimezone in send-prayer-
+// notifications.js) is a Friday; every other day of the week this is a
+// no-op. lastJumatReminderDate makes it idempotent per calendar date
+// rather than per-run, so a manual re-trigger the same Friday doesn't
+// double-send.
+function todayInJakarta() {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Jakarta',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    weekday: 'short',
+  }).formatToParts(new Date());
+  const get = (type) => parts.find((p) => p.type === type)?.value;
+  return { dateKey: `${get('year')}-${get('month')}-${get('day')}`, weekday: get('weekday') };
+}
+
+async function checkJumatReminder(db) {
+  const { dateKey, weekday } = todayInJakarta();
+  if (weekday !== 'Fri') return { skipped: 'not-friday' };
+
+  const messaging = getMessaging();
+  const snap = await db.collection('users').where('notifEnabled', '==', true).get();
+  const notified = [];
+  const errors = [];
+
+  for (const docSnap of snap.docs) {
+    try {
+      const u = docSnap.data();
+      const tokens = u.fcmTokens || [];
+      if (!tokens.length || u.lastJumatReminderDate === dateKey) continue;
+
+      const result = await messaging.sendEachForMulticast({
+        tokens,
+        data: {
+          tag: 'jumat-al-kahf',
+          title: '📖 Selamat Hari Jumat',
+          body: 'Yuk sempatkan baca Surah Al-Kahf hari ini — sunnah Rasulullah ﷺ tiap Jumat.',
+        },
+      });
+
+      await docSnap.ref.update({ lastJumatReminderDate: dateKey });
+
+      const deadTokens = result.responses.map((r, i) => (!r.success ? tokens[i] : null)).filter(Boolean);
+      if (deadTokens.length) {
+        await docSnap.ref.update({ fcmTokens: FieldValue.arrayRemove(...deadTokens) });
+      }
+
+      notified.push({ uid: docSnap.id, successCount: result.successCount });
+    } catch (err) {
+      errors.push({ uid: docSnap.id, error: err.message });
+    }
+  }
+
+  return { notified, errors };
+}
+
 function initAdmin() {
   if (getApps().length) return;
   const b64 = process.env.FIREBASE_SERVICE_ACCOUNT_B64;
@@ -134,11 +194,13 @@ export default async function handler(req, res) {
     }
 
     const haulResult = await checkZakatHaul(db);
+    const jumatResult = await checkJumatReminder(db);
 
     return res.status(200).json({
       checked: snap.size,
       notified,
       zakatHaul: haulResult,
+      jumatReminder: jumatResult,
     });
   } catch (err) {
     console.error('check-campaign-deadlines error:', err);

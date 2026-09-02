@@ -4,6 +4,7 @@ import TopBar from '../components/TopBar';
 import { IconSearch } from '../components/icons';
 import { searchQuran } from '../lib/quranSearchApi';
 import ErrorRetry from '../components/ErrorRetry';
+import { Skeleton } from '../components/Skeleton';
 
 export default function CariAyat() {
   const [q, setQ] = useState('');
@@ -46,8 +47,14 @@ export default function CariAyat() {
         </form>
 
         {loading && (
-          <div className="center" style={{ minHeight: '30vh' }}>
-            <div className="spinner" />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="card" style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: 14 }}>
+                <Skeleton width={70} height={16} radius={999} />
+                <Skeleton width="90%" height={18} />
+                <Skeleton width="60%" height={13} />
+              </div>
+            ))}
           </div>
         )}
 

@@ -30,6 +30,18 @@ export function ThemeProvider({ children }) {
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
+    // Keeps the browser's own chrome (Android Chrome's address bar, iOS
+    // Safari's status bar area) in sync with the actually-applied theme —
+    // a single static <meta name="theme-color"> (index.html's own tag,
+    // still there as the pre-JS default) can't react to a manual
+    // Light/Dark override the way a `media="(prefers-color-scheme)"`
+    // meta pair could, since that only tracks the OS setting, not this
+    // app's own 'system'|'light'|'dark' preference. Mirrors --primary's
+    // per-theme value (theme.css) rather than --bg, matching the existing
+    // design intent of tinting the chrome with the brand color, not the
+    // page background.
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', theme === 'dark' ? '#a8823c' : '#0d4d47');
   }, [theme]);
 
   useEffect(() => {

@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import ProtectedRoute from './components/ProtectedRoute';
+import Logo from './components/Logo';
 
 // Route-level code splitting (2026-09-02) — every build was warning about
 // a single 1MB+ JS chunk holding all ~29 page components at once, so a
@@ -51,11 +52,18 @@ function P({ children }) {
 // for its own data fetches (see e.g. SurahReader.jsx) — so the brief gap
 // while a route's chunk downloads looks like the same familiar "loading"
 // moment, not a distinct new loading UI.
+// The brand's own mark instead of a bare spinner — this is what shows
+// during the very first paint (before any route's own chunk, let alone
+// its data, has loaded), so it's the actual first thing a visitor sees of
+// the app. A gentle pulse (`animation` on the wrapper, not the mark's own
+// SVG) says "loading" without needing a spinner glyph competing with it.
 function RouteFallback() {
   return (
     <div className="screen">
       <div className="screen-content center" style={{ minHeight: '100vh' }}>
-        <div className="spinner" />
+        <div className="splash-pulse">
+          <Logo size={40} showWordmark={false} />
+        </div>
       </div>
     </div>
   );

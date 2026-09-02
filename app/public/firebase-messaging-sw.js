@@ -42,9 +42,22 @@ messaging.onBackgroundMessage((payload) => {
   });
 });
 
+// Routed by tag prefix (2026-09-03) — every notification used to open
+// /jadwal-sholat regardless of what it was actually about, which made
+// sense back when adzan reminders were the only push this app sent, but
+// stopped being right once doa broadcasts, the zakat haul reminder, and
+// now the Friday Al-Kahf reminder were added on top. See
+// api/broadcast-doa.js, api/check-campaign-deadlines.js's checkZakatHaul/
+// checkJumatReminder, and send-prayer-notifications.js for where each tag
+// is actually set.
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  event.waitUntil(clients.openWindow('/jadwal-sholat'));
+  const tag = event.notification.tag || '';
+  let url = '/jadwal-sholat'; // adzan-* and any unrecognized tag
+  if (tag.startsWith('doa-')) url = '/doa';
+  else if (tag === 'zakat-haul') url = '/lainnya/kalkulator-zakat';
+  else if (tag === 'jumat-al-kahf') url = '/quran/18'; // Al-Kahf
+  event.waitUntil(clients.openWindow(url));
 });
 
 // --- Offline reading (2026-09-02) ---------------------------------------

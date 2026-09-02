@@ -121,6 +121,35 @@ a {
   flex-direction: column;
 }
 
+/* This is a mobile-first app (bottom nav, safe-area padding, everything
+   designed around a phone-width column) — .screen's own 480px cap was
+   never meant to change on a wider viewport. What was missing is any
+   acknowledgment of the space beyond that cap: on a desktop/tablet
+   browser, body and .screen share the exact same flat --bg color, so the
+   empty gutters on either side read as an accident (a narrow strip with
+   nothing around it) rather than an intentional layout. A quiet branded
+   backdrop in the gutters, plus a visible edge on .screen itself, is
+   enough to make it read as "a phone-shaped app, deliberately," without
+   touching anything about the actual mobile experience — this rule only
+   engages once there's real gutter space to fill. */
+@media (min-width: 560px) {
+  body {
+    background: radial-gradient(ellipse 900px 700px at 50% -10%, rgba(13, 77, 71, 0.08), transparent 60%), var(--bg);
+  }
+  /* data-theme is always explicitly 'light' or 'dark' on <html> — set by
+     ThemeContext.jsx's own effect on every mount, resolving 'system' to
+     one or the other itself — so this can target the attribute directly
+     rather than needing an un-stamped-root fallback. */
+  [data-theme='dark'] body {
+    background: radial-gradient(ellipse 900px 700px at 50% -10%, rgba(168, 130, 60, 0.1), transparent 60%), var(--bg);
+  }
+  .screen {
+    border-left: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    box-shadow: var(--shadow-card);
+  }
+}
+
 .screen-content {
   flex: 1;
   display: flex;
@@ -408,9 +437,26 @@ textarea:focus-visible,
   }
 }
 
+.splash-pulse {
+  animation: splash-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes splash-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(0.94);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .skeleton,
   .screen,
+  .splash-pulse,
   button:not(:disabled) {
     animation: none !important;
     transition: none !important;

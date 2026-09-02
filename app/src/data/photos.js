@@ -40,3 +40,16 @@ export const PAGE_PHOTOS = {
   kalenderHijriah: '/photos/page-kalender.jpg',
   doaHarian: '/photos/page-doa-harian.jpg',
 };
+
+// A wider rotation pool for purely decorative use (KutipanInspirasi.jsx's
+// quote card, lib/ayatCardCanvas.js's shareable Ayat Card) — these don't
+// need a specific photo tied to a specific page's subject matter the way
+// PAGE_PHOTOS's own pairings do, so folding all 8 of those in alongside
+// the Home pool just means more variety cycling through, rather than the
+// same ~6 photos repeating across every quote/ayat someone shares. The
+// PAGE_PHOTOS set has no separate dark variant (unlike HOME_PHOTOS_DARK),
+// but that's fine here — both consumers already draw a strong (0.6-0.9
+// opacity) brand-tinted overlay over whichever photo lands, so a
+// daylight page photo still reads correctly under the dark-theme overlay.
+export const DECORATIVE_PHOTOS_LIGHT = [...HOME_PHOTOS_LIGHT, ...Object.values(PAGE_PHOTOS)];
+export const DECORATIVE_PHOTOS_DARK = [...HOME_PHOTOS_DARK, ...Object.values(PAGE_PHOTOS)];

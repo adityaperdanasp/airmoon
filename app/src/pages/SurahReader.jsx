@@ -12,6 +12,7 @@ import { useNightMode, NIGHT_STYLE_VARS } from '../lib/readingPrefs';
 import TopBar from '../components/TopBar';
 import AyatCardModal from '../components/AyatCardModal';
 import ErrorRetry from '../components/ErrorRetry';
+import { Skeleton, SkeletonCard } from '../components/Skeleton';
 
 function getReciterId() {
   return localStorage.getItem('airmoon-qari') || '05';
@@ -204,8 +205,15 @@ export default function SurahReader() {
   if (!surah) {
     return (
       <div className="screen">
-        <div className="screen-content center" style={{ minHeight: '60vh' }}>
-          <div className="spinner" />
+        <div className="screen-content">
+          <Skeleton height={20} width={140} />
+          <SkeletonCard height={90} radius={22} />
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingBottom: 18, borderBottom: '1px solid var(--border)' }}>
+              <Skeleton height={26} width="85%" style={{ alignSelf: 'flex-end' }} />
+              <Skeleton height={13} width="60%" />
+            </div>
+          ))}
         </div>
       </div>
     );

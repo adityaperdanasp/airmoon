@@ -1,6 +1,8 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useLang } from '../context/LangContext';
 import TopBar from '../components/TopBar';
+import { getRecentLainnya, markLainnyaVisited } from '../lib/recentLainnya';
 import {
   QiblaCompassIcon,
   CalculatorIcon,
@@ -39,10 +41,51 @@ const ITEMS = [
 
 export default function Lainnya() {
   const { t } = useLang();
+  const [recent, setRecent] = useState([]);
+
+  useEffect(() => setRecent(getRecentLainnya()), []);
+
+  const recentItems = recent.map((to) => ITEMS.find((it) => it.to === to)).filter(Boolean);
+
   return (
     <div className="screen">
       <div className="screen-content">
         <TopBar title={t('lainnya_title')} />
+
+        {recentItems.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <span className="section-label" style={{ color: 'var(--muted)', fontSize: 11.5, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+              Terakhir Dibuka
+            </span>
+            <div style={{ display: 'flex', gap: 8, overflowX: 'auto' }}>
+              {recentItems.map((it) => (
+                <Link
+                  key={it.to}
+                  to={it.to}
+                  onClick={() => markLainnyaVisited(it.to)}
+                  style={{
+                    flexShrink: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    padding: '8px 14px 8px 8px',
+                    borderRadius: 999,
+                    background: 'var(--card)',
+                    border: '1px solid var(--border)',
+                    textDecoration: 'none',
+                    color: 'inherit',
+                  }}
+                >
+                  <div style={{ width: 28, height: 28, borderRadius: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: it.bg }}>
+                    {it.node}
+                  </div>
+                  <span style={{ fontSize: 11.5, fontWeight: 700, whiteSpace: 'nowrap' }}>{t(it.key)}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           {ITEMS.map((it) => {
             const label = t(it.key);
@@ -50,6 +93,7 @@ export default function Lainnya() {
               <Link
                 key={it.to}
                 to={it.to}
+                onClick={() => markLainnyaVisited(it.to)}
                 style={{
                   display: 'flex',
                   flexDirection: 'column',
