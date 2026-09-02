@@ -105,3 +105,221 @@ export function CalculatorIcon({ size = 42 }) {
     </svg>
   );
 }
+
+// A ring of tasbih beads with a tassel — replaces the 📿 emoji, matching
+// the same hand-drawn gradient style as the icons above rather than
+// mixing in a platform-rendered glyph (whose look varies wildly between
+// iOS/Android and doesn't carry the brand's teal/gold palette at all).
+export function TasbihIcon({ size = 42 }) {
+  const beadPositions = Array.from({ length: 11 }, (_, i) => {
+    const a = (i / 11) * Math.PI * 2 - Math.PI / 2;
+    return [21 + 13 * Math.cos(a), 17.5 + 13 * Math.sin(a)];
+  });
+  return (
+    <svg width={size} height={size} viewBox="0 0 42 42" fill="none">
+      <defs>
+        <radialGradient id="tasbihBeadG" cx="0.35" cy="0.3" r="0.85">
+          <stop offset="0" stopColor="#fff2cf" />
+          <stop offset="0.55" stopColor="#f0c04d" />
+          <stop offset="1" stopColor="#c98f22" />
+        </radialGradient>
+      </defs>
+      {beadPositions.map(([cx, cy], i) => (
+        <circle key={i} cx={cx} cy={cy} r="3.1" fill="url(#tasbihBeadG)" />
+      ))}
+      <path d="M21 31v6" stroke="#c98f22" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M17.5 38q3.5-3.5 7 0" stroke="#c98f22" strokeWidth="1.4" fill="none" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+// A calendar with a crescent-moon corner accent — the Hijri (lunar
+// calendar) angle, not just a generic Gregorian grid.
+export function HijriCalendarIcon({ size = 42 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 42 42" fill="none">
+      <defs>
+        <linearGradient id="calBodyG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#2fa190" />
+          <stop offset="1" stopColor="#0a4a43" />
+        </linearGradient>
+        <linearGradient id="calGoldG" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor="#fff2cf" />
+          <stop offset="0.55" stopColor="#f0c04d" />
+          <stop offset="1" stopColor="#c98f22" />
+        </linearGradient>
+      </defs>
+      <rect x="12" y="4" width="3" height="8" rx="1.5" fill="#0a4a43" />
+      <rect x="27" y="4" width="3" height="8" rx="1.5" fill="#0a4a43" />
+      <rect x="7" y="9" width="28" height="26" rx="4" fill="url(#calBodyG)" />
+      <rect x="7" y="9" width="28" height="8" rx="4" fill="url(#calGoldG)" />
+      <rect x="7" y="13" width="28" height="4" fill="url(#calGoldG)" />
+      <g fill="#eaf6f0">
+        <rect x="11" y="21" width="5" height="4.5" rx="1" />
+        <rect x="18.5" y="21" width="5" height="4.5" rx="1" />
+        <rect x="26" y="21" width="5" height="4.5" rx="1" />
+        <rect x="11" y="27.5" width="5" height="4.5" rx="1" />
+        <rect x="18.5" y="27.5" width="5" height="4.5" rx="1" />
+      </g>
+      <path d="M29.5 32.3a3.3 3.3 0 1 1 0-6.6 2.6 2.6 0 1 0 0 6.6Z" fill="url(#calGoldG)" />
+    </svg>
+  );
+}
+
+// An envelope with a heart, for greeting cards — deliberately not a
+// generic "mail" icon, since these are warm/personal cards, not letters.
+export function GreetingCardIcon({ size = 42 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 42 42" fill="none">
+      <defs>
+        <linearGradient id="envBodyG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#2fa190" />
+          <stop offset="1" stopColor="#0a4a43" />
+        </linearGradient>
+        <radialGradient id="envHeartG" cx="0.35" cy="0.3" r="0.9">
+          <stop offset="0" stopColor="#fff2cf" />
+          <stop offset="0.55" stopColor="#f0c04d" />
+          <stop offset="1" stopColor="#c98f22" />
+        </radialGradient>
+      </defs>
+      <rect x="5" y="10" width="32" height="24" rx="4" fill="url(#envBodyG)" />
+      <path d="M5 12 21 25 37 12" stroke="#eaf6f0" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M21 17c-2-3-7-2-7 1.5 0 3.5 7 7 7 7s7-3.5 7-7c0-3.5-5-4.5-7-1.5Z" fill="url(#envHeartG)" />
+    </svg>
+  );
+}
+
+// Cupped hands (a bowl shape + fingertip dots along the rim) for daily
+// doa — an abstraction deliberately simplified from real hand anatomy
+// (an early attempt at literal fingers read as an unrecognizable dark
+// blob at this size); this reads clearly as "hands raised/cupped" at
+// tile size instead.
+export function CuppedHandsIcon({ size = 42 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 42 42" fill="none">
+      <defs>
+        <linearGradient id="handsG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#2fa190" />
+          <stop offset="1" stopColor="#0a4a43" />
+        </linearGradient>
+      </defs>
+      <path
+        d="M6 23c0-2.2 2-3.4 4.2-2.4C12.3 12.3 17.6 7 21 7s8.7 5.3 10.8 13.6c2.2-1 4.2.2 4.2 2.4 0 6.6-8.5 13-15 13S6 29.6 6 23Z"
+        fill="url(#handsG)"
+      />
+      <g fill="#eaf6f0">
+        <circle cx="10.5" cy="19" r="1.5" />
+        <circle cx="15" cy="14" r="1.5" />
+        <circle cx="21" cy="12" r="1.5" />
+        <circle cx="27" cy="14" r="1.5" />
+        <circle cx="31.5" cy="19" r="1.5" />
+      </g>
+    </svg>
+  );
+}
+
+// A scroll with a few text lines, for daily quotes — evokes an actual
+// written passage rather than a generic document icon.
+export function ScrollIcon({ size = 42 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 42 42" fill="none">
+      <defs>
+        <linearGradient id="scrollPaperG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#fdf8ec" />
+          <stop offset="1" stopColor="#f0e3bf" />
+        </linearGradient>
+        <linearGradient id="scrollGoldG" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor="#fff2cf" />
+          <stop offset="0.55" stopColor="#f0c04d" />
+          <stop offset="1" stopColor="#c98f22" />
+        </linearGradient>
+      </defs>
+      <rect x="9" y="9" width="24" height="24" rx="2" fill="url(#scrollPaperG)" />
+      <rect x="6" y="8" width="4" height="26" rx="2" fill="url(#scrollGoldG)" />
+      <rect x="32" y="8" width="4" height="26" rx="2" fill="url(#scrollGoldG)" />
+      <g stroke="#a9761f" strokeWidth="1.4" strokeLinecap="round">
+        <line x1="13" y1="16" x2="29" y2="16" />
+        <line x1="13" y1="21" x2="29" y2="21" />
+        <line x1="13" y1="26" x2="23" y2="26" />
+      </g>
+    </svg>
+  );
+}
+
+// A Kaaba silhouette with a red "live" play badge — for the Makkah live
+// stream, not a generic camera/video icon.
+export function LiveKaabaIcon({ size = 42 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 42 42" fill="none">
+      <defs>
+        <linearGradient id="liveKaabaG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#2b2b2e" />
+          <stop offset="1" stopColor="#0c0c0d" />
+        </linearGradient>
+        <linearGradient id="liveGoldG" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor="#fff2cf" />
+          <stop offset="0.55" stopColor="#f0c04d" />
+          <stop offset="1" stopColor="#c98f22" />
+        </linearGradient>
+      </defs>
+      <rect x="8" y="12" width="24" height="22" rx="2" fill="url(#liveKaabaG)" />
+      <rect x="8" y="18" width="24" height="4" fill="url(#liveGoldG)" />
+      <rect x="17.5" y="22" width="5" height="7" rx="0.8" fill="url(#liveGoldG)" />
+      <circle cx="31" cy="10" r="6.4" fill="#e6423f" stroke="#0c0c0d" strokeWidth="1.6" />
+      <path d="M29.1 7v6l5-3Z" fill="#fff" />
+    </svg>
+  );
+}
+
+// A traditional fanoos (Ramadan lantern) — not the 🌙 emoji alone, since
+// the lantern is the more specific/recognizable Ramadan visual motif.
+export function LanternIcon({ size = 42 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 42 42" fill="none">
+      <defs>
+        <linearGradient id="lantGoldG" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor="#fff2cf" />
+          <stop offset="0.55" stopColor="#f0c04d" />
+          <stop offset="1" stopColor="#c98f22" />
+        </linearGradient>
+        <linearGradient id="lantBodyG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#f6d879" />
+          <stop offset="1" stopColor="#b8862e" />
+        </linearGradient>
+      </defs>
+      <path d="M21 3v4" stroke="url(#lantGoldG)" strokeWidth="2" strokeLinecap="round" />
+      <path d="M15 7h12l2.5 5h-17Z" fill="url(#lantGoldG)" />
+      <rect x="12" y="12" width="18" height="17" rx="2" fill="url(#lantBodyG)" stroke="url(#lantGoldG)" strokeWidth="1.4" />
+      <g stroke="#8a5f1c" strokeWidth="1">
+        <line x1="16.5" y1="12" x2="16.5" y2="29" />
+        <line x1="21" y1="12" x2="21" y2="29" />
+        <line x1="25.5" y1="12" x2="25.5" y2="29" />
+      </g>
+      <path d="M17 33l4 6 4-6Z" fill="url(#lantGoldG)" />
+    </svg>
+  );
+}
+
+// A travel bag with a gold Kaaba-door accent, for Umroh Needs — replaces
+// a stray `/icons-3d/umroh-needs.png` raster that didn't match this
+// icon set's style at all.
+export function UmrohIcon({ size = 42 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 42 42" fill="none">
+      <defs>
+        <linearGradient id="umrohBagG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#2fa190" />
+          <stop offset="1" stopColor="#0a4a43" />
+        </linearGradient>
+        <linearGradient id="umrohGoldG" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor="#fff2cf" />
+          <stop offset="0.55" stopColor="#f0c04d" />
+          <stop offset="1" stopColor="#c98f22" />
+        </linearGradient>
+      </defs>
+      <path d="M15 12a6 6 0 0 1 12 0v3h-12Z" fill="none" stroke="url(#umrohGoldG)" strokeWidth="2.4" />
+      <rect x="8" y="15" width="26" height="21" rx="4" fill="url(#umrohBagG)" />
+      <rect x="17" y="22" width="8" height="8" rx="1" fill="url(#umrohGoldG)" />
+    </svg>
+  );
+}

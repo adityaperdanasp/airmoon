@@ -173,7 +173,13 @@ export default function Home() {
               position: 'relative',
               zIndex: 1,
               margin: 0,
-              fontSize: 22,
+              // Was 22px — with a 100-line rotating pool (data/headlines.js)
+              // some lines wrapped to 3 visual lines at that size and
+              // dominated the whole photo card. 18px keeps every headline
+              // to its intended 2 lines (each already has its own \n) at
+              // this card's width.
+              fontSize: 18,
+              lineHeight: 1.35,
               fontWeight: 800,
               letterSpacing: '-0.01em',
               whiteSpace: 'pre-line',
