@@ -5,6 +5,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useNavigate, Link } from 'react-router-dom';
 import TopBar from '../components/TopBar';
 import { isNativeApp } from '../lib/notifications';
+import { AVATAR_COLORS, watchUserProfile, setAvatarColor } from '../lib/profile';
 
 function SegButton({ active, onClick, children }) {
   return (
@@ -86,6 +87,113 @@ function AzanSoundPicker() {
   );
 }
 
+// Name + avatar color, both writing to the same users/{uid} doc (the
+// color) and Firebase Auth + users/{uid} (the name, via AuthContext's
+// updateDisplayName — see that file for why a plain updateProfile() call
+// alone wouldn't re-render anything). No photo upload here on purpose —
+// this project has no Firebase Storage bucket set up anywhere (see
+// lib/profile.js's own note); a color picker is a real customization
+// option without needing new upload infrastructure.
+function ProfileCard() {
+  const { user, updateDisplayName } = useAuth();
+  const [name, setName] = useState(user?.displayName || '');
+  const [savingName, setSavingName] = useState(false);
+  const [nameSaved, setNameSaved] = useState(false);
+  const [nameError, setNameError] = useState('');
+  const [avatarColor, setAvatarColorState] = useState(null);
+
+  useEffect(() => setName(user?.displayName || ''), [user?.displayName]);
+  useEffect(() => watchUserProfile(user?.uid, (p) => setAvatarColorState(p?.avatarColor || null)), [user?.uid]);
+
+  const currentColor = avatarColor || 'var(--primary)';
+  const nameChanged = name.trim() !== '' && name.trim() !== (user?.displayName || '');
+
+  async function handleSaveName() {
+    setNameError('');
+    setSavingName(true);
+    try {
+      await updateDisplayName(name);
+      setNameSaved(true);
+      setTimeout(() => setNameSaved(false), 2000);
+    } catch (err) {
+      setNameError(err.message || 'Gagal menyimpan nama.');
+    } finally {
+      setSavingName(false);
+    }
+  }
+
+  return (
+    <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: 16 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontWeight: 800,
+            fontSize: 17,
+            color: '#fff',
+            background: currentColor,
+            flexShrink: 0,
+          }}
+        >
+          {(user?.displayName || 'A')[0].toUpperCase()}
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <span style={{ fontSize: 13, fontWeight: 700 }}>Profil</span>
+          <span style={{ fontSize: 11, color: 'var(--muted)' }}>Nama & warna avatar kamu</span>
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+        <span style={{ fontSize: 12, fontWeight: 700 }}>Nama Tampilan</span>
+        <div className="input-row">
+          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nama kamu" />
+        </div>
+        {nameError && <span style={{ fontSize: 11.5, color: 'var(--danger)' }}>{nameError}</span>}
+        {nameChanged && (
+          <button className="btn" style={{ padding: '11px' }} onClick={handleSaveName} disabled={savingName}>
+            {savingName ? 'Menyimpan…' : 'Simpan Nama'}
+          </button>
+        )}
+        {nameSaved && <span style={{ fontSize: 11.5, color: 'var(--success)', fontWeight: 600 }}>Nama berhasil diubah ✓</span>}
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+        <span style={{ fontSize: 12, fontWeight: 700 }}>Warna Avatar</span>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          {AVATAR_COLORS.map((c) => {
+            const isActive = avatarColor === c.hex;
+            return (
+              <button
+                key={c.id}
+                aria-label={c.id}
+                onClick={() => {
+                  setAvatarColorState(c.hex);
+                  setAvatarColor(user.uid, c.hex).catch(() => setAvatarColorState(avatarColor));
+                }}
+                style={{
+                  width: 34,
+                  height: 34,
+                  borderRadius: '50%',
+                  background: c.hex,
+                  border: isActive ? '2.5px solid var(--ink)' : '2.5px solid transparent',
+                  boxShadow: isActive ? '0 0 0 2px var(--bg)' : 'none',
+                  cursor: 'pointer',
+                  padding: 0,
+                }}
+              />
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Pengaturan() {
   const { t, lang, setLang } = useLang();
   const { theme, setTheme } = useTheme();
@@ -96,6 +204,8 @@ export default function Pengaturan() {
     <div className="screen">
       <div className="screen-content">
         <TopBar title={t('pengaturan')} />
+
+        <ProfileCard />
 
         <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 14, padding: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>

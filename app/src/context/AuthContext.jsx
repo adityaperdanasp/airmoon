@@ -89,7 +89,20 @@ export function AuthProvider({ children }) {
     await signOut(auth);
   }
 
-  const value = { user, signUpWithEmail, signInWithEmail, signInWithGoogle, signInWithFacebook, logOut };
+  // Firebase Auth's updateProfile() mutates auth.currentUser in place but
+  // doesn't fire onAuthStateChanged, so nothing here would re-render on
+  // its own — spreading currentUser into a new object after the update
+  // gives React a new reference to notice, without needing a full
+  // sign-out/in or a manual reload().
+  async function updateDisplayName(name) {
+    const trimmed = name.trim();
+    if (!trimmed) throw new Error('Nama gak boleh kosong.');
+    await updateProfile(auth.currentUser, { displayName: trimmed });
+    await setDoc(doc(db, 'users', auth.currentUser.uid), { displayName: trimmed }, { merge: true });
+    setUser({ ...auth.currentUser });
+  }
+
+  const value = { user, signUpWithEmail, signInWithEmail, signInWithGoogle, signInWithFacebook, logOut, updateDisplayName };
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 

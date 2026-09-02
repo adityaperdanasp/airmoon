@@ -5,6 +5,7 @@ import { useLang } from '../context/LangContext';
 import { useTheme } from '../context/ThemeContext';
 import { usePrayerTimes } from '../lib/usePrayerTimes';
 import { watchActiveDonations, watchMyContributions } from '../lib/donations';
+import { watchUserProfile } from '../lib/profile';
 import { watchDoas } from '../lib/doa';
 import { HEADLINES, todaysHeadlineIndex } from '../data/headlines';
 import { todaysHomePhoto } from '../data/photos';
@@ -80,8 +81,10 @@ export default function Home() {
   const [myContributions, setMyContributions] = useState([]);
   const [showSedekahHistory, setShowSedekahHistory] = useState(false);
   const [doas, setDoas] = useState(null);
+  const [avatarColor, setAvatarColor] = useState(null);
 
   useEffect(() => watchActiveDonations(setDonations), []);
+  useEffect(() => watchUserProfile(user?.uid, (p) => setAvatarColor(p?.avatarColor || null)), [user?.uid]);
   useEffect(() => watchDoas(setDoas), []);
 
   useEffect(() => {
@@ -150,7 +153,7 @@ export default function Home() {
                     fontWeight: 800,
                     fontSize: 16,
                     color: '#fff',
-                    background: 'var(--primary)',
+                    background: avatarColor || 'var(--primary)',
                   }}
                 >
                   {(user?.displayName || 'A')[0].toUpperCase()}
