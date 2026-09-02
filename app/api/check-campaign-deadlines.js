@@ -1,10 +1,20 @@
-// Vercel serverless function — admin alert for "this campaign's deadline
-// has passed". Triggered once a day by Vercel's own native Cron Jobs
-// (see the `crons` entry in vercel.json) rather than the external
-// cron-job.org pinger send-prayer-notifications.js needs — a daily check
-// is exactly what a one-time deadline needs, and Vercel's own Cron Jobs
-// (daily-only on the Hobby plan) are enough for that, so no third-party
-// scheduler is needed here.
+// Vercel serverless function — the daily admin/user checks that don't need
+// anything finer-grained than once a day: (1) campaign deadlines that just
+// passed (admin Telegram alert), and (2) zakat maal haul countdowns that
+// just completed (a real FCM push to the user themselves). Both live in
+// one function/one cron entry deliberately — the Hobby plan caps a
+// deployment at 12 Serverless Functions total, and this repo was already
+// at that cap, so a second daily-cron function for the haul check alone
+// would have pushed a `vercel --prod` deploy over the limit (hit for real,
+// 2026-09-02: "No more than 12 Serverless Functions can be added...").
+// Neither check is time-sensitive enough to need its own schedule, so
+// merging them costs nothing.
+//
+// Triggered once a day by Vercel's own native Cron Jobs (see the `crons`
+// entry in vercel.json) rather than the external cron-job.org pinger
+// send-prayer-notifications.js needs — a daily check is enough for both a
+// one-time deadline and a haul measured in months, and Vercel's own Cron
+// Jobs (daily-only on the Hobby plan) cover that fine.
 //
 // Auth accepts two forms so this works both from Vercel's own scheduler
 // and from manual/testing calls: Vercel automatically sends
@@ -17,7 +27,59 @@
 
 import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
+import { getMessaging } from 'firebase-admin/messaging';
 import { sendTelegramNotification } from './_lib/telegram.js';
+
+const HAUL_DAYS = 354; // a Hijri (lunar) year, not the Gregorian 365 this app's dates otherwise run on
+
+function daysSince(dateStr) {
+  const start = new Date(`${dateStr}T00:00:00Z`);
+  return Math.floor((Date.now() - start.getTime()) / (1000 * 60 * 60 * 24));
+}
+
+// Zakat maal is only due once wealth has stayed above nisab for a full
+// haul — see lib/zakatHaul.js (client) for the countdown UI this backs.
+async function checkZakatHaul(db) {
+  const messaging = getMessaging();
+  const snap = await db.collection('users').where('zakatHaul', '!=', null).get();
+  const notified = [];
+  const errors = [];
+
+  for (const docSnap of snap.docs) {
+    try {
+      const u = docSnap.data();
+      const haul = u.zakatHaul;
+      const tokens = u.fcmTokens || [];
+      if (!haul?.startDate || !tokens.length) continue;
+
+      const elapsed = daysSince(haul.startDate);
+      const alreadyNotifiedThisCycle = haul.lastNotifiedCycle === haul.startDate;
+      if (elapsed < HAUL_DAYS || alreadyNotifiedThisCycle) continue;
+
+      const result = await messaging.sendEachForMulticast({
+        tokens,
+        data: {
+          tag: 'zakat-haul',
+          title: '🌙 Sudah 1 Haul',
+          body: 'Harta kamu sudah mengendap 1 tahun di atas nisab — saatnya cek & bayar zakat maal.',
+        },
+      });
+
+      await docSnap.ref.update({ 'zakatHaul.lastNotifiedCycle': haul.startDate });
+
+      const deadTokens = result.responses.map((r, i) => (!r.success ? tokens[i] : null)).filter(Boolean);
+      if (deadTokens.length) {
+        await docSnap.ref.update({ fcmTokens: FieldValue.arrayRemove(...deadTokens) });
+      }
+
+      notified.push({ uid: docSnap.id, successCount: result.successCount });
+    } catch (err) {
+      errors.push({ uid: docSnap.id, error: err.message });
+    }
+  }
+
+  return { notified, errors };
+}
 
 function initAdmin() {
   if (getApps().length) return;
@@ -71,7 +133,13 @@ export default async function handler(req, res) {
       notified.push({ id: docSnap.id, title: d.title });
     }
 
-    return res.status(200).json({ checked: snap.size, notified });
+    const haulResult = await checkZakatHaul(db);
+
+    return res.status(200).json({
+      checked: snap.size,
+      notified,
+      zakatHaul: haulResult,
+    });
   } catch (err) {
     console.error('check-campaign-deadlines error:', err);
     return res.status(500).json({ error: err.message || 'Gagal cek deadline campaign.' });

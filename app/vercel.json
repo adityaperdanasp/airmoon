@@ -3,7 +3,6 @@
     { "source": "/((?!api/|\\.well-known/).*)", "destination": "/index.html" }
   ],
   "crons": [
-    { "path": "/api/check-campaign-deadlines", "schedule": "0 1 * * *" },
-    { "path": "/api/check-zakat-haul", "schedule": "15 1 * * *" }
+    { "path": "/api/check-campaign-deadlines", "schedule": "0 1 * * *" }
   ]
 }
