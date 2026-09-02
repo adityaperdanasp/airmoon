@@ -55,7 +55,7 @@ export default function DoaHarian() {
                   fontSize: 12.5,
                   fontWeight: 700,
                   cursor: 'pointer',
-                  color: isActive ? '#fff' : 'var(--ink)',
+                  color: isActive ? 'var(--on-primary)' : 'var(--ink)',
                   background: isActive ? 'var(--primary)' : 'var(--card)',
                 }}
               >
@@ -98,7 +98,7 @@ export default function DoaHarian() {
                 fontSize: 12,
                 fontWeight: 700,
                 cursor: doneToday ? 'default' : 'pointer',
-                color: doneToday ? 'var(--primary)' : '#fff',
+                color: doneToday ? 'var(--primary)' : 'var(--on-primary)',
                 background: doneToday ? 'var(--mint)' : 'var(--primary)',
               }}
             >

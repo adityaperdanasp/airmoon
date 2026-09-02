@@ -120,7 +120,7 @@ function AyahEndMark({ text, verseKey, isBookmarked, isTarget, onTap, forwardRef
         background: isBookmarked ? 'var(--gold-ink)' : 'transparent',
         fontSize: 11,
         fontFamily: "'Amiri', serif",
-        color: isBookmarked ? '#fff' : 'var(--gold-ink)',
+        color: isBookmarked ? 'var(--on-gold)' : 'var(--gold-ink)',
         margin: '0 2px',
         verticalAlign: 'middle',
         padding: 0,

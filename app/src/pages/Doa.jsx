@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import TopBar from '../components/TopBar';
 import BottomNav from '../components/BottomNav';
 import DoaCard from '../components/DoaCard';
+import { SkeletonCard } from '../components/Skeleton';
 
 const MAX_LENGTH = 500;
 
@@ -105,7 +106,13 @@ export default function Doa() {
 
         <ComposeDoa user={user} />
 
-        {!doas && <div className="center" style={{ minHeight: 150 }}><div className="spinner" /></div>}
+        {!doas && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <SkeletonCard height={110} />
+            <SkeletonCard height={110} />
+            <SkeletonCard height={110} />
+          </div>
+        )}
 
         {doas && doas.length === 0 && (
           <div className="card" style={{ padding: 16, fontSize: 12.5, color: 'var(--muted)', textAlign: 'center' }}>

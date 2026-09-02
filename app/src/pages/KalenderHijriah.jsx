@@ -51,19 +51,19 @@ export default function KalenderHijriah() {
         <PageHeaderPhoto title={t('item_kalender_hijriah')} photo={PAGE_PHOTOS.kalenderHijriah} />
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderRadius: 16, background: 'var(--primary)' }}>
-          <button onClick={() => shiftMonth(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#fff' }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff"><path d="m15 5-7 7 7 7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+          <button onClick={() => shiftMonth(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--on-primary)' }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--on-primary)"><path d="m15 5-7 7 7 7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
           </button>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <span style={{ fontSize: 15, fontWeight: 800, color: '#fff' }}>
+            <span style={{ fontSize: 15, fontWeight: 800, color: 'var(--on-primary)' }}>
               {monthLabel ? `${monthLabel} ${hijriYear} H` : '…'}
             </span>
             <span style={{ fontSize: 11, color: 'var(--accent)' }}>
               {new Date(cursor.year, cursor.month - 1).toLocaleDateString(lang === 'en' ? 'en-US' : 'id-ID', { month: 'long', year: 'numeric' })}
             </span>
           </div>
-          <button onClick={() => shiftMonth(1)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#fff' }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff"><path d="m9 5 7 7-7 7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+          <button onClick={() => shiftMonth(1)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--on-primary)' }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--on-primary)"><path d="m9 5 7 7-7 7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
           </button>
         </div>
 
@@ -92,7 +92,7 @@ export default function KalenderHijriah() {
                     background: isToday ? 'var(--primary)' : 'var(--card)',
                   }}
                 >
-                  <span style={{ fontSize: 13, fontWeight: isToday ? 800 : 700, color: isToday ? '#fff' : 'var(--ink)' }}>{d.hijri.day}</span>
+                  <span style={{ fontSize: 13, fontWeight: isToday ? 800 : 700, color: isToday ? 'var(--on-primary)' : 'var(--ink)' }}>{d.hijri.day}</span>
                   <span style={{ fontSize: 8.5, color: isToday ? 'var(--accent)' : 'var(--muted-soft)' }}>{gDay} {d.gregorian.month.en.slice(0, 3)}</span>
                 </div>
               );

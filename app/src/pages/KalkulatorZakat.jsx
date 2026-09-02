@@ -22,7 +22,7 @@ function TabBtn({ active, onClick, children }) {
         fontSize: 12.5,
         fontWeight: 700,
         cursor: 'pointer',
-        color: active ? '#fff' : 'var(--ink)',
+        color: active ? 'var(--on-primary)' : 'var(--ink)',
         background: active ? 'var(--primary)' : 'transparent',
       }}
     >

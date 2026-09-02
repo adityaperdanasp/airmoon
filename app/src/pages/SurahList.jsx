@@ -8,6 +8,7 @@ import BottomNav from '../components/BottomNav';
 import PageHeaderPhoto from '../components/PageHeaderPhoto';
 import { PAGE_PHOTOS } from '../data/photos';
 import { IconMenu, IconSearch } from '../components/icons';
+import { SkeletonSurahRow } from '../components/Skeleton';
 
 export default function SurahList() {
   const { user } = useAuth();
@@ -168,7 +169,13 @@ export default function SurahList() {
         )}
 
         {error && <p className="state-msg">{error}</p>}
-        {!surahs && !error && <p className="state-msg">Memuat daftar surat…</p>}
+        {!surahs && !error && (
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            {Array.from({ length: 8 }).map((_, i) => (
+              <SkeletonSurahRow key={i} />
+            ))}
+          </div>
+        )}
 
         {filtered && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>

@@ -2,6 +2,7 @@
 [data-theme='light'] {
   --primary: #0d4d47;
   --primary-dark: #0a3630;
+  --on-primary: #ffffff;
   --accent: #e8b84b;
   --bg: #ffffff;
   --ink: #0f2019;
@@ -16,6 +17,7 @@
   --blue-gray: #dde8ec;
   --gold-ink: #a9761f;
   --gold-ink-dark: #6b4a12;
+  --on-gold: #ffffff;
   --success: #178f4c;
   --success-bg: #e3f5ea;
   --danger: #d92d2d;
@@ -39,6 +41,19 @@
 [data-theme='dark'] {
   --primary: #a8823c;
   --primary-dark: #6b4f22;
+  /* Dark theme's --primary alone (not blended toward --primary-dark) is
+     bright enough that white text on it reads poorly — the same problem
+     .btn already worked around with its own hardcoded dark-mode text
+     color, now generalized into this token so any other solid
+     var(--primary)-filled surface (e.g. Tasbih.jsx's active phrase chip,
+     KalkulatorZakat.jsx's active tab) can just use var(--on-primary)
+     instead of re-solving the same contrast issue per component. The
+     large gradient hero cards (Home's Jadwal Sholat card and its several
+     equivalents) blend all the way to the much darker --primary-dark and
+     were already separately confirmed legible with hardcoded white text —
+     this token isn't meant to touch those, only new flat var(--primary)
+     fills. */
+  --on-primary: #04211c;
   --accent: #f0cd7b;
   --bg: #0b0c0a;
   --ink: #f4f0e6;
@@ -53,6 +68,11 @@
   --blue-gray: rgba(140, 170, 190, 0.14);
   --gold-ink: #f0cd7b;
   --gold-ink-dark: #f0cd7b;
+  /* --gold-ink in dark mode is a light, bright gold (#f0cd7b, unlike light
+     theme's much darker #a9761f) — a flat var(--gold-ink) fill (e.g.
+     MushafReader.jsx's bookmark mark) needs dark text on top here, not the
+     white that works in light theme. Same reasoning as --on-primary above. */
+  --on-gold: #3d2a06;
   --success: #4fbf82;
   --success-bg: rgba(79, 191, 130, 0.14);
   --danger: #ff6b6b;
@@ -142,12 +162,8 @@ a {
   font-weight: 700;
   font-size: 14px;
   cursor: pointer;
-  color: #ffffff;
+  color: var(--on-primary);
   background: var(--primary);
-}
-
-[data-theme='dark'] .btn {
-  color: #04211c;
 }
 
 .btn:disabled {
@@ -290,4 +306,77 @@ a {
   font-size: 12.5px;
   color: var(--muted);
   padding: 24px 0;
+}
+
+/* Skeleton loading placeholders (components/Skeleton.jsx) — a shimmer
+   sweep across a var(--card)-toned block, standing in for content that's
+   still being fetched (surah list rows, donation cards, doa cards) so a
+   slow API response reads as "loading in", not a blank pause before
+   things suddenly pop in. */
+.skeleton {
+  background: linear-gradient(90deg, var(--card) 25%, var(--border) 50%, var(--card) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+  border-radius: 8px;
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Tap feedback + page-enter transition (2026-09-02) — buttons previously
+   gave no visual acknowledgement of a tap besides whatever color change
+   their own inline styles happened to define (many of the icon-only
+   buttons scattered across pages, e.g. SurahReader.jsx's per-ayat
+   toolbar, define none at all). A route swap is a fresh component
+   instance mounting a fresh .screen div, so animating .screen on mount
+   gives every page a consistent soft fade/slide-in for free — no router-
+   level transition wrapper needed. */
+button:not(:disabled) {
+  transition: transform 0.12s ease;
+}
+
+button:not(:disabled):active {
+  transform: scale(0.94);
+}
+
+a:active {
+  opacity: 0.75;
+}
+
+.screen {
+  animation: screen-enter 0.22s ease both;
+}
+
+/* Opacity only, deliberately no transform: a transform on .screen — even
+   one that settles at translateY(0) — creates a new containing block for
+   any position:fixed descendant for as long as it's applied, which given
+   animation-fill-mode: both means forever after the animation ends. This
+   app has several fixed-position elements nested inside .screen
+   (.bottomnav, .bottomnav-scrim, SurahReader.jsx's floating audio bar,
+   AyatCardModal, AyahActionSheet) that would otherwise silently stop
+   tracking the viewport and pin to .screen's own box instead. Caught
+   before shipping, not worth re-introducing for a slightly fancier
+   slide-in. */
+@keyframes screen-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton,
+  .screen,
+  button:not(:disabled) {
+    animation: none !important;
+    transition: none !important;
+  }
 }

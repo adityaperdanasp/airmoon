@@ -15,6 +15,7 @@ import DonationCard from '../components/DonationCard';
 import DoaCard from '../components/DoaCard';
 import { IconBell, IconSearch, IconMoon } from '../components/icons';
 import { QiblaCompassIcon, QuranBookIcon, MosqueIcon, PrayerClockIcon } from '../components/serviceIcons';
+import { SkeletonCard } from '../components/Skeleton';
 
 const dateFmt = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
@@ -315,6 +316,12 @@ export default function Home() {
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--primary)"><path d="m9 6 6 6-6 6" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
             </Link>
           </div>
+          {doas === null && (
+            <div style={{ display: 'flex', gap: 10, margin: '0 -20px', padding: '0 20px' }}>
+              <SkeletonCard height={100} radius={16} style={{ flex: 1 }} />
+              <SkeletonCard height={100} radius={16} style={{ flex: 1 }} />
+            </div>
+          )}
           {doas && doas.length === 0 && (
             <div className="card" style={{ padding: 16, fontSize: 12.5, color: 'var(--muted)', textAlign: 'center' }}>
               Belum ada doa. Jadilah yang pertama.
@@ -331,6 +338,7 @@ export default function Home() {
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <span className="section-label">🕌 {t('donasi_kamu')}</span>
+          {donations === null && <SkeletonCard height={140} />}
           {donations && donations.length === 0 && (
             <div className="card" style={{ padding: 16, fontSize: 12.5, color: 'var(--muted)', textAlign: 'center' }}>
               Belum ada campaign aktif saat ini.

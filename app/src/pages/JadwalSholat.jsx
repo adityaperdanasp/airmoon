@@ -114,9 +114,9 @@ export default function JadwalSholat() {
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       {isNext && <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent)' }} />}
-                      <span style={{ fontSize: 13.5, fontWeight: 700, color: isNext ? '#fff' : 'var(--ink)' }}>{prayerLabel[key]}</span>
+                      <span style={{ fontSize: 13.5, fontWeight: 700, color: isNext ? 'var(--on-primary)' : 'var(--ink)' }}>{prayerLabel[key]}</span>
                     </div>
-                    <span style={{ fontSize: 14, fontWeight: 700, color: isNext ? '#fff' : 'var(--ink)' }}>{data.timings[key]}</span>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: isNext ? 'var(--on-primary)' : 'var(--ink)' }}>{data.timings[key]}</span>
                   </div>
                 );
               })}

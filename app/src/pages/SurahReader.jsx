@@ -258,7 +258,7 @@ export default function SurahReader() {
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{ width: 30, height: 30, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--primary)' }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--on-primary)">
                 <path d="M12 2a4 4 0 0 0-4 4v5a4 4 0 0 0 8 0V6a4 4 0 0 0-4-4Z" strokeWidth="1.6" />
                 <path d="M6 11a6 6 0 0 0 12 0M12 17v4M9 21h6" strokeWidth="1.6" strokeLinecap="round" />
               </svg>
@@ -427,7 +427,7 @@ export default function SurahReader() {
             onClick={() => audioRef.current?.pause()}
             style={{ width: 40, height: 40, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: 'var(--primary)', border: 'none', cursor: 'pointer' }}
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff" stroke="none"><rect x="6" y="5" width="4" height="14" rx="1" /><rect x="14" y="5" width="4" height="14" rx="1" /></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--on-primary)" stroke="none"><rect x="6" y="5" width="4" height="14" rx="1" /><rect x="14" y="5" width="4" height="14" rx="1" /></svg>
           </button>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1, minWidth: 0 }}>
             <span style={{ fontSize: 12, fontWeight: 700 }}>{surah.namaLatin} &middot; Ayat {playing}</span>

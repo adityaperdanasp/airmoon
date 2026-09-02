@@ -78,7 +78,7 @@ export default function Tasbih() {
                 fontWeight: 700,
                 cursor: 'pointer',
                 border: p.id === phraseId ? 'none' : '1px solid var(--border)',
-                color: p.id === phraseId ? '#fff' : 'var(--ink)',
+                color: p.id === phraseId ? 'var(--on-primary)' : 'var(--ink)',
                 background: p.id === phraseId ? 'var(--primary)' : 'var(--card)',
               }}
             >

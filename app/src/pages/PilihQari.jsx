@@ -50,7 +50,7 @@ export default function PilihQari() {
                     background: active ? 'var(--primary)' : 'var(--mint-soft)',
                   }}
                 >
-                  <span style={{ fontSize: 14, fontWeight: 800, color: active ? '#fff' : 'var(--muted)' }}>
+                  <span style={{ fontSize: 14, fontWeight: 800, color: active ? 'var(--on-primary)' : 'var(--muted)' }}>
                     {r.name
                       .split(' ')
                       .map((w) => w[0])
@@ -78,7 +78,7 @@ export default function PilihQari() {
                   }}
                 >
                   {active && (
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff"><path d="M5 12.5 10 17 19 7" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--on-primary)"><path d="M5 12.5 10 17 19 7" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" /></svg>
                   )}
                 </div>
               </button>

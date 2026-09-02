@@ -102,7 +102,7 @@ export default function CariMasjid() {
                   }}
                   aria-label={t('buka_arah_aria')}
                 >
-                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--on-primary)">
                     <path d="M3 11 20 4l-7 17-3-7-7-3Z" strokeWidth="1.7" strokeLinejoin="round" />
                   </svg>
                 </a>

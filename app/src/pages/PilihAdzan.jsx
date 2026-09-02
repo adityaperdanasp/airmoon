@@ -103,9 +103,9 @@ export default function PilihAdzan() {
                   aria-label={`Preview ${s.name}`}
                 >
                   {isPlaying ? (
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="#fff" stroke="none"><rect x="6" y="5" width="4" height="14" rx="1" /><rect x="14" y="5" width="4" height="14" rx="1" /></svg>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="var(--on-primary)" stroke="none"><rect x="6" y="5" width="4" height="14" rx="1" /><rect x="14" y="5" width="4" height="14" rx="1" /></svg>
                   ) : (
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke={active ? '#fff' : 'var(--muted)'}>
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke={active ? 'var(--on-primary)' : 'var(--muted)'}>
                       <path d="M11 5 6 9H3v6h3l5 4V5Z" strokeWidth="1.6" strokeLinejoin="round" />
                       {s.preview && <path d="M15.5 9a4.5 4.5 0 0 1 0 6" strokeWidth="1.6" strokeLinecap="round" />}
                     </svg>
@@ -128,7 +128,7 @@ export default function PilihAdzan() {
                     border: active ? 'none' : '1.5px solid var(--border)',
                   }}
                 >
-                  {active && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff"><path d="M5 12.5 10 17 19 7" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+                  {active && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--on-primary)"><path d="M5 12.5 10 17 19 7" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" /></svg>}
                 </div>
               </div>
             );

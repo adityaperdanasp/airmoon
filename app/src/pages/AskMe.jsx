@@ -89,7 +89,7 @@ export default function AskMe() {
           >
             {m.role === 'assistant' && (
               <div style={{ width: 26, height: 26, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: 'var(--primary)', marginTop: 2 }}>
-                <IconMoon width="13" height="13" style={{ color: '#fff' }} />
+                <IconMoon width="13" height="13" style={{ color: 'var(--on-primary)' }} />
               </div>
             )}
             <div
@@ -101,7 +101,7 @@ export default function AskMe() {
                 fontSize: 13.5,
                 lineHeight: 1.55,
                 background: m.role === 'user' ? 'var(--primary)' : 'var(--card)',
-                color: m.role === 'user' ? '#fff' : 'var(--ink)',
+                color: m.role === 'user' ? 'var(--on-primary)' : 'var(--ink)',
                 whiteSpace: 'pre-wrap',
               }}
             >
@@ -112,7 +112,7 @@ export default function AskMe() {
         {busy && messages[messages.length - 1]?.role === 'user' && (
           <div style={{ alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ width: 26, height: 26, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: 'var(--primary)' }}>
-              <IconMoon width="13" height="13" style={{ color: '#fff' }} />
+              <IconMoon width="13" height="13" style={{ color: 'var(--on-primary)' }} />
             </div>
             <div className="spinner" style={{ width: 16, height: 16 }} />
           </div>
@@ -147,7 +147,7 @@ export default function AskMe() {
           }}
           aria-label="Kirim"
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff"><path d="M3 11 20 4l-7 17-3-7-7-3Z" strokeWidth="1.7" strokeLinejoin="round" /></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--on-primary)"><path d="M3 11 20 4l-7 17-3-7-7-3Z" strokeWidth="1.7" strokeLinejoin="round" /></svg>
         </button>
       </div>
     </div>

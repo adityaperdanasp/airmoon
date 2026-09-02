@@ -37,7 +37,7 @@ function AminButton({ doaId, aminCount, compact }) {
         borderRadius: 999,
         border: amined ? 'none' : '1px solid var(--border)',
         background: amined ? 'var(--primary)' : 'transparent',
-        color: amined ? '#fff' : 'var(--muted)',
+        color: amined ? 'var(--on-primary)' : 'var(--muted)',
         fontSize: compact ? 11 : 12,
         fontWeight: 700,
         cursor: 'pointer',
