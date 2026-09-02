@@ -221,6 +221,30 @@ export function TasbihCounterIcon({ size = 42 }) {
   );
 }
 
+// A bookmark ribbon with a star cut-out — Ayat Favorit's own icon,
+// distinct from TasbihIcon/TasbihCounterIcon and from the plain outline
+// bookmark glyph SurahReader.jsx already uses for "tandai terakhir dibaca"
+// (that one marks *position*, this page is a saved *collection*).
+export function FavoriteAyatIcon({ size = 42 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 42 42" fill="none">
+      <defs>
+        <linearGradient id="favRibbonG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#2fa190" />
+          <stop offset="1" stopColor="#0a4a43" />
+        </linearGradient>
+        <linearGradient id="favStarG" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor="#fff2cf" />
+          <stop offset="0.55" stopColor="#f0c04d" />
+          <stop offset="1" stopColor="#c98f22" />
+        </linearGradient>
+      </defs>
+      <path d="M11 6h20a2 2 0 0 1 2 2v27l-12-7-12 7V8a2 2 0 0 1 2-2Z" fill="url(#favRibbonG)" />
+      <path d="m21 14 2.4 5.2 5.7.5-4.3 3.8 1.3 5.6L21 26l-5.1 3.1 1.3-5.6-4.3-3.8 5.7-.5Z" fill="url(#favStarG)" />
+    </svg>
+  );
+}
+
 // A calendar with a crescent-moon corner accent — the Hijri (lunar
 // calendar) angle, not just a generic Gregorian grid.
 export function HijriCalendarIcon({ size = 42 }) {

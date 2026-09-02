@@ -46,3 +46,73 @@ self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   event.waitUntil(clients.openWindow('/jadwal-sholat'));
 });
+
+// --- Offline reading (2026-09-02) ---------------------------------------
+// This worker used to only ever get registered when someone opted into
+// prayer notifications (lib/notifications.js's enablePrayerNotifications),
+// so most visitors had no service worker at all controlling fetches. Now
+// registered unconditionally at app boot (main.jsx) as well — registering
+// the same scriptURL+scope twice is a no-op, the browser just returns the
+// existing registration — so this fetch handler actually runs for
+// everyone, not just people who enabled notifications.
+//
+// This is runtime caching, not full precaching: nothing is downloaded
+// ahead of time, so the very first visit still needs a network connection.
+// After that, whatever was actually opened (a surah, the app shell itself)
+// stays available offline until it's fetched fresh again.
+self.addEventListener('install', () => self.skipWaiting());
+self.addEventListener('activate', (event) => event.waitUntil(clients.claim()));
+
+const RUNTIME_CACHE = 'airmoon-runtime-v1';
+// The Qur'an text/audio APIs this app reads from (lib/quranApi.js,
+// lib/mushafApi.js, lib/wordGlossApi.js, lib/quranSearchApi.js) — reading
+// is the offline use case that actually matters (bad signal at the
+// mosque/on a train), prayer-time/donation data changes too often to be
+// worth serving stale.
+const OFFLINE_HOSTS = ['equran.id', 'api.quran.com'];
+
+self.addEventListener('fetch', (event) => {
+  const { request } = event;
+  if (request.method !== 'GET') return;
+  const url = new URL(request.url);
+
+  if (OFFLINE_HOSTS.includes(url.hostname)) {
+    // Cache-first: once a surah/search/gloss request has been made
+    // successfully, re-opening the same thing works offline indefinitely
+    // (Qur'an text doesn't change) instead of re-hitting the network.
+    event.respondWith(
+      caches.open(RUNTIME_CACHE).then(async (cache) => {
+        const cached = await cache.match(request);
+        if (cached) return cached;
+        const res = await fetch(request);
+        if (res.ok) cache.put(request, res.clone());
+        return res;
+      })
+    );
+    return;
+  }
+
+  if (url.origin === self.location.origin) {
+    // Network-first for the app shell itself (HTML/JS/CSS/fonts/icons) —
+    // an online visitor always gets the freshest deploy, and the cache is
+    // only what falls back into service once the network is unreachable.
+    event.respondWith(
+      fetch(request)
+        .then((res) => {
+          if (res.ok) {
+            const clone = res.clone();
+            caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, clone));
+          }
+          return res;
+        })
+        .catch(async () => {
+          const cached = await caches.match(request);
+          // A deep link like /quran/2 isn't a real file — both hosts
+          // rewrite any unknown path to index.html when online (see
+          // firebase.json/vercel.json), so fall back to whatever cached
+          // copy of the app shell exists rather than a bare network error.
+          return cached || caches.match('/index.html') || caches.match('/');
+        })
+    );
+  }
+});

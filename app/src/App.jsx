@@ -32,6 +32,8 @@ import MakkahLive from './pages/MakkahLive';
 import QiblaCompass from './pages/QiblaCompass';
 import ModeRamadan from './pages/ModeRamadan';
 import Tasbih from './pages/Tasbih';
+import CariAyat from './pages/CariAyat';
+import AyatFavorit from './pages/AyatFavorit';
 
 function P({ children }) {
   return <ProtectedRoute>{children}</ProtectedRoute>;
@@ -49,6 +51,7 @@ export default function App() {
       <Route path="/quran/:nomor" element={<P><SurahReader /></P>} />
       <Route path="/quran/mushaf/:page" element={<P><MushafReader /></P>} />
       <Route path="/quran/:nomor/qari" element={<P><PilihQari /></P>} />
+      <Route path="/quran/cari" element={<P><CariAyat /></P>} />
       <Route path="/jadwal-sholat" element={<P><JadwalSholat /></P>} />
       <Route path="/jadwal-sholat/adzan" element={<P><PilihAdzan /></P>} />
       <Route path="/donasi" element={<P><Donasi /></P>} />
@@ -73,6 +76,7 @@ export default function App() {
       <Route path="/lainnya/kiblat" element={<P><QiblaCompass /></P>} />
       <Route path="/lainnya/mode-ramadan" element={<P><ModeRamadan /></P>} />
       <Route path="/lainnya/tasbih" element={<P><Tasbih /></P>} />
+      <Route path="/lainnya/ayat-favorit" element={<P><AyatFavorit /></P>} />
     </Routes>
   );
 }

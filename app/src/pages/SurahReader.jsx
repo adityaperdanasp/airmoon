@@ -1,13 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
 import { fetchSurahDetail, RECITERS } from '../lib/quranApi';
 import { hasWordSync, fetchChapterTiming } from '../lib/quranTimingApi';
 import { fetchWordGloss } from '../lib/wordGlossApi';
+import { watchFavoriteAyat, addFavoriteAyat, removeFavoriteAyat } from '../lib/favoriteAyat';
 import { useNightMode, NIGHT_STYLE_VARS } from '../lib/readingPrefs';
 import TopBar from '../components/TopBar';
+import AyatCardModal from '../components/AyatCardModal';
 
 function getReciterId() {
   return localStorage.getItem('airmoon-qari') || '05';
@@ -15,8 +17,11 @@ function getReciterId() {
 
 export default function SurahReader() {
   const { nomor } = useParams();
+  const [searchParams] = useSearchParams();
+  const jumpToAyat = Number(searchParams.get('ayat')) || null; // deep-link from Cari Ayat search results
   const { user } = useAuth();
   const [surah, setSurah] = useState(null);
+  const [highlightAyat, setHighlightAyat] = useState(null);
   const [error, setError] = useState('');
   const [playing, setPlaying] = useState(null); // ayat number currently playing
   const [bookmarked, setBookmarked] = useState(null);
@@ -27,6 +32,8 @@ export default function SurahReader() {
   const [glossOn, setGlossOn] = useState(false);
   const [gloss, setGloss] = useState(null); // { [ayatNumber]: [{arab, id}, ...] } once loaded
   const [glossLoading, setGlossLoading] = useState(false);
+  const [favorites, setFavorites] = useState([]);
+  const [cardAyat, setCardAyat] = useState(null); // ayat passed to AyatCardModal, or null when closed
   const audioRef = useRef(null);
   const reciter = RECITERS.find((r) => r.id === reciterId) || RECITERS[4];
   // Word-sync only actually applies once the timing data has loaded — a
@@ -42,9 +49,42 @@ export default function SurahReader() {
       .catch(() => setError('Gagal memuat surat. Coba lagi.'));
   }, [nomor]);
 
+  // Deep-link from Cari Ayat: once the surah's real content is in the DOM,
+  // scroll the target ayat into view and give it a brief highlight ring —
+  // same "you landed here, not randomly on the page" affordance
+  // MushafReader already gives its own ?ayat= deep link.
+  useEffect(() => {
+    if (!surah || !jumpToAyat) return;
+    const el = document.getElementById(`ayat-${jumpToAyat}`);
+    if (!el) return;
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setHighlightAyat(jumpToAyat);
+    const t = setTimeout(() => setHighlightAyat(null), 2200);
+    return () => clearTimeout(t);
+  }, [surah, jumpToAyat]);
+
   useEffect(() => {
     setReciterId(getReciterId());
   }, []);
+
+  useEffect(() => watchFavoriteAyat(user?.uid, setFavorites), [user?.uid]);
+  const favoriteKeys = new Set(favorites.map((f) => f.id));
+
+  async function toggleFavorite(a) {
+    if (!user || !surah) return;
+    const key = `${surah.nomor}:${a.nomorAyat}`;
+    if (favoriteKeys.has(key)) {
+      await removeFavoriteAyat(user.uid, surah.nomor, a.nomorAyat);
+    } else {
+      await addFavoriteAyat(user.uid, {
+        chapter: surah.nomor,
+        chapterName: surah.namaLatin,
+        verse: a.nomorAyat,
+        arabic: a.teksArab,
+        translation: a.teksIndonesia,
+      });
+    }
+  }
 
   // Reset whenever the surah changes so a stale gloss from the previous
   // surah never gets shown against the wrong ayat while the new one loads.
@@ -240,19 +280,23 @@ export default function SurahReader() {
           {surah.ayat.map((a) => {
             const isPlaying = playing === a.nomorAyat;
             const isBookmarked = bookmarked === a.nomorAyat;
+            const isJumpTarget = highlightAyat === a.nomorAyat;
             return (
               <div
                 key={a.nomorAyat}
+                id={`ayat-${a.nomorAyat}`}
                 style={{
                   display: 'flex',
                   flexDirection: 'column',
                   gap: 10,
                   paddingBottom: 18,
                   borderBottom: '1px solid var(--border)',
-                  background: isPlaying ? 'var(--cream)' : 'transparent',
-                  borderRadius: isPlaying ? 16 : 0,
-                  padding: isPlaying ? '12px 10px 18px' : undefined,
-                  margin: isPlaying ? '0 -10px' : undefined,
+                  background: isJumpTarget ? 'var(--mint)' : isPlaying ? 'var(--cream)' : 'transparent',
+                  borderRadius: isJumpTarget || isPlaying ? 16 : 0,
+                  padding: isJumpTarget || isPlaying ? '12px 10px 18px' : undefined,
+                  margin: isJumpTarget || isPlaying ? '0 -10px' : undefined,
+                  boxShadow: isJumpTarget ? '0 0 0 2px var(--primary)' : 'none',
+                  transition: 'background 0.3s ease, box-shadow 0.3s ease',
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
@@ -323,6 +367,33 @@ export default function SurahReader() {
                       <path d="M7 3.5h10a1 1 0 0 1 1 1V21l-6-3.5L6 21V4.5a1 1 0 0 1 1-1Z" strokeWidth="1.6" strokeLinejoin="round" />
                     </svg>
                   </button>
+                  <button
+                    onClick={() => toggleFavorite(a)}
+                    style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: favoriteKeys.has(`${surah.nomor}:${a.nomorAyat}`) ? 'var(--accent)' : 'var(--muted-soft)' }}
+                    aria-label="Simpan ke favorit"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill={favoriteKeys.has(`${surah.nomor}:${a.nomorAyat}`) ? 'currentColor' : 'none'} stroke="currentColor">
+                      <path d="m12 3 2.7 6.2 6.8.6-5.1 4.5 1.6 6.7L12 17.3l-5.9 3.5 1.5-6.7-5-4.5 6.7-.6Z" strokeWidth="1.4" strokeLinejoin="round" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={() =>
+                      setCardAyat({
+                        chapter: surah.nomor,
+                        chapterName: surah.namaLatin,
+                        verse: a.nomorAyat,
+                        arabic: a.teksArab,
+                        translation: a.teksIndonesia,
+                      })
+                    }
+                    style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'var(--muted-soft)' }}
+                    aria-label="Bagikan sebagai gambar"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <path d="M12 3v13M12 3 8 7M12 3l4 4" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M5 14v4.5A2.5 2.5 0 0 0 7.5 21h9a2.5 2.5 0 0 0 2.5-2.5V14" strokeWidth="1.6" strokeLinecap="round" />
+                    </svg>
+                  </button>
                 </div>
               </div>
             );
@@ -364,6 +435,8 @@ export default function SurahReader() {
           </div>
         </div>
       )}
+
+      {cardAyat && <AyatCardModal ayat={cardAyat} onClose={() => setCardAyat(null)} />}
     </div>
   );
 }

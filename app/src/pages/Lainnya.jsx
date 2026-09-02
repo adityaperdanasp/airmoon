@@ -6,6 +6,7 @@ import {
   CalculatorIcon,
   TasbihIcon,
   TasbihCounterIcon,
+  FavoriteAyatIcon,
   HijriCalendarIcon,
   GreetingCardIcon,
   CuppedHandsIcon,
@@ -33,6 +34,7 @@ const ITEMS = [
   { to: '/lainnya/mode-ramadan', key: 'item_ramadan', bg: 'var(--cream)', node: <LanternIcon size={30} /> },
   { to: '/umroh', key: 'nav_umroh', bg: 'var(--blue-gray)', node: <UmrohIcon size={30} /> },
   { to: '/lainnya/tasbih', key: 'item_tasbih', bg: 'var(--peach)', node: <TasbihCounterIcon size={30} /> },
+  { to: '/lainnya/ayat-favorit', key: 'item_ayat_favorit', bg: 'var(--mint)', node: <FavoriteAyatIcon size={30} /> },
 ];
 
 export default function Lainnya() {
