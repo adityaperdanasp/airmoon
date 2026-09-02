@@ -5,6 +5,7 @@ import { useLang } from '../context/LangContext';
 import PageHeaderPhoto from '../components/PageHeaderPhoto';
 import { PAGE_PHOTOS } from '../data/photos';
 import { IconSearch } from '../components/icons';
+import ErrorRetry from '../components/ErrorRetry';
 
 export default function CariMasjid() {
   const { t } = useLang();
@@ -13,8 +14,10 @@ export default function CariMasjid() {
   const [mosques, setMosques] = useState([]);
   const [source, setSource] = useState(null);
   const [query, setQuery] = useState('');
+  const [retryTick, setRetryTick] = useState(0);
 
   useEffect(() => {
+    setStatus('loading');
     (async () => {
       try {
         const loc = await getLocation();
@@ -27,7 +30,7 @@ export default function CariMasjid() {
         setStatus(err.code === 1 ? 'denied' : 'error');
       }
     })();
-  }, []);
+  }, [retryTick]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -52,8 +55,8 @@ export default function CariMasjid() {
         )}
 
         {status === 'loading' && <div className="center" style={{ minHeight: 200 }}><div className="spinner" /></div>}
-        {status === 'denied' && <p className="state-msg">{t('loc_denied')}</p>}
-        {status === 'error' && <p className="state-msg">{t('loc_error')}</p>}
+        {status === 'denied' && <ErrorRetry message={t('loc_denied')} onRetry={() => setRetryTick((n) => n + 1)} />}
+        {status === 'error' && <ErrorRetry message={t('loc_error')} onRetry={() => setRetryTick((n) => n + 1)} />}
 
         {status === 'ready' && filtered.length === 0 && (
           <p className="state-msg">{t('no_mosques')}</p>

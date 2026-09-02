@@ -9,6 +9,7 @@ import PageHeaderPhoto from '../components/PageHeaderPhoto';
 import { PAGE_PHOTOS } from '../data/photos';
 import { IconMenu, IconSearch } from '../components/icons';
 import { SkeletonSurahRow } from '../components/Skeleton';
+import ErrorRetry from '../components/ErrorRetry';
 
 export default function SurahList() {
   const { user } = useAuth();
@@ -17,12 +18,14 @@ export default function SurahList() {
   const [query, setQuery] = useState('');
   const [lastReadAyat, setLastReadAyat] = useState(null);
   const [lastReadMushaf, setLastReadMushaf] = useState(null);
+  const [retryTick, setRetryTick] = useState(0);
 
   useEffect(() => {
+    setError('');
     fetchSurahList()
       .then(setSurahs)
-      .catch(() => setError('Gagal memuat daftar surat. Coba refresh halaman.'));
-  }, []);
+      .catch(() => setError('Gagal memuat daftar surat.'));
+  }, [retryTick]);
 
   useEffect(() => {
     if (!user) return;
@@ -168,7 +171,7 @@ export default function SurahList() {
           </Link>
         )}
 
-        {error && <p className="state-msg">{error}</p>}
+        {error && <ErrorRetry message={error} onRetry={() => setRetryTick((n) => n + 1)} />}
         {!surahs && !error && (
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             {Array.from({ length: 8 }).map((_, i) => (

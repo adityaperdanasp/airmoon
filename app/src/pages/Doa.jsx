@@ -5,6 +5,7 @@ import TopBar from '../components/TopBar';
 import BottomNav from '../components/BottomNav';
 import DoaCard from '../components/DoaCard';
 import { SkeletonCard } from '../components/Skeleton';
+import EmptyState from '../components/EmptyState';
 
 const MAX_LENGTH = 500;
 
@@ -115,9 +116,7 @@ export default function Doa() {
         )}
 
         {doas && doas.length === 0 && (
-          <div className="card" style={{ padding: 16, fontSize: 12.5, color: 'var(--muted)', textAlign: 'center' }}>
-            Belum ada doa. Jadilah yang pertama.
-          </div>
+          <EmptyState icon="🤲" title="Belum ada doa" subtitle='Tulis doamu lewat tombol "Tulis Doa" di atas — jadilah yang pertama.' />
         )}
 
         {doas && doas.length > 0 && (

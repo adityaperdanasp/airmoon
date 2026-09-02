@@ -6,6 +6,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import TopBar from '../components/TopBar';
 import { isNativeApp } from '../lib/notifications';
 import { AVATAR_COLORS, watchUserProfile, setAvatarColor } from '../lib/profile';
+import InstallAppCard from '../components/InstallAppCard';
 
 function SegButton({ active, onClick, children }) {
   return (
@@ -262,6 +263,8 @@ export default function Pengaturan() {
           <span className="section-label" style={{ color: 'var(--muted)', fontSize: 11.5, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
             {t('pengaturan_lainnya')}
           </span>
+
+          <InstallAppCard variant="settings" />
 
           <Link
             to="/privacy-policy"

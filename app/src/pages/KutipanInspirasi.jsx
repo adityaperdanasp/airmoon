@@ -3,20 +3,22 @@ import { useLang } from '../context/LangContext';
 import { fetchQuoteByIndex, todaysQuoteIndex } from '../lib/quotesApi';
 import { QUOTE_REFS } from '../data/quoteRefs';
 import TopBar from '../components/TopBar';
+import ErrorRetry from '../components/ErrorRetry';
 
 export default function KutipanInspirasi() {
   const { lang } = useLang();
   const [idx, setIdx] = useState(todaysQuoteIndex());
   const [quote, setQuote] = useState(null);
   const [error, setError] = useState('');
+  const [retryTick, setRetryTick] = useState(0);
 
   useEffect(() => {
     setQuote(null);
     setError('');
     fetchQuoteByIndex(idx)
       .then(setQuote)
-      .catch(() => setError(lang === 'en' ? 'Failed to load the quote. Try again.' : 'Gagal memuat kutipan. Coba lagi.'));
-  }, [idx]);
+      .catch(() => setError(lang === 'en' ? 'Failed to load the quote.' : 'Gagal memuat kutipan.'));
+  }, [idx, retryTick]);
 
   async function handleShare() {
     if (!quote) return;
@@ -30,7 +32,7 @@ export default function KutipanInspirasi() {
       <div className="screen-content">
         <TopBar title={lang === 'en' ? 'Daily Quote' : 'Kutipan Inspirasi'} subtitle={lang === 'en' ? '100 quotes, one new each day' : '100 kutipan, gonta-ganti tiap hari'} />
 
-        {error && <p className="state-msg">{error}</p>}
+        {error && <ErrorRetry message={error} onRetry={() => setRetryTick((n) => n + 1)} />}
 
         {!quote && !error && (
           <div className="center" style={{ minHeight: 260 }}>

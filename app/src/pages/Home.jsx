@@ -16,6 +16,9 @@ import DoaCard from '../components/DoaCard';
 import { IconBell, IconSearch, IconMoon } from '../components/icons';
 import { QiblaCompassIcon, QuranBookIcon, MosqueIcon, PrayerClockIcon } from '../components/serviceIcons';
 import { SkeletonCard } from '../components/Skeleton';
+import InstallAppCard from '../components/InstallAppCard';
+import EmptyState from '../components/EmptyState';
+import AmalanHarianCard from '../components/AmalanHarianCard';
 
 const dateFmt = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
@@ -221,9 +224,7 @@ export default function Home() {
         {showSedekahHistory && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {myContributions.length === 0 ? (
-              <div className="card" style={{ padding: 16, fontSize: 12.5, color: 'var(--muted)', textAlign: 'center' }}>
-                Belum ada donasi. Yuk mulai sedekah hari ini.
-              </div>
+              <EmptyState icon="💝" title="Belum ada riwayat sedekah" subtitle="Yuk mulai sedekah hari ini, sekecil apapun." actionLabel="Lihat Campaign" actionTo="/donasi" />
             ) : (
               myContributions.map((c) => (
                 <div
@@ -274,6 +275,10 @@ export default function Home() {
           </div>
         </Link>
 
+        {user && <AmalanHarianCard uid={user.uid} />}
+
+        <InstallAppCard variant="banner" />
+
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span className="section-label">{t('layanan')}</span>
@@ -323,9 +328,13 @@ export default function Home() {
             </div>
           )}
           {doas && doas.length === 0 && (
-            <div className="card" style={{ padding: 16, fontSize: 12.5, color: 'var(--muted)', textAlign: 'center' }}>
-              Belum ada doa. Jadilah yang pertama.
-            </div>
+            <EmptyState
+              icon="🤲"
+              title="Belum ada doa"
+              subtitle="Jadilah yang pertama nulis doa buat diaminkan sahabat lain."
+              actionLabel="Tulis Doa"
+              actionTo="/doa"
+            />
           )}
           {doas && doas.length > 0 && (
             <div style={{ display: 'flex', gap: 10, overflowX: 'auto', scrollSnapType: 'x mandatory', margin: '0 -20px', padding: '0 20px' }}>
@@ -340,9 +349,11 @@ export default function Home() {
           <span className="section-label">🕌 {t('donasi_kamu')}</span>
           {donations === null && <SkeletonCard height={140} />}
           {donations && donations.length === 0 && (
-            <div className="card" style={{ padding: 16, fontSize: 12.5, color: 'var(--muted)', textAlign: 'center' }}>
-              Belum ada campaign aktif saat ini.
-            </div>
+            <EmptyState
+              icon="🕌"
+              title="Belum ada campaign aktif"
+              subtitle="Campaign donasi listrik masjid baru bakal muncul di sini begitu ada yang disetujui."
+            />
           )}
           {donations && donations.length > 0 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>

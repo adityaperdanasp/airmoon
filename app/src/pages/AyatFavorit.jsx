@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { watchFavoriteAyat, removeFavoriteAyat } from '../lib/favoriteAyat';
 import TopBar from '../components/TopBar';
+import EmptyState from '../components/EmptyState';
 
 export default function AyatFavorit() {
   const { user } = useAuth();
@@ -16,9 +17,13 @@ export default function AyatFavorit() {
         <TopBar title="Ayat Favorit" subtitle={favorites ? `${favorites.length} ayat tersimpan` : 'Memuat…'} />
 
         {favorites?.length === 0 && (
-          <p style={{ fontSize: 12.5, color: 'var(--muted)', textAlign: 'center', padding: '24px 12px' }}>
-            Belum ada ayat favorit. Tap ikon bintang di bawah ayat saat membaca Mode Ayat buat menyimpannya di sini.
-          </p>
+          <EmptyState
+            icon="⭐"
+            title="Belum ada ayat favorit"
+            subtitle="Tap ikon bintang di bawah ayat saat baca Mode Ayat buat menyimpannya di sini."
+            actionLabel="Baca Qur'an"
+            actionTo="/quran"
+          />
         )}
 
         {favorites === null && (

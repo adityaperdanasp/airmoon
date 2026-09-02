@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import TopBar from '../components/TopBar';
 import { IconSearch } from '../components/icons';
 import { searchQuran } from '../lib/quranSearchApi';
+import ErrorRetry from '../components/ErrorRetry';
 
 export default function CariAyat() {
   const [q, setQ] = useState('');
@@ -10,20 +11,23 @@ export default function CariAyat() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  async function runSearch(e) {
-    e.preventDefault();
-    const term = q.trim();
+  async function doSearch(term) {
     if (!term) return;
     setLoading(true);
     setError('');
     try {
       setResults(await searchQuran(term));
     } catch {
-      setError('Gagal mencari ayat. Coba lagi.');
+      setError('Gagal mencari ayat.');
       setResults(null);
     } finally {
       setLoading(false);
     }
+  }
+
+  function runSearch(e) {
+    e.preventDefault();
+    doSearch(q.trim());
   }
 
   return (
@@ -47,7 +51,7 @@ export default function CariAyat() {
           </div>
         )}
 
-        {error && <p className="state-msg">{error}</p>}
+        {error && <ErrorRetry message={error} onRetry={() => doSearch(q.trim())} />}
 
         {!loading && results?.length === 0 && (
           <p className="state-msg">Gak ketemu ayat yang cocok dengan "{q}".</p>

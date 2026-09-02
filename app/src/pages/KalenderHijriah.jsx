@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLang } from '../context/LangContext';
 import PageHeaderPhoto from '../components/PageHeaderPhoto';
 import { PAGE_PHOTOS } from '../data/photos';
+import ErrorRetry from '../components/ErrorRetry';
 
 const WEEKDAY_KEYS = ['weekday_min', 'weekday_sen', 'weekday_sel', 'weekday_rab', 'weekday_kam', 'weekday_jum', 'weekday_sab'];
 
@@ -13,6 +14,7 @@ export default function KalenderHijriah() {
   });
   const [days, setDays] = useState(null);
   const [error, setError] = useState('');
+  const [retryTick, setRetryTick] = useState(0);
 
   useEffect(() => {
     setDays(null);
@@ -27,7 +29,7 @@ export default function KalenderHijriah() {
       // render (LangContext doesn't memoize it); including it here would refire this
       // fetch on every render instead of only when the month/year cursor changes.
       .catch(() => setError(t('kalender_error')));
-  }, [cursor]);
+  }, [cursor, retryTick]);
 
   function shiftMonth(delta) {
     setCursor(({ month, year }) => {
@@ -67,7 +69,7 @@ export default function KalenderHijriah() {
           </button>
         </div>
 
-        {error && <p className="state-msg">{error}</p>}
+        {error && <ErrorRetry message={error} onRetry={() => setRetryTick((n) => n + 1)} />}
 
         {days && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: 4 }}>

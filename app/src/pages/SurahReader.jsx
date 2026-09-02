@@ -10,6 +10,7 @@ import { watchFavoriteAyat, addFavoriteAyat, removeFavoriteAyat } from '../lib/f
 import { useNightMode, NIGHT_STYLE_VARS } from '../lib/readingPrefs';
 import TopBar from '../components/TopBar';
 import AyatCardModal from '../components/AyatCardModal';
+import ErrorRetry from '../components/ErrorRetry';
 
 function getReciterId() {
   return localStorage.getItem('airmoon-qari') || '05';
@@ -40,14 +41,15 @@ export default function SurahReader() {
   // fetch failure (or a reciter with no Quran.com match at all) falls back
   // to the plain per-ayat playback below rather than blocking anything.
   const wordSyncReady = hasWordSync(reciterId) && !!timing;
+  const [retryTick, setRetryTick] = useState(0);
 
   useEffect(() => {
     setSurah(null);
     setError('');
     fetchSurahDetail(nomor)
       .then(setSurah)
-      .catch(() => setError('Gagal memuat surat. Coba lagi.'));
-  }, [nomor]);
+      .catch(() => setError('Gagal memuat surat.'));
+  }, [nomor, retryTick]);
 
   // Deep-link from Cari Ayat: once the surah's real content is in the DOM,
   // scroll the target ayat into view and give it a brief highlight ring —
@@ -189,7 +191,7 @@ export default function SurahReader() {
       <div className="screen">
         <div className="screen-content">
           <TopBar title="Al-Qur'an" />
-          <p className="state-msg">{error}</p>
+          <ErrorRetry message={error} onRetry={() => setRetryTick((n) => n + 1)} />
         </div>
       </div>
     );

@@ -7,6 +7,7 @@ import { fetchChapters, fetchMushafPage, layoutPage, TOTAL_MUSHAF_PAGES, TAJWEED
 import { fetchSurahDetail } from '../lib/quranApi';
 import { useNightMode, NIGHT_STYLE_VARS } from '../lib/readingPrefs';
 import { IconBack } from '../components/icons';
+import ErrorRetry from '../components/ErrorRetry';
 
 // Same Bismillah text as Al-Fatihah's own first ayah, standard convention
 // for rendering it as a separate banner line before a new surah — every
@@ -344,6 +345,7 @@ export default function MushafReader() {
   const [chapters, setChapters] = useState(null);
   const [verses, setVerses] = useState(null);
   const [error, setError] = useState('');
+  const [retryTick, setRetryTick] = useState(0);
   const [bookmarkedVerseKey, setBookmarkedVerseKey] = useState(null);
   const [actionSheetVerseKey, setActionSheetVerseKey] = useState(null);
   const [tajwidOn, setTajwidOn] = useState(() => localStorage.getItem('airmoon-mushaf-tajwid') === '1');
@@ -387,15 +389,15 @@ export default function MushafReader() {
     fetchChapters()
       .then(setChapters)
       .catch(() => setError('Gagal memuat data surat.'));
-  }, []);
+  }, [retryTick]);
 
   useEffect(() => {
     setVerses(null);
     setError('');
     fetchMushafPage(page)
       .then(setVerses)
-      .catch(() => setError('Gagal memuat halaman mushaf. Coba lagi.'));
-  }, [page]);
+      .catch(() => setError('Gagal memuat halaman mushaf.'));
+  }, [page, retryTick]);
 
   function goTo(n) {
     if (n < 1 || n > TOTAL_MUSHAF_PAGES) return;
@@ -502,7 +504,7 @@ export default function MushafReader() {
           </div>
         </div>
 
-        {error && <p className="state-msg">{error}</p>}
+        {error && <ErrorRetry message={error} onRetry={() => setRetryTick((n) => n + 1)} />}
 
         {!error && !verses && (
           <div className="center" style={{ minHeight: '50vh' }}>

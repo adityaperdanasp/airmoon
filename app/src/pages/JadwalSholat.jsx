@@ -3,11 +3,12 @@ import { Link } from 'react-router-dom';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { usePrayerTimes } from '../lib/usePrayerTimes';
 import { useAuth } from '../context/AuthContext';
-import { enablePrayerNotifications, disablePrayerNotifications } from '../lib/notifications';
+import { enablePrayerNotifications, disablePrayerNotifications, isNativeApp } from '../lib/notifications';
 import { db } from '../lib/firebase';
 import PageHeaderPhoto from '../components/PageHeaderPhoto';
 import { PAGE_PHOTOS } from '../data/photos';
 import BottomNav from '../components/BottomNav';
+import NotificationPrimer from '../components/NotificationPrimer';
 
 // Background push (works with the app closed) — Firestore's notifEnabled
 // flag is the source of truth, kept live via onSnapshot so a toggle flipped
@@ -51,6 +52,27 @@ export default function JadwalSholat() {
   const location = data ? { lat: data.lat, lng: data.lng } : null;
   const { enabled, toggle, busy, error: notifError } = useNotifyToggle(user?.uid, location);
   const adzanSound = localStorage.getItem('airmoon-adzan-sound') || 'Adzan Makkah';
+  const [showPrimer, setShowPrimer] = useState(false);
+
+  // Prime before the browser's own permission prompt, but only the very
+  // first time — once `Notification.permission` is anything other than
+  // 'default' (already granted or denied), the OS-level dialog won't fire
+  // again anyway, so re-explaining would just be an extra tap for nothing.
+  // isNativeApp() has its own separate native permission flow (Android's
+  // POST_NOTIFICATIONS, requested by MainActivity.kt, not this JS path) —
+  // this priming screen has nothing to gate there.
+  function handleToggleClick() {
+    const needsPriming =
+      !enabled &&
+      !isNativeApp() &&
+      typeof Notification !== 'undefined' &&
+      Notification.permission === 'default';
+    if (needsPriming) {
+      setShowPrimer(true);
+      return;
+    }
+    toggle();
+  }
 
   return (
     <div className="screen">
@@ -137,7 +159,7 @@ export default function JadwalSholat() {
                 </div>
               </div>
               <button
-                onClick={toggle}
+                onClick={handleToggleClick}
                 disabled={busy}
                 style={{
                   width: 42,
@@ -190,6 +212,16 @@ export default function JadwalSholat() {
         )}
       </div>
       <BottomNav />
+
+      {showPrimer && (
+        <NotificationPrimer
+          onCancel={() => setShowPrimer(false)}
+          onConfirm={() => {
+            setShowPrimer(false);
+            toggle();
+          }}
+        />
+      )}
     </div>
   );
 }
