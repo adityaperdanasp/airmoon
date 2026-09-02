@@ -111,6 +111,8 @@ export default function KartuUcapan() {
               <button
                 key={t.id}
                 onClick={() => setTplId(t.id)}
+                aria-label={`Template ${t.title}`}
+                aria-pressed={t.id === tplId}
                 style={{
                   width: 56,
                   height: 70,

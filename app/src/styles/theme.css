@@ -349,6 +349,24 @@ a:active {
   opacity: 0.75;
 }
 
+/* Keyboard focus ring (2026-09-02) — the browser's own default outline
+   often gets visually lost on this app's circular icon-btns and pill-
+   shaped buttons (clipped oddly by border-radius, or just low-contrast
+   against a colored background), which left keyboard/switch-device
+   navigation with no reliable "where am I" indicator. :focus-visible
+   (not a bare :focus) so this only shows for keyboard/programmatic focus,
+   never as a lingering ring after a mouse/touch tap — matching how every
+   modern browser already treats the two differently. */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
 .screen {
   animation: screen-enter 0.22s ease both;
 }

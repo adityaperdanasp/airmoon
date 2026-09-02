@@ -195,6 +195,25 @@ function ProfileCard() {
   );
 }
 
+const SHARE_TEXT = "Yuk pakai airmoon — baca Qur'an, jadwal sholat, & donasi listrik masjid langsung dari HP kamu.";
+const SHARE_URL = 'https://airmoon.vercel.app';
+
+// navigator.share() (the real OS share sheet — WhatsApp, Telegram, SMS,
+// whatever's installed) when available; WhatsApp's own wa.me deep link as
+// the fallback for browsers that don't support it (mainly desktop) rather
+// than a dead button.
+async function handleShareApp() {
+  if (navigator.share) {
+    try {
+      await navigator.share({ title: 'airmoon', text: SHARE_TEXT, url: SHARE_URL });
+    } catch {
+      // Share sheet cancelled by the user — nothing to do.
+    }
+    return;
+  }
+  window.open(`https://wa.me/?text=${encodeURIComponent(`${SHARE_TEXT} ${SHARE_URL}`)}`, '_blank');
+}
+
 export default function Pengaturan() {
   const { t, lang, setLang } = useLang();
   const { theme, setTheme } = useTheme();
@@ -265,6 +284,34 @@ export default function Pengaturan() {
           </span>
 
           <InstallAppCard variant="settings" />
+
+          <button
+            onClick={handleShareApp}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '14px 16px',
+              borderRadius: 18,
+              border: '1px solid var(--border)',
+              background: 'none',
+              textAlign: 'left',
+              cursor: 'pointer',
+              color: 'inherit',
+              fontFamily: 'inherit',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: 'var(--mint)' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)">
+                  <circle cx="18" cy="5" r="2.6" strokeWidth="1.6" /><circle cx="6" cy="12" r="2.6" strokeWidth="1.6" /><circle cx="18" cy="19" r="2.6" strokeWidth="1.6" />
+                  <path d="m8.3 10.7 7.4-4.2M8.3 13.3l7.4 4.2" strokeWidth="1.6" strokeLinecap="round" />
+                </svg>
+              </div>
+              <span style={{ fontSize: 13, fontWeight: 700 }}>Ajak Teman Pakai airmoon</span>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)"><path d="m9 6 6 6-6 6" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+          </button>
 
           <Link
             to="/privacy-policy"

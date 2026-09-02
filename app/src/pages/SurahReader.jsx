@@ -427,6 +427,7 @@ export default function SurahReader() {
         >
           <button
             onClick={() => audioRef.current?.pause()}
+            aria-label="Jeda"
             style={{ width: 40, height: 40, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: 'var(--primary)', border: 'none', cursor: 'pointer' }}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--on-primary)" stroke="none"><rect x="6" y="5" width="4" height="14" rx="1" /><rect x="14" y="5" width="4" height="14" rx="1" /></svg>

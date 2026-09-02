@@ -53,7 +53,7 @@ export default function KalenderHijriah() {
         <PageHeaderPhoto title={t('item_kalender_hijriah')} photo={PAGE_PHOTOS.kalenderHijriah} />
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderRadius: 16, background: 'var(--primary)' }}>
-          <button onClick={() => shiftMonth(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--on-primary)' }}>
+          <button onClick={() => shiftMonth(-1)} aria-label="Bulan sebelumnya" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--on-primary)' }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--on-primary)"><path d="m15 5-7 7 7 7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
           </button>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
@@ -64,7 +64,7 @@ export default function KalenderHijriah() {
               {new Date(cursor.year, cursor.month - 1).toLocaleDateString(lang === 'en' ? 'en-US' : 'id-ID', { month: 'long', year: 'numeric' })}
             </span>
           </div>
-          <button onClick={() => shiftMonth(1)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--on-primary)' }}>
+          <button onClick={() => shiftMonth(1)} aria-label="Bulan berikutnya" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--on-primary)' }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--on-primary)"><path d="m9 5 7 7-7 7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
           </button>
         </div>

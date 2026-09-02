@@ -7,6 +7,7 @@ import { usePrayerTimes } from '../lib/usePrayerTimes';
 import { watchActiveDonations, watchMyContributions } from '../lib/donations';
 import { watchUserProfile } from '../lib/profile';
 import { watchDoas } from '../lib/doa';
+import { markSeen } from '../lib/unseenBadges';
 import { HEADLINES, todaysHeadlineIndex } from '../data/headlines';
 import { todaysHomePhoto } from '../data/photos';
 import { formatRupiah } from '../lib/zakat';
@@ -90,6 +91,16 @@ export default function Home() {
   useEffect(() => watchActiveDonations(setDonations), []);
   useEffect(() => watchUserProfile(user?.uid, (p) => setAvatarColor(p?.avatarColor || null)), [user?.uid]);
   useEffect(() => watchDoas(setDoas), []);
+
+  // Marked seen on the way out, not on mount — so BottomNav's dot stays
+  // visible for as long as this page (which shows both feeds inline) was
+  // actually open, rather than clearing itself the instant it appears.
+  useEffect(() => {
+    return () => {
+      markSeen('doa');
+      markSeen('donasi');
+    };
+  }, []);
 
   useEffect(() => {
     if (!user) return;

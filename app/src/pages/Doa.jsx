@@ -6,6 +6,7 @@ import BottomNav from '../components/BottomNav';
 import DoaCard from '../components/DoaCard';
 import { SkeletonCard } from '../components/Skeleton';
 import EmptyState from '../components/EmptyState';
+import { markSeen } from '../lib/unseenBadges';
 
 const MAX_LENGTH = 500;
 
@@ -99,6 +100,10 @@ export default function Doa() {
   const [doas, setDoas] = useState(null);
 
   useEffect(() => watchDoas(setDoas), []);
+
+  useEffect(() => {
+    return () => markSeen('doa');
+  }, []);
 
   return (
     <div className="screen">

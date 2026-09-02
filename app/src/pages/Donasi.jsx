@@ -4,6 +4,7 @@ import { formatRupiah } from '../lib/zakat';
 import { useAuth } from '../context/AuthContext';
 import BottomNav from '../components/BottomNav';
 import DonationCard from '../components/DonationCard';
+import { markSeen } from '../lib/unseenBadges';
 
 const dateFmt = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
@@ -69,6 +70,10 @@ export default function Donasi() {
     if (!user) return;
     return watchMyContributions(user.uid, setMyContributions);
   }, [user]);
+
+  useEffect(() => {
+    return () => markSeen('donasi');
+  }, []);
 
   const myTotal = myContributions.reduce((sum, c) => sum + c.amount, 0);
 
