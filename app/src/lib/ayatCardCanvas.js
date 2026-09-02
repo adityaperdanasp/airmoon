@@ -1,10 +1,11 @@
-// Draws a shareable "Ayat Card" (Arabic + Indonesian translation + a small
-// airmoon footer) onto a <canvas> — plain Canvas 2D, no html2canvas/library
-// dependency, since the content here is just gradient + wrapped text, well
-// within what fillText/measureText can do directly (and canvas text
-// rendering already goes through the browser's normal font-shaping engine,
-// so Arabic joining/ligatures render correctly as long as the font itself
-// is loaded first — see ensureFontsReady below).
+// Draws a shareable "Ayat Card" (a real photo backdrop + Arabic +
+// Indonesian translation + a small airmoon footer) onto a <canvas> —
+// plain Canvas 2D, no html2canvas/library dependency: drawImage + gradient
+// fills + wrapped fillText, all native canvas primitives. Canvas text
+// rendering already goes through the browser's normal font-shaping
+// engine, so Arabic joining/ligatures render correctly as long as the
+// font itself is loaded first — see ensureFontsReady below.
+import { HOME_PHOTOS_LIGHT, HOME_PHOTOS_DARK } from '../data/photos';
 
 const W = 1080;
 const H = 1350;
@@ -19,6 +20,24 @@ async function ensureFontsReady() {
     document.fonts.load('800 40px Poppins'),
     document.fonts.load('600 30px Poppins'),
   ]);
+}
+
+function loadImage(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = src;
+  });
+}
+
+// Same object-fit: cover math the CSS property does — scale up to
+// whichever dimension needs it more, then center-crop the overflow.
+function drawImageCover(ctx, img) {
+  const scale = Math.max(W / img.width, H / img.height);
+  const w = img.width * scale;
+  const h = img.height * scale;
+  ctx.drawImage(img, (W - w) / 2, (H - h) / 2, w, h);
 }
 
 // Greedy word-wrap: splits `text` on spaces and packs words onto lines no
@@ -41,24 +60,51 @@ function wrapLines(ctx, text, maxWidth) {
   return lines;
 }
 
-export async function drawAyatCard(canvas, { arabic, translation, chapterName, verse }) {
+export async function drawAyatCard(canvas, { arabic, translation, chapterName, chapter, verse, theme = 'light' }) {
   canvas.width = W;
   canvas.height = H;
   const ctx = canvas.getContext('2d');
 
   await ensureFontsReady();
 
-  const grad = ctx.createLinearGradient(0, 0, W, H);
-  grad.addColorStop(0, '#0d4d47');
-  grad.addColorStop(1, '#0a3630');
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, W, H);
+  // Same rotating photo pool Home.jsx's own header uses (theme-aware),
+  // picked deterministically from chapter+verse rather than randomly — the
+  // same ayat always gets the same backdrop instead of a different one
+  // every time the card is regenerated, and a variety of ayat shared to
+  // the same feed don't all show the identical photo. Same-origin images
+  // (served from this app's own /photos/) never taint the canvas, so no
+  // crossOrigin dance is needed before toBlob()/toDataURL() later.
+  const pool = theme === 'dark' ? HOME_PHOTOS_DARK : HOME_PHOTOS_LIGHT;
+  const photoSrc = pool[(chapter * 31 + verse) % pool.length];
 
-  // A soft radial glow behind the text block, purely decorative.
-  const glow = ctx.createRadialGradient(W / 2, H * 0.38, 40, W / 2, H * 0.38, W * 0.7);
-  glow.addColorStop(0, 'rgba(232,184,75,0.14)');
-  glow.addColorStop(1, 'rgba(232,184,75,0)');
-  ctx.fillStyle = glow;
+  try {
+    const img = await loadImage(photoSrc);
+    drawImageCover(ctx, img);
+  } catch {
+    // Photo failed to load (offline, etc.) — fall back to the flat
+    // gradient this card used before photos were added, rather than
+    // leaving a blank canvas.
+    const fallback = ctx.createLinearGradient(0, 0, W, H);
+    fallback.addColorStop(0, '#0d4d47');
+    fallback.addColorStop(1, '#0a3630');
+    ctx.fillStyle = fallback;
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  // Brand-tinted overlay over the photo — same theme-aware gradient
+  // treatment Home.jsx's header photo and KutipanInspirasi.jsx's quote
+  // card both use, so this reads as "this app's card" rather than a bare
+  // stock photo with text pasted on top, and keeps the text legible
+  // regardless of how bright the underlying photo is.
+  const overlay = ctx.createLinearGradient(0, 0, W, H);
+  if (theme === 'dark') {
+    overlay.addColorStop(0, 'rgba(11,12,10,0.55)');
+    overlay.addColorStop(1, 'rgba(11,12,10,0.9)');
+  } else {
+    overlay.addColorStop(0, 'rgba(13,77,71,0.6)');
+    overlay.addColorStop(1, 'rgba(10,54,48,0.88)');
+  }
+  ctx.fillStyle = overlay;
   ctx.fillRect(0, 0, W, H);
 
   // Thin gold frame, matching the app's teal/gold palette.

@@ -26,6 +26,17 @@ export const IconHome = (p) => (
   </svg>
 );
 
+// BottomNav's "Lainnya" tab (2026-09-02) — a 2x2 grid, the standard "more"
+// glyph, matching the same stroke-icon style as the rest of this file.
+export const IconGrid = (p) => (
+  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" {...p}>
+    <rect x="4" y="4" width="7" height="7" rx="1.5" strokeWidth="1.8" />
+    <rect x="13" y="4" width="7" height="7" rx="1.5" strokeWidth="1.8" />
+    <rect x="4" y="13" width="7" height="7" rx="1.5" strokeWidth="1.8" />
+    <rect x="13" y="13" width="7" height="7" rx="1.5" strokeWidth="1.8" />
+  </svg>
+);
+
 export const IconBook = (p) => (
   <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" {...p}>
     <path d="M5 4.5C5 3.7 5.7 3 6.5 3H17a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6.5A1.5 1.5 0 0 1 5 19.5v-15Z" strokeWidth="1.8" strokeLinejoin="round" />

@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react';
 import { useLang } from '../context/LangContext';
+import { useTheme } from '../context/ThemeContext';
 import { fetchQuoteByIndex, todaysQuoteIndex } from '../lib/quotesApi';
 import { QUOTE_REFS } from '../data/quoteRefs';
+import { HOME_PHOTOS_LIGHT, HOME_PHOTOS_DARK } from '../data/photos';
 import TopBar from '../components/TopBar';
 import ErrorRetry from '../components/ErrorRetry';
 
 export default function KutipanInspirasi() {
   const { lang } = useLang();
+  const { theme } = useTheme();
   const [idx, setIdx] = useState(todaysQuoteIndex());
   const [quote, setQuote] = useState(null);
   const [error, setError] = useState('');
@@ -51,20 +54,42 @@ export default function KutipanInspirasi() {
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                gap: 18,
-                textAlign: 'center',
-                background: `linear-gradient(160deg, var(--primary), var(--primary-dark))`,
-                minHeight: 300,
                 justifyContent: 'center',
+                minHeight: 300,
               }}
             >
-              <span style={{ fontFamily: "'Amiri', serif", fontSize: 26, lineHeight: 1.9, color: '#fff', direction: 'rtl' }}>
-                {quote.arabic}
-              </span>
-              <span style={{ fontSize: 13.5, lineHeight: 1.6, color: 'rgba(255,255,255,0.85)', fontStyle: 'italic' }}>
-                "{quote[lang]}"
-              </span>
-              <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--accent)' }}>{quote.source}</span>
+              {/* A real photo backdrop instead of a flat gradient — reuses
+                  Home's own rotating pool (theme-aware, one per idx so
+                  browsing "Next" through quotes also cycles the backdrop)
+                  rather than a dedicated quote-only photo set. Same
+                  brand-tinted overlay gradient + opacity values Home.jsx's
+                  own header photo already uses for both themes, so this
+                  reads as "this app's card", not a stock photo with text
+                  pasted on top. */}
+              <img
+                src={(theme === 'dark' ? HOME_PHOTOS_DARK : HOME_PHOTOS_LIGHT)[idx % (theme === 'dark' ? HOME_PHOTOS_DARK : HOME_PHOTOS_LIGHT).length]}
+                alt=""
+                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  background:
+                    theme === 'dark'
+                      ? 'linear-gradient(160deg, rgba(11,12,10,0.55) 0%, rgba(11,12,10,0.88) 100%)'
+                      : 'linear-gradient(160deg, rgba(13,77,71,0.62) 0%, rgba(13,77,71,0.85) 100%)',
+                }}
+              />
+              <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18, textAlign: 'center' }}>
+                <span style={{ fontFamily: "'Amiri', serif", fontSize: 26, lineHeight: 1.9, color: '#fff', direction: 'rtl' }}>
+                  {quote.arabic}
+                </span>
+                <span style={{ fontSize: 13.5, lineHeight: 1.6, color: 'rgba(255,255,255,0.85)', fontStyle: 'italic' }}>
+                  "{quote[lang]}"
+                </span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--accent)' }}>{quote.source}</span>
+              </div>
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, flexWrap: 'wrap' }}>

@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
 import { useLang } from '../context/LangContext';
 import { useTheme } from '../context/ThemeContext';
@@ -20,6 +22,7 @@ import { SkeletonCard } from '../components/Skeleton';
 import InstallAppCard from '../components/InstallAppCard';
 import EmptyState from '../components/EmptyState';
 import AmalanHarianCard from '../components/AmalanHarianCard';
+import PullToRefresh from '../components/PullToRefresh';
 
 const dateFmt = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
@@ -87,10 +90,42 @@ export default function Home() {
   const [showSedekahHistory, setShowSedekahHistory] = useState(false);
   const [doas, setDoas] = useState(null);
   const [avatarColor, setAvatarColor] = useState(null);
+  const [lastReadAyat, setLastReadAyat] = useState(null);
+  const [lastReadMushaf, setLastReadMushaf] = useState(null);
 
   useEffect(() => watchActiveDonations(setDonations), []);
   useEffect(() => watchUserProfile(user?.uid, (p) => setAvatarColor(p?.avatarColor || null)), [user?.uid]);
   useEffect(() => watchDoas(setDoas), []);
+
+  // Same lastReadAyat/lastRead fallback SurahList.jsx uses — see that
+  // file's own comment for why the older field name still has to be
+  // checked (bookmarks saved before Mode Mushaf got its own separate
+  // field). A "Lanjut Baca" quick-access row here means resuming a read
+  // doesn't require going through SurahList first.
+  async function refreshLastRead() {
+    if (!user) return;
+    const snap = await getDoc(doc(db, 'users', user.uid));
+    const data = snap.data();
+    const ayatBookmark = data?.lastReadAyat || data?.lastRead;
+    if (ayatBookmark) setLastReadAyat(ayatBookmark);
+    if (data?.lastReadMushaf) setLastReadMushaf(data.lastReadMushaf);
+  }
+
+  useEffect(() => {
+    refreshLastRead();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- refreshLastRead
+    // is redefined every render (not memoized); including it here would
+    // refire this on every render instead of only when the user changes.
+  }, [user]);
+
+  // The doa/donation feeds below are already onSnapshot-live (nothing to
+  // re-fetch there), so pulling down mainly re-checks the last-read
+  // bookmark — still a real fetch, not just gesture theater — plus gives
+  // the expected tactile "did something" feedback on a page whose other
+  // data updates itself anyway.
+  async function handlePullRefresh() {
+    await refreshLastRead();
+  }
 
   // Marked seen on the way out, not on mount — so BottomNav's dot stays
   // visible for as long as this page (which shows both feeds inline) was
@@ -117,6 +152,7 @@ export default function Home() {
   return (
     <div className="screen">
       <div className="screen-content">
+      <PullToRefresh onRefresh={handlePullRefresh}>
         <div
           style={{
             position: 'relative',
@@ -288,6 +324,41 @@ export default function Home() {
 
         {user && <AmalanHarianCard uid={user.uid} />}
 
+        {(lastReadAyat || lastReadMushaf) && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {lastReadAyat && (
+              <Link
+                to={`/quran/${lastReadAyat.nomor}`}
+                style={{ display: 'flex', alignItems: 'center', gap: 12, borderRadius: 18, padding: '12px 15px', background: 'var(--cream)', textDecoration: 'none', color: 'inherit' }}
+              >
+                <div style={{ width: 34, height: 34, borderRadius: 11, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: 'rgba(255,255,255,0.55)' }}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--gold-ink)"><path d="M8 5.5v13l11-6.5-11-6.5Z" /></svg>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 1, flex: 1, minWidth: 0 }}>
+                  <span style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--muted)' }}>Lanjut Baca &middot; Mode Ayat</span>
+                  <span style={{ fontSize: 13, fontWeight: 800 }}>{lastReadAyat.namaLatin} &middot; Ayat {lastReadAyat.ayat}</span>
+                </div>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)"><path d="m9 6 6 6-6 6" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              </Link>
+            )}
+            {lastReadMushaf && (
+              <Link
+                to={`/quran/mushaf/${lastReadMushaf.page}?ayat=${lastReadMushaf.verseKey}`}
+                style={{ display: 'flex', alignItems: 'center', gap: 12, borderRadius: 18, padding: '12px 15px', background: 'var(--mint)', textDecoration: 'none', color: 'inherit' }}
+              >
+                <div style={{ width: 34, height: 34, borderRadius: 11, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: 'rgba(255,255,255,0.55)' }}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--primary)"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H12v18H6.5A2.5 2.5 0 0 1 4 18.5v-13Z" strokeWidth="1.6" strokeLinejoin="round" /><path d="M20 5.5A2.5 2.5 0 0 0 17.5 3H12v18h5.5a2.5 2.5 0 0 0 2.5-2.5v-13Z" strokeWidth="1.6" strokeLinejoin="round" /></svg>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 1, flex: 1, minWidth: 0 }}>
+                  <span style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--muted)' }}>Lanjut Baca &middot; Mode Mushaf</span>
+                  <span style={{ fontSize: 13, fontWeight: 800 }}>{lastReadMushaf.chapterName} &middot; Halaman {lastReadMushaf.page}</span>
+                </div>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)"><path d="m9 6 6 6-6 6" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              </Link>
+            )}
+          </div>
+        )}
+
         <InstallAppCard variant="banner" />
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -374,6 +445,7 @@ export default function Home() {
             </div>
           )}
         </div>
+      </PullToRefresh>
       </div>
       <BottomNav />
     </div>

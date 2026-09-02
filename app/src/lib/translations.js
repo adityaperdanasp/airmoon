@@ -4,6 +4,7 @@ export const translations = {
     nav_quran: "Qur'an",
     nav_donasi: 'Donasi',
     nav_umroh: 'Umroh Needs',
+    nav_lainnya: 'Lainnya',
     greeting: "Assalamu'alaikum",
     headline: 'Sedekah hari ini,\nberkah esok hari',
     search_placeholder: 'Tanya AI Sedekah…',
@@ -44,6 +45,7 @@ export const translations = {
     tampilan_sub: 'Sesuaikan tema terang atau gelap',
     light: 'Light',
     dark: 'Dark',
+    system: 'Sistem',
     loading: 'Memuat…',
     error_generic: 'Ada yang salah, coba lagi ya.',
 
@@ -143,6 +145,7 @@ export const translations = {
     nav_quran: "Qur'an",
     nav_donasi: 'Donate',
     nav_umroh: 'Umroh Needs',
+    nav_lainnya: 'More',
     greeting: 'Assalamu’alaikum',
     headline: 'Give today,\nblessed tomorrow',
     search_placeholder: 'Ask AI Sedekah…',
@@ -183,6 +186,7 @@ export const translations = {
     tampilan_sub: 'Adjust light or dark theme',
     light: 'Light',
     dark: 'Dark',
+    system: 'System',
     loading: 'Loading…',
     error_generic: 'Something went wrong, please try again.',
 

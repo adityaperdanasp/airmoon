@@ -3,6 +3,7 @@ import { useLang } from '../context/LangContext';
 import PageHeaderPhoto from '../components/PageHeaderPhoto';
 import { PAGE_PHOTOS } from '../data/photos';
 import ErrorRetry from '../components/ErrorRetry';
+import { Skeleton } from '../components/Skeleton';
 
 const WEEKDAY_KEYS = ['weekday_min', 'weekday_sen', 'weekday_sel', 'weekday_rab', 'weekday_kam', 'weekday_jum', 'weekday_sab'];
 
@@ -102,7 +103,13 @@ export default function KalenderHijriah() {
           </div>
         )}
 
-        {!days && !error && <div className="center" style={{ minHeight: 200 }}><div className="spinner" /></div>}
+        {!days && !error && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: 4 }}>
+            {Array.from({ length: 35 }).map((_, i) => (
+              <Skeleton key={i} height={44} radius={10} />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

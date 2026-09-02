@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useLang } from '../context/LangContext';
 import { useTheme } from '../context/ThemeContext';
+import { useToast } from '../context/ToastContext';
 import { useNavigate, Link } from 'react-router-dom';
 import TopBar from '../components/TopBar';
 import { isNativeApp } from '../lib/notifications';
 import { AVATAR_COLORS, watchUserProfile, setAvatarColor } from '../lib/profile';
 import InstallAppCard from '../components/InstallAppCard';
+import ConfirmDialog from '../components/ConfirmDialog';
 
 function SegButton({ active, onClick, children }) {
   return (
@@ -97,6 +99,7 @@ function AzanSoundPicker() {
 // option without needing new upload infrastructure.
 function ProfileCard() {
   const { user, updateDisplayName } = useAuth();
+  const { showToast } = useToast();
   const [name, setName] = useState(user?.displayName || '');
   const [savingName, setSavingName] = useState(false);
   const [nameSaved, setNameSaved] = useState(false);
@@ -174,7 +177,9 @@ function ProfileCard() {
                 aria-label={c.id}
                 onClick={() => {
                   setAvatarColorState(c.hex);
-                  setAvatarColor(user.uid, c.hex).catch(() => setAvatarColorState(avatarColor));
+                  setAvatarColor(user.uid, c.hex)
+                    .then(() => showToast('Warna avatar disimpan'))
+                    .catch(() => setAvatarColorState(avatarColor));
                 }}
                 style={{
                   width: 34,
@@ -216,9 +221,10 @@ async function handleShareApp() {
 
 export default function Pengaturan() {
   const { t, lang, setLang } = useLang();
-  const { theme, setTheme } = useTheme();
+  const { preference: themePreference, setTheme } = useTheme();
   const { logOut } = useAuth();
   const navigate = useNavigate();
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   return (
     <div className="screen">
@@ -270,8 +276,9 @@ export default function Pengaturan() {
               </div>
             </div>
             <div style={{ display: 'flex', padding: 3, borderRadius: 999, background: 'var(--mint-soft)' }}>
-              <SegButton active={theme === 'light'} onClick={() => setTheme('light')}>{t('light')}</SegButton>
-              <SegButton active={theme === 'dark'} onClick={() => setTheme('dark')}>{t('dark')}</SegButton>
+              <SegButton active={themePreference === 'light'} onClick={() => setTheme('light')}>{t('light')}</SegButton>
+              <SegButton active={themePreference === 'dark'} onClick={() => setTheme('dark')}>{t('dark')}</SegButton>
+              <SegButton active={themePreference === 'system'} onClick={() => setTheme('system')}>{t('system')}</SegButton>
             </div>
           </div>
 
@@ -333,15 +340,27 @@ export default function Pengaturan() {
           <button
             className="btn-outline"
             style={{ color: 'var(--danger)', borderColor: 'var(--danger)' }}
-            onClick={async () => {
-              await logOut();
-              navigate('/login');
-            }}
+            onClick={() => setShowLogoutConfirm(true)}
           >
             {t('keluar')}
           </button>
         </div>
       </div>
+
+      {showLogoutConfirm && (
+        <ConfirmDialog
+          title="Keluar dari akun?"
+          message="Kamu bisa masuk lagi kapan aja pakai email & password yang sama."
+          confirmLabel="Ya, Keluar"
+          danger
+          onCancel={() => setShowLogoutConfirm(false)}
+          onConfirm={async () => {
+            setShowLogoutConfirm(false);
+            await logOut();
+            navigate('/login');
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { drawAyatCard, canvasToFile } from '../lib/ayatCardCanvas';
+import { useTheme } from '../context/ThemeContext';
 
 // A shareable "Ayat Card" preview — renders the same canvas used for
 // sharing/downloading directly on screen (scaled down via CSS width, the
@@ -8,19 +9,20 @@ import { drawAyatCard, canvasToFile } from '../lib/ayatCardCanvas';
 // a dataURL <img>.
 export default function AyatCardModal({ ayat, onClose }) {
   const canvasRef = useRef(null);
+  const { theme } = useTheme();
   const [ready, setReady] = useState(false);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     setReady(false);
-    drawAyatCard(canvasRef.current, ayat).then(() => {
+    drawAyatCard(canvasRef.current, { ...ayat, theme }).then(() => {
       if (!cancelled) setReady(true);
     });
     return () => {
       cancelled = true;
     };
-  }, [ayat]);
+  }, [ayat, theme]);
 
   async function handleShare() {
     setBusy(true);

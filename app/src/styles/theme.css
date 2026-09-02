@@ -21,6 +21,7 @@
   --success: #178f4c;
   --success-bg: #e3f5ea;
   --danger: #d92d2d;
+  --on-danger: #ffffff;
   --shadow-card: 0 24px 60px rgba(15, 32, 25, 0.12);
   --shadow-pill: 0 16px 40px rgba(13, 77, 71, 0.16);
 }
@@ -76,6 +77,12 @@
   --success: #4fbf82;
   --success-bg: rgba(79, 191, 130, 0.14);
   --danger: #ff6b6b;
+  /* White text on this dark-theme danger red fails WCAG AA outright
+     (~2.8:1, computed — below even the 3:1 floor for bold text), unlike
+     light theme's --danger where white passes comfortably (~4.8:1). Found
+     while adding ConfirmDialog.jsx's danger button, same category of bug
+     as --on-primary/--on-gold above. */
+  --on-danger: #2b0906;
   --shadow-card: 0 24px 60px rgba(0, 0, 0, 0.45);
   --shadow-pill: 0 16px 40px rgba(0, 0, 0, 0.5);
 }
@@ -387,6 +394,17 @@ textarea:focus-visible,
   }
   to {
     opacity: 1;
+  }
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 

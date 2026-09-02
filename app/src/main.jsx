@@ -6,6 +6,7 @@ import App from './App.jsx';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { LangProvider } from './context/LangContext';
+import { ToastProvider } from './context/ToastContext';
 
 // Registered unconditionally now (not just when someone opts into prayer
 // notifications, see lib/notifications.js) so its offline-caching fetch
@@ -25,11 +26,13 @@ createRoot(document.getElementById('root')).render(
   <StrictMode>
     <ThemeProvider>
       <LangProvider>
-        <BrowserRouter>
-          <AuthProvider>
-            <App />
-          </AuthProvider>
-        </BrowserRouter>
+        <ToastProvider>
+          <BrowserRouter>
+            <AuthProvider>
+              <App />
+            </AuthProvider>
+          </BrowserRouter>
+        </ToastProvider>
       </LangProvider>
     </ThemeProvider>
   </StrictMode>

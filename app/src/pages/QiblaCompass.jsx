@@ -3,6 +3,7 @@ import { useLang } from '../context/LangContext';
 import { useQibla } from '../lib/useQibla';
 import PageHeaderPhoto from '../components/PageHeaderPhoto';
 import { PAGE_PHOTOS } from '../data/photos';
+import { Skeleton } from '../components/Skeleton';
 
 function LocationSearch({ onPick, onUseGps, onClose }) {
   const [query, setQuery] = useState('');
@@ -103,7 +104,7 @@ export default function QiblaCompass() {
 
         {locStatus === 'loading' && (
           <div className="center" style={{ minHeight: 240 }}>
-            <div className="spinner" />
+            <Skeleton width={240} height={240} radius="50%" />
           </div>
         )}
 

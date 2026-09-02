@@ -9,6 +9,7 @@ import PageHeaderPhoto from '../components/PageHeaderPhoto';
 import { PAGE_PHOTOS } from '../data/photos';
 import BottomNav from '../components/BottomNav';
 import NotificationPrimer from '../components/NotificationPrimer';
+import { SkeletonCard } from '../components/Skeleton';
 
 // Background push (works with the app closed) — Firestore's notifEnabled
 // flag is the source of truth, kept live via onSnapshot so a toggle flipped
@@ -206,9 +207,14 @@ export default function JadwalSholat() {
         )}
 
         {status === 'loading' && (
-          <div className="center" style={{ minHeight: 200 }}>
-            <div className="spinner" />
-          </div>
+          <>
+            <SkeletonCard height={112} radius={22} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {Array.from({ length: 5 }).map((_, i) => (
+                <SkeletonCard key={i} height={48} radius={16} />
+              ))}
+            </div>
+          </>
         )}
       </div>
       <BottomNav />

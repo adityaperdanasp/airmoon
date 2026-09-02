@@ -6,6 +6,7 @@ import PageHeaderPhoto from '../components/PageHeaderPhoto';
 import { PAGE_PHOTOS } from '../data/photos';
 import { IconSearch } from '../components/icons';
 import ErrorRetry from '../components/ErrorRetry';
+import { Skeleton } from '../components/Skeleton';
 
 export default function CariMasjid() {
   const { t } = useLang();
@@ -54,7 +55,19 @@ export default function CariMasjid() {
           </div>
         )}
 
-        {status === 'loading' && <div className="center" style={{ minHeight: 200 }}><div className="spinner" /></div>}
+        {status === 'loading' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 13, borderRadius: 16, background: 'var(--card)' }}>
+                <Skeleton width={42} height={42} radius={12} />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: 1 }}>
+                  <Skeleton width="55%" height={13} />
+                  <Skeleton width="35%" height={10} />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
         {status === 'denied' && <ErrorRetry message={t('loc_denied')} onRetry={() => setRetryTick((n) => n + 1)} />}
         {status === 'error' && <ErrorRetry message={t('loc_error')} onRetry={() => setRetryTick((n) => n + 1)} />}
 

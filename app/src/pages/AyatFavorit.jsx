@@ -4,10 +4,14 @@ import { useAuth } from '../context/AuthContext';
 import { watchFavoriteAyat, removeFavoriteAyat } from '../lib/favoriteAyat';
 import TopBar from '../components/TopBar';
 import EmptyState from '../components/EmptyState';
+import ConfirmDialog from '../components/ConfirmDialog';
+import { useToast } from '../context/ToastContext';
 
 export default function AyatFavorit() {
   const { user } = useAuth();
+  const { showToast } = useToast();
   const [favorites, setFavorites] = useState(null);
+  const [pendingRemove, setPendingRemove] = useState(null); // the favorite object awaiting confirmation, or null
 
   useEffect(() => watchFavoriteAyat(user?.uid, setFavorites), [user?.uid]);
 
@@ -52,7 +56,7 @@ export default function AyatFavorit() {
                     {f.chapterName} : {f.verse}
                   </Link>
                   <button
-                    onClick={() => removeFavoriteAyat(user.uid, f.chapter, f.verse)}
+                    onClick={() => setPendingRemove(f)}
                     style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'var(--muted-soft)' }}
                     aria-label="Hapus dari favorit"
                   >
@@ -72,6 +76,21 @@ export default function AyatFavorit() {
           </div>
         )}
       </div>
+
+      {pendingRemove && (
+        <ConfirmDialog
+          title="Hapus dari favorit?"
+          message={`${pendingRemove.chapterName} : ${pendingRemove.verse} bakal dihapus dari daftar favoritmu.`}
+          confirmLabel="Ya, Hapus"
+          danger
+          onCancel={() => setPendingRemove(null)}
+          onConfirm={() => {
+            removeFavoriteAyat(user.uid, pendingRemove.chapter, pendingRemove.verse);
+            showToast('Dihapus dari favorit');
+            setPendingRemove(null);
+          }}
+        />
+      )}
     </div>
   );
 }

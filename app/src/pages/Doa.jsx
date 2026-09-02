@@ -7,6 +7,7 @@ import DoaCard from '../components/DoaCard';
 import { SkeletonCard } from '../components/Skeleton';
 import EmptyState from '../components/EmptyState';
 import { markSeen } from '../lib/unseenBadges';
+import PullToRefresh from '../components/PullToRefresh';
 
 const MAX_LENGTH = 500;
 
@@ -105,9 +106,19 @@ export default function Doa() {
     return () => markSeen('doa');
   }, []);
 
+  // watchDoas() above is already a live onSnapshot listener — there's no
+  // stale data to actually re-fetch here. A short resolved delay still
+  // gives the pull gesture its expected "did something" completion beat
+  // instead of the indicator snapping back instantly, which would read as
+  // broken rather than "already up to date".
+  function handlePullRefresh() {
+    return new Promise((resolve) => setTimeout(resolve, 400));
+  }
+
   return (
     <div className="screen">
       <div className="screen-content">
+      <PullToRefresh onRefresh={handlePullRefresh}>
         <TopBar title="Doa & Aminkan" subtitle="Baca & aminkan doa sahabat lain" />
 
         <ComposeDoa user={user} />
@@ -131,6 +142,7 @@ export default function Doa() {
             ))}
           </div>
         )}
+      </PullToRefresh>
       </div>
       <BottomNav />
     </div>

@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import TopBar from '../components/TopBar';
+import ConfirmDialog from '../components/ConfirmDialog';
+import { useToast } from '../context/ToastContext';
 import { DZIKIR_PHRASES, TARGETS, loadCounts, saveCounts } from '../lib/tasbih';
 
 function getLastPhrase() {
@@ -14,10 +16,12 @@ const RING_R = 92;
 const RING_CIRC = 2 * Math.PI * RING_R;
 
 export default function Tasbih() {
+  const { showToast } = useToast();
   const [counts, setCounts] = useState(() => loadCounts());
   const [phraseId, setPhraseId] = useState(getLastPhrase);
   const [target, setTarget] = useState(getLastTarget);
   const [pulse, setPulse] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   const phrase = DZIKIR_PHRASES.find((p) => p.id === phraseId) || DZIKIR_PHRASES[0];
   const count = counts[phraseId] || 0;
@@ -176,11 +180,26 @@ export default function Tasbih() {
           <button className="btn-outline" style={{ flex: 'none', padding: '10px 20px' }} onClick={undo} disabled={count === 0}>
             −1
           </button>
-          <button className="btn-outline" style={{ flex: 'none', padding: '10px 20px', color: 'var(--danger)', borderColor: 'var(--danger)' }} onClick={reset} disabled={count === 0}>
+          <button className="btn-outline" style={{ flex: 'none', padding: '10px 20px', color: 'var(--danger)', borderColor: 'var(--danger)' }} onClick={() => setShowResetConfirm(true)} disabled={count === 0}>
             Reset
           </button>
         </div>
       </div>
+
+      {showResetConfirm && (
+        <ConfirmDialog
+          title="Reset hitungan?"
+          message={`Hitungan ${phrase.label} (${count}) bakal balik ke 0. Ini gak bisa dibatalin.`}
+          confirmLabel="Ya, Reset"
+          danger
+          onCancel={() => setShowResetConfirm(false)}
+          onConfirm={() => {
+            reset();
+            showToast('Hitungan direset');
+            setShowResetConfirm(false);
+          }}
+        />
+      )}
     </div>
   );
 }

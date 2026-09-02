@@ -4,6 +4,8 @@ import { useLang } from '../context/LangContext';
 import { useAuth } from '../context/AuthContext';
 import { watchZakatHaul, startZakatHaul, clearZakatHaul, daysUntilHaulDue } from '../lib/zakatHaul';
 import PageHeaderPhoto from '../components/PageHeaderPhoto';
+import ConfirmDialog from '../components/ConfirmDialog';
+import { useToast } from '../context/ToastContext';
 import { PAGE_PHOTOS } from '../data/photos';
 
 function digitsOnly(v) {
@@ -34,7 +36,9 @@ function TabBtn({ active, onClick, children }) {
 export default function KalkulatorZakat() {
   const { t } = useLang();
   const { user } = useAuth();
+  const { showToast } = useToast();
   const [tab, setTab] = useState('penghasilan');
+  const [showHaulResetConfirm, setShowHaulResetConfirm] = useState(false);
 
   // Zakat Penghasilan
   const [income, setIncome] = useState('15000000');
@@ -158,12 +162,21 @@ export default function KalkulatorZakat() {
                   <span style={{ fontSize: 10.5, color: 'var(--muted)' }}>
                     {t('haul_tersimpan')}: {new Date(`${haul.startDate}T00:00:00`).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
                   </span>
-                  <button className="btn-outline" style={{ padding: '9px' }} onClick={() => user && clearZakatHaul(user.uid)}>
+                  <button className="btn-outline" style={{ padding: '9px' }} onClick={() => setShowHaulResetConfirm(true)}>
                     Reset
                   </button>
                 </>
               ) : (
-                <button className="btn" style={{ padding: '11px' }} onClick={() => user && startZakatHaul(user.uid)} disabled={!user}>
+                <button
+                  className="btn"
+                  style={{ padding: '11px' }}
+                  onClick={() => {
+                    if (!user) return;
+                    startZakatHaul(user.uid);
+                    showToast('Haul mulai dihitung dari hari ini');
+                  }}
+                  disabled={!user}
+                >
                   {t('tandai_haul_btn')}
                 </button>
               )}
@@ -178,6 +191,21 @@ export default function KalkulatorZakat() {
           </>
         )}
       </div>
+
+      {showHaulResetConfirm && (
+        <ConfirmDialog
+          title="Reset hitungan haul?"
+          message="Countdown haul bakal dihapus dan mulai dari awal lagi kalau kamu tandai ulang nanti."
+          confirmLabel="Ya, Reset"
+          danger
+          onCancel={() => setShowHaulResetConfirm(false)}
+          onConfirm={() => {
+            if (user) clearZakatHaul(user.uid);
+            showToast('Hitungan haul direset');
+            setShowHaulResetConfirm(false);
+          }}
+        />
+      )}
     </div>
   );
 }

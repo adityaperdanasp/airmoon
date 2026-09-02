@@ -10,6 +10,7 @@ import { PAGE_PHOTOS } from '../data/photos';
 import { IconMenu, IconSearch } from '../components/icons';
 import { SkeletonSurahRow } from '../components/Skeleton';
 import ErrorRetry from '../components/ErrorRetry';
+import PullToRefresh from '../components/PullToRefresh';
 
 export default function SurahList() {
   const { user } = useAuth();
@@ -20,11 +21,20 @@ export default function SurahList() {
   const [lastReadMushaf, setLastReadMushaf] = useState(null);
   const [retryTick, setRetryTick] = useState(0);
 
-  useEffect(() => {
+  async function refresh() {
     setError('');
-    fetchSurahList()
-      .then(setSurahs)
-      .catch(() => setError('Gagal memuat daftar surat.'));
+    try {
+      setSurahs(await fetchSurahList());
+    } catch {
+      setError('Gagal memuat daftar surat.');
+    }
+  }
+
+  useEffect(() => {
+    refresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- refresh is
+    // redefined every render (not memoized), including it here would
+    // refire this on every render instead of only on mount/retry.
   }, [retryTick]);
 
   useEffect(() => {
@@ -52,6 +62,7 @@ export default function SurahList() {
   return (
     <div className="screen">
       <div className="screen-content">
+      <PullToRefresh onRefresh={refresh}>
         <PageHeaderPhoto
           title="Al-Qur'an"
           photo={PAGE_PHOTOS.quran}
@@ -200,6 +211,7 @@ export default function SurahList() {
             ))}
           </div>
         )}
+      </PullToRefresh>
       </div>
       <BottomNav />
     </div>

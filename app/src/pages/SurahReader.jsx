@@ -3,6 +3,7 @@ import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import { fetchSurahDetail, RECITERS } from '../lib/quranApi';
 import { hasWordSync, fetchChapterTiming } from '../lib/quranTimingApi';
 import { fetchWordGloss } from '../lib/wordGlossApi';
@@ -21,6 +22,7 @@ export default function SurahReader() {
   const [searchParams] = useSearchParams();
   const jumpToAyat = Number(searchParams.get('ayat')) || null; // deep-link from Cari Ayat search results
   const { user } = useAuth();
+  const { showToast } = useToast();
   const [surah, setSurah] = useState(null);
   const [highlightAyat, setHighlightAyat] = useState(null);
   const [error, setError] = useState('');
@@ -77,6 +79,7 @@ export default function SurahReader() {
     const key = `${surah.nomor}:${a.nomorAyat}`;
     if (favoriteKeys.has(key)) {
       await removeFavoriteAyat(user.uid, surah.nomor, a.nomorAyat);
+      showToast('Dihapus dari favorit');
     } else {
       await addFavoriteAyat(user.uid, {
         chapter: surah.nomor,
@@ -85,6 +88,7 @@ export default function SurahReader() {
         arabic: a.teksArab,
         translation: a.teksIndonesia,
       });
+      showToast('Ditambahkan ke favorit');
     }
   }
 
