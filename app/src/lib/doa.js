@@ -15,10 +15,42 @@ import {
 import { db } from './firebase';
 
 const MAX_DOA_LENGTH = 500;
+const DOA_TTL_MS = 24 * 60 * 60 * 1000; // a doa only stays on the wall for 24 hours
 
+// A Firestore range filter on createdAt would only apply the 24h cutoff
+// once, at the moment the query is built — the comparison value is frozen
+// then, so a doa doesn't get pushed back out of an already-live listener's
+// results just because real time moved past it. Filtering client-side
+// (and re-applying that filter on a timer, not just on new snapshots)
+// is what actually makes a doa disappear at the 24h mark instead of only
+// whenever someone else happens to post/amin something next.
 export function watchDoas(callback) {
   const q = query(collection(db, 'doas'), orderBy('createdAt', 'desc'), limit(50));
-  return onSnapshot(q, (snap) => callback(snap.docs.map((d) => ({ id: d.id, ...d.data() }))));
+  let latestDocs = [];
+
+  function emit() {
+    const cutoff = Date.now() - DOA_TTL_MS;
+    callback(
+      latestDocs.filter((d) => {
+        const ms = d.createdAt?.toMillis ? d.createdAt.toMillis() : null;
+        // serverTimestamp() resolves a moment after the optimistic local
+        // write lands, so a brand-new doa can briefly have no createdAt
+        // yet — show it right away rather than filtering it out.
+        return ms === null || ms >= cutoff;
+      })
+    );
+  }
+
+  const unsubscribe = onSnapshot(q, (snap) => {
+    latestDocs = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    emit();
+  });
+  const interval = setInterval(emit, 60 * 1000);
+
+  return () => {
+    unsubscribe();
+    clearInterval(interval);
+  };
 }
 
 export async function createDoa(text, anonymous, user) {
