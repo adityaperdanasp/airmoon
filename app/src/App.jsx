@@ -15,6 +15,10 @@ import Doa from './pages/Doa';
 import AskMe from './pages/AskMe';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import Umroh from './pages/Umroh';
+import UmrohManasik from './pages/UmrohManasik';
+import UmrohBadal from './pages/UmrohBadal';
+import UmrohChecklist from './pages/UmrohChecklist';
+import UmrohTabungan from './pages/UmrohTabungan';
 import Pengaturan from './pages/Pengaturan';
 import Lainnya from './pages/Lainnya';
 import NamaNamaAllah from './pages/NamaNamaAllah';
@@ -50,6 +54,10 @@ export default function App() {
       <Route path="/doa" element={<P><Doa /></P>} />
       <Route path="/ask-me" element={<P><AskMe /></P>} />
       <Route path="/umroh" element={<P><Umroh /></P>} />
+      <Route path="/umroh/manasik" element={<P><UmrohManasik /></P>} />
+      <Route path="/umroh/badal" element={<P><UmrohBadal /></P>} />
+      <Route path="/umroh/checklist" element={<P><UmrohChecklist /></P>} />
+      <Route path="/umroh/tabungan" element={<P><UmrohTabungan /></P>} />
       <Route path="/pengaturan" element={<P><Pengaturan /></P>} />
 
       <Route path="/lainnya" element={<P><Lainnya /></P>} />

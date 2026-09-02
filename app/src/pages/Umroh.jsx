@@ -1,12 +1,19 @@
+import { Link } from 'react-router-dom';
 import BottomNav from '../components/BottomNav';
 import PageHeaderPhoto from '../components/PageHeaderPhoto';
 import { PAGE_PHOTOS } from '../data/photos';
+import { UmrohIcon } from '../components/serviceIcons';
 
+// All 4 now real pages (content written/sourced per an explicit ask to
+// fill these in — was 4 flat "segera hadir" cards before). Manasik/Badal
+// carry real fiqh content (sourced from Rumaysho.com, see those files'
+// own header comments for the sourcing/verification caveat); Checklist
+// is a real interactive checklist; Tabungan is a real calculator.
 const ITEMS = [
-  { title: 'Tabungan Umroh', desc: 'Nabung rutin buat biaya umroh dengan target jelas.' },
-  { title: 'Badal Umrah', desc: 'Titip doa & niat lewat jamaah yang lagi umroh.' },
-  { title: 'Panduan Manasik', desc: 'Video & langkah tata cara umroh dari niat sampai tahallul.' },
-  { title: 'Checklist Persiapan', desc: 'Dokumen, vaksin, dan barang bawaan sebelum berangkat.' },
+  { to: '/umroh/manasik', title: 'Panduan Manasik', desc: 'Tata cara umroh dari niat sampai tahallul.' },
+  { to: '/umroh/badal', title: 'Badal Umrah', desc: 'Hukum & ketentuan mengumrohkan orang lain.' },
+  { to: '/umroh/checklist', title: 'Checklist Persiapan', desc: 'Dokumen, vaksin, dan barang bawaan sebelum berangkat.' },
+  { to: '/umroh/tabungan', title: 'Tabungan Umroh', desc: 'Hitung target nabung bulanan buat biaya umroh.' },
 ];
 
 export default function Umroh() {
@@ -14,23 +21,25 @@ export default function Umroh() {
     <div className="screen">
       <div className="screen-content">
         <PageHeaderPhoto title="Umroh Needs" photo={PAGE_PHOTOS.umroh} showBack={false} />
-        <p className="muted" style={{ margin: 0, fontSize: 12.5 }}>
-          Segera hadir — fitur-fitur ini masih dalam pengembangan.
-        </p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {ITEMS.map((it) => (
-            <div key={it.title} className="card" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, opacity: 0.7 }}>
-              <div style={{ width: 40, height: 40, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: 'var(--blue-gray)' }}>
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#3f5c68">
-                  <rect x="5" y="5" width="14" height="14" rx="1.3" strokeWidth="1.7" />
-                  <path d="M5 9.5h14" strokeWidth="1.7" />
-                </svg>
+            <Link
+              key={it.to}
+              to={it.to}
+              className="card"
+              style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, textDecoration: 'none', color: 'inherit' }}
+            >
+              <div style={{ width: 44, height: 44, borderRadius: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: 'var(--blue-gray)' }}>
+                <UmrohIcon size={26} />
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1 }}>
                 <span style={{ fontSize: 13, fontWeight: 700 }}>{it.title}</span>
                 <span style={{ fontSize: 11, color: 'var(--muted)' }}>{it.desc}</span>
               </div>
-            </div>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)">
+                <path d="m9 6 6 6-6 6" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </Link>
           ))}
         </div>
       </div>
