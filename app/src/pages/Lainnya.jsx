@@ -5,6 +5,7 @@ import {
   QiblaCompassIcon,
   CalculatorIcon,
   TasbihIcon,
+  TasbihCounterIcon,
   HijriCalendarIcon,
   GreetingCardIcon,
   CuppedHandsIcon,
@@ -31,6 +32,7 @@ const ITEMS = [
   { to: '/lainnya/kiblat', key: 'item_kiblat', bg: 'var(--mint)', node: <QiblaCompassIcon size={33} /> },
   { to: '/lainnya/mode-ramadan', key: 'item_ramadan', bg: 'var(--cream)', node: <LanternIcon size={30} /> },
   { to: '/umroh', key: 'nav_umroh', bg: 'var(--blue-gray)', node: <UmrohIcon size={30} /> },
+  { to: '/lainnya/tasbih', key: 'item_tasbih', bg: 'var(--peach)', node: <TasbihCounterIcon size={30} /> },
 ];
 
 export default function Lainnya() {

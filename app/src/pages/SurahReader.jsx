@@ -5,6 +5,7 @@ import { db } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
 import { fetchSurahDetail, RECITERS } from '../lib/quranApi';
 import { hasWordSync, fetchChapterTiming } from '../lib/quranTimingApi';
+import { fetchWordGloss } from '../lib/wordGlossApi';
 import { useNightMode, NIGHT_STYLE_VARS } from '../lib/readingPrefs';
 import TopBar from '../components/TopBar';
 
@@ -23,6 +24,9 @@ export default function SurahReader() {
   const [timing, setTiming] = useState(null); // fetchChapterTiming() result, or null if unavailable
   const [night, setNight] = useNightMode();
   const [activeWord, setActiveWord] = useState(null); // 1-based word index within the playing ayat
+  const [glossOn, setGlossOn] = useState(false);
+  const [gloss, setGloss] = useState(null); // { [ayatNumber]: [{arab, id}, ...] } once loaded
+  const [glossLoading, setGlossLoading] = useState(false);
   const audioRef = useRef(null);
   const reciter = RECITERS.find((r) => r.id === reciterId) || RECITERS[4];
   // Word-sync only actually applies once the timing data has loaded — a
@@ -41,6 +45,31 @@ export default function SurahReader() {
   useEffect(() => {
     setReciterId(getReciterId());
   }, []);
+
+  // Reset whenever the surah changes so a stale gloss from the previous
+  // surah never gets shown against the wrong ayat while the new one loads.
+  useEffect(() => {
+    setGloss(null);
+  }, [nomor]);
+
+  useEffect(() => {
+    if (!glossOn || gloss || !nomor) return;
+    let cancelled = false;
+    setGlossLoading(true);
+    fetchWordGloss(nomor)
+      .then((g) => {
+        if (!cancelled) setGloss(g);
+      })
+      .catch(() => {
+        /* toggle just stays on with nothing to show — teksIndonesia below still covers the ayat */
+      })
+      .finally(() => {
+        if (!cancelled) setGlossLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [glossOn, gloss, nomor]);
 
   useEffect(() => {
     setTiming(null);
@@ -136,24 +165,42 @@ export default function SurahReader() {
     );
   }
 
-  const nightToggle = (
-    <button
-      className="icon-btn"
-      onClick={() => setNight((v) => !v)}
-      aria-label="Toggle mode malam"
-      style={{ color: night ? 'var(--primary)' : 'var(--muted)' }}
-      title="Mode malam"
-    >
-      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-        <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z" strokeWidth="1.6" strokeLinejoin="round" />
-      </svg>
-    </button>
+  const topbarActions = (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+      <button
+        className="icon-btn"
+        onClick={() => setGlossOn((v) => !v)}
+        aria-label="Toggle terjemahan per kata"
+        style={{ color: glossOn ? 'var(--primary)' : 'var(--muted)' }}
+        title="Terjemahan per kata"
+      >
+        {glossLoading ? (
+          <div className="spinner" style={{ width: 14, height: 14 }} />
+        ) : (
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
+            <text x="1" y="16" fontSize="12" fontWeight="800" fontFamily="Poppins, sans-serif">A</text>
+            <text x="11" y="20" fontSize="13" fontWeight="700" fontFamily="'Amiri', serif">ب</text>
+          </svg>
+        )}
+      </button>
+      <button
+        className="icon-btn"
+        onClick={() => setNight((v) => !v)}
+        aria-label="Toggle mode malam"
+        style={{ color: night ? 'var(--primary)' : 'var(--muted)' }}
+        title="Mode malam"
+      >
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z" strokeWidth="1.6" strokeLinejoin="round" />
+        </svg>
+      </button>
+    </div>
   );
 
   return (
     <div className="screen" style={night ? NIGHT_STYLE_VARS : undefined}>
       <div className="screen-content" style={{ paddingBottom: 110 }}>
-        <TopBar title={surah.namaLatin} subtitle={`${surah.tempatTurun} · ${surah.jumlahAyat} Ayat`} right={nightToggle} />
+        <TopBar title={surah.namaLatin} subtitle={`${surah.tempatTurun} · ${surah.jumlahAyat} Ayat`} right={topbarActions} />
 
         <Link
           to={`/quran/${nomor}/qari`}
@@ -226,22 +273,33 @@ export default function SurahReader() {
                       {a.nomorAyat}
                     </span>
                   </div>
+                  {glossOn && gloss?.[a.nomorAyat] ? (
+                    <div style={{ flex: 1, display: 'flex', flexWrap: 'wrap', flexDirection: 'row-reverse', gap: '10px 14px', justifyContent: 'flex-start' }}>
+                      {gloss[a.nomorAyat].map((w, i) => (
+                        <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, maxWidth: 90 }}>
+                          <span style={{ fontFamily: "'Amiri', serif", fontSize: 22, lineHeight: 1.4 }}>{w.arab}</span>
+                          <span style={{ fontSize: 9.5, color: 'var(--muted)', textAlign: 'center', lineHeight: 1.2 }}>{w.id}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
                   <div style={{ flex: 1, fontFamily: "'Amiri', serif", fontSize: 24, lineHeight: 2, direction: 'rtl', textAlign: 'right' }}>
-                    {wordSyncReady && isPlaying
-                      ? a.teksArab.split(' ').map((word, i) => (
-                          <span
-                            key={i}
-                            style={{
-                              color: activeWord === i + 1 ? 'var(--primary)' : 'inherit',
-                              transition: 'color 0.15s ease',
-                            }}
-                          >
-                            {word}
-                            {i < a.teksArab.split(' ').length - 1 ? ' ' : ''}
-                          </span>
-                        ))
-                      : a.teksArab}
-                  </div>
+                      {wordSyncReady && isPlaying
+                        ? a.teksArab.split(' ').map((word, i) => (
+                            <span
+                              key={i}
+                              style={{
+                                color: activeWord === i + 1 ? 'var(--primary)' : 'inherit',
+                                transition: 'color 0.15s ease',
+                              }}
+                            >
+                              {word}
+                              {i < a.teksArab.split(' ').length - 1 ? ' ' : ''}
+                            </span>
+                          ))
+                        : a.teksArab}
+                    </div>
+                  )}
                 </div>
                 <p style={{ margin: 0, fontSize: 13, lineHeight: 1.6, color: 'var(--muted)' }}>{a.teksIndonesia}</p>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>

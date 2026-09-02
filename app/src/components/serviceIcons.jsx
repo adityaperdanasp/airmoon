@@ -195,6 +195,32 @@ export function TasbihIcon({ size = 42 }) {
   );
 }
 
+// A single bead with a "+1" tally badge — the Tasbih Digital counter page's
+// own icon, deliberately distinct from TasbihIcon's full ring-of-beads
+// above (which stays on Asmaul Husna) so the two Lainnya tiles don't look
+// identical at a glance.
+export function TasbihCounterIcon({ size = 42 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 42 42" fill="none">
+      <defs>
+        <radialGradient id="counterBeadG" cx="0.35" cy="0.3" r="0.85">
+          <stop offset="0" stopColor="#fff2cf" />
+          <stop offset="0.55" stopColor="#f0c04d" />
+          <stop offset="1" stopColor="#c98f22" />
+        </radialGradient>
+        <linearGradient id="counterBadgeG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#2fa190" />
+          <stop offset="1" stopColor="#0a4a43" />
+        </linearGradient>
+      </defs>
+      <circle cx="17" cy="24" r="13" fill="url(#counterBeadG)" />
+      <path d="M17 31v6" stroke="#c98f22" strokeWidth="1.6" strokeLinecap="round" />
+      <circle cx="30" cy="12" r="9" fill="url(#counterBadgeG)" stroke="#fff" strokeWidth="1.6" />
+      <text x="30" y="15.5" fontSize="9.5" fontWeight="800" fill="#fff" textAnchor="middle" fontFamily="Poppins, sans-serif">+1</text>
+    </svg>
+  );
+}
+
 // A calendar with a crescent-moon corner accent — the Hijri (lunar
 // calendar) angle, not just a generic Gregorian grid.
 export function HijriCalendarIcon({ size = 42 }) {
@@ -382,6 +408,37 @@ export function UmrohIcon({ size = 42 }) {
       <path d="M15 12a6 6 0 0 1 12 0v3h-12Z" fill="none" stroke="url(#umrohGoldG)" strokeWidth="2.4" />
       <rect x="8" y="15" width="26" height="21" rx="4" fill="url(#umrohBagG)" />
       <rect x="17" y="22" width="8" height="8" rx="1" fill="url(#umrohGoldG)" />
+    </svg>
+  );
+}
+
+// A clock face topped with a mihrab-arch dome — replaces the ⏰ emoji for
+// Sholat on Home's Layanan row, same ring/face/gold-hand construction as
+// QiblaCompassIcon so the row's last emoji holdout matches the other 3.
+export function PrayerClockIcon({ size = 42 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 42 42" fill="none">
+      <defs>
+        <linearGradient id="prayerRingG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#2fa190" />
+          <stop offset="1" stopColor="#0a4a43" />
+        </linearGradient>
+        <linearGradient id="prayerFaceG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#ffffff" />
+          <stop offset="1" stopColor="#f2ede2" />
+        </linearGradient>
+        <linearGradient id="prayerGoldG" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor="#fff2cf" />
+          <stop offset="0.55" stopColor="#f0c04d" />
+          <stop offset="1" stopColor="#c98f22" />
+        </linearGradient>
+      </defs>
+      <path d="M15 12.5a6 6 0 0 1 12 0v3.5h-12Z" fill="url(#prayerRingG)" />
+      <circle cx="21" cy="9" r="1.4" fill="url(#prayerGoldG)" />
+      <circle cx="21" cy="23" r="15.5" fill="url(#prayerFaceG)" stroke="url(#prayerRingG)" strokeWidth="2.6" />
+      <line x1="21" y1="23" x2="21" y2="15" stroke="url(#prayerGoldG)" strokeWidth="2" strokeLinecap="round" />
+      <line x1="21" y1="23" x2="27" y2="26" stroke="#0a4a43" strokeWidth="2" strokeLinecap="round" />
+      <circle cx="21" cy="23" r="1.6" fill="#0a4a43" />
     </svg>
   );
 }

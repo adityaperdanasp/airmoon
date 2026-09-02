@@ -31,6 +31,7 @@ import CariMasjid from './pages/CariMasjid';
 import MakkahLive from './pages/MakkahLive';
 import QiblaCompass from './pages/QiblaCompass';
 import ModeRamadan from './pages/ModeRamadan';
+import Tasbih from './pages/Tasbih';
 
 function P({ children }) {
   return <ProtectedRoute>{children}</ProtectedRoute>;
@@ -71,6 +72,7 @@ export default function App() {
       <Route path="/lainnya/makkah-live" element={<P><MakkahLive /></P>} />
       <Route path="/lainnya/kiblat" element={<P><QiblaCompass /></P>} />
       <Route path="/lainnya/mode-ramadan" element={<P><ModeRamadan /></P>} />
+      <Route path="/lainnya/tasbih" element={<P><Tasbih /></P>} />
     </Routes>
   );
 }

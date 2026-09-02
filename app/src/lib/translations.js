@@ -53,6 +53,7 @@ export const translations = {
     item_doa_harian: "Do'a Harian",
     item_kutipan_inspirasi: 'Kutipan Inspirasi',
     item_makkah_live: 'Makkah Live',
+    item_tasbih: 'Tasbih Digital',
 
     asmaul_husna_subtitle: '99 Nama-Nama Allah',
     lihat_semua_99: 'Lihat Semua 99 Nama',
@@ -175,6 +176,7 @@ export const translations = {
     item_doa_harian: 'Daily Duas',
     item_kutipan_inspirasi: 'Daily Quote',
     item_makkah_live: 'Makkah Live',
+    item_tasbih: 'Digital Tasbih',
 
     asmaul_husna_subtitle: 'The 99 Names of Allah',
     lihat_semua_99: 'View All 99 Names',

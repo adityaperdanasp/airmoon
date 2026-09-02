@@ -1,13 +1,38 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { doaCategories } from '../data/doaHarian';
 import { useLang } from '../context/LangContext';
+import { useAuth } from '../context/AuthContext';
+import { watchDzikirStreak, markDzikirDone, isDoneToday } from '../lib/dzikirStreak';
 import PageHeaderPhoto from '../components/PageHeaderPhoto';
 import { PAGE_PHOTOS } from '../data/photos';
 
+// pagi/petang are real daily habits worth a streak; kegiatan (doa per
+// situation — makan, keluar rumah, etc.) isn't a once-a-day thing, so it
+// gets no streak UI.
+const STREAK_CATEGORIES = ['pagi', 'petang'];
+
 export default function DoaHarian() {
   const { t } = useLang();
+  const { user } = useAuth();
   const [activeId, setActiveId] = useState('pagi');
+  const [streaks, setStreaks] = useState({});
+  const [marking, setMarking] = useState(false);
   const active = doaCategories.find((c) => c.id === activeId) ?? doaCategories[0];
+  const streak = streaks[activeId];
+  const doneToday = isDoneToday(streak);
+  const showStreak = STREAK_CATEGORIES.includes(activeId);
+
+  useEffect(() => watchDzikirStreak(user?.uid, setStreaks), [user?.uid]);
+
+  async function handleMarkDone() {
+    if (!user || doneToday) return;
+    setMarking(true);
+    try {
+      await markDzikirDone(user.uid, activeId);
+    } finally {
+      setMarking(false);
+    }
+  }
 
   return (
     <div className="screen">
@@ -39,6 +64,48 @@ export default function DoaHarian() {
             );
           })}
         </div>
+
+        {showStreak && (
+          <div
+            className="card"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 10,
+              padding: '14px 16px',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontSize: 22, lineHeight: 1 }}>🔥</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <span style={{ fontSize: 13, fontWeight: 800 }}>
+                  {streak?.current > 0 ? `${streak.current} hari berturut-turut` : 'Belum ada rentetan'}
+                </span>
+                <span style={{ fontSize: 11, color: 'var(--muted)' }}>
+                  {streak?.best > 0 ? `Rekor terbaik: ${streak.best} hari` : 'Tandai selesai tiap hari biar rentetannya jalan'}
+                </span>
+              </div>
+            </div>
+            <button
+              onClick={handleMarkDone}
+              disabled={doneToday || marking}
+              style={{
+                flexShrink: 0,
+                padding: '9px 14px',
+                borderRadius: 999,
+                border: 'none',
+                fontSize: 12,
+                fontWeight: 700,
+                cursor: doneToday ? 'default' : 'pointer',
+                color: doneToday ? 'var(--primary)' : '#fff',
+                background: doneToday ? 'var(--mint)' : 'var(--primary)',
+              }}
+            >
+              {doneToday ? 'Selesai ✓' : marking ? '...' : 'Tandai Selesai'}
+            </button>
+          </div>
+        )}
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {active.items.map((d, i) => (
