@@ -13,7 +13,7 @@ import BottomNav from '../components/BottomNav';
 import DonationCard from '../components/DonationCard';
 import DoaCard from '../components/DoaCard';
 import { IconBell, IconSearch, IconMoon } from '../components/icons';
-import { QiblaCompassIcon } from '../components/serviceIcons';
+import { QiblaCompassIcon, QuranBookIcon, MosqueIcon } from '../components/serviceIcons';
 
 const dateFmt = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
@@ -57,15 +57,18 @@ function GeometricPattern({ id }) {
   );
 }
 
-// quran/jadwal/cari-masjid don't have a matching icon in the pitch deck's
-// design system asset pack, so they stay emoji; donasi/kiblat use hand-drawn
-// vectors from components/serviceIcons.jsx (shared with the Lainnya grid) so
-// they stay crisp at any size instead of a cropped raster.
+// All 4 now hand-drawn vectors from components/serviceIcons.jsx (shared
+// with the Lainnya grid) — Sholat is the one still on an emoji (⏰), no
+// matching custom icon built for it yet. Qur'an/Cari Masjid were emoji
+// (📖/🕌) until an explicit ask to match Kiblat's existing custom-icon
+// treatment for consistency (same reasoning as the Lainnya grid's
+// icon pass) instead of the mismatched Flaticon-style assets that were
+// also considered and declined for the same style-clash reasons.
 const SVC = [
-  { to: '/quran', emoji: '📖', key: 'nav_quran', bg: 'linear-gradient(160deg, #fdf3df, #fbe4b0)' },
+  { to: '/quran', node: <QuranBookIcon size={46} />, key: 'nav_quran', bg: 'linear-gradient(160deg, #fdf3df, #fbe4b0)' },
   { to: '/jadwal-sholat', emoji: '⏰', label: 'Sholat', bg: 'linear-gradient(160deg, #e2f1ec, #bfe2d4)' },
   { to: '/lainnya/kiblat', node: <QiblaCompassIcon size={46} />, key: 'item_kiblat', bg: 'linear-gradient(160deg, #fbe6da, #f3c9ab)' },
-  { to: '/lainnya/cari-masjid', emoji: '🕌', label: 'Cari Masjid', bg: 'linear-gradient(160deg, #e3e9ee, #c3d1dc)' },
+  { to: '/lainnya/cari-masjid', node: <MosqueIcon size={46} />, label: 'Cari Masjid', bg: 'linear-gradient(160deg, #e3e9ee, #c3d1dc)' },
 ];
 
 export default function Home() {

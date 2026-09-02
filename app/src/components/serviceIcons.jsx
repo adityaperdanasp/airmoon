@@ -106,6 +106,68 @@ export function CalculatorIcon({ size = 42 }) {
   );
 }
 
+// An open Qur'an — replaces the 📖 emoji on Home's Layanan row, same
+// reasoning as the Lainnya icons: consistent hand-drawn style instead of
+// a platform-rendered glyph.
+export function QuranBookIcon({ size = 42 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 42 42" fill="none">
+      <defs>
+        <linearGradient id="quranPageG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#fdf8ec" />
+          <stop offset="1" stopColor="#f0e3bf" />
+        </linearGradient>
+        <linearGradient id="quranGoldG" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor="#fff2cf" />
+          <stop offset="0.55" stopColor="#f0c04d" />
+          <stop offset="1" stopColor="#c98f22" />
+        </linearGradient>
+      </defs>
+      <path d="M21 10c-3-2-8-3-13-2v22c5-1 10 0 13 2Z" fill="url(#quranPageG)" stroke="url(#quranGoldG)" strokeWidth="1.2" />
+      <path d="M21 10c3-2 8-3 13-2v22c-5-1-10 0-13 2Z" fill="url(#quranPageG)" stroke="url(#quranGoldG)" strokeWidth="1.2" />
+      <path d="M21 10v22" stroke="url(#quranGoldG)" strokeWidth="1.4" />
+      <g stroke="#a9761f" strokeWidth="1" strokeLinecap="round">
+        <line x1="11" y1="14" x2="17" y2="13.4" />
+        <line x1="11" y1="18" x2="17" y2="17.4" />
+        <line x1="11" y1="22" x2="17" y2="21.4" />
+        <line x1="25" y1="13.4" x2="31" y2="14" />
+        <line x1="25" y1="17.4" x2="31" y2="18" />
+        <line x1="25" y1="21.4" x2="31" y2="22" />
+      </g>
+    </svg>
+  );
+}
+
+// A mosque silhouette (dome + two minarets) — replaces the 🕌 emoji for
+// Cari Masjid, same style as QuranBookIcon above and the QiblaCompassIcon
+// already used for Arah Kiblat on this same row.
+export function MosqueIcon({ size = 42 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 42 42" fill="none">
+      <defs>
+        <linearGradient id="mosqueBodyG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#2fa190" />
+          <stop offset="1" stopColor="#0a4a43" />
+        </linearGradient>
+        <linearGradient id="mosqueGoldG" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor="#fff2cf" />
+          <stop offset="0.55" stopColor="#f0c04d" />
+          <stop offset="1" stopColor="#c98f22" />
+        </linearGradient>
+      </defs>
+      <rect x="4" y="18" width="4" height="18" rx="1" fill="url(#mosqueBodyG)" />
+      <path d="M4 18c0-3 1-5 2-5s2 2 2 5Z" fill="url(#mosqueBodyG)" />
+      <rect x="34" y="18" width="4" height="18" rx="1" fill="url(#mosqueBodyG)" />
+      <path d="M34 18c0-3 1-5 2-5s2 2 2 5Z" fill="url(#mosqueBodyG)" />
+      <rect x="7" y="26" width="28" height="10" rx="1.5" fill="url(#mosqueBodyG)" />
+      <path d="M14 26c0-5 3-9 7-9s7 4 7 9Z" fill="url(#mosqueBodyG)" />
+      <circle cx="21" cy="14" r="1.6" fill="url(#mosqueGoldG)" />
+      <path d="M21 8v6" stroke="url(#mosqueGoldG)" strokeWidth="1.6" strokeLinecap="round" />
+      <rect x="18" y="29" width="6" height="7" rx="0.8" fill="url(#mosqueGoldG)" />
+    </svg>
+  );
+}
+
 // A ring of tasbih beads with a tassel — replaces the 📿 emoji, matching
 // the same hand-drawn gradient style as the icons above rather than
 // mixing in a platform-rendered glyph (whose look varies wildly between
