@@ -306,6 +306,20 @@ export default function QiblaCompass() {
               </div>
             )}
 
+            {/* webkitCompassAccuracy is iOS Safari-only (see useQibla.js) —
+                Android/other browsers never report a number here at all,
+                which meant the calibration tip above never showed for
+                them regardless of how far off their compass actually was.
+                A generic, always-available version for exactly that case. */}
+            {hasHeading && headingAccuracy == null && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '13px 14px', borderRadius: 14, background: 'var(--card)' }}>
+                <span style={{ width: 8, height: 8, borderRadius: '50%', flexShrink: 0, background: '#e67e22' }} />
+                <span style={{ fontSize: 11.5, color: 'var(--muted)' }}>
+                  Perangkat ini gak melaporkan akurasi kompas — kalau arah kiblat terasa meleset, gerakkan HP membentuk angka 8 buat kalibrasi ulang sensornya.
+                </span>
+              </div>
+            )}
+
             {hasHeading && (
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '13px 14px', borderRadius: 14, background: 'var(--card)' }}>
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" style={{ flexShrink: 0, marginTop: 1 }}>

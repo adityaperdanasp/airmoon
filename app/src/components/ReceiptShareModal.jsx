@@ -4,6 +4,7 @@ import { canvasToFile } from '../lib/ayatCardCanvas';
 import { shareFile } from '../lib/share';
 import { formatRupiah } from '../lib/zakat';
 import { useTheme } from '../context/ThemeContext';
+import { useEscapeKey } from '../lib/useEscapeKey';
 import Portal from './Portal';
 
 const dateFmt = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -15,6 +16,7 @@ export default function ReceiptShareModal({ contribution, onClose }) {
   const { theme } = useTheme();
   const [ready, setReady] = useState(false);
   const [busy, setBusy] = useState(false);
+  useEscapeKey(onClose);
 
   useEffect(() => {
     let cancelled = false;

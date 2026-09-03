@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import Portal from './Portal';
+import { useEscapeKey } from '../lib/useEscapeKey';
 
 // A small bottom sheet for assigning an ayat favorite to a collection —
 // existing collection names as tappable rows, plus a text field to create
@@ -9,6 +10,7 @@ import Portal from './Portal';
 // future "collections" feature elsewhere (e.g. Kutipan Inspirasi) too.
 export default function CollectionPickerSheet({ existingCollections, current, onPick, onClose }) {
   const [newName, setNewName] = useState('');
+  useEscapeKey(onClose);
 
   function submitNew(e) {
     e.preventDefault();

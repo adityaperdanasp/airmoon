@@ -1,4 +1,5 @@
 import Portal from './Portal';
+import { useEscapeKey } from '../lib/useEscapeKey';
 
 // A reusable "are you sure?" bottom sheet — Reset Tasbih, Reset Zakat
 // Haul, Hapus Ayat Favorit, and Keluar (logout) used to fire immediately
@@ -8,6 +9,7 @@ import Portal from './Portal';
 // AyatCardModal/NotificationPrimer are already used in this codebase).
 // Portalled to document.body — see Portal.jsx's own comment for why.
 export default function ConfirmDialog({ title, message, confirmLabel = 'Ya, Lanjutkan', cancelLabel = 'Batal', danger = false, onConfirm, onCancel }) {
+  useEscapeKey(onCancel);
   return (
     <Portal>
     <div

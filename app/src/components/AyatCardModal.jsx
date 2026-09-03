@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { drawAyatCard, canvasToFile } from '../lib/ayatCardCanvas';
 import { useTheme } from '../context/ThemeContext';
 import { shareFile } from '../lib/share';
+import { useEscapeKey } from '../lib/useEscapeKey';
 import Portal from './Portal';
 
 // A shareable "Ayat Card" preview — renders the same canvas used for
@@ -15,6 +16,7 @@ export default function AyatCardModal({ ayat, onClose }) {
   const { theme } = useTheme();
   const [ready, setReady] = useState(false);
   const [busy, setBusy] = useState(false);
+  useEscapeKey(onClose);
 
   useEffect(() => {
     let cancelled = false;

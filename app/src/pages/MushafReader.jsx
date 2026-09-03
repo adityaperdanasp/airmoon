@@ -8,6 +8,8 @@ import { fetchSurahDetail } from '../lib/quranApi';
 import { useNightMode, NIGHT_STYLE_VARS } from '../lib/readingPrefs';
 import { fetchSurahTafsir } from '../lib/tafsirApi';
 import { markPageRead } from '../lib/khatamProgress';
+import { useEscapeKey } from '../lib/useEscapeKey';
+import { useReadingTimeTracker } from '../lib/readingTime';
 import { IconBack } from '../components/icons';
 import ErrorRetry from '../components/ErrorRetry';
 import Portal from '../components/Portal';
@@ -175,6 +177,7 @@ function ActionRow({ icon, label, onClick, disabled }) {
 // preference (`airmoon-qari`) already set in Mode Ayat's Pilih Qari
 // screen — Mode Mushaf doesn't need its own separate reciter setting.
 function AyahActionSheet({ verse, chapterName, isBookmarked, onClose, onBookmark }) {
+  useEscapeKey(onClose);
   const [audioUrl, setAudioUrl] = useState(null);
   const [translation, setTranslation] = useState(null);
   const [loadingExtra, setLoadingExtra] = useState(true);
@@ -372,6 +375,7 @@ export default function MushafReader() {
   const targetVerseKey = searchParams.get('ayat'); // set when arriving via "Lanjut Baca · Mode Mushaf"
   const navigate = useNavigate();
   const { user } = useAuth();
+  useReadingTimeTracker(user?.uid);
   const page = Math.min(TOTAL_MUSHAF_PAGES, Math.max(1, Number(pageParam) || 1));
 
   const [chapters, setChapters] = useState(null);

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { fetchSurahDetail } from '../lib/quranApi';
+import { useEscapeKey } from '../lib/useEscapeKey';
 import Portal from './Portal';
 
 function getReciterId() {
@@ -17,6 +18,7 @@ function getReciterId() {
 // long-press detector would need to get right.
 export default function SurahPreviewSheet({ surah, onClose }) {
   const navigate = useNavigate();
+  useEscapeKey(onClose);
   const [detail, setDetail] = useState(null);
   const [playing, setPlaying] = useState(false);
   const audioRef = useRef(null);

@@ -1,5 +1,6 @@
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { RECITERS } from '../lib/quranApi';
+import { RECITERS, fetchSurahDetail } from '../lib/quranApi';
 import { hasWordSync } from '../lib/quranTimingApi';
 import TopBar from '../components/TopBar';
 
@@ -7,6 +8,38 @@ export default function PilihQari() {
   const navigate = useNavigate();
   const { nomor } = useParams();
   const current = localStorage.getItem('airmoon-qari') || '05';
+  // Al-Fatihah's audioFull map — short enough to be a real preview, and
+  // fetchSurahDetail already returns it alongside the per-ayat audio this
+  // page never used to expose. Previously this page was just a plain name
+  // list with no way to hear a reciter before committing to them.
+  const [audioFull, setAudioFull] = useState(null);
+  const [playingId, setPlayingId] = useState(null);
+  const audioRef = useRef(null);
+
+  useEffect(() => {
+    fetchSurahDetail(1)
+      .then((d) => setAudioFull(d.audioFull))
+      .catch(() => {});
+    return () => audioRef.current?.pause();
+  }, []);
+
+  function togglePreview(e, id) {
+    e.stopPropagation();
+    const url = audioFull?.[id];
+    if (!url) return;
+    if (playingId === id) {
+      audioRef.current?.pause();
+      setPlayingId(null);
+      return;
+    }
+    if (!audioRef.current) {
+      audioRef.current = new Audio();
+      audioRef.current.addEventListener('ended', () => setPlayingId(null));
+    }
+    audioRef.current.src = url;
+    audioRef.current.play();
+    setPlayingId(id);
+  }
 
   function pick(id) {
     localStorage.setItem('airmoon-qari', id);
@@ -16,10 +49,11 @@ export default function PilihQari() {
   return (
     <div className="screen">
       <div className="screen-content">
-        <TopBar title="Pilih Qari" />
+        <TopBar title="Pilih Qari" subtitle="Ketuk ▶ buat dengar contoh (Al-Fatihah)" />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {RECITERS.map((r) => {
             const active = r.id === current;
+            const isPlaying = playingId === r.id;
             return (
               <button
                 key={r.id}
@@ -62,6 +96,28 @@ export default function PilihQari() {
                   <span style={{ fontSize: 13.5, fontWeight: 700 }}>{r.name}</span>
                   {hasWordSync(r.id) && (
                     <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--primary)' }}>Highlight kata saat dibaca</span>
+                  )}
+                </div>
+                <div
+                  onClick={(e) => togglePreview(e, r.id)}
+                  role="button"
+                  aria-label={isPlaying ? `Hentikan contoh suara ${r.name}` : `Dengar contoh suara ${r.name}`}
+                  style={{
+                    width: 30,
+                    height: 30,
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                    background: isPlaying ? 'var(--accent)' : 'var(--card)',
+                    opacity: audioFull ? 1 : 0.4,
+                  }}
+                >
+                  {isPlaying ? (
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none" style={{ color: 'var(--primary-dark)' }}><rect x="6" y="5" width="4" height="14" rx="1" /><rect x="14" y="5" width="4" height="14" rx="1" /></svg>
+                  ) : (
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none" style={{ color: 'var(--muted)' }}><path d="M8 5.5v13l11-6.5-11-6.5Z" /></svg>
                   )}
                 </div>
                 <div

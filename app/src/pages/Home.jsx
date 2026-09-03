@@ -22,6 +22,7 @@ import { SkeletonCard } from '../components/Skeleton';
 import InstallAppCard from '../components/InstallAppCard';
 import EmptyState from '../components/EmptyState';
 import AmalanHarianCard from '../components/AmalanHarianCard';
+import AmalanHeatmap from '../components/AmalanHeatmap';
 import PullToRefresh from '../components/PullToRefresh';
 
 const dateFmt = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
@@ -350,6 +351,8 @@ export default function Home() {
             <AmalanHarianCard uid={user.uid} />
           </div>
         )}
+
+        {user && <AmalanHeatmap uid={user.uid} />}
 
         {(lastReadAyat || lastReadMushaf) && (
           // Side-by-side when both bookmarks exist (Mode Ayat and Mode

@@ -123,6 +123,7 @@ self.addEventListener('notificationclick', (event) => {
   else if (tag === 'zakat-fitrah') url = '/lainnya/kalkulator-zakat';
   else if (tag === 'kutipan-harian') url = '/lainnya/kutipan-inspirasi';
   else if (tag === 'amalan-belum-selesai') url = '/?focus=amalan';
+  else if (tag === 'puasa-sunnah') url = '/'; // no dedicated non-Ramadan fasting page exists yet — ModeRamadan is specifically Ramadan-scoped
   event.waitUntil(clients.openWindow(url));
 });
 

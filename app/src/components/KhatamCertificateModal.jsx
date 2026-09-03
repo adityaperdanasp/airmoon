@@ -1,19 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
-import { drawAmalanCard } from '../lib/amalanCardCanvas';
+import { drawKhatamCertificate } from '../lib/khatamCertificateCanvas';
 import { canvasToFile } from '../lib/ayatCardCanvas';
 import { shareFile } from '../lib/share';
 import { useTheme } from '../context/ThemeContext';
 import { useEscapeKey } from '../lib/useEscapeKey';
 import Portal from './Portal';
 
-const dateFmt = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
-
-// Same shell as AyatCardModal.jsx (canvas preview + Unduh/Bagikan), a
-// different card — this one's a "how much of today's ibadah checklist is
-// done" progress image (lib/amalanCardCanvas.js) rather than an ayat,
-// giving Amalan Harian a reason to be shared/posted instead of staying a
-// private in-app number.
-export default function AmalanShareModal({ totalDone, totalItems, onClose }) {
+// Same canvas-card share shell as the app's other share modals, for the
+// one-time "khatam selesai" milestone — see lib/khatamCertificateCanvas.js.
+export default function KhatamCertificateModal({ onClose }) {
   const canvasRef = useRef(null);
   const { theme } = useTheme();
   const [ready, setReady] = useState(false);
@@ -23,19 +18,19 @@ export default function AmalanShareModal({ totalDone, totalItems, onClose }) {
   useEffect(() => {
     let cancelled = false;
     setReady(false);
-    drawAmalanCard(canvasRef.current, { totalDone, totalItems, dateLabel: dateFmt.format(new Date()), theme }).then(() => {
+    drawKhatamCertificate(canvasRef.current, { theme }).then(() => {
       if (!cancelled) setReady(true);
     });
     return () => {
       cancelled = true;
     };
-  }, [totalDone, totalItems, theme]);
+  }, [theme]);
 
   async function handleShare() {
     setBusy(true);
     try {
-      const file = await canvasToFile(canvasRef.current, 'amalan-harian.png');
-      await shareFile({ file, title: 'Progress Amalan Harian - airmoon', onFallback: handleDownload });
+      const file = await canvasToFile(canvasRef.current, 'khatam-quran.png');
+      await shareFile({ file, title: 'Khatam Qur\'an - airmoon', onFallback: handleDownload });
     } finally {
       setBusy(false);
     }
@@ -46,7 +41,7 @@ export default function AmalanShareModal({ totalDone, totalItems, onClose }) {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'amalan-harian.png';
+      a.download = 'khatam-quran.png';
       a.click();
       URL.revokeObjectURL(url);
     }, 'image/png');

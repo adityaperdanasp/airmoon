@@ -514,3 +514,29 @@ export function GlobalSearchIcon({ size = 42 }) {
     </svg>
   );
 }
+
+// A scale/balance shape — Kalkulator Waris (Ilmu Faraidh), distinct from
+// CalculatorIcon (Zakat) since this is a different fiqh topic entirely.
+export function InheritanceScaleIcon({ size = 42 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 42 42" fill="none">
+      <defs>
+        <linearGradient id="scaleBodyG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#2fa190" />
+          <stop offset="1" stopColor="#0a4a43" />
+        </linearGradient>
+        <linearGradient id="scaleGoldG" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor="#fff2cf" />
+          <stop offset="0.55" stopColor="#f0c04d" />
+          <stop offset="1" stopColor="#c98f22" />
+        </linearGradient>
+      </defs>
+      <line x1="21" y1="7" x2="21" y2="32" stroke="url(#scaleBodyG)" strokeWidth="2.6" strokeLinecap="round" />
+      <line x1="9" y1="13" x2="33" y2="13" stroke="url(#scaleBodyG)" strokeWidth="2.2" strokeLinecap="round" />
+      <circle cx="21" cy="8" r="2.6" fill="url(#scaleGoldG)" />
+      <path d="M9 13 5 21a4.5 4.5 0 0 0 9 0Z" fill="none" stroke="url(#scaleGoldG)" strokeWidth="2" strokeLinejoin="round" />
+      <path d="M33 13 29 21a4.5 4.5 0 0 0 9 0Z" fill="none" stroke="url(#scaleGoldG)" strokeWidth="2" strokeLinejoin="round" />
+      <path d="M14 33h14" stroke="url(#scaleBodyG)" strokeWidth="2.6" strokeLinecap="round" />
+    </svg>
+  );
+}

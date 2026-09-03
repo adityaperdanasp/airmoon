@@ -11,6 +11,7 @@ import { watchFavoriteAyat, addFavoriteAyat, removeFavoriteAyat } from '../lib/f
 import { useNightMode, NIGHT_STYLE_VARS, useArabicFontSize, MIN_ARABIC_SIZE, MAX_ARABIC_SIZE, useArabicFont, ARABIC_FONTS } from '../lib/readingPrefs';
 import { fetchSurahTafsir } from '../lib/tafsirApi';
 import { markSurahOpened } from '../lib/readingHistory';
+import { useReadingTimeTracker } from '../lib/readingTime';
 import TopBar from '../components/TopBar';
 import AyatCardModal from '../components/AyatCardModal';
 import TafsirSheet from '../components/TafsirSheet';
@@ -28,6 +29,7 @@ export default function SurahReader() {
   const jumpToAyat = Number(searchParams.get('ayat')) || null; // deep-link from Cari Ayat search results
   const { user } = useAuth();
   const { showToast } = useToast();
+  useReadingTimeTracker(user?.uid);
   const [surah, setSurah] = useState(null);
   const [highlightAyat, setHighlightAyat] = useState(null);
   const [error, setError] = useState('');
@@ -48,6 +50,15 @@ export default function SurahReader() {
   const [glossLoading, setGlossLoading] = useState(false);
   const [favorites, setFavorites] = useState([]);
   const [cardAyat, setCardAyat] = useState(null); // ayat passed to AyatCardModal, or null when closed
+  // Transliteration (teksLatin) — fetched by fetchSurahDetail already
+  // (it's right there in the same ayat object as teksArab/teksIndonesia)
+  // but was never actually rendered anywhere; a real, if quiet, gap for
+  // anyone not yet fluent reading Arabic script. Persisted like the other
+  // reading toggles below.
+  const [latinOn, setLatinOn] = useState(() => localStorage.getItem('airmoon-latin-toggle') === '1');
+  useEffect(() => {
+    localStorage.setItem('airmoon-latin-toggle', latinOn ? '1' : '0');
+  }, [latinOn]);
   const audioRef = useRef(null);
   const reciter = RECITERS.find((r) => r.id === reciterId) || RECITERS[4];
   // Word-sync only actually applies once the timing data has loaded — a
@@ -265,6 +276,15 @@ export default function SurahReader() {
       </button>
       <button
         className="icon-btn"
+        onClick={() => setLatinOn((v) => !v)}
+        aria-label="Toggle teks Latin"
+        style={{ color: latinOn ? 'var(--primary)' : 'var(--muted)', fontWeight: 800, fontSize: 10.5 }}
+        title="Teks Latin"
+      >
+        AB
+      </button>
+      <button
+        className="icon-btn"
         onClick={() => setGlossOn((v) => !v)}
         aria-label="Toggle terjemahan per kata"
         style={{ color: glossOn ? 'var(--primary)' : 'var(--muted)' }}
@@ -445,6 +465,9 @@ export default function SurahReader() {
                     </div>
                   )}
                 </div>
+                {latinOn && (
+                  <p style={{ margin: 0, fontSize: 12, lineHeight: 1.6, fontStyle: 'italic', color: 'var(--gold-ink)' }}>{a.teksLatin}</p>
+                )}
                 <p style={{ margin: 0, fontSize: 13, lineHeight: 1.6, color: 'var(--muted)' }}>{a.teksIndonesia}</p>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                   <button

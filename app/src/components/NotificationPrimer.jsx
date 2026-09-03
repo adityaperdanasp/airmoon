@@ -8,8 +8,10 @@
 // doesn't get re-primed every time they revisit the toggle. Portalled to
 // document.body — see Portal.jsx's own comment for why.
 import Portal from './Portal';
+import { useEscapeKey } from '../lib/useEscapeKey';
 
 export default function NotificationPrimer({ onConfirm, onCancel }) {
+  useEscapeKey(onCancel);
   return (
     <Portal>
     <div

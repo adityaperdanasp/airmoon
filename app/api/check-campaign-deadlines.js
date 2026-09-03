@@ -3,14 +3,15 @@
 // passed (admin Telegram alert), (2) zakat maal haul countdowns that just
 // completed, (3) the Friday Al-Kahf reminder, (4) the monthly donation
 // pledge reminder, (5) the Zakat Fitrah reminder (last 5 days of Ramadan),
-// and (6) the daily "Kutipan Hari Ini" push — everything but (1) is a real
-// FCM push to the user themselves. All six live in one function/one cron
-// entry deliberately — the Hobby plan caps a deployment at 12 Serverless
+// (6) the Puasa Sunnah reminder (Senin/Kamis + Ayyamul Bidh), and (7) the
+// daily "Kutipan Hari Ini" push — everything but (1) is a real FCM push to
+// the user themselves. All seven live in one function/one cron entry
+// deliberately — the Hobby plan caps a deployment at 12 Serverless
 // Functions total, and this repo was already at that cap, so a separate
 // daily-cron function for any one of these alone would have pushed a
 // `vercel --prod` deploy over the limit (hit for real, 2026-09-02: "No
-// more than 12 Serverless Functions can be added..."). None of the six is
-// time-sensitive enough to need its own schedule, so merging them costs
+// more than 12 Serverless Functions can be added..."). None of the seven
+// is time-sensitive enough to need its own schedule, so merging them costs
 // nothing.
 //
 // Triggered once a day by Vercel's own native Cron Jobs (see the `crons`
@@ -206,16 +207,27 @@ async function checkMonthlyPledgeReminders(db) {
 // so there's still time to actually pay it.
 const RAMADAN_HIJRI_MONTH_FITRAH = 9;
 
+// Shared by both the Zakat Fitrah and Puasa Sunnah checks below — each
+// used to make its own independent call to this, which worked but meant
+// two network round-trips to the same endpoint on the same run for the
+// same date. One call, reused.
+let hijriCache = null;
+async function fetchTodayHijri(dateKey) {
+  if (hijriCache?.dateKey === dateKey) return hijriCache.hijri;
+  const [year, month, day] = dateKey.split('-');
+  const res = await fetch(`https://api.aladhan.com/v1/gToH/${day}-${month}-${year}`);
+  if (!res.ok) throw new Error(`Aladhan gToH returned ${res.status}`);
+  const json = await res.json();
+  hijriCache = { dateKey, hijri: json.data.hijri };
+  return json.data.hijri;
+}
+
 async function checkZakatFitrahReminder(db) {
   const { dateKey } = todayInJakarta();
-  const [year, month, day] = dateKey.split('-');
 
   let hijri;
   try {
-    const res = await fetch(`https://api.aladhan.com/v1/gToH/${day}-${month}-${year}`);
-    if (!res.ok) return { skipped: 'aladhan-error' };
-    const json = await res.json();
-    hijri = json.data.hijri;
+    hijri = await fetchTodayHijri(dateKey);
   } catch (err) {
     return { skipped: 'aladhan-unreachable', error: err.message };
   }
@@ -247,6 +259,68 @@ async function checkZakatFitrahReminder(db) {
       });
 
       await docSnap.ref.update({ lastZakatFitrahReminderYear: hijriYear });
+
+      const deadTokens = result.responses.map((r, i) => (!r.success ? tokens[i] : null)).filter(Boolean);
+      if (deadTokens.length) {
+        await docSnap.ref.update({ fcmTokens: FieldValue.arrayRemove(...deadTokens) });
+      }
+
+      notified.push({ uid: docSnap.id, successCount: result.successCount });
+    } catch (err) {
+      errors.push({ uid: docSnap.id, error: err.message });
+    }
+  }
+
+  return { notified, errors };
+}
+
+// Puasa Sunnah reminder (2026-09-04) — Senin/Kamis (weekly) and Ayyamul
+// Bidh (Hijri 13-15 of any month), distinct from the Ramadan-specific
+// Imsak reminder and the once-a-year Zakat Fitrah reminder above. Both
+// conditions can in principle land on the same date (rare), so this sends
+// at most one push per day mentioning whichever applies, rather than two.
+// Idempotent per Gregorian date via lastPuasaSunnahReminderDate — a plain
+// dateKey is enough here (unlike Zakat Fitrah's Hijri-year key), since
+// this reminder is meant to repeat weekly/monthly, not once per cycle.
+async function checkPuasaSunnahReminder(db) {
+  const { dateKey, weekday } = todayInJakarta();
+  const isSenin = weekday === 'Mon';
+  const isKamis = weekday === 'Thu';
+
+  let isAyyamulBidh = false;
+  try {
+    const hijri = await fetchTodayHijri(dateKey);
+    const hijriDay = Number(hijri.day);
+    isAyyamulBidh = hijriDay >= 13 && hijriDay <= 15;
+  } catch {
+    // Hijri lookup failing shouldn't block the plain Senin/Kamis check,
+    // which needs no Hijri data at all.
+  }
+
+  if (!isSenin && !isKamis && !isAyyamulBidh) return { skipped: 'not-applicable-today' };
+
+  const parts = [];
+  if (isSenin || isKamis) parts.push(`Puasa Sunnah ${isSenin ? 'Senin' : 'Kamis'}`);
+  if (isAyyamulBidh) parts.push('Ayyamul Bidh');
+  const body = `Hari ini ${parts.join(' & ')} — yuk raih pahala puasa sunnah kalau belum niat dari malam.`;
+
+  const messaging = getMessaging();
+  const snap = await db.collection('users').where('notifEnabled', '==', true).get();
+  const notified = [];
+  const errors = [];
+
+  for (const docSnap of snap.docs) {
+    try {
+      const u = docSnap.data();
+      const tokens = u.fcmTokens || [];
+      if (!tokens.length || u.lastPuasaSunnahReminderDate === dateKey) continue;
+
+      const result = await messaging.sendEachForMulticast({
+        tokens,
+        data: { tag: 'puasa-sunnah', title: '🌙 Puasa Sunnah Hari Ini', body },
+      });
+
+      await docSnap.ref.update({ lastPuasaSunnahReminderDate: dateKey });
 
       const deadTokens = result.responses.map((r, i) => (!r.success ? tokens[i] : null)).filter(Boolean);
       if (deadTokens.length) {
@@ -381,6 +455,7 @@ export default async function handler(req, res) {
     const jumatResult = await checkJumatReminder(db);
     const pledgeResult = await checkMonthlyPledgeReminders(db);
     const fitrahResult = await checkZakatFitrahReminder(db);
+    const puasaSunnahResult = await checkPuasaSunnahReminder(db);
     const quoteResult = await checkDailyQuoteReminder(db);
 
     return res.status(200).json({
@@ -390,6 +465,7 @@ export default async function handler(req, res) {
       jumatReminder: jumatResult,
       pledgeReminder: pledgeResult,
       zakatFitrah: fitrahResult,
+      puasaSunnah: puasaSunnahResult,
       dailyQuote: quoteResult,
     });
   } catch (err) {

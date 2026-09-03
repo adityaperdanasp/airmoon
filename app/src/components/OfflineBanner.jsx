@@ -40,7 +40,7 @@ export default function OfflineBanner() {
           zIndex: 70,
           padding: 'calc(8px + env(safe-area-inset-top)) 16px 8px',
           background: 'var(--gold-ink)',
-          color: '#04211c',
+          color: 'var(--on-gold)',
           fontSize: 11.5,
           fontWeight: 700,
           textAlign: 'center',

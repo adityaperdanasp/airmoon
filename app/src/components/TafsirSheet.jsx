@@ -1,4 +1,5 @@
 import Portal from './Portal';
+import { useEscapeKey } from '../lib/useEscapeKey';
 
 // A shared bottom sheet for tafsir text, used by both SurahReader.jsx
 // (its own toolbar button) and MushafReader.jsx's AyahActionSheet (a new
@@ -6,6 +7,7 @@ import Portal from './Portal';
 // regular modal layer (50) so it can stack on top of AyahActionSheet
 // without fighting it for paint order.
 export default function TafsirSheet({ title, loading, text, onClose }) {
+  useEscapeKey(onClose);
   return (
     <Portal>
       <div

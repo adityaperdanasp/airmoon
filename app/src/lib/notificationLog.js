@@ -132,5 +132,6 @@ export function routeForTag(tag = '') {
   if (tag === 'zakat-fitrah') return '/lainnya/kalkulator-zakat';
   if (tag === 'kutipan-harian') return '/lainnya/kutipan-inspirasi';
   if (tag === 'amalan-belum-selesai') return '/?focus=amalan';
+  if (tag === 'puasa-sunnah') return '/';
   return '/jadwal-sholat'; // adzan-* and any unrecognized tag
 }
