@@ -7,6 +7,7 @@ import { fetchChapters, fetchMushafPage, layoutPage, TOTAL_MUSHAF_PAGES, TAJWEED
 import { fetchSurahDetail } from '../lib/quranApi';
 import { useNightMode, NIGHT_STYLE_VARS } from '../lib/readingPrefs';
 import { fetchSurahTafsir } from '../lib/tafsirApi';
+import { markPageRead } from '../lib/khatamProgress';
 import { IconBack } from '../components/icons';
 import ErrorRetry from '../components/ErrorRetry';
 import Portal from '../components/Portal';
@@ -426,9 +427,19 @@ export default function MushafReader() {
     setVerses(null);
     setError('');
     fetchMushafPage(page)
-      .then(setVerses)
+      .then((v) => {
+        setVerses(v);
+        // Progress Khatam Qur'an — every page actually visited counts
+        // toward it, not just ones read start-to-finish, matching how a
+        // physical mushaf's bookmark ribbon works: paging through counts.
+        if (user) markPageRead(user.uid, page, v?.[0]?.juz_number);
+      })
       .catch(() => setError('Gagal memuat halaman mushaf.'));
-  }, [page, retryTick]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- keyed on
+    // user?.uid rather than the whole user object, same reasoning as
+    // watchFavoriteAyat's effect elsewhere: a new user object reference
+    // for the same uid shouldn't refetch the page.
+  }, [page, retryTick, user?.uid]);
 
   function goTo(n) {
     if (n < 1 || n > TOTAL_MUSHAF_PAGES) return;

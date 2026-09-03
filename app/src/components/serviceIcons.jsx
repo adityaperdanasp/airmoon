@@ -488,3 +488,29 @@ export function NotificationBellIcon({ size = 42 }) {
     </svg>
   );
 }
+
+// A magnifying glass over a small book-page shape — Cari (global search),
+// distinct from Cari Ayat's plain search icon since this one searches
+// across ayat + Asmaul Husna + Doa Harian, not just ayat text.
+export function GlobalSearchIcon({ size = 42 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 42 42" fill="none">
+      <defs>
+        <linearGradient id="searchRingG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#2fa190" />
+          <stop offset="1" stopColor="#0a4a43" />
+        </linearGradient>
+        <linearGradient id="searchGoldG" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor="#fff2cf" />
+          <stop offset="0.55" stopColor="#f0c04d" />
+          <stop offset="1" stopColor="#c98f22" />
+        </linearGradient>
+      </defs>
+      <rect x="8" y="6" width="18" height="24" rx="2.5" fill="#ffffff" stroke="url(#searchRingG)" strokeWidth="2" />
+      <line x1="12" y1="13" x2="22" y2="13" stroke="url(#searchRingG)" strokeWidth="1.6" strokeLinecap="round" />
+      <line x1="12" y1="18" x2="19" y2="18" stroke="url(#searchRingG)" strokeWidth="1.6" strokeLinecap="round" />
+      <circle cx="26" cy="27" r="7" fill="#ffffff" stroke="url(#searchGoldG)" strokeWidth="3" />
+      <line x1="31" y1="32" x2="36" y2="37" stroke="url(#searchGoldG)" strokeWidth="3.2" strokeLinecap="round" />
+    </svg>
+  );
+}

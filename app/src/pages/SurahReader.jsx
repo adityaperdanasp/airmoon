@@ -8,7 +8,7 @@ import { fetchSurahDetail, RECITERS } from '../lib/quranApi';
 import { hasWordSync, fetchChapterTiming } from '../lib/quranTimingApi';
 import { fetchWordGloss } from '../lib/wordGlossApi';
 import { watchFavoriteAyat, addFavoriteAyat, removeFavoriteAyat } from '../lib/favoriteAyat';
-import { useNightMode, NIGHT_STYLE_VARS, useArabicFontSize, MIN_ARABIC_SIZE, MAX_ARABIC_SIZE } from '../lib/readingPrefs';
+import { useNightMode, NIGHT_STYLE_VARS, useArabicFontSize, MIN_ARABIC_SIZE, MAX_ARABIC_SIZE, useArabicFont, ARABIC_FONTS } from '../lib/readingPrefs';
 import { fetchSurahTafsir } from '../lib/tafsirApi';
 import { markSurahOpened } from '../lib/readingHistory';
 import TopBar from '../components/TopBar';
@@ -37,6 +37,7 @@ export default function SurahReader() {
   const [timing, setTiming] = useState(null); // fetchChapterTiming() result, or null if unavailable
   const [night, setNight] = useNightMode();
   const [arabicSize, setArabicSize] = useArabicFontSize();
+  const [arabicFont, setArabicFont] = useArabicFont();
   const [showSizeControls, setShowSizeControls] = useState(false);
   const [tafsirMap, setTafsirMap] = useState(null);
   const [tafsirOpenAyat, setTafsirOpenAyat] = useState(null);
@@ -298,24 +299,46 @@ export default function SurahReader() {
         <TopBar title={surah.namaLatin} subtitle={`${surah.tempatTurun} · ${surah.jumlahAyat} Ayat`} right={topbarActions} />
 
         {showSizeControls && (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, padding: '10px 14px', borderRadius: 14, background: 'var(--mint-soft)' }}>
-            <button
-              onClick={() => setArabicSize((s) => Math.max(MIN_ARABIC_SIZE, s - 2))}
-              disabled={arabicSize <= MIN_ARABIC_SIZE}
-              aria-label="Perkecil teks Arab"
-              style={{ width: 32, height: 32, borderRadius: '50%', border: 'none', background: 'var(--card)', color: 'var(--primary)', fontWeight: 800, fontSize: 13, cursor: 'pointer', opacity: arabicSize <= MIN_ARABIC_SIZE ? 0.4 : 1 }}
-            >
-              A-
-            </button>
-            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--muted)', minWidth: 30, textAlign: 'center' }}>{arabicSize}px</span>
-            <button
-              onClick={() => setArabicSize((s) => Math.min(MAX_ARABIC_SIZE, s + 2))}
-              disabled={arabicSize >= MAX_ARABIC_SIZE}
-              aria-label="Perbesar teks Arab"
-              style={{ width: 32, height: 32, borderRadius: '50%', border: 'none', background: 'var(--card)', color: 'var(--primary)', fontWeight: 800, fontSize: 15, cursor: 'pointer', opacity: arabicSize >= MAX_ARABIC_SIZE ? 0.4 : 1 }}
-            >
-              A+
-            </button>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '10px 14px', borderRadius: 14, background: 'var(--mint-soft)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
+              <button
+                onClick={() => setArabicSize((s) => Math.max(MIN_ARABIC_SIZE, s - 2))}
+                disabled={arabicSize <= MIN_ARABIC_SIZE}
+                aria-label="Perkecil teks Arab"
+                style={{ width: 32, height: 32, borderRadius: '50%', border: 'none', background: 'var(--card)', color: 'var(--primary)', fontWeight: 800, fontSize: 13, cursor: 'pointer', opacity: arabicSize <= MIN_ARABIC_SIZE ? 0.4 : 1 }}
+              >
+                A-
+              </button>
+              <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--muted)', minWidth: 30, textAlign: 'center' }}>{arabicSize}px</span>
+              <button
+                onClick={() => setArabicSize((s) => Math.min(MAX_ARABIC_SIZE, s + 2))}
+                disabled={arabicSize >= MAX_ARABIC_SIZE}
+                aria-label="Perbesar teks Arab"
+                style={{ width: 32, height: 32, borderRadius: '50%', border: 'none', background: 'var(--card)', color: 'var(--primary)', fontWeight: 800, fontSize: 15, cursor: 'pointer', opacity: arabicSize >= MAX_ARABIC_SIZE ? 0.4 : 1 }}
+              >
+                A+
+              </button>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 8 }}>
+              {ARABIC_FONTS.map((f) => (
+                <button
+                  key={f.id}
+                  onClick={() => setArabicFont(f.id)}
+                  style={{
+                    padding: '6px 14px',
+                    borderRadius: 999,
+                    fontSize: 11.5,
+                    fontWeight: 700,
+                    border: arabicFont === f.id ? 'none' : '1px solid var(--border)',
+                    background: arabicFont === f.id ? 'var(--primary)' : 'var(--card)',
+                    color: arabicFont === f.id ? 'var(--on-primary)' : 'var(--ink)',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
           </div>
         )}
 
@@ -398,13 +421,13 @@ export default function SurahReader() {
                     <div style={{ flex: 1, display: 'flex', flexWrap: 'wrap', flexDirection: 'row-reverse', gap: '10px 14px', justifyContent: 'flex-start' }}>
                       {gloss[a.nomorAyat].map((w, i) => (
                         <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, maxWidth: 90 }}>
-                          <span style={{ fontFamily: "'Amiri', serif", fontSize: arabicSize - 2, lineHeight: 1.4 }}>{w.arab}</span>
+                          <span style={{ fontFamily: `'${arabicFont}', serif`, fontSize: arabicSize - 2, lineHeight: 1.4 }}>{w.arab}</span>
                           <span style={{ fontSize: 9.5, color: 'var(--muted)', textAlign: 'center', lineHeight: 1.2 }}>{w.id}</span>
                         </div>
                       ))}
                     </div>
                   ) : (
-                  <div style={{ flex: 1, fontFamily: "'Amiri', serif", fontSize: arabicSize, lineHeight: 2, direction: 'rtl', textAlign: 'right' }}>
+                  <div style={{ flex: 1, fontFamily: `'${arabicFont}', serif`, fontSize: arabicSize, lineHeight: 2, direction: 'rtl', textAlign: 'right' }}>
                       {wordSyncReady && isPlaying
                         ? a.teksArab.split(' ').map((word, i) => (
                             <span

@@ -1,15 +1,17 @@
 // Vercel serverless function — the daily admin/user checks that don't need
 // anything finer-grained than once a day: (1) campaign deadlines that just
 // passed (admin Telegram alert), (2) zakat maal haul countdowns that just
-// completed, (3) the Friday Al-Kahf reminder, and (4) the monthly donation
-// pledge reminder — (2), (3), and (4) are real FCM pushes to the user
-// themselves. All four live in one function/one cron entry deliberately —
-// the Hobby plan caps a deployment at 12 Serverless Functions total, and
-// this repo was already at that cap, so a separate daily-cron function for
-// any one of these alone would have pushed a `vercel --prod` deploy over
-// the limit (hit for real, 2026-09-02: "No more than 12 Serverless
-// Functions can be added..."). None of the four is time-sensitive enough
-// to need its own schedule, so merging them costs nothing.
+// completed, (3) the Friday Al-Kahf reminder, (4) the monthly donation
+// pledge reminder, (5) the Zakat Fitrah reminder (last 5 days of Ramadan),
+// and (6) the daily "Kutipan Hari Ini" push — everything but (1) is a real
+// FCM push to the user themselves. All six live in one function/one cron
+// entry deliberately — the Hobby plan caps a deployment at 12 Serverless
+// Functions total, and this repo was already at that cap, so a separate
+// daily-cron function for any one of these alone would have pushed a
+// `vercel --prod` deploy over the limit (hit for real, 2026-09-02: "No
+// more than 12 Serverless Functions can be added..."). None of the six is
+// time-sensitive enough to need its own schedule, so merging them costs
+// nothing.
 //
 // Triggered once a day by Vercel's own native Cron Jobs (see the `crons`
 // entry in vercel.json) rather than the external cron-job.org pinger
@@ -188,6 +190,141 @@ async function checkMonthlyPledgeReminders(db) {
   return { notified, errors };
 }
 
+// Zakat Fitrah reminder (2026-09-04) — distinct from the existing Zakat
+// Maal haul reminder above: fitrah has a hard calendar deadline (before
+// the Idul Fitri prayer), not a rolling one-year countdown. Needs today's
+// real Hijri date, which this file didn't have a way to get until now
+// (the existing checks only need the Gregorian `todayInJakarta()` above) —
+// Aladhan's `gToH` (Gregorian-to-Hijri) endpoint is a pure calendar
+// conversion, no lat/lng needed, so this is a plain server-to-server call,
+// not the IPv6-avoidance situation api/aladhan.js's proxy exists for
+// (that's specifically about *browser* clients on IPv6-preferring
+// networks; a Vercel function calling out has no such problem — confirmed
+// live via curl before wiring this in). Fires once per Hijri year via
+// lastZakatFitrahReminderYear, during the last 5 days of Ramadan (day >=
+// month length - 4) — a real window before Eid, not just the final day,
+// so there's still time to actually pay it.
+const RAMADAN_HIJRI_MONTH_FITRAH = 9;
+
+async function checkZakatFitrahReminder(db) {
+  const { dateKey } = todayInJakarta();
+  const [year, month, day] = dateKey.split('-');
+
+  let hijri;
+  try {
+    const res = await fetch(`https://api.aladhan.com/v1/gToH/${day}-${month}-${year}`);
+    if (!res.ok) return { skipped: 'aladhan-error' };
+    const json = await res.json();
+    hijri = json.data.hijri;
+  } catch (err) {
+    return { skipped: 'aladhan-unreachable', error: err.message };
+  }
+
+  const monthDays = Number(hijri.month.days) || 29;
+  if (Number(hijri.month.number) !== RAMADAN_HIJRI_MONTH_FITRAH || Number(hijri.day) < monthDays - 4) {
+    return { skipped: 'not-in-window' };
+  }
+
+  const hijriYear = hijri.year;
+  const messaging = getMessaging();
+  const snap = await db.collection('users').where('notifEnabled', '==', true).get();
+  const notified = [];
+  const errors = [];
+
+  for (const docSnap of snap.docs) {
+    try {
+      const u = docSnap.data();
+      const tokens = u.fcmTokens || [];
+      if (!tokens.length || u.lastZakatFitrahReminderYear === hijriYear) continue;
+
+      const result = await messaging.sendEachForMulticast({
+        tokens,
+        data: {
+          tag: 'zakat-fitrah',
+          title: '🌙 Jangan Lupa Zakat Fitrah',
+          body: 'Idul Fitri sudah dekat — yuk tunaikan zakat fitrah sebelum sholat Ied.',
+        },
+      });
+
+      await docSnap.ref.update({ lastZakatFitrahReminderYear: hijriYear });
+
+      const deadTokens = result.responses.map((r, i) => (!r.success ? tokens[i] : null)).filter(Boolean);
+      if (deadTokens.length) {
+        await docSnap.ref.update({ fcmTokens: FieldValue.arrayRemove(...deadTokens) });
+      }
+
+      notified.push({ uid: docSnap.id, successCount: result.successCount });
+    } catch (err) {
+      errors.push({ uid: docSnap.id, error: err.message });
+    }
+  }
+
+  return { notified, errors };
+}
+
+// Daily "Kutipan Hari Ini" push (2026-09-04) — KutipanInspirasi.jsx's
+// quote rotation was previously "there if you happen to open the page",
+// never actually surfaced. Reuses the exact same day-of-year → QUOTE_REFS
+// index math as lib/quotesApi.js's todaysQuoteIndex() (surah = index+15,
+// ayat 1 — see data/quoteRefs.js), just computed from this file's own
+// Jakarta-calendar dateKey instead of the client's local Date, and fetches
+// the real Indonesian translation from the same Quran.com endpoint the
+// client uses, so the notification body is never a fabricated quote.
+function jakartaDayOfYear(dateKey) {
+  const [y, m, d] = dateKey.split('-').map(Number);
+  const start = Date.UTC(y, 0, 0);
+  const current = Date.UTC(y, m - 1, d);
+  return Math.floor((current - start) / 86400000);
+}
+
+async function checkDailyQuoteReminder(db) {
+  const { dateKey } = todayInJakarta();
+  const dayOfYear = jakartaDayOfYear(dateKey);
+  const surah = (dayOfYear % 100) + 15; // matches data/quoteRefs.js exactly
+
+  let body = 'Buka buat baca kutipan inspirasi hari ini.';
+  try {
+    const res = await fetch(`https://api.quran.com/api/v4/verses/by_key/${surah}:1?translations=33`);
+    const json = await res.json();
+    const text = (json.verse?.translations?.find((t) => t.resource_id === 33)?.text || '').replace(/<[^>]+>/g, '');
+    if (text) body = text.length > 140 ? `${text.slice(0, 137)}...` : text;
+  } catch {
+    // Falls back to the generic body above — the push still fires, just
+    // without the actual quote text preview.
+  }
+
+  const messaging = getMessaging();
+  const snap = await db.collection('users').where('notifEnabled', '==', true).get();
+  const notified = [];
+  const errors = [];
+
+  for (const docSnap of snap.docs) {
+    try {
+      const u = docSnap.data();
+      const tokens = u.fcmTokens || [];
+      if (!tokens.length || u.lastQuoteReminderDate === dateKey) continue;
+
+      const result = await messaging.sendEachForMulticast({
+        tokens,
+        data: { tag: 'kutipan-harian', title: '📜 Kutipan Hari Ini', body },
+      });
+
+      await docSnap.ref.update({ lastQuoteReminderDate: dateKey });
+
+      const deadTokens = result.responses.map((r, i) => (!r.success ? tokens[i] : null)).filter(Boolean);
+      if (deadTokens.length) {
+        await docSnap.ref.update({ fcmTokens: FieldValue.arrayRemove(...deadTokens) });
+      }
+
+      notified.push({ uid: docSnap.id, successCount: result.successCount });
+    } catch (err) {
+      errors.push({ uid: docSnap.id, error: err.message });
+    }
+  }
+
+  return { notified, errors };
+}
+
 function initAdmin() {
   if (getApps().length) return;
   const b64 = process.env.FIREBASE_SERVICE_ACCOUNT_B64;
@@ -243,6 +380,8 @@ export default async function handler(req, res) {
     const haulResult = await checkZakatHaul(db);
     const jumatResult = await checkJumatReminder(db);
     const pledgeResult = await checkMonthlyPledgeReminders(db);
+    const fitrahResult = await checkZakatFitrahReminder(db);
+    const quoteResult = await checkDailyQuoteReminder(db);
 
     return res.status(200).json({
       checked: snap.size,
@@ -250,6 +389,8 @@ export default async function handler(req, res) {
       zakatHaul: haulResult,
       jumatReminder: jumatResult,
       pledgeReminder: pledgeResult,
+      zakatFitrah: fitrahResult,
+      dailyQuote: quoteResult,
     });
   } catch (err) {
     console.error('check-campaign-deadlines error:', err);

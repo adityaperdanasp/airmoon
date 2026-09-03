@@ -3,6 +3,7 @@ import { Routes, Route } from 'react-router-dom';
 import ProtectedRoute from './components/ProtectedRoute';
 import Logo from './components/Logo';
 import NotificationForegroundListener from './components/NotificationForegroundListener';
+import OfflineBanner from './components/OfflineBanner';
 
 // Route-level code splitting (2026-09-02) — every build was warning about
 // a single 1MB+ JS chunk holding all ~29 page components at once, so a
@@ -45,6 +46,7 @@ const Tasbih = lazy(() => import('./pages/Tasbih'));
 const CariAyat = lazy(() => import('./pages/CariAyat'));
 const AyatFavorit = lazy(() => import('./pages/AyatFavorit'));
 const NotifikasiCenter = lazy(() => import('./pages/NotifikasiCenter'));
+const CariGlobal = lazy(() => import('./pages/CariGlobal'));
 
 function P({ children }) {
   return <ProtectedRoute>{children}</ProtectedRoute>;
@@ -75,6 +77,7 @@ export default function App() {
   return (
     <>
     <NotificationForegroundListener />
+    <OfflineBanner />
     <Suspense fallback={<RouteFallback />}>
       <Routes>
         <Route path="/login" element={<Login />} />
@@ -113,6 +116,7 @@ export default function App() {
         <Route path="/lainnya/tasbih" element={<P><Tasbih /></P>} />
         <Route path="/lainnya/ayat-favorit" element={<P><AyatFavorit /></P>} />
         <Route path="/notifikasi" element={<P><NotifikasiCenter /></P>} />
+        <Route path="/cari" element={<P><CariGlobal /></P>} />
       </Routes>
     </Suspense>
     </>

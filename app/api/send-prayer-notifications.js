@@ -10,12 +10,12 @@
 // client), compare against "now" in that location's own timezone, and send
 // through FCM once per prayer per day — tracked via lastNotified on the
 // user doc so re-running this every minute doesn't double-send. Also
-// carries two more per-user, per-local-time checks added later (2026-09-
-// 03) that fit naturally into this same loop since it already has each
-// user's own timezone-resolved "now" and Aladhan response on hand: the
-// Ramadan Imsak reminder and the Dzikir Petang streak-break reminder.
-// Neither needed its own scheduler — both ride this function's existing
-// 1-5 minute cadence.
+// carries three more per-user, per-local-time checks added later that fit
+// naturally into this same loop since it already has each user's own
+// timezone-resolved "now" and Aladhan response on hand: the Ramadan Imsak
+// reminder and the Dzikir Petang streak-break reminder (2026-09-03), and
+// the Amalan Harian incomplete reminder (2026-09-04). None needed its own
+// scheduler — all three ride this function's existing 1-5 minute cadence.
 
 import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
@@ -25,6 +25,12 @@ import { pickPrayerMessage } from './_lib/prayerMessages.js';
 const PRAYER_ORDER = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
 const PRAYER_LABEL = { Fajr: 'Subuh', Dhuhr: 'Dzuhur', Asr: 'Ashar', Maghrib: 'Maghrib', Isha: 'Isya' };
 const RAMADAN_HIJRI_MONTH = 9; // matches lib/ramadan.js's RAMADAN_MONTH
+// Duplicated from lib/amalanHarian.js's SHOLAT_KEYS — that file is a
+// client-side ES module using the client Firestore SDK, can't be imported
+// into this Admin SDK context, so just the 5-item key list is copied here
+// (same small-duplication precedent as RAMADAN_HIJRI_MONTH above).
+const AMALAN_SHOLAT_KEYS = ['subuh', 'dzuhur', 'ashar', 'maghrib', 'isya'];
+const AMALAN_TOTAL_ITEMS = AMALAN_SHOLAT_KEYS.length + 3; // + Dzikir Pagi, Dzikir Petang, Tilawah
 
 // Minutes a prayer stays "due" after its exact time — catches cron runs
 // that don't land on the exact minute, without needing a 1-minute cron.
@@ -35,6 +41,12 @@ const WINDOW_MINUTES = 10;
 // do it right after Maghrib already have, short enough it's still evening
 // when the nudge arrives.
 const STREAK_REMINDER_DELAY_MINUTES = 90;
+
+// How long after this user's own local Isha to check whether today's
+// Amalan Harian checklist is still incomplete — deliberately later than
+// STREAK_REMINDER_DELAY_MINUTES (90) so the two reminders don't land in
+// the same instant for someone who'd get both.
+const AMALAN_REMINDER_DELAY_MINUTES = 150;
 
 function initAdmin() {
   if (getApps().length) return;
@@ -202,6 +214,44 @@ export default async function handler(req, res) {
             await docSnap.ref.update({ 'dzikirStreak.petang.lastReminderDate': dateKey });
             await pruneDeadTokens(docSnap.ref, tokens, result);
             sent.push({ uid: docSnap.id, prayer: 'DzikirStreak', successCount: result.successCount });
+          }
+        }
+
+        // Amalan Harian incomplete reminder (2026-09-04) — one gentle
+        // evening nudge if today's checklist (5 sholat + Dzikir Pagi/
+        // Petang + Tilawah, same shape as components/AmalanHarianCard.jsx)
+        // isn't fully done yet, instead of the app only ever passively
+        // waiting for someone to open it and notice on their own.
+        // lastAmalanReminderDate is set every time this window is checked
+        // (whether or not a push actually goes out) so a user who finishes
+        // everything before the window doesn't get re-queried the rest of
+        // the day.
+        if (timings.Isha) {
+          const amalanWindowStart = minutesSinceMidnight(timings.Isha) + AMALAN_REMINDER_DELAY_MINUTES;
+          const due = nowMin >= amalanWindowStart && nowMin < amalanWindowStart + WINDOW_MINUTES;
+          const alreadyReminded = u.lastAmalanReminderDate === dateKey;
+          if (due && !alreadyReminded) {
+            const amalanSnap = await docSnap.ref.collection('amalanHarian').doc(dateKey).get();
+            const amalan = amalanSnap.exists ? amalanSnap.data() : { sholat: {}, tilawah: false };
+            const sholatDone = AMALAN_SHOLAT_KEYS.filter((k) => amalan.sholat?.[k]).length;
+            const dzikirPagiDone = u.dzikirStreak?.pagi?.lastDate === dateKey;
+            const dzikirPetangDone = u.dzikirStreak?.petang?.lastDate === dateKey;
+            const totalDone = sholatDone + (dzikirPagiDone ? 1 : 0) + (dzikirPetangDone ? 1 : 0) + (amalan.tilawah ? 1 : 0);
+
+            await docSnap.ref.update({ lastAmalanReminderDate: dateKey });
+
+            if (totalDone < AMALAN_TOTAL_ITEMS) {
+              const result = await messaging.sendEachForMulticast({
+                tokens,
+                data: {
+                  tag: 'amalan-belum-selesai',
+                  title: '📋 Amalan Hari Ini Belum Selesai',
+                  body: `${totalDone}/${AMALAN_TOTAL_ITEMS} amalan harian selesai — masih ada waktu buat lengkapin sebelum hari ini berakhir.`,
+                },
+              });
+              await pruneDeadTokens(docSnap.ref, tokens, result);
+              sent.push({ uid: docSnap.id, prayer: 'AmalanReminder', successCount: result.successCount });
+            }
           }
         }
       } catch (err) {

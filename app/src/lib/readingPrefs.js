@@ -53,6 +53,32 @@ export function useArabicFontSize() {
   return [size, setSize];
 }
 
+// Arabic font choice for Mode Ayat (2026-09-04) — same "safe to add here,
+// not to Mode Mushaf" reasoning as the font-size hook above: Mushaf mode's
+// QCF glyph fonts are per-page pre-shaped word images, not swappable
+// typefaces at all, so a font picker only makes sense for Mode Ayat's
+// plain Unicode text. Two options: 'Amiri' (this app's existing default,
+// a general-purpose elegant Naskh design) and 'Scheherazade New' (a Google
+// Font purpose-built for Quranic/classical Arabic text — see index.html's
+// font `<link>`), so the choice is a real difference in reading feel, not
+// a cosmetic-only swap.
+const ARABIC_FONT_KEY = 'airmoon-arabic-font';
+export const ARABIC_FONTS = [
+  { id: 'Amiri', label: 'Amiri' },
+  { id: 'Scheherazade New', label: 'Scheherazade' },
+];
+
+export function useArabicFont() {
+  const [font, setFont] = useState(() => {
+    const saved = localStorage.getItem(ARABIC_FONT_KEY);
+    return ARABIC_FONTS.some((f) => f.id === saved) ? saved : ARABIC_FONTS[0].id;
+  });
+  useEffect(() => {
+    localStorage.setItem(ARABIC_FONT_KEY, font);
+  }, [font]);
+  return [font, setFont];
+}
+
 export const NIGHT_STYLE_VARS = {
   '--bg': '#0d0d0d',
   '--ink': '#ececec',

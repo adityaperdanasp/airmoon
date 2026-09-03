@@ -8,6 +8,7 @@ import DonationCard from '../components/DonationCard';
 import { markSeen } from '../lib/unseenBadges';
 import EmptyState from '../components/EmptyState';
 import { SkeletonCard } from '../components/Skeleton';
+import ReceiptShareModal from '../components/ReceiptShareModal';
 
 const PLEDGE_AMOUNTS = [25000, 50000, 100000];
 
@@ -152,6 +153,7 @@ export default function Donasi() {
   const { user } = useAuth();
   const [donations, setDonations] = useState(null);
   const [myContributions, setMyContributions] = useState([]);
+  const [receiptFor, setReceiptFor] = useState(null); // the contribution being shared as a receipt image, or null
 
   useEffect(() => watchActiveDonations(setDonations), []);
 
@@ -239,7 +241,20 @@ export default function Donasi() {
                       <span style={{ fontSize: 13, fontWeight: 700 }}>{c.donationTitle}</span>
                       <span style={{ fontSize: 11, color: 'var(--muted)' }}>{c.createdAt ? dateFmt.format(c.createdAt.toDate()) : 'Baru saja'}</span>
                     </div>
-                    <span style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--primary)' }}>+{formatRupiah(c.amount)}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <span style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--primary)' }}>+{formatRupiah(c.amount)}</span>
+                      <button
+                        onClick={() => setReceiptFor(c)}
+                        aria-label="Bagikan bukti sedekah"
+                        title="Bagikan bukti sedekah"
+                        style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'var(--muted-soft)', display: 'flex' }}
+                      >
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                          <path d="M12 3v13M12 3 8 7M12 3l4 4" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M5 14v4.5A2.5 2.5 0 0 0 7.5 21h9a2.5 2.5 0 0 0 2.5-2.5V14" strokeWidth="1.6" strokeLinecap="round" />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -248,6 +263,8 @@ export default function Donasi() {
         )}
       </div>
       <BottomNav />
+
+      {receiptFor && <ReceiptShareModal contribution={receiptFor} onClose={() => setReceiptFor(null)} />}
     </div>
   );
 }

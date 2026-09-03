@@ -5,6 +5,8 @@ import { db } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
 import { fetchSurahList } from '../lib/quranApi';
 import { getReadingHistory } from '../lib/readingHistory';
+import KhatamProgressCard from '../components/KhatamProgressCard';
+import SurahPreviewSheet from '../components/SurahPreviewSheet';
 import BottomNav from '../components/BottomNav';
 import PageHeaderPhoto from '../components/PageHeaderPhoto';
 import { PAGE_PHOTOS } from '../data/photos';
@@ -22,6 +24,7 @@ export default function SurahList() {
   const [lastReadMushaf, setLastReadMushaf] = useState(null);
   const [retryTick, setRetryTick] = useState(0);
   const [history, setHistory] = useState([]);
+  const [previewSurah, setPreviewSurah] = useState(null);
 
   useEffect(() => setHistory(getReadingHistory()), []);
 
@@ -106,6 +109,8 @@ export default function SurahList() {
           </div>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)"><path d="m9 6 6 6-6 6" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
         </Link>
+
+        {user && <KhatamProgressCard uid={user.uid} />}
 
         <Link
           to="/quran/cari"
@@ -228,26 +233,40 @@ export default function SurahList() {
         {filtered && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {filtered.map((s) => (
-              <Link
-                key={s.nomor}
-                to={`/quran/${s.nomor}`}
-                style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 4px', textDecoration: 'none', color: 'inherit' }}
-              >
-                <div style={{ width: 36, height: 36, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: 'var(--mint)' }}>
-                  <span style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--primary)' }}>{s.nomor}</span>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1, minWidth: 0 }}>
-                  <span style={{ fontSize: 13.5, fontWeight: 700 }}>{s.namaLatin}</span>
-                  <span style={{ fontSize: 11, color: 'var(--muted)' }}>{s.tempatTurun} &middot; {s.jumlahAyat} Ayat</span>
-                </div>
-                <span style={{ fontFamily: "'Amiri', serif", fontSize: 19, fontWeight: 700, flexShrink: 0 }}>{s.nama}</span>
-              </Link>
+              <div key={s.nomor} style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Link
+                  to={`/quran/${s.nomor}`}
+                  style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 4px', textDecoration: 'none', color: 'inherit', flex: 1, minWidth: 0 }}
+                >
+                  <div style={{ width: 36, height: 36, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: 'var(--mint)' }}>
+                    <span style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--primary)' }}>{s.nomor}</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1, minWidth: 0 }}>
+                    <span style={{ fontSize: 13.5, fontWeight: 700 }}>{s.namaLatin}</span>
+                    <span style={{ fontSize: 11, color: 'var(--muted)' }}>{s.tempatTurun} &middot; {s.jumlahAyat} Ayat</span>
+                  </div>
+                  <span style={{ fontFamily: "'Amiri', serif", fontSize: 19, fontWeight: 700, flexShrink: 0 }}>{s.nama}</span>
+                </Link>
+                <button
+                  onClick={() => setPreviewSurah(s)}
+                  aria-label={`Pratinjau ${s.namaLatin}`}
+                  title="Pratinjau"
+                  style={{ background: 'none', border: 'none', padding: 8, cursor: 'pointer', color: 'var(--muted-soft)', flexShrink: 0 }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M2.5 12S6 5 12 5s9.5 7 9.5 7-3.5 7-9.5 7-9.5-7-9.5-7Z" strokeWidth="1.6" strokeLinejoin="round" />
+                    <circle cx="12" cy="12" r="2.8" strokeWidth="1.6" />
+                  </svg>
+                </button>
+              </div>
             ))}
           </div>
         )}
       </PullToRefresh>
       </div>
       <BottomNav />
+
+      {previewSurah && <SurahPreviewSheet surah={previewSurah} onClose={() => setPreviewSurah(null)} />}
     </div>
   );
 }

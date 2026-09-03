@@ -18,6 +18,7 @@ import {
   LanternIcon,
   UmrohIcon,
   NotificationBellIcon,
+  GlobalSearchIcon,
 } from '../components/serviceIcons';
 
 // All hand-drawn gradient icons now (see serviceIcons.jsx) — this grid
@@ -40,6 +41,7 @@ const ITEMS = [
   { to: '/lainnya/tasbih', key: 'item_tasbih', bg: 'var(--peach)', node: <TasbihCounterIcon size={30} /> },
   { to: '/lainnya/ayat-favorit', key: 'item_ayat_favorit', bg: 'var(--mint)', node: <FavoriteAyatIcon size={30} /> },
   { to: '/notifikasi', label: 'Notifikasi', bg: 'var(--cream)', node: <NotificationBellIcon size={30} /> },
+  { to: '/cari', label: 'Cari', bg: 'var(--mint)', node: <GlobalSearchIcon size={30} /> },
 ];
 
 export default function Lainnya() {

@@ -120,6 +120,9 @@ self.addEventListener('notificationclick', (event) => {
   else if (tag === 'imsak') url = '/lainnya/mode-ramadan';
   else if (tag === 'dzikir-streak') url = '/lainnya/doa-harian';
   else if (tag === 'pledge-reminder') url = '/donasi';
+  else if (tag === 'zakat-fitrah') url = '/lainnya/kalkulator-zakat';
+  else if (tag === 'kutipan-harian') url = '/lainnya/kutipan-inspirasi';
+  else if (tag === 'amalan-belum-selesai') url = '/?focus=amalan';
   event.waitUntil(clients.openWindow(url));
 });
 
@@ -178,8 +181,14 @@ async function trimCache(cacheName, maxEntries) {
 // lib/mushafApi.js, lib/wordGlossApi.js, lib/quranSearchApi.js) — reading
 // is the offline use case that actually matters (bad signal at the
 // mosque/on a train), prayer-time/donation data changes too often to be
-// worth serving stale.
-const OFFLINE_HOSTS = ['equran.id', 'api.quran.com'];
+// worth serving stale. `cdn.equran.id` and `download.quranicaudio.com`
+// were a real gap here (2026-09-04) — every per-ayat/per-surah murotal
+// audio file is served from one of those two hosts (see quranApi.js's
+// `audio`/`audioFull` maps and lib/quranTimingApi.js's word-synced
+// reciters respectively), not from `equran.id`/`api.quran.com` themselves,
+// so listening to a surah once online never actually made it available
+// offline afterward despite the reading text being cached correctly.
+const OFFLINE_HOSTS = ['equran.id', 'api.quran.com', 'cdn.equran.id', 'download.quranicaudio.com'];
 
 self.addEventListener('fetch', (event) => {
   const { request } = event;
