@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useLang } from '../context/LangContext';
 import { IconHome, IconBook, IconHeart, IconKaaba, IconGrid } from './icons';
@@ -56,7 +57,20 @@ export default function BottomNav() {
   // index at all.
   const activeIndex = ITEMS.findIndex((it) => location.pathname === it.to);
 
-  return (
+  // Portalled straight to document.body (2026-09-04) — reported bug: the
+  // floating pill would sometimes end up dragged up and stuck mid-screen,
+  // blocking content. `position: fixed` only resolves against the true
+  // viewport as long as *no ancestor* has a transform/filter/perspective/
+  // will-change/contain — any one of those on any ancestor (this nav
+  // used to render as a child of .screen, which picks up new CSS often as
+  // this app evolves) silently turns "fixed" into "fixed relative to that
+  // ancestor's box" instead, which for a tall scrollable page reads
+  // exactly like "the nav floats up and gets stuck partway down the
+  // screen." Rendering into document.body — a sibling of #root itself —
+  // makes this immune to that class of bug regardless of what .screen or
+  // any other ancestor does in the future, rather than auditing every
+  // future CSS change by hand.
+  return createPortal(
     <>
       {/* Fades scrolled content out before it reaches the floating pill below,
           instead of content getting sharply cut off behind it mid-scroll. */}
@@ -96,6 +110,7 @@ export default function BottomNav() {
           </NavLink>
         ))}
       </nav>
-    </>
+    </>,
+    document.body
   );
 }

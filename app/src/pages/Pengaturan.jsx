@@ -201,7 +201,12 @@ function ProfileCard() {
 }
 
 const SHARE_TEXT = "Yuk pakai airmoon — baca Qur'an, jadwal sholat, & donasi listrik masjid langsung dari HP kamu.";
-const SHARE_URL = 'https://airmoon.vercel.app';
+// The custom domain, not the vercel.app one — a shared link is meant to
+// look like a real, permanent address, not an internal hosting detail.
+// api/* calls elsewhere in the app stay pointed at vercel.app on purpose
+// (Firebase Hosting is static-only and can't run those serverless
+// functions), but this URL is only ever shown to a human, never fetched.
+const SHARE_URL = 'https://jalanmenujusurga.web.id';
 
 // navigator.share() (the real OS share sheet — WhatsApp, Telegram, SMS,
 // whatever's installed) when available; WhatsApp's own wa.me deep link as

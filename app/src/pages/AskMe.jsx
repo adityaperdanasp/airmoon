@@ -93,7 +93,7 @@ export default function AskMe() {
         </div>
       </div>
 
-      <div ref={listRef} style={{ flex: 1, overflowY: 'auto', padding: '0 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div ref={listRef} style={{ flex: 1, overflowY: 'auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
         {messages.map((m, i) => (
           <div
             key={i}
