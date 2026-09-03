@@ -9,6 +9,7 @@ import { isNativeApp } from '../lib/notifications';
 import { AVATAR_COLORS, watchUserProfile, setAvatarColor } from '../lib/profile';
 import InstallAppCard from '../components/InstallAppCard';
 import ConfirmDialog from '../components/ConfirmDialog';
+import { exportAndDownloadUserData } from '../lib/exportData';
 
 function SegButton({ active, onClick, children }) {
   return (
@@ -227,9 +228,28 @@ async function handleShareApp() {
 export default function Pengaturan() {
   const { t, lang, setLang } = useLang();
   const { preference: themePreference, setTheme } = useTheme();
-  const { logOut } = useAuth();
+  const { logOut, user } = useAuth();
+  const { showToast } = useToast();
   const navigate = useNavigate();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [exporting, setExporting] = useState(false);
+
+  // Export/backup personal data — dzikir streak, ayat favorit, tabungan
+  // umroh, and a few other personal records had no way for a user to get
+  // a copy of their own data before this. See lib/exportData.js for what
+  // gets bundled in.
+  async function handleExportData() {
+    if (!user || exporting) return;
+    setExporting(true);
+    try {
+      await exportAndDownloadUserData(user);
+      showToast('Data kamu berhasil diunduh');
+    } catch {
+      showToast('Gagal ekspor data, coba lagi.');
+    } finally {
+      setExporting(false);
+    }
+  }
 
   return (
     <div className="screen">
@@ -323,6 +343,38 @@ export default function Pengaturan() {
               <span style={{ fontSize: 13, fontWeight: 700 }}>Ajak Teman Pakai airmoon</span>
             </div>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)"><path d="m9 6 6 6-6 6" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+          </button>
+
+          <button
+            onClick={handleExportData}
+            disabled={exporting}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '14px 16px',
+              borderRadius: 18,
+              border: '1px solid var(--border)',
+              background: 'none',
+              textAlign: 'left',
+              cursor: exporting ? 'default' : 'pointer',
+              opacity: exporting ? 0.6 : 1,
+              color: 'inherit',
+              fontFamily: 'inherit',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: 'var(--cream)' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gold-ink)">
+                  <path d="M12 3v12m0 0-4-4m4 4 4-4M5 17v2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <span style={{ fontSize: 13, fontWeight: 700 }}>{exporting ? 'Menyiapkan data…' : 'Ekspor Data Saya'}</span>
+                <span style={{ fontSize: 11, color: 'var(--muted)' }}>Unduh cadangan dzikir, ayat favorit, tabungan umroh, dll</span>
+              </div>
+            </div>
+            {!exporting && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)"><path d="m9 6 6 6-6 6" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>}
           </button>
 
           <Link

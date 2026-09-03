@@ -5,9 +5,13 @@
 // where the app explains why first. Only ever shown when
 // `Notification.permission === 'default'` (never asked yet) — see
 // JadwalSholat.jsx's call site — so someone who already granted or denied
-// doesn't get re-primed every time they revisit the toggle.
+// doesn't get re-primed every time they revisit the toggle. Portalled to
+// document.body — see Portal.jsx's own comment for why.
+import Portal from './Portal';
+
 export default function NotificationPrimer({ onConfirm, onCancel }) {
   return (
+    <Portal>
     <div
       onClick={onCancel}
       style={{
@@ -67,5 +71,6 @@ export default function NotificationPrimer({ onConfirm, onCancel }) {
         </div>
       </div>
     </div>
+    </Portal>
   );
 }

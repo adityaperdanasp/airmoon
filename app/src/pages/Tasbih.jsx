@@ -66,7 +66,7 @@ export default function Tasbih() {
 
   return (
     <div className="screen">
-      <div className="screen-content" style={{ paddingBottom: 40 }}>
+      <div className="screen-content" style={{ paddingBottom: 'calc(40px + env(safe-area-inset-bottom))' }}>
         <TopBar title="Tasbih Digital" subtitle="Ketuk untuk menghitung" />
 
         <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 2 }}>

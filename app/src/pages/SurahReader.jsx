@@ -13,6 +13,7 @@ import TopBar from '../components/TopBar';
 import AyatCardModal from '../components/AyatCardModal';
 import ErrorRetry from '../components/ErrorRetry';
 import { Skeleton, SkeletonCard } from '../components/Skeleton';
+import Portal from '../components/Portal';
 
 function getReciterId() {
   return localStorage.getItem('airmoon-qari') || '05';
@@ -253,7 +254,7 @@ export default function SurahReader() {
 
   return (
     <div className="screen" style={night ? NIGHT_STYLE_VARS : undefined}>
-      <div className="screen-content" style={{ paddingBottom: 110 }}>
+      <div className="screen-content" style={{ paddingBottom: 'calc(110px + env(safe-area-inset-bottom))' }}>
         <TopBar title={surah.namaLatin} subtitle={`${surah.tempatTurun} · ${surah.jumlahAyat} Ayat`} right={topbarActions} />
 
         <Link
@@ -418,6 +419,7 @@ export default function SurahReader() {
       <audio ref={audioRef} onEnded={handleEnded} onTimeUpdate={handleTimeUpdate} style={{ display: 'none' }} />
 
       {playing && (
+        <Portal>
         <div
           style={{
             position: 'fixed',
@@ -449,6 +451,7 @@ export default function SurahReader() {
             <span style={{ fontSize: 10, color: 'var(--muted)' }}>{reciter.name}</span>
           </div>
         </div>
+        </Portal>
       )}
 
       {cardAyat && <AyatCardModal ayat={cardAyat} onClose={() => setCardAyat(null)} />}

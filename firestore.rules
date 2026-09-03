@@ -89,12 +89,24 @@ service cloud.firestore {
     // else's doa text or author.
     match /doas/{id} {
       allow read: if true;
+      // Last clause is the actual spam rate limit (2026-09-03) — the doa
+      // wall used to have no create-side limit at all, only the FCM
+      // broadcast did. Reads users/{uid}.lastDoaPostAt as it stood
+      // *before* this write (lib/doa.js's createDoa commits this create
+      // together with that field's update in one atomic batch, so a
+      // client can't skip the bookkeeping write and post again
+      // immediately) and rejects a create that's less than 30s after it.
       allow create: if request.auth != null
         && request.resource.data.uid == request.auth.uid
         && request.resource.data.text is string
         && request.resource.data.text.size() > 0
         && request.resource.data.text.size() <= 500
-        && request.resource.data.aminCount == 0;
+        && request.resource.data.aminCount == 0
+        && (
+          !exists(/databases/$(database)/documents/users/$(request.auth.uid))
+          || !('lastDoaPostAt' in get(/databases/$(database)/documents/users/$(request.auth.uid)).data)
+          || request.time > get(/databases/$(database)/documents/users/$(request.auth.uid)).data.lastDoaPostAt + duration.value(30, 's')
+        );
       allow update: if request.auth != null
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['aminCount']);
       allow delete: if request.auth != null && request.auth.uid == resource.data.uid;

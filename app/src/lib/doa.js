@@ -10,12 +10,14 @@
 
 import {
   collection, addDoc, doc,
-  increment, serverTimestamp, query, orderBy, limit, onSnapshot, runTransaction,
+  increment, serverTimestamp, query, orderBy, limit, onSnapshot, runTransaction, writeBatch,
 } from 'firebase/firestore';
 import { db } from './firebase';
 
 const MAX_DOA_LENGTH = 500;
 const DOA_TTL_MS = 24 * 60 * 60 * 1000; // a doa only stays on the wall for 24 hours
+const DOA_POST_COOLDOWN_MS = 30 * 1000; // 30s between posts per user — enough to stop rapid-fire spam without getting in the way of someone actually posting a doa
+const LAST_POST_KEY = 'airmoon-last-doa-post'; // client-side mirror of the check below, just for an instant "tunggu N detik" message instead of waiting on a round trip to get rejected
 
 // A Firestore range filter on createdAt would only apply the 24h cutoff
 // once, at the moment the query is built — the comparison value is frozen
@@ -53,12 +55,36 @@ export function watchDoas(callback) {
   };
 }
 
+// The doa post itself had no rate limit at all before this — only the FCM
+// broadcast did (5-minute cooldown, see api/broadcast-doa.js), so someone
+// could still spam the public wall itself as fast as they could tap
+// "Kirim", the broadcasts just wouldn't follow. Enforced as an atomic
+// batch (not two separate writes) so the cooldown can't be bypassed by a
+// client calling the Firestore SDK directly and skipping the bookkeeping
+// write: firestore.rules' `doas` create rule reads
+// users/{uid}.lastDoaPostAt (its value from *before* this batch, since
+// rules evaluate a batch's writes against the pre-commit state) and
+// rejects the create outright if it's too soon — this write is what sets
+// that field for the next check.
 export async function createDoa(text, anonymous, user) {
   const trimmed = text.trim();
   if (!trimmed) throw new Error('Doa-nya kosong.');
   if (trimmed.length > MAX_DOA_LENGTH) throw new Error(`Maksimal ${MAX_DOA_LENGTH} karakter.`);
 
-  const ref = await addDoc(collection(db, 'doas'), {
+  // Best-effort local pre-check (easy to clear, not what actually
+  // enforces this) just so a too-soon post fails instantly with a
+  // friendly countdown instead of waiting on a round trip to get
+  // rejected by the rule below.
+  const lastPost = Number(localStorage.getItem(LAST_POST_KEY) || 0);
+  const remaining = DOA_POST_COOLDOWN_MS - (Date.now() - lastPost);
+  if (remaining > 0) {
+    throw new Error(`Tunggu ${Math.ceil(remaining / 1000)} detik lagi sebelum posting doa lagi.`);
+  }
+
+  const doaRef = doc(collection(db, 'doas'));
+  const userRef = doc(db, 'users', user.uid);
+  const batch = writeBatch(db);
+  batch.set(doaRef, {
     text: trimmed,
     uid: user.uid,
     authorName: anonymous ? null : (user.displayName || user.email || 'Sahabat airmoon'),
@@ -66,6 +92,21 @@ export async function createDoa(text, anonymous, user) {
     aminCount: 0,
     createdAt: serverTimestamp(),
   });
+  batch.set(userRef, { lastDoaPostAt: serverTimestamp() }, { merge: true });
+
+  try {
+    await batch.commit();
+  } catch (err) {
+    // The cooldown rule is the only thing in this rule that can reject an
+    // otherwise-valid create, so a permission-denied here almost
+    // certainly means "too soon", not a real auth problem — surface that
+    // instead of a raw Firebase error string.
+    if (err?.code === 'permission-denied') {
+      throw new Error('Tunggu sebentar dulu sebelum posting doa lagi.');
+    }
+    throw err;
+  }
+  localStorage.setItem(LAST_POST_KEY, String(Date.now()));
 
   // Broadcasting is separate from the write itself (and allowed to fail
   // silently from the poster's point of view — see the endpoint's own
@@ -75,14 +116,14 @@ export async function createDoa(text, anonymous, user) {
     await fetch('https://airmoon.vercel.app/api/broadcast-doa', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ doaId: ref.id, text: trimmed, uid: user.uid }),
+      body: JSON.stringify({ doaId: doaRef.id, text: trimmed, uid: user.uid }),
     });
   } catch {
     // Network hiccup calling the broadcast endpoint — the doa itself is
     // already saved and visible in the feed regardless.
   }
 
-  return ref.id;
+  return doaRef.id;
 }
 
 // Whether `uid` has already amin-ed `doaId` — drives the button's toggled

@@ -155,7 +155,13 @@ a {
   display: flex;
   flex-direction: column;
   gap: 18px;
-  padding: 28px 20px 130px;
+  /* index.html's viewport meta sets viewport-fit=cover (content extends
+     under the notch/status bar and home-indicator area) but nothing was
+     ever added to compensate — a real, reported bug: page content (e.g.
+     Pengaturan's section labels) could render directly under the iOS
+     status bar. env(safe-area-inset-*) falls back to 0 on any device
+     without a notch/inset, so this is a no-op everywhere else. */
+  padding: calc(28px + env(safe-area-inset-top)) 20px calc(130px + env(safe-area-inset-bottom));
 }
 
 .topbar {
@@ -270,7 +276,7 @@ a {
   position: fixed;
   left: 50%;
   transform: translateX(-50%);
-  bottom: 22px;
+  bottom: calc(22px + env(safe-area-inset-bottom));
   width: calc(100% - 32px);
   max-width: 448px;
   display: flex;
@@ -441,6 +447,37 @@ textarea:focus-visible,
   animation: splash-pulse 1.6s ease-in-out infinite;
 }
 
+/* AskMe.jsx's "Ust. Rewin is replying" indicator — three dots inside a
+   chat-bubble shape (matching the assistant's own message bubbles)
+   instead of a bare spinner, the near-universal "typing…" convention
+   from WhatsApp/iMessage/etc. */
+.typing-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--muted-soft);
+  animation: typing-bounce 1.2s ease-in-out infinite;
+}
+.typing-dot:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.typing-dot:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes typing-bounce {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.5;
+  }
+  30% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+}
+
 @keyframes splash-pulse {
   0%,
   100% {
@@ -457,6 +494,7 @@ textarea:focus-visible,
   .skeleton,
   .screen,
   .splash-pulse,
+  .typing-dot,
   button:not(:disabled) {
     animation: none !important;
     transition: none !important;

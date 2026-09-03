@@ -28,6 +28,12 @@
       "short_name": "Cari Ayat",
       "url": "/quran/cari",
       "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Progress Hari Ini",
+      "short_name": "Progress",
+      "url": "/?focus=amalan",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     }
   ],
   "icons": [

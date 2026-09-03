@@ -1,20 +1,54 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { IconMoon, IconBack } from '../components/icons';
+import ConfirmDialog from '../components/ConfirmDialog';
 
 // Filled in after the Vercel deploy — see CLAUDE.md. Absolute URL so this
 // works no matter which host (Firebase or Vercel) serves the frontend.
 const ASK_ME_ENDPOINT = 'https://airmoon.vercel.app/api/ask-me';
 
+const WELCOME_MESSAGE = { role: 'assistant', content: 'Assalamu\'alaikum! Saya Ust. Rewin. Tanya apa aja seputar Islam — sholat, puasa, zakat, Qur\'an, atau fitur di airmoon.' };
+
+// Persisted per-device (localStorage, not Firestore — this is scratch
+// conversation history, not something that needs to sync across a
+// user's devices) so leaving the page and coming back doesn't lose the
+// conversation, which is what happened before this. Capped so someone
+// who chats a lot doesn't grow this without bound.
+const HISTORY_KEY = 'airmoon-askme-history';
+const MAX_HISTORY = 40;
+
+function loadHistory() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(HISTORY_KEY));
+    return Array.isArray(saved) && saved.length ? saved : [WELCOME_MESSAGE];
+  } catch {
+    return [WELCOME_MESSAGE];
+  }
+}
+
 export default function AskMe() {
   const navigate = useNavigate();
-  const [messages, setMessages] = useState([
-    { role: 'assistant', content: 'Assalamu\'alaikum! Saya Ust. Rewin. Tanya apa aja seputar Islam — sholat, puasa, zakat, Qur\'an, atau fitur di airmoon.' },
-  ]);
+  const [messages, setMessages] = useState(loadHistory);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const listRef = useRef(null);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(messages.slice(-MAX_HISTORY)));
+    } catch {
+      // Private-browsing/full storage — the conversation just won't
+      // survive a reload this session, not fatal.
+    }
+  }, [messages]);
+
+  function clearHistory() {
+    setMessages([WELCOME_MESSAGE]);
+    localStorage.removeItem(HISTORY_KEY);
+    setShowClearConfirm(false);
+  }
 
   useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: 'smooth' });
@@ -80,17 +114,26 @@ export default function AskMe() {
           JadwalSholat's next-prayer card and others already use — those
           tokens alone resolve to the right per-theme colors, no photo or
           JS theme-check needed) instead of the ~130px photo treatment. */}
-      <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 12, background: 'linear-gradient(135deg, var(--primary), var(--primary-dark))' }}>
+      <div style={{ padding: 'calc(16px + env(safe-area-inset-top)) 20px 16px', display: 'flex', alignItems: 'center', gap: 12, background: 'linear-gradient(135deg, var(--primary), var(--primary-dark))' }}>
         <button onClick={() => navigate(-1)} aria-label="Kembali" style={{ background: 'rgba(255,255,255,0.16)', border: 'none', width: 32, height: 32, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--on-primary)', cursor: 'pointer', flexShrink: 0 }}>
           <IconBack />
         </button>
         <div style={{ width: 34, height: 34, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: 'rgba(255,255,255,0.16)' }}>
           <IconMoon width="16" height="16" style={{ color: 'var(--on-primary)' }} />
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 1, minWidth: 0 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 1, minWidth: 0, flex: 1 }}>
           <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--on-primary)' }}>Ust. Rewin</span>
           <span style={{ fontSize: 10.5, color: 'var(--on-primary)', opacity: 0.85 }}>Asisten AI seputar Islam</span>
         </div>
+        {messages.length > 1 && (
+          <button
+            onClick={() => setShowClearConfirm(true)}
+            aria-label="Hapus riwayat obrolan"
+            style={{ background: 'rgba(255,255,255,0.16)', border: 'none', width: 32, height: 32, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--on-primary)', cursor: 'pointer', flexShrink: 0 }}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 7h12M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m2 0-.8 12.1a2 2 0 0 1-2 1.9H9.8a2 2 0 0 1-2-1.9L7 7" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
+          </button>
+        )}
       </div>
 
       <div ref={listRef} style={{ flex: 1, overflowY: 'auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -128,11 +171,15 @@ export default function AskMe() {
           </div>
         ))}
         {busy && messages[messages.length - 1]?.role === 'user' && (
-          <div style={{ alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ width: 26, height: 26, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: 'var(--primary)' }}>
+          <div style={{ alignSelf: 'flex-start', display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+            <div style={{ width: 26, height: 26, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: 'var(--primary)', marginTop: 2 }}>
               <IconMoon width="13" height="13" style={{ color: 'var(--on-primary)' }} />
             </div>
-            <div className="spinner" style={{ width: 16, height: 16 }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '13px 16px', borderRadius: 16, borderBottomLeftRadius: 4, background: 'var(--card)' }}>
+              <span className="typing-dot" />
+              <span className="typing-dot" />
+              <span className="typing-dot" />
+            </div>
           </div>
         )}
         {error && <p style={{ fontSize: 12, color: 'var(--danger)', textAlign: 'center' }}>{error}</p>}
@@ -168,6 +215,17 @@ export default function AskMe() {
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--on-primary)"><path d="M3 11 20 4l-7 17-3-7-7-3Z" strokeWidth="1.7" strokeLinejoin="round" /></svg>
         </button>
       </div>
+
+      {showClearConfirm && (
+        <ConfirmDialog
+          title="Hapus riwayat obrolan?"
+          message="Semua percakapan dengan Ust. Rewin di perangkat ini bakal dihapus."
+          confirmLabel="Ya, Hapus"
+          danger
+          onCancel={() => setShowClearConfirm(false)}
+          onConfirm={clearHistory}
+        />
+      )}
     </div>
   );
 }

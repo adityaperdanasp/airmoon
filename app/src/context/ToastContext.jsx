@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useState } from 'react';
+import Portal from '../components/Portal';
 
 const ToastContext = createContext(null);
 
@@ -21,12 +22,13 @@ export function ToastProvider({ children }) {
   return (
     <ToastContext.Provider value={{ showToast }}>
       {children}
+      <Portal>
       <div
         style={{
           position: 'fixed',
           left: '50%',
           transform: 'translateX(-50%)',
-          bottom: 96, // clears BottomNav's floating pill (bottom: 22px + its own height)
+          bottom: 'calc(96px + env(safe-area-inset-bottom))', // clears BottomNav's floating pill (bottom: 22px + its own height + safe area)
           zIndex: 60,
           display: 'flex',
           flexDirection: 'column',
@@ -59,6 +61,7 @@ export function ToastProvider({ children }) {
           </div>
         ))}
       </div>
+      </Portal>
     </ToastContext.Provider>
   );
 }

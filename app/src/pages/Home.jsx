@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
@@ -92,6 +92,8 @@ export default function Home() {
   const [avatarColor, setAvatarColor] = useState(null);
   const [lastReadAyat, setLastReadAyat] = useState(null);
   const [lastReadMushaf, setLastReadMushaf] = useState(null);
+  const [searchParams] = useSearchParams();
+  const [highlightAmalan, setHighlightAmalan] = useState(false);
 
   useEffect(() => watchActiveDonations(setDonations), []);
   useEffect(() => watchUserProfile(user?.uid, (p) => setAvatarColor(p?.avatarColor || null)), [user?.uid]);
@@ -117,6 +119,20 @@ export default function Home() {
     // is redefined every render (not memoized); including it here would
     // refire this on every render instead of only when the user changes.
   }, [user]);
+
+  // "Progress Hari Ini" PWA shortcut (manifest.json) deep-links here with
+  // ?focus=amalan since Amalan Harian lives inline on Home rather than its
+  // own route — scroll it into view and give it the same brief highlight
+  // ring SurahReader/MushafReader already use for their own deep links.
+  useEffect(() => {
+    if (searchParams.get('focus') !== 'amalan') return;
+    const el = document.getElementById('amalan-harian');
+    if (!el) return;
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setHighlightAmalan(true);
+    const t = setTimeout(() => setHighlightAmalan(false), 2200);
+    return () => clearTimeout(t);
+  }, [searchParams]);
 
   // The doa/donation feeds below are already onSnapshot-live (nothing to
   // re-fetch there), so pulling down mainly re-checks the last-read
@@ -322,7 +338,18 @@ export default function Home() {
           </div>
         </Link>
 
-        {user && <AmalanHarianCard uid={user.uid} />}
+        {user && (
+          <div
+            id="amalan-harian"
+            style={{
+              borderRadius: 20,
+              boxShadow: highlightAmalan ? '0 0 0 2px var(--primary)' : 'none',
+              transition: 'box-shadow 0.3s ease',
+            }}
+          >
+            <AmalanHarianCard uid={user.uid} />
+          </div>
+        )}
 
         {(lastReadAyat || lastReadMushaf) && (
           // Side-by-side when both bookmarks exist (Mode Ayat and Mode

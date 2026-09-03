@@ -1,11 +1,15 @@
+import Portal from './Portal';
+
 // A reusable "are you sure?" bottom sheet — Reset Tasbih, Reset Zakat
 // Haul, Hapus Ayat Favorit, and Keluar (logout) used to fire immediately
 // on tap with no way to back out of an accidental press. Same bottom-
 // sheet shape as NotificationPrimer.jsx (local state + conditional render
 // at each call site, not a global context/provider — matches how
 // AyatCardModal/NotificationPrimer are already used in this codebase).
+// Portalled to document.body — see Portal.jsx's own comment for why.
 export default function ConfirmDialog({ title, message, confirmLabel = 'Ya, Lanjutkan', cancelLabel = 'Batal', danger = false, onConfirm, onCancel }) {
   return (
+    <Portal>
     <div
       onClick={onCancel}
       style={{
@@ -66,5 +70,6 @@ export default function ConfirmDialog({ title, message, confirmLabel = 'Ya, Lanj
         </div>
       </div>
     </div>
+    </Portal>
   );
 }

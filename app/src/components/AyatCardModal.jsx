@@ -2,12 +2,14 @@ import { useEffect, useRef, useState } from 'react';
 import { drawAyatCard, canvasToFile } from '../lib/ayatCardCanvas';
 import { useTheme } from '../context/ThemeContext';
 import { shareFile } from '../lib/share';
+import Portal from './Portal';
 
 // A shareable "Ayat Card" preview — renders the same canvas used for
 // sharing/downloading directly on screen (scaled down via CSS width, the
 // backing resolution stays 1080x1350 so the shared/downloaded file is
 // still full quality) rather than drawing twice or round-tripping through
-// a dataURL <img>.
+// a dataURL <img>. Portalled to document.body — see Portal.jsx's own
+// comment for why.
 export default function AyatCardModal({ ayat, onClose }) {
   const canvasRef = useRef(null);
   const { theme } = useTheme();
@@ -47,6 +49,7 @@ export default function AyatCardModal({ ayat, onClose }) {
   }
 
   return (
+    <Portal>
     <div
       onClick={onClose}
       style={{
@@ -89,5 +92,6 @@ export default function AyatCardModal({ ayat, onClose }) {
         </button>
       </div>
     </div>
+    </Portal>
   );
 }

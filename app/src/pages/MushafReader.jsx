@@ -8,6 +8,7 @@ import { fetchSurahDetail } from '../lib/quranApi';
 import { useNightMode, NIGHT_STYLE_VARS } from '../lib/readingPrefs';
 import { IconBack } from '../components/icons';
 import ErrorRetry from '../components/ErrorRetry';
+import Portal from '../components/Portal';
 
 // Same Bismillah text as Al-Fatihah's own first ayah, standard convention
 // for rendering it as a separate banner line before a new surah — every
@@ -244,6 +245,7 @@ function AyahActionSheet({ verse, chapterName, isBookmarked, onClose, onBookmark
   }
 
   return (
+    <Portal>
     <div
       onClick={onClose}
       style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 50, display: 'flex', alignItems: 'flex-end' }}
@@ -262,6 +264,7 @@ function AyahActionSheet({ verse, chapterName, isBookmarked, onClose, onBookmark
         <ActionRow icon={isBookmarked ? '★' : '☆'} label="Tandai Terakhir Baca" onClick={onBookmark} />
       </div>
     </div>
+    </Portal>
   );
 }
 
@@ -464,7 +467,7 @@ export default function MushafReader() {
 
   return (
     <div className="screen" style={night ? NIGHT_STYLE_VARS : undefined}>
-      <div className="screen-content" style={{ paddingBottom: 130 }}>
+      <div className="screen-content" style={{ paddingBottom: 'calc(130px + env(safe-area-inset-bottom))' }}>
         <div className="topbar">
           <button className="icon-btn" onClick={() => navigate('/quran')} aria-label="Kembali">
             <IconBack />
