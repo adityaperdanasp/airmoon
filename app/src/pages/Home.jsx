@@ -469,7 +469,7 @@ export default function Home() {
             />
           )}
           {doas && doas.length > 0 && (
-            <div style={{ display: 'flex', gap: 10, overflowX: 'auto', scrollSnapType: 'x mandatory', margin: '0 -20px', padding: '0 20px' }}>
+            <div className="hide-scrollbar" style={{ display: 'flex', gap: 10, overflowX: 'auto', scrollSnapType: 'x mandatory', margin: '0 -20px', padding: '0 20px' }}>
               {doas.map((doa) => (
                 <DoaCard key={doa.id} doa={doa} compact />
               ))}

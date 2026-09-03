@@ -22,6 +22,7 @@ import {
   GlobalSearchIcon,
   InheritanceScaleIcon,
   WhatsNewIcon,
+  HistoryBookIcon,
 } from '../components/serviceIcons';
 
 // All hand-drawn gradient icons now (see serviceIcons.jsx) — this grid
@@ -47,6 +48,7 @@ const ITEMS = [
   { to: '/cari', label: 'Cari', bg: 'var(--mint)', node: <GlobalSearchIcon size={30} /> },
   { to: '/lainnya/kalkulator-waris', label: 'Kalkulator Waris', bg: 'var(--peach)', node: <InheritanceScaleIcon size={30} /> },
   { to: '/yang-baru', label: 'Yang Baru', bg: 'var(--blue-gray)', node: <WhatsNewIcon size={30} /> },
+  { to: '/lainnya/sejarah-islam', label: 'Sejarah Islam', bg: 'var(--cream)', node: <HistoryBookIcon size={30} /> },
 ];
 
 export default function Lainnya() {
@@ -73,7 +75,7 @@ export default function Lainnya() {
             <span className="section-label" style={{ color: 'var(--muted)', fontSize: 11.5, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
               Terakhir Dibuka
             </span>
-            <div style={{ display: 'flex', gap: 8, overflowX: 'auto' }}>
+            <div className="hide-scrollbar" style={{ display: 'flex', gap: 8, overflowX: 'auto' }}>
               {recentItems.map((it) => (
                 <Link
                   key={it.to}

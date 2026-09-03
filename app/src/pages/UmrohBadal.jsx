@@ -1,4 +1,8 @@
+import { useState } from 'react';
 import TopBar from '../components/TopBar';
+import { loadReadProgress, toggleReadProgress } from '../lib/readProgress';
+
+const PAGE_KEY = 'badal';
 
 // Content written originally based on rumaysho.com/12952-badal-umrah-adakah-dalilnya.html
 // and rumaysho.com/2873-10-ketentuan-badal-haji.html (badal umrah follows
@@ -40,10 +44,20 @@ const SECTIONS = [
 ];
 
 export default function UmrohBadal() {
+  const [progress, setProgress] = useState(() => loadReadProgress(PAGE_KEY));
+  const doneCount = Object.values(progress).filter(Boolean).length;
+
+  function toggle(title) {
+    setProgress(toggleReadProgress(PAGE_KEY, title));
+  }
+
   return (
     <div className="screen">
       <div className="screen-content">
-        <TopBar title="Badal Umrah" />
+        <TopBar title="Badal Umrah" subtitle={`${doneCount}/${SECTIONS.length} bagian ditandai`} />
+        <div style={{ height: 6, borderRadius: 999, background: 'var(--border)', overflow: 'hidden' }}>
+          <div style={{ height: '100%', width: `${(doneCount / SECTIONS.length) * 100}%`, background: 'var(--primary)', transition: 'width 0.25s ease' }} />
+        </div>
         <p className="muted" style={{ margin: 0, fontSize: 12, lineHeight: 1.6 }}>
           Dirangkum dari{' '}
           <a href="https://rumaysho.com/12952-badal-umrah-adakah-dalilnya.html" target="_blank" rel="noreferrer" style={{ color: 'var(--primary)', fontWeight: 600 }}>
@@ -55,7 +69,13 @@ export default function UmrohBadal() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {SECTIONS.map((s) => (
             <div key={s.title} className="card" style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <h2 style={{ margin: 0, fontSize: 14, fontWeight: 800, color: 'var(--primary)' }}>{s.title}</h2>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                <h2 style={{ margin: 0, fontSize: 14, fontWeight: 800, color: 'var(--primary)' }}>{s.title}</h2>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', flexShrink: 0 }}>
+                  <input type="checkbox" checked={!!progress[s.title]} onChange={() => toggle(s.title)} style={{ width: 15, height: 15, accentColor: 'var(--primary)' }} />
+                  <span style={{ fontSize: 10.5, color: 'var(--muted)' }}>Sudah dibaca</span>
+                </label>
+              </div>
               {s.body && <p style={{ margin: 0, fontSize: 12.5, lineHeight: 1.6, color: 'var(--ink)' }}>{s.body}</p>}
               {s.list && (
                 <ul style={{ margin: 0, paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 6 }}>

@@ -14,6 +14,50 @@ function digitsOnly(v) {
   return v.replace(/\D/g, '');
 }
 
+// Radial gauge for how close current assets are to the nisab threshold —
+// the text-only "Nisab: RpX" line next to the input told someone the
+// number, but not at a glance how close (or far past) they actually are;
+// a physical dial reads instantly in a way scanning two rupiah figures
+// and subtracting them in your head doesn't.
+function NisabGauge({ assets, nisab, reachesNisab }) {
+  const pct = nisab > 0 ? Math.min(1, assets / nisab) : 0;
+  const size = 108;
+  const stroke = 10;
+  const r = (size - stroke) / 2;
+  const circumference = 2 * Math.PI * r;
+  const offset = circumference * (1 - pct);
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '14px 16px', borderRadius: 16, background: 'var(--card)' }}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ flexShrink: 0, transform: 'rotate(-90deg)' }}>
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--border)" strokeWidth={stroke} />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          fill="none"
+          stroke={reachesNisab ? 'var(--success)' : 'var(--gold-ink)'}
+          strokeWidth={stroke}
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          style={{ transition: 'stroke-dashoffset 0.3s ease, stroke 0.3s ease' }}
+        />
+      </svg>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+        <span style={{ fontSize: 20, fontWeight: 800, color: reachesNisab ? 'var(--success)' : 'var(--ink)' }}>
+          {Math.round(pct * 100)}%
+        </span>
+        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink)' }}>
+          {reachesNisab ? 'Sudah mencapai nisab' : 'Menuju nisab'}
+        </span>
+        <span style={{ fontSize: 10, color: 'var(--muted)', lineHeight: 1.4 }}>
+          {reachesNisab ? 'Harta wajib dizakati' : `Butuh ${formatRupiah(Math.max(0, nisab - assets))} lagi`}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 function TabBtn({ active, onClick, children }) {
   return (
     <button
@@ -106,7 +150,14 @@ export default function KalkulatorZakat() {
               </span>
             </div>
 
-            <button className="btn">{t('bayar_zakat_btn')}</button>
+            {/* Was a dead button — no onClick at all, so tapping it did
+                nothing. No real zakat-payment flow exists in this app
+                (Donasi's infra is specifically PLN-direct mosque
+                electricity, a different flow) — honest info instead of a
+                fake "processing" state or a silently broken tap. */}
+            <button className="btn" onClick={() => showToast('Pembayaran zakat online belum tersedia di airmoon — salurkan langsung ke amil/BAZNAS atau masjid terdekat ya.', { duration: 4500 })}>
+              {t('bayar_zakat_btn')}
+            </button>
 
             {user && (
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '12px 14px', borderRadius: 14, background: 'var(--card)' }}>
@@ -148,6 +199,8 @@ export default function KalkulatorZakat() {
               </div>
               <span style={{ fontSize: 10.5, color: 'var(--muted)' }}>{t('nisab_info')} &middot; {formatRupiah(nisab)}</span>
             </div>
+
+            <NisabGauge assets={assetsN} nisab={nisab} reachesNisab={reachesNisab} />
 
             <div style={{ borderRadius: 20, padding: 20, textAlign: 'center', background: `linear-gradient(135deg, var(--primary), var(--primary-dark))` }}>
               <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--accent)' }}>

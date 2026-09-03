@@ -3,6 +3,7 @@ import { useLang } from '../context/LangContext';
 import TopBar from '../components/TopBar';
 import { DECORATIVE_PHOTOS_LIGHT } from '../data/photos';
 import { shareFile } from '../lib/share';
+import { getKartuUcapanHistory, logKartuUcapan } from '../lib/kartuUcapanHistory';
 
 const TEMPLATES = [
   { id: 0, colors: ['#0d4d47', '#0a3630'], title: 'Selamat Idul Fitri', sub: 'Mohon maaf lahir & batin' },
@@ -110,6 +111,7 @@ export default function KartuUcapan() {
   const canvasRef = useRef(null);
   const [tplId, setTplId] = useState(0);
   const [ready, setReady] = useState(false);
+  const [history, setHistory] = useState(() => getKartuUcapanHistory());
   const tpl = TEMPLATES[tplId];
 
   useEffect(() => {
@@ -129,6 +131,8 @@ export default function KartuUcapan() {
     a.href = url;
     a.download = 'kartu-ucapan-airmoon.png';
     a.click();
+    logKartuUcapan(tplId);
+    setHistory(getKartuUcapanHistory());
   }
 
   async function handleShare() {
@@ -137,6 +141,8 @@ export default function KartuUcapan() {
       const file = new File([blob], 'kartu-ucapan.png', { type: 'image/png' });
       await shareFile({ file, title: 'Kartu Ucapan airmoon', onFallback: handleDownload });
     });
+    logKartuUcapan(tplId);
+    setHistory(getKartuUcapanHistory());
   }
 
   return (
@@ -184,6 +190,36 @@ export default function KartuUcapan() {
           <button className="btn-outline" onClick={handleDownload} disabled={!ready}>{t('simpan')}</button>
           <button className="btn" onClick={handleShare} disabled={!ready}>{t('bagikan')}</button>
         </div>
+
+        {history.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <span className="section-label" style={{ color: 'var(--muted)', fontSize: 11.5, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+              Riwayat Dibuat
+            </span>
+            <div className="hide-scrollbar" style={{ display: 'flex', gap: 8, overflowX: 'auto' }}>
+              {history.map((h) => {
+                const t2 = TEMPLATES[h.templateId];
+                if (!t2) return null;
+                return (
+                  <button
+                    key={h.templateId}
+                    onClick={() => setTplId(h.templateId)}
+                    style={{
+                      flexShrink: 0,
+                      width: 46,
+                      height: 58,
+                      borderRadius: 10,
+                      border: h.templateId === tplId ? '2px solid var(--primary)' : 'none',
+                      cursor: 'pointer',
+                      background: `linear-gradient(160deg, ${t2.colors[0]}, ${t2.colors[1]})`,
+                    }}
+                    aria-label={`Pakai lagi template ${t2.title}`}
+                  />
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

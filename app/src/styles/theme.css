@@ -328,6 +328,19 @@ a {
   justify-content: center;
 }
 
+/* Hides the browser's own horizontal scrollbar on the app's many
+   swipeable chip/card rows (riwayat baca, koleksi doa, riwayat kartu
+   ucapan, skenario waris, etc.) — the row still scrolls by touch/drag,
+   this only removes the OS-drawn scrollbar track that looked out of
+   place sitting under an otherwise custom-styled row. */
+.hide-scrollbar {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* old Edge/IE */
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome/Safari/Android WebView */
+}
+
 .spinner {
   width: 22px;
   height: 22px;

@@ -9,6 +9,7 @@ import { useNightMode, NIGHT_STYLE_VARS } from '../lib/readingPrefs';
 import { fetchSurahTafsir } from '../lib/tafsirApi';
 import { addFavoriteAyat, removeFavoriteAyat } from '../lib/favoriteAyat';
 import { markPageRead } from '../lib/khatamProgress';
+import { recordPageReadForGoal } from '../lib/readingGoal';
 import { useEscapeKey } from '../lib/useEscapeKey';
 import { useReadingTimeTracker } from '../lib/readingTime';
 import { usePopAnimation } from '../lib/usePopAnimation';
@@ -16,6 +17,7 @@ import { IconBack } from '../components/icons';
 import ErrorRetry from '../components/ErrorRetry';
 import Portal from '../components/Portal';
 import TafsirSheet from '../components/TafsirSheet';
+import StickyMiniHeader from '../components/StickyMiniHeader';
 
 // Same Bismillah text as Al-Fatihah's own first ayah, standard convention
 // for rendering it as a separate banner line before a new surah — every
@@ -475,7 +477,10 @@ export default function MushafReader() {
         // Progress Khatam Qur'an — every page actually visited counts
         // toward it, not just ones read start-to-finish, matching how a
         // physical mushaf's bookmark ribbon works: paging through counts.
-        if (user) markPageRead(user.uid, page, v?.[0]?.juz_number);
+        if (user) {
+          markPageRead(user.uid, page, v?.[0]?.juz_number);
+          recordPageReadForGoal(user.uid, page);
+        }
       })
       .catch(() => setError('Gagal memuat halaman mushaf.'));
     // eslint-disable-next-line react-hooks/exhaustive-deps -- keyed on
@@ -549,6 +554,7 @@ export default function MushafReader() {
 
   return (
     <div className="screen" style={night ? NIGHT_STYLE_VARS : undefined}>
+      <StickyMiniHeader title={chapterNamesOnPage || 'Mushaf'} subtitle={`${juzNumber ? `Juz ${juzNumber} · ` : ''}Halaman ${page}`} />
       <div className="screen-content" style={{ paddingBottom: 'calc(130px + env(safe-area-inset-bottom))' }}>
         <div className="topbar">
           <button className="icon-btn" onClick={() => navigate('/quran')} aria-label="Kembali">

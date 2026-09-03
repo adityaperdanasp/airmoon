@@ -11,7 +11,9 @@ import InstallAppCard from '../components/InstallAppCard';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { exportAndDownloadUserData, importUserDataFromFile } from '../lib/exportData';
 import DeleteAccountSheet from '../components/DeleteAccountSheet';
+import { resetAllLocalData } from '../lib/resetLocalData';
 import { NOTIF_CATEGORIES, watchNotifPrefs, setNotifPref } from '../lib/notifPrefs';
+import AchievementShareModal from '../components/AchievementShareModal';
 
 function SegButton({ active, onClick, children }) {
   return (
@@ -300,6 +302,8 @@ export default function Pengaturan() {
   const navigate = useNavigate();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showDeleteAccount, setShowDeleteAccount] = useState(false);
+  const [showResetDataConfirm, setShowResetDataConfirm] = useState(false);
+  const [showAchievement, setShowAchievement] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [importing, setImporting] = useState(false);
   const [pendingImportFile, setPendingImportFile] = useState(null); // File awaiting confirmation, or null
@@ -355,6 +359,23 @@ export default function Pengaturan() {
             {t('pengaturan_akun')}
           </span>
           <ProfileCard />
+
+          {user && (
+            <button
+              className="card"
+              onClick={() => setShowAchievement(true)}
+              style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 16, textAlign: 'left', cursor: 'pointer', border: 'none' }}
+            >
+              <div style={{ width: 36, height: 36, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: 'var(--cream)', fontSize: 18 }}>
+                🏆
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 1, flex: 1 }}>
+                <span style={{ fontSize: 13, fontWeight: 700 }}>Kartu Pencapaian</span>
+                <span style={{ fontSize: 11, color: 'var(--muted)' }}>Progress khatam, streak dzikir & total sedekah jadi 1 kartu</span>
+              </div>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)"><path d="M9 6l6 6-6 6" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            </button>
+          )}
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -502,6 +523,37 @@ export default function Pengaturan() {
             {!importing && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)"><path d="m9 6 6 6-6 6" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>}
           </label>
 
+          <button
+            onClick={() => setShowResetDataConfirm(true)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '14px 16px',
+              borderRadius: 18,
+              border: '1px solid var(--border)',
+              background: 'none',
+              textAlign: 'left',
+              cursor: 'pointer',
+              color: 'inherit',
+              fontFamily: 'inherit',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: 'var(--cream)' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gold-ink)">
+                  <path d="M3 12a9 9 0 1 0 3-6.7" strokeWidth="1.6" strokeLinecap="round" />
+                  <path d="M3 4v5h5" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <span style={{ fontSize: 13, fontWeight: 700 }}>Reset Semua Data Lokal</span>
+                <span style={{ fontSize: 11, color: 'var(--muted)' }}>Hapus riwayat baca, pencarian, tasbih, dll dari HP ini</span>
+              </div>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)"><path d="m9 6 6 6-6 6" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+          </button>
+
           <Link
             to="/privacy-policy"
             style={{
@@ -553,6 +605,24 @@ export default function Pengaturan() {
           onDeleted={() => navigate('/login')}
         />
       )}
+
+      {showResetDataConfirm && (
+        <ConfirmDialog
+          title="Reset semua data lokal?"
+          message="Riwayat baca, riwayat pencarian, hitungan tasbih, progress khatam, dan data lain yang tersimpan di HP ini bakal dihapus. Tema, bahasa, dan pilihan qari/adzan gak ikut terhapus. Data yang tersimpan di server (favorit ayat, dzikir streak, dll) gak kena — cuma yang di HP ini doang."
+          confirmLabel="Ya, Reset"
+          danger
+          onCancel={() => setShowResetDataConfirm(false)}
+          onConfirm={() => {
+            const count = resetAllLocalData();
+            setShowResetDataConfirm(false);
+            showToast(`${count} data lokal direset — muat ulang halaman...`);
+            setTimeout(() => window.location.reload(), 1000);
+          }}
+        />
+      )}
+
+      {showAchievement && <AchievementShareModal onClose={() => setShowAchievement(false)} />}
 
       {showLogoutConfirm && (
         <ConfirmDialog

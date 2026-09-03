@@ -59,7 +59,7 @@ export default function AyatFavorit() {
         )}
 
         {favorites && favorites.length > 0 && collections.length > 0 && (
-          <div style={{ display: 'flex', gap: 8, overflowX: 'auto' }}>
+          <div className="hide-scrollbar" style={{ display: 'flex', gap: 8, overflowX: 'auto' }}>
             {[null, ...collections].map((name) => (
               <button
                 key={name || '__all__'}

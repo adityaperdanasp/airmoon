@@ -1,4 +1,8 @@
+import { useState } from 'react';
 import TopBar from '../components/TopBar';
+import { loadReadProgress, toggleReadProgress } from '../lib/readProgress';
+
+const PAGE_KEY = 'manasik';
 
 // Content written originally (not copied verbatim) based on the sequence
 // published at rumaysho.com/2654-tata-cara-pelaksanaan-umrah333.html
@@ -75,10 +79,20 @@ const STAGES = [
 ];
 
 export default function UmrohManasik() {
+  const [progress, setProgress] = useState(() => loadReadProgress(PAGE_KEY));
+  const doneCount = Object.values(progress).filter(Boolean).length;
+
+  function toggle(title) {
+    setProgress(toggleReadProgress(PAGE_KEY, title));
+  }
+
   return (
     <div className="screen">
       <div className="screen-content">
-        <TopBar title="Panduan Manasik" />
+        <TopBar title="Panduan Manasik" subtitle={`${doneCount}/${STAGES.length} tahap ditandai`} />
+        <div style={{ height: 6, borderRadius: 999, background: 'var(--border)', overflow: 'hidden' }}>
+          <div style={{ height: '100%', width: `${(doneCount / STAGES.length) * 100}%`, background: 'var(--primary)', transition: 'width 0.25s ease' }} />
+        </div>
         <p className="muted" style={{ margin: 0, fontSize: 12, lineHeight: 1.6 }}>
           Ringkasan tata cara umrah, ditulis ulang berdasarkan panduan di{' '}
           <a href="https://rumaysho.com/2654-tata-cara-pelaksanaan-umrah333.html" target="_blank" rel="noreferrer" style={{ color: 'var(--primary)', fontWeight: 600 }}>
@@ -90,7 +104,13 @@ export default function UmrohManasik() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {STAGES.map((stage) => (
             <div key={stage.title} className="card" style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <h2 style={{ margin: 0, fontSize: 14, fontWeight: 800, color: 'var(--primary)' }}>{stage.title}</h2>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                <h2 style={{ margin: 0, fontSize: 14, fontWeight: 800, color: 'var(--primary)' }}>{stage.title}</h2>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', flexShrink: 0 }}>
+                  <input type="checkbox" checked={!!progress[stage.title]} onChange={() => toggle(stage.title)} style={{ width: 15, height: 15, accentColor: 'var(--primary)' }} />
+                  <span style={{ fontSize: 10.5, color: 'var(--muted)' }}>Sudah dibaca</span>
+                </label>
+              </div>
               <ul style={{ margin: 0, paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {stage.items.map((item, i) => (
                   <li key={i} style={{ fontSize: 12.5, lineHeight: 1.55, color: 'var(--ink)' }}>

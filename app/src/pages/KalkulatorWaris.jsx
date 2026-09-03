@@ -4,6 +4,8 @@ import { formatRupiah } from '../lib/zakat';
 import PageHeaderPhoto from '../components/PageHeaderPhoto';
 import { PAGE_PHOTOS } from '../data/photos';
 import WarisShareModal from '../components/WarisShareModal';
+import ConfirmDialog from '../components/ConfirmDialog';
+import { loadWarisScenarios, saveWarisScenario, deleteWarisScenario } from '../lib/warisScenarios';
 
 function digitsOnly(v) {
   return v.replace(/\D/g, '');
@@ -65,6 +67,27 @@ export default function KalkulatorWaris() {
   const [harta, setHarta] = useState('500000000');
   const hartaN = Number(digitsOnly(harta)) || 0;
   const [showShare, setShowShare] = useState(false);
+  const [scenarios, setScenarios] = useState(loadWarisScenarios);
+  const [scenarioName, setScenarioName] = useState('');
+  const [showSaveScenario, setShowSaveScenario] = useState(false);
+  const [deleteScenarioId, setDeleteScenarioId] = useState(null);
+
+  function applyScenario(s) {
+    setHasSuami(s.inputs.hasSuami);
+    setJumlahIstri(s.inputs.jumlahIstri);
+    setAnakLaki(s.inputs.anakLaki);
+    setAnakPerempuan(s.inputs.anakPerempuan);
+    setHasAyah(s.inputs.hasAyah);
+    setHasIbu(s.inputs.hasIbu);
+    setHarta(s.inputs.harta);
+  }
+
+  function handleSaveScenario() {
+    const name = scenarioName.trim() || `Skenario ${scenarios.length + 1}`;
+    setScenarios(saveWarisScenario(name, { hasSuami, jumlahIstri, anakLaki, anakPerempuan, hasAyah, hasIbu, harta }));
+    setScenarioName('');
+    setShowSaveScenario(false);
+  }
 
   const noHeirs = !hasSuami && jumlahIstri === 0 && anakLaki === 0 && anakPerempuan === 0 && !hasAyah && !hasIbu;
   const { results, warnings } = noHeirs
@@ -78,6 +101,55 @@ export default function KalkulatorWaris() {
 
         <div style={{ padding: '10px 14px', borderRadius: 12, background: 'var(--cream)', fontSize: 11, color: 'var(--gold-ink-dark)', lineHeight: 1.5 }}>
           Mengcover kombinasi ahli waris paling umum (suami/istri, anak, ayah/ibu). Kasus lebih kompleks (kakek/nenek, saudara kandung, cucu, wasiat, hutang jenazah) tidak tercakup — konsultasikan ke ahli faraidh/ulama untuk kasus itu.
+        </div>
+
+        <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span className="section-label" style={{ color: 'var(--muted)', fontSize: 11.5, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+              Skenario Tersimpan
+            </span>
+            <button
+              onClick={() => setShowSaveScenario((v) => !v)}
+              style={{ background: 'none', border: 'none', color: 'var(--primary)', fontSize: 11, fontWeight: 700, cursor: 'pointer', padding: 0 }}
+            >
+              + Simpan Ini
+            </button>
+          </div>
+
+          {showSaveScenario && (
+            <div style={{ display: 'flex', gap: 8 }}>
+              <input
+                autoFocus
+                value={scenarioName}
+                onChange={(e) => setScenarioName(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSaveScenario()}
+                placeholder="Nama skenario, misal 'Ada anak laki-laki'"
+                style={{ flex: 1, padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--ink)', fontSize: 13 }}
+              />
+              <button className="btn" onClick={handleSaveScenario} style={{ padding: '0 16px' }}>Simpan</button>
+            </div>
+          )}
+
+          {scenarios.length === 0 ? (
+            <span style={{ fontSize: 11.5, color: 'var(--muted)' }}>Belum ada skenario tersimpan. Atur ahli waris di bawah, lalu simpan buat dibandingkan nanti.</span>
+          ) : (
+            <div className="hide-scrollbar" style={{ display: 'flex', gap: 8, overflowX: 'auto' }}>
+              {scenarios.map((s) => (
+                <div key={s.id} style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6, padding: '8px 6px 8px 12px', borderRadius: 999, background: 'var(--mint-soft)' }}>
+                  <button onClick={() => applyScenario(s)} style={{ background: 'none', border: 'none', color: 'var(--ink)', fontSize: 12, fontWeight: 700, cursor: 'pointer', padding: 0, whiteSpace: 'nowrap' }}>
+                    {s.name}
+                  </button>
+                  <button
+                    onClick={() => setDeleteScenarioId(s.id)}
+                    aria-label={`Hapus skenario ${s.name}`}
+                    style={{ width: 20, height: 20, borderRadius: '50%', border: 'none', background: 'rgba(0,0,0,0.08)', color: 'var(--muted)', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 14, padding: 16 }}>
@@ -142,6 +214,20 @@ export default function KalkulatorWaris() {
       </div>
 
       {showShare && <WarisShareModal totalHarta={hartaN} results={results} onClose={() => setShowShare(false)} />}
+
+      {deleteScenarioId && (
+        <ConfirmDialog
+          title="Hapus skenario ini?"
+          message="Skenario yang tersimpan di HP ini bakal dihapus."
+          confirmLabel="Ya, Hapus"
+          danger
+          onCancel={() => setDeleteScenarioId(null)}
+          onConfirm={() => {
+            setScenarios(deleteWarisScenario(deleteScenarioId));
+            setDeleteScenarioId(null);
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { IconMoon, IconBack } from '../components/icons';
 import ConfirmDialog from '../components/ConfirmDialog';
+import { shareText } from '../lib/share';
+import { useToast } from '../context/ToastContext';
 
 // Filled in after the Vercel deploy — see CLAUDE.md. Absolute URL so this
 // works no matter which host (Firebase or Vercel) serves the frontend.
@@ -37,8 +39,19 @@ function loadHistory() {
   }
 }
 
+// Turns the visible transcript into a plain-text export — the welcome
+// message is skipped (it's the same fixed greeting on every chat, not
+// something worth including in a shared/saved conversation).
+function formatTranscript(messages) {
+  const lines = messages
+    .filter((m) => m !== WELCOME_MESSAGE)
+    .map((m) => `${m.role === 'user' ? 'Saya' : 'Ust. Rewin'}: ${m.content}`);
+  return `${lines.join('\n\n')}\n\n— via airmoon (Tanya Ust. Rewin)`;
+}
+
 export default function AskMe() {
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [messages, setMessages] = useState(loadHistory);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [input, setInput] = useState('');
@@ -115,6 +128,11 @@ export default function AskMe() {
     }
   }
 
+  async function handleShareTranscript() {
+    const result = await shareText({ text: formatTranscript(messages), title: 'Obrolan dengan Ust. Rewin' });
+    if (result === 'copied') showToast('Obrolan disalin ke clipboard.');
+  }
+
   return (
     <div className="screen" style={{ height: '100vh' }}>
       {/* A compact gradient header, not the full-height PageHeaderPhoto
@@ -136,6 +154,15 @@ export default function AskMe() {
           <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--on-primary)' }}>Ust. Rewin</span>
           <span style={{ fontSize: 10.5, color: 'var(--on-primary)', opacity: 0.85 }}>Asisten AI seputar Islam</span>
         </div>
+        {messages.length > 1 && (
+          <button
+            onClick={handleShareTranscript}
+            aria-label="Bagikan obrolan"
+            style={{ background: 'rgba(255,255,255,0.16)', border: 'none', width: 32, height: 32, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--on-primary)', cursor: 'pointer', flexShrink: 0 }}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 8a3 3 0 1 0-2.83-4H15a3 3 0 0 0 .05 3.11L8.91 10.7a3 3 0 1 0 0 2.6l6.14 3.59A3 3 0 1 0 15.7 15l-6.14-3.59a3 3 0 0 0 0-1.62l6.13-3.6c.36.4.81.71 1.31.81Z" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>
+          </button>
+        )}
         {messages.length > 1 && (
           <button
             onClick={() => setShowClearConfirm(true)}

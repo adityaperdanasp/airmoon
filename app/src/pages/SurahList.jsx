@@ -207,7 +207,7 @@ export default function SurahList() {
                 Hapus
               </button>
             </div>
-            <div style={{ display: 'flex', gap: 8, overflowX: 'auto' }}>
+            <div className="hide-scrollbar" style={{ display: 'flex', gap: 8, overflowX: 'auto' }}>
               {history.map((s) => (
                 <Link
                   key={s.nomor}

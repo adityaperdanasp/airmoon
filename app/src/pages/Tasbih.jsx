@@ -149,7 +149,7 @@ export default function Tasbih() {
       <div className="screen-content" style={{ paddingBottom: 'calc(40px + env(safe-area-inset-bottom))' }}>
         <TopBar title="Tasbih Digital" subtitle="Ketuk untuk menghitung" />
 
-        <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 2 }}>
+        <div className="hide-scrollbar" style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 2 }}>
           {allPhrases.map((p) => (
             <button
               key={p.id}

@@ -13,6 +13,7 @@ import { fetchSurahTafsir } from '../lib/tafsirApi';
 import { markSurahOpened } from '../lib/readingHistory';
 import { useReadingTimeTracker } from '../lib/readingTime';
 import TopBar from '../components/TopBar';
+import StickyMiniHeader from '../components/StickyMiniHeader';
 import AyatCardModal from '../components/AyatCardModal';
 import TafsirSheet from '../components/TafsirSheet';
 import ErrorRetry from '../components/ErrorRetry';
@@ -323,6 +324,7 @@ export default function SurahReader() {
 
   return (
     <div className="screen" style={night ? NIGHT_STYLE_VARS : undefined}>
+      <StickyMiniHeader title={surah.namaLatin} subtitle={`${surah.tempatTurun} · ${surah.jumlahAyat} Ayat`} />
       <div className="screen-content" style={{ paddingBottom: 'calc(110px + env(safe-area-inset-bottom))' }}>
         <TopBar title={surah.namaLatin} subtitle={`${surah.tempatTurun} · ${surah.jumlahAyat} Ayat`} right={topbarActions} />
 

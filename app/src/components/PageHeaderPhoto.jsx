@@ -1,6 +1,40 @@
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { IconBack } from './icons';
 import { useTheme } from '../context/ThemeContext';
+
+// Gentle parallax: the photo itself scrolls slightly slower than the page
+// (translateY at a fraction of window.scrollY, clamped to a small max so
+// the photo never visibly detaches from its 130px frame) — a plain static
+// banner previously felt flat compared to the rest of this batch's
+// scroll-reactive touches (StickyMiniHeader, PullToRefresh). Window-level
+// scroll listener, not a container ref — .screen/.screen-content have no
+// overflow rule of their own, the document itself is what scrolls.
+const MAX_SHIFT = 18;
+
+function usePhotoParallax() {
+  const [shift, setShift] = useState(0);
+  const elRef = useRef(null);
+
+  useEffect(() => {
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+    function onScroll() {
+      const el = elRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      // Only worth computing while the banner is anywhere near the
+      // viewport — this fires on every scroll tick across the whole app.
+      if (rect.bottom < -50 || rect.top > window.innerHeight + 50) return;
+      const clamped = Math.max(-MAX_SHIFT, Math.min(MAX_SHIFT, window.scrollY * 0.25));
+      setShift(clamped);
+    }
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  return { elRef, shift };
+}
 
 // A photo banner replacing the plain TopBar on a handful of content
 // pages (Arah Kiblat, Jadwal Sholat, Cari Masjid, Zakat, ...) — per an
@@ -12,12 +46,20 @@ import { useTheme } from '../context/ThemeContext';
 export default function PageHeaderPhoto({ title, photo, subtitle, showBack = true, right }) {
   const navigate = useNavigate();
   const { theme } = useTheme();
+  const { elRef, shift } = usePhotoParallax();
   return (
-    <div style={{ position: 'relative', height: 130, borderRadius: 22, overflow: 'hidden' }}>
+    <div ref={elRef} style={{ position: 'relative', height: 130, borderRadius: 22, overflow: 'hidden' }}>
       <img
         src={photo}
         alt=""
-        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+        style={{
+          position: 'absolute',
+          inset: -MAX_SHIFT,
+          width: `calc(100% + ${MAX_SHIFT * 2}px)`,
+          height: `calc(100% + ${MAX_SHIFT * 2}px)`,
+          objectFit: 'cover',
+          transform: `translateY(${shift}px)`,
+        }}
       />
       <div
         style={{

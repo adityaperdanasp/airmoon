@@ -137,5 +137,6 @@ export function routeForTag(tag = '') {
   if (tag === 'sedekah-recap') return '/donasi';
   if (tag === 'test-notification') return '/pengaturan';
   if (tag === 'zakat-penghasilan') return '/lainnya/kalkulator-zakat';
+  if (tag === 'target-baca') return '/quran';
   return '/jadwal-sholat'; // adzan-* and any unrecognized tag
 }

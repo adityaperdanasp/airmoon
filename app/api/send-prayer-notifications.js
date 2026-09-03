@@ -76,6 +76,11 @@ const STREAK_REMINDER_DELAY_MINUTES = 90;
 // the same instant for someone who'd get both.
 const AMALAN_REMINDER_DELAY_MINUTES = 150;
 
+// Later still than AMALAN_REMINDER_DELAY_MINUTES (150) so a user who'd get
+// all 3 evening nudges (Dzikir Petang, Amalan Harian, Target Baca) sees
+// them spread out rather than all at once.
+const READING_GOAL_REMINDER_DELAY_MINUTES = 210;
+
 function initAdmin() {
   if (getApps().length) return;
   const b64 = process.env.FIREBASE_SERVICE_ACCOUNT_B64;
@@ -331,6 +336,33 @@ export default async function handler(req, res) {
               });
               await pruneDeadTokens(docSnap.ref, tokens, result);
               sent.push({ uid: docSnap.id, prayer: 'AmalanReminder', successCount: result.successCount });
+            }
+          }
+        }
+
+        // Target Baca Harian reminder (2026-09-04) — only fires when the
+        // user has actually set a daily page goal (lib/readingGoal.js);
+        // no default goal exists, so this never nags someone who never
+        // opted into a target in the first place.
+        const goal = u.readingGoal;
+        if (pengingatEnabled && timings.Isha && goal?.pagesPerDay > 0) {
+          const goalWindowStart = minutesSinceMidnight(timings.Isha) + READING_GOAL_REMINDER_DELAY_MINUTES;
+          const due = nowMin >= goalWindowStart && nowMin < goalWindowStart + WINDOW_MINUTES;
+          const alreadyReminded = u.lastReadingGoalReminderDate === dateKey;
+          if (due && !alreadyReminded) {
+            await docSnap.ref.update({ lastReadingGoalReminderDate: dateKey });
+            const pagesToday = goal.lastDate === dateKey ? goal.pagesToday?.length || 0 : 0;
+            if (pagesToday < goal.pagesPerDay) {
+              const result = await messaging.sendEachForMulticast({
+                tokens,
+                data: {
+                  tag: 'target-baca',
+                  title: '🎯 Target Baca Hari Ini Belum Tercapai',
+                  body: `Baru ${pagesToday}/${goal.pagesPerDay} halaman hari ini — masih ada waktu buat lanjut baca Mushaf sebelum hari ini berakhir.`,
+                },
+              });
+              await pruneDeadTokens(docSnap.ref, tokens, result);
+              sent.push({ uid: docSnap.id, prayer: 'ReadingGoalReminder', successCount: result.successCount });
             }
           }
         }

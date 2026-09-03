@@ -565,3 +565,29 @@ export function WhatsNewIcon({ size = 42 }) {
     </svg>
   );
 }
+
+// An open book with a small clock face rising from its spine — "Hari Ini
+// dalam Sejarah Islam" is a dated-history feature, distinct from
+// ScrollIcon (used for the timeless-quote KutipanInspirasi feature).
+export function HistoryBookIcon({ size = 42 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 42 42" fill="none">
+      <defs>
+        <linearGradient id="histBookG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#fdf8ec" />
+          <stop offset="1" stopColor="#f0e3bf" />
+        </linearGradient>
+        <linearGradient id="histClockG" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#fff2cf" />
+          <stop offset="0.55" stopColor="#f0c04d" />
+          <stop offset="1" stopColor="#c98f22" />
+        </linearGradient>
+      </defs>
+      <path d="M6 12c4-2 9-2 12 0v18c-3-2-8-2-12 0Z" fill="url(#histBookG)" />
+      <path d="M36 12c-4-2-9-2-12 0v18c3-2 8-2 12 0Z" fill="url(#histBookG)" />
+      <line x1="21" y1="12" x2="21" y2="30" stroke="#c9a75c" strokeWidth="1.4" />
+      <circle cx="29" cy="12" r="7" fill="url(#histClockG)" stroke="#fdf8ec" strokeWidth="1.6" />
+      <path d="M29 8v4l3 2" stroke="#7a4f10" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}

@@ -16,6 +16,11 @@ export default function KutipanInspirasi() {
   const [quote, setQuote] = useState(null);
   const [error, setError] = useState('');
   const [retryTick, setRetryTick] = useState(0);
+  // "Berikutnya" already let someone reach every quote by tapping through
+  // sequentially, but there was no way to actually see the other 99 at a
+  // glance or jump straight to one — this grid is the real "jelajah
+  // semua" view.
+  const [browsing, setBrowsing] = useState(false);
 
   useEffect(() => {
     setQuote(null);
@@ -35,7 +40,47 @@ export default function KutipanInspirasi() {
   return (
     <div className="screen">
       <div className="screen-content">
-        <TopBar title={lang === 'en' ? 'Daily Quote' : 'Kutipan Inspirasi'} subtitle={lang === 'en' ? '100 quotes, one new each day' : '100 kutipan, gonta-ganti tiap hari'} />
+        <TopBar
+          title={lang === 'en' ? 'Daily Quote' : 'Kutipan Inspirasi'}
+          subtitle={lang === 'en' ? '100 quotes, one new each day' : '100 kutipan, gonta-ganti tiap hari'}
+          right={
+            <button className="icon-btn" onClick={() => setBrowsing((v) => !v)} aria-label="Jelajah semua kutipan" title="Jelajah semua kutipan">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <rect x="3" y="3" width="7" height="7" rx="1.5" strokeWidth="1.6" />
+                <rect x="14" y="3" width="7" height="7" rx="1.5" strokeWidth="1.6" />
+                <rect x="3" y="14" width="7" height="7" rx="1.5" strokeWidth="1.6" />
+                <rect x="14" y="14" width="7" height="7" rx="1.5" strokeWidth="1.6" />
+              </svg>
+            </button>
+          }
+        />
+
+        {browsing && (
+          <div className="card" style={{ padding: 14, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {QUOTE_REFS.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => {
+                  setIdx(i);
+                  setBrowsing(false);
+                }}
+                style={{
+                  width: 30,
+                  height: 30,
+                  borderRadius: 8,
+                  fontSize: 10.5,
+                  fontWeight: 700,
+                  border: i === idx ? 'none' : '1px solid var(--border)',
+                  background: i === idx ? 'var(--primary)' : 'var(--card)',
+                  color: i === idx ? 'var(--on-primary)' : 'var(--muted)',
+                  cursor: 'pointer',
+                }}
+              >
+                {i + 1}
+              </button>
+            ))}
+          </div>
+        )}
 
         {error && <ErrorRetry message={error} onRetry={() => setRetryTick((n) => n + 1)} />}
 
@@ -97,10 +142,13 @@ export default function KutipanInspirasi() {
             </div>
 
             <div style={{ display: 'flex', gap: 10 }}>
-              <button className="btn-outline" onClick={() => setIdx((i) => (i + 1) % QUOTE_REFS.length)}>
+              <button className="btn-outline" style={{ flex: 'none', padding: '0 16px' }} onClick={() => setIdx((i) => (i - 1 + QUOTE_REFS.length) % QUOTE_REFS.length)} aria-label={lang === 'en' ? 'Previous' : 'Sebelumnya'}>
+                ←
+              </button>
+              <button className="btn-outline" style={{ flex: 1 }} onClick={() => setIdx((i) => (i + 1) % QUOTE_REFS.length)}>
                 {lang === 'en' ? 'Next' : 'Berikutnya'}
               </button>
-              <button className="btn" onClick={handleShare}>
+              <button className="btn" style={{ flex: 1 }} onClick={handleShare}>
                 {lang === 'en' ? 'Share' : 'Bagikan'}
               </button>
             </div>

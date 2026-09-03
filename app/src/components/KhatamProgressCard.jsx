@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { watchKhatamProgress, resetKhatamProgress, TOTAL_MUSHAF_PAGES, TOTAL_JUZ } from '../lib/khatamProgress';
 import { watchReadingStats } from '../lib/readingTime';
+import { watchReadingGoal, setReadingGoalTarget } from '../lib/readingGoal';
 import ConfirmDialog from './ConfirmDialog';
 import KhatamCertificateModal from './KhatamCertificateModal';
 import Confetti from './Confetti';
 
 const CELEBRATED_KEY = 'airmoon-khatam-celebrated';
+const GOAL_OPTIONS = [1, 2, 3, 5];
 
 // A compact progress display on SurahList.jsx — "how much of the whole
 // Mushaf have I actually paged through" (filled in by MushafReader.jsx's
@@ -17,12 +19,15 @@ const CELEBRATED_KEY = 'airmoon-khatam-celebrated';
 export default function KhatamProgressCard({ uid }) {
   const [progress, setProgress] = useState({ pages: [], juz: [] });
   const [readingStats, setReadingStats] = useState({ totalMinutes: 0 });
+  const [readingGoal, setReadingGoalState] = useState({ pagesPerDay: 0, pagesToday: [] });
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showCertificate, setShowCertificate] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [showGoalPicker, setShowGoalPicker] = useState(false);
 
   useEffect(() => watchKhatamProgress(uid, setProgress), [uid]);
   useEffect(() => watchReadingStats(uid, setReadingStats), [uid]);
+  useEffect(() => watchReadingGoal(uid, setReadingGoalState), [uid]);
 
   const pageCount = progress.pages.length;
   const totalMinutes = readingStats.totalMinutes || 0;
@@ -90,6 +95,65 @@ export default function KhatamProgressCard({ uid }) {
           <span>⏱ Total waktu baca: <strong style={{ color: 'var(--ink)' }}>{timeLabel}</strong></span>
         </div>
       )}
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '10px 12px', borderRadius: 12, background: 'var(--bg)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink)' }}>🎯 Target Baca Harian</span>
+          <button
+            onClick={() => setShowGoalPicker((v) => !v)}
+            style={{ background: 'none', border: 'none', color: 'var(--primary)', fontSize: 10.5, fontWeight: 700, cursor: 'pointer', padding: 0 }}
+          >
+            {readingGoal.pagesPerDay > 0 ? 'Ubah' : 'Atur'}
+          </button>
+        </div>
+
+        {showGoalPicker && (
+          <div style={{ display: 'flex', gap: 6 }}>
+            {GOAL_OPTIONS.map((n) => (
+              <button
+                key={n}
+                onClick={() => {
+                  setReadingGoalTarget(uid, n);
+                  setShowGoalPicker(false);
+                }}
+                style={{
+                  flex: 1,
+                  padding: '8px 0',
+                  borderRadius: 10,
+                  fontSize: 12,
+                  fontWeight: 700,
+                  border: readingGoal.pagesPerDay === n ? 'none' : '1px solid var(--border)',
+                  background: readingGoal.pagesPerDay === n ? 'var(--primary)' : 'var(--card)',
+                  color: readingGoal.pagesPerDay === n ? 'var(--on-primary)' : 'var(--ink)',
+                  cursor: 'pointer',
+                }}
+              >
+                {n} hlm
+              </button>
+            ))}
+          </div>
+        )}
+
+        {readingGoal.pagesPerDay > 0 && !showGoalPicker && (
+          <>
+            <div style={{ height: 6, borderRadius: 999, background: 'var(--border)', overflow: 'hidden' }}>
+              <div
+                style={{
+                  height: '100%',
+                  width: `${Math.min(100, Math.round((readingGoal.pagesToday.length / readingGoal.pagesPerDay) * 100))}%`,
+                  background: readingGoal.pagesToday.length >= readingGoal.pagesPerDay ? 'var(--success)' : 'var(--gold-ink)',
+                  transition: 'width 0.25s ease',
+                }}
+              />
+            </div>
+            <span style={{ fontSize: 10.5, color: 'var(--muted)' }}>
+              {readingGoal.pagesToday.length >= readingGoal.pagesPerDay
+                ? '✅ Target hari ini tercapai!'
+                : `${readingGoal.pagesToday.length}/${readingGoal.pagesPerDay} halaman hari ini`}
+            </span>
+          </>
+        )}
+      </div>
 
       {isKhatam && (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '10px 12px', borderRadius: 12, background: 'var(--cream)' }}>

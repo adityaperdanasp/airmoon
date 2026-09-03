@@ -6,6 +6,7 @@ import { watchDzikirStreak, markDzikirDone, isDoneToday } from '../lib/dzikirStr
 import PageHeaderPhoto from '../components/PageHeaderPhoto';
 import { PAGE_PHOTOS } from '../data/photos';
 import { IconSearch } from '../components/icons';
+import StickyMiniHeader from '../components/StickyMiniHeader';
 
 // pagi/petang are real daily habits worth a streak; kegiatan (doa per
 // situation — makan, keluar rumah, etc.) isn't a once-a-day thing, so it
@@ -47,10 +48,11 @@ export default function DoaHarian() {
 
   return (
     <div className="screen">
+      <StickyMiniHeader title={t('item_doa_harian')} subtitle={t(active.labelKey)} />
       <div className="screen-content">
         <PageHeaderPhoto title={t('item_doa_harian')} photo={PAGE_PHOTOS.doaHarian} />
 
-        <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 2 }}>
+        <div className="hide-scrollbar" style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 2 }}>
           {doaCategories.map((c) => {
             const isActive = c.id === active.id;
             return (

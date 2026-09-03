@@ -128,6 +128,7 @@ self.addEventListener('notificationclick', (event) => {
   else if (tag === 'sedekah-recap') url = '/donasi';
   else if (tag === 'test-notification') url = '/pengaturan';
   else if (tag === 'zakat-penghasilan') url = '/lainnya/kalkulator-zakat';
+  else if (tag === 'target-baca') url = '/quran';
   event.waitUntil(clients.openWindow(url));
 });
 
