@@ -466,3 +466,25 @@ export function PrayerClockIcon({ size = 42 }) {
     </svg>
   );
 }
+
+// A bell with a small gold clapper accent — Notifikasi's entry on the
+// Lainnya grid (an in-app log of past pushes, see lib/notificationLog.js).
+export function NotificationBellIcon({ size = 42 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 42 42" fill="none">
+      <defs>
+        <linearGradient id="bellBodyG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#2fa190" />
+          <stop offset="1" stopColor="#0a4a43" />
+        </linearGradient>
+        <linearGradient id="bellGoldG" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor="#fff2cf" />
+          <stop offset="0.55" stopColor="#f0c04d" />
+          <stop offset="1" stopColor="#c98f22" />
+        </linearGradient>
+      </defs>
+      <path d="M21 7a2 2 0 0 1 2 2v1.3c4 1 7 4.7 7 9.2v5l2.5 3.5a1 1 0 0 1-.8 1.6H10.3a1 1 0 0 1-.8-1.6L12 24.5v-5c0-4.5 3-8.2 7-9.2V9a2 2 0 0 1 2-2Z" fill="url(#bellBodyG)" />
+      <path d="M16.5 30.5a4.5 4.5 0 0 0 9 0Z" fill="url(#bellGoldG)" />
+    </svg>
+  );
+}

@@ -8,9 +8,12 @@ import { fetchSurahDetail, RECITERS } from '../lib/quranApi';
 import { hasWordSync, fetchChapterTiming } from '../lib/quranTimingApi';
 import { fetchWordGloss } from '../lib/wordGlossApi';
 import { watchFavoriteAyat, addFavoriteAyat, removeFavoriteAyat } from '../lib/favoriteAyat';
-import { useNightMode, NIGHT_STYLE_VARS } from '../lib/readingPrefs';
+import { useNightMode, NIGHT_STYLE_VARS, useArabicFontSize, MIN_ARABIC_SIZE, MAX_ARABIC_SIZE } from '../lib/readingPrefs';
+import { fetchSurahTafsir } from '../lib/tafsirApi';
+import { markSurahOpened } from '../lib/readingHistory';
 import TopBar from '../components/TopBar';
 import AyatCardModal from '../components/AyatCardModal';
+import TafsirSheet from '../components/TafsirSheet';
 import ErrorRetry from '../components/ErrorRetry';
 import { Skeleton, SkeletonCard } from '../components/Skeleton';
 import Portal from '../components/Portal';
@@ -33,6 +36,11 @@ export default function SurahReader() {
   const [reciterId, setReciterId] = useState(getReciterId());
   const [timing, setTiming] = useState(null); // fetchChapterTiming() result, or null if unavailable
   const [night, setNight] = useNightMode();
+  const [arabicSize, setArabicSize] = useArabicFontSize();
+  const [showSizeControls, setShowSizeControls] = useState(false);
+  const [tafsirMap, setTafsirMap] = useState(null);
+  const [tafsirOpenAyat, setTafsirOpenAyat] = useState(null);
+  const [tafsirLoading, setTafsirLoading] = useState(false);
   const [activeWord, setActiveWord] = useState(null); // 1-based word index within the playing ayat
   const [glossOn, setGlossOn] = useState(false);
   const [gloss, setGloss] = useState(null); // { [ayatNumber]: [{arab, id}, ...] } once loaded
@@ -51,9 +59,32 @@ export default function SurahReader() {
     setSurah(null);
     setError('');
     fetchSurahDetail(nomor)
-      .then(setSurah)
+      .then((s) => {
+        setSurah(s);
+        markSurahOpened({ nomor: s.nomor, namaLatin: s.namaLatin });
+      })
       .catch(() => setError('Gagal memuat surat.'));
   }, [nomor, retryTick]);
+
+  // Reset the cached tafsir map whenever the surah changes so a stale
+  // tafsir from the previous surah never gets shown against the wrong
+  // ayat — same reasoning as the gloss reset effect below.
+  useEffect(() => {
+    setTafsirMap(null);
+  }, [nomor]);
+
+  async function openTafsir(ayatNumber) {
+    setTafsirOpenAyat(ayatNumber);
+    if (tafsirMap) return;
+    setTafsirLoading(true);
+    try {
+      setTafsirMap(await fetchSurahTafsir(nomor));
+    } catch {
+      setTafsirMap({});
+    } finally {
+      setTafsirLoading(false);
+    }
+  }
 
   // Deep-link from Cari Ayat: once the surah's real content is in the DOM,
   // scroll the target ayat into view and give it a brief highlight ring —
@@ -224,6 +255,15 @@ export default function SurahReader() {
     <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
       <button
         className="icon-btn"
+        onClick={() => setShowSizeControls((v) => !v)}
+        aria-label="Ukuran teks Arab"
+        style={{ color: showSizeControls ? 'var(--primary)' : 'var(--muted)', fontWeight: 800, fontSize: 13 }}
+        title="Ukuran teks Arab"
+      >
+        Aa
+      </button>
+      <button
+        className="icon-btn"
         onClick={() => setGlossOn((v) => !v)}
         aria-label="Toggle terjemahan per kata"
         style={{ color: glossOn ? 'var(--primary)' : 'var(--muted)' }}
@@ -256,6 +296,28 @@ export default function SurahReader() {
     <div className="screen" style={night ? NIGHT_STYLE_VARS : undefined}>
       <div className="screen-content" style={{ paddingBottom: 'calc(110px + env(safe-area-inset-bottom))' }}>
         <TopBar title={surah.namaLatin} subtitle={`${surah.tempatTurun} · ${surah.jumlahAyat} Ayat`} right={topbarActions} />
+
+        {showSizeControls && (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, padding: '10px 14px', borderRadius: 14, background: 'var(--mint-soft)' }}>
+            <button
+              onClick={() => setArabicSize((s) => Math.max(MIN_ARABIC_SIZE, s - 2))}
+              disabled={arabicSize <= MIN_ARABIC_SIZE}
+              aria-label="Perkecil teks Arab"
+              style={{ width: 32, height: 32, borderRadius: '50%', border: 'none', background: 'var(--card)', color: 'var(--primary)', fontWeight: 800, fontSize: 13, cursor: 'pointer', opacity: arabicSize <= MIN_ARABIC_SIZE ? 0.4 : 1 }}
+            >
+              A-
+            </button>
+            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--muted)', minWidth: 30, textAlign: 'center' }}>{arabicSize}px</span>
+            <button
+              onClick={() => setArabicSize((s) => Math.min(MAX_ARABIC_SIZE, s + 2))}
+              disabled={arabicSize >= MAX_ARABIC_SIZE}
+              aria-label="Perbesar teks Arab"
+              style={{ width: 32, height: 32, borderRadius: '50%', border: 'none', background: 'var(--card)', color: 'var(--primary)', fontWeight: 800, fontSize: 15, cursor: 'pointer', opacity: arabicSize >= MAX_ARABIC_SIZE ? 0.4 : 1 }}
+            >
+              A+
+            </button>
+          </div>
+        )}
 
         <Link
           to={`/quran/${nomor}/qari`}
@@ -336,13 +398,13 @@ export default function SurahReader() {
                     <div style={{ flex: 1, display: 'flex', flexWrap: 'wrap', flexDirection: 'row-reverse', gap: '10px 14px', justifyContent: 'flex-start' }}>
                       {gloss[a.nomorAyat].map((w, i) => (
                         <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, maxWidth: 90 }}>
-                          <span style={{ fontFamily: "'Amiri', serif", fontSize: 22, lineHeight: 1.4 }}>{w.arab}</span>
+                          <span style={{ fontFamily: "'Amiri', serif", fontSize: arabicSize - 2, lineHeight: 1.4 }}>{w.arab}</span>
                           <span style={{ fontSize: 9.5, color: 'var(--muted)', textAlign: 'center', lineHeight: 1.2 }}>{w.id}</span>
                         </div>
                       ))}
                     </div>
                   ) : (
-                  <div style={{ flex: 1, fontFamily: "'Amiri', serif", fontSize: 24, lineHeight: 2, direction: 'rtl', textAlign: 'right' }}>
+                  <div style={{ flex: 1, fontFamily: "'Amiri', serif", fontSize: arabicSize, lineHeight: 2, direction: 'rtl', textAlign: 'right' }}>
                       {wordSyncReady && isPlaying
                         ? a.teksArab.split(' ').map((word, i) => (
                             <span
@@ -409,6 +471,17 @@ export default function SurahReader() {
                       <path d="M5 14v4.5A2.5 2.5 0 0 0 7.5 21h9a2.5 2.5 0 0 0 2.5-2.5V14" strokeWidth="1.6" strokeLinecap="round" />
                     </svg>
                   </button>
+                  <button
+                    onClick={() => openTafsir(a.nomorAyat)}
+                    style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'var(--muted-soft)' }}
+                    aria-label="Lihat tafsir"
+                    title="Tafsir"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H12v18H6.5A2.5 2.5 0 0 1 4 18.5v-13Z" strokeWidth="1.6" strokeLinejoin="round" />
+                      <path d="M20 5.5A2.5 2.5 0 0 0 17.5 3H12v18h5.5a2.5 2.5 0 0 0 2.5-2.5v-13Z" strokeWidth="1.6" strokeLinejoin="round" />
+                    </svg>
+                  </button>
                 </div>
               </div>
             );
@@ -455,6 +528,15 @@ export default function SurahReader() {
       )}
 
       {cardAyat && <AyatCardModal ayat={cardAyat} onClose={() => setCardAyat(null)} />}
+
+      {tafsirOpenAyat && (
+        <TafsirSheet
+          title={`${surah.namaLatin} : ${tafsirOpenAyat}`}
+          loading={tafsirLoading}
+          text={tafsirMap?.[tafsirOpenAyat]}
+          onClose={() => setTafsirOpenAyat(null)}
+        />
+      )}
     </div>
   );
 }

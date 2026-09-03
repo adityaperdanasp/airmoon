@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useLang } from '../context/LangContext';
 import TopBar from '../components/TopBar';
 import { getRecentLainnya, markLainnyaVisited } from '../lib/recentLainnya';
+import { hasUnseenNotifications } from '../lib/notificationLog';
 import {
   QiblaCompassIcon,
   CalculatorIcon,
@@ -16,6 +17,7 @@ import {
   LiveKaabaIcon,
   LanternIcon,
   UmrohIcon,
+  NotificationBellIcon,
 } from '../components/serviceIcons';
 
 // All hand-drawn gradient icons now (see serviceIcons.jsx) — this grid
@@ -37,13 +39,18 @@ const ITEMS = [
   { to: '/umroh', key: 'nav_umroh', bg: 'var(--blue-gray)', node: <UmrohIcon size={30} /> },
   { to: '/lainnya/tasbih', key: 'item_tasbih', bg: 'var(--peach)', node: <TasbihCounterIcon size={30} /> },
   { to: '/lainnya/ayat-favorit', key: 'item_ayat_favorit', bg: 'var(--mint)', node: <FavoriteAyatIcon size={30} /> },
+  { to: '/notifikasi', label: 'Notifikasi', bg: 'var(--cream)', node: <NotificationBellIcon size={30} /> },
 ];
 
 export default function Lainnya() {
   const { t } = useLang();
   const [recent, setRecent] = useState([]);
+  const [hasUnseenNotif, setHasUnseenNotif] = useState(false);
 
   useEffect(() => setRecent(getRecentLainnya()), []);
+  useEffect(() => {
+    hasUnseenNotifications().then(setHasUnseenNotif);
+  }, []);
 
   const recentItems = recent.map((to) => ITEMS.find((it) => it.to === to)).filter(Boolean);
 
@@ -79,7 +86,7 @@ export default function Lainnya() {
                   <div style={{ width: 28, height: 28, borderRadius: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: it.bg }}>
                     {it.node}
                   </div>
-                  <span style={{ fontSize: 11.5, fontWeight: 700, whiteSpace: 'nowrap' }}>{t(it.key)}</span>
+                  <span style={{ fontSize: 11.5, fontWeight: 700, whiteSpace: 'nowrap' }}>{it.key ? t(it.key) : it.label}</span>
                 </Link>
               ))}
             </div>
@@ -88,13 +95,14 @@ export default function Lainnya() {
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           {ITEMS.map((it) => {
-            const label = t(it.key);
+            const label = it.key ? t(it.key) : it.label;
             return (
               <Link
                 key={it.to}
                 to={it.to}
                 onClick={() => markLainnyaVisited(it.to)}
                 style={{
+                  position: 'relative',
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
@@ -106,8 +114,11 @@ export default function Lainnya() {
                   color: 'inherit',
                 }}
               >
-                <div style={{ width: 48, height: 48, borderRadius: 16, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: it.bg }}>
+                <div style={{ position: 'relative', width: 48, height: 48, borderRadius: 16, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: it.bg }}>
                   {it.node}
+                  {it.to === '/notifikasi' && hasUnseenNotif && (
+                    <div style={{ position: 'absolute', top: 4, right: 4, width: 9, height: 9, borderRadius: '50%', background: 'var(--danger)', border: '1.5px solid var(--card)' }} />
+                  )}
                 </div>
                 <span style={{ fontSize: 11.5, fontWeight: 700, textAlign: 'center' }}>{label}</span>
               </Link>

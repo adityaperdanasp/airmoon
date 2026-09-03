@@ -7,7 +7,7 @@
 // app's whole personal footprint is small enough to fetch client-side in
 // one shot.
 
-import { doc, getDoc, collection, getDocs, query, orderBy } from 'firebase/firestore';
+import { doc, getDoc, setDoc, collection, getDocs, query, orderBy, writeBatch, serverTimestamp } from 'firebase/firestore';
 import { db } from './firebase';
 
 async function subcollection(uid, name) {
@@ -68,4 +68,60 @@ export async function exportAndDownloadUserData(user) {
   a.download = `airmoon-data-${dateStr}.json`;
   a.click();
   URL.revokeObjectURL(url);
+}
+
+// Import/restore — reads back a file this same export produced. Only
+// restores the durable/personal parts (streaks, goals, favorites,
+// bookmarks) — deliberately skips riwayatSedekah and amalanHarian: the
+// sedekah history is a server-written audit trail from real payment
+// webhooks, not something a client re-import should ever be able to
+// recreate, and re-importing old daily amalanHarian docs would just
+// confusingly overwrite (or clutter alongside) whatever's already logged
+// for those dates. umrohTabungan's deposit history is skipped for the
+// same "don't let a client re-inject financial-shaped records" reason —
+// only the goal (target/months) is restored, not the deposit list.
+export async function importUserDataFromFile(user, file) {
+  const text = await file.text();
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    throw new Error('File bukan format JSON yang valid.');
+  }
+  if (!data || typeof data !== 'object') {
+    throw new Error('Isi file tidak dikenali sebagai data ekspor airmoon.');
+  }
+
+  const profileUpdate = {};
+  if (data.dzikirStreak) profileUpdate.dzikirStreak = data.dzikirStreak;
+  if (data.zakatHaul) profileUpdate.zakatHaul = data.zakatHaul;
+  if (data.tabunganUmroh?.goal) profileUpdate.umrohTabungan = data.tabunganUmroh.goal;
+  if (data.bookmarkTerakhir?.modeAyat) profileUpdate.lastReadAyat = data.bookmarkTerakhir.modeAyat;
+  if (data.bookmarkTerakhir?.modeMushaf) profileUpdate.lastReadMushaf = data.bookmarkTerakhir.modeMushaf;
+
+  if (Object.keys(profileUpdate).length) {
+    await setDoc(doc(db, 'users', user.uid), profileUpdate, { merge: true });
+  }
+
+  const favorites = Array.isArray(data.ayatFavorit) ? data.ayatFavorit : [];
+  let restoredFavorites = 0;
+  // Firestore batches cap at 500 writes — this app's favorite lists are
+  // nowhere near that in practice, but chunk anyway rather than assume.
+  for (let i = 0; i < favorites.length; i += 400) {
+    const chunk = favorites.slice(i, i + 400);
+    const batch = writeBatch(db);
+    for (const f of chunk) {
+      if (!f.id || !f.chapter || !f.verse) continue;
+      // Drop the exported createdAt (a serialized Firestore Timestamp,
+      // not a real one once round-tripped through JSON) and stamp fresh —
+      // favoriteAyat.js sorts by this field, so it needs to stay a real
+      // Timestamp, not a plain {seconds,nanoseconds} map.
+      const { id, createdAt: _createdAt, ...rest } = f;
+      batch.set(doc(db, 'users', user.uid, 'favoriteAyat', id), { ...rest, createdAt: serverTimestamp() }, { merge: true });
+      restoredFavorites++;
+    }
+    await batch.commit();
+  }
+
+  return { restoredFavorites, restoredProfile: Object.keys(profileUpdate) };
 }

@@ -1,12 +1,99 @@
 import { useEffect, useState } from 'react';
-import { watchMyContributions, watchActiveDonations } from '../lib/donations';
+import { watchMyContributions, watchActiveDonations, watchMonthlyPledge, setMonthlyPledge, cancelMonthlyPledge } from '../lib/donations';
 import { formatRupiah } from '../lib/zakat';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import BottomNav from '../components/BottomNav';
 import DonationCard from '../components/DonationCard';
 import { markSeen } from '../lib/unseenBadges';
 import EmptyState from '../components/EmptyState';
 import { SkeletonCard } from '../components/Skeleton';
+
+const PLEDGE_AMOUNTS = [25000, 50000, 100000];
+
+// A monthly REMINDER, not real recurring billing — see lib/donations.js's
+// own comment on watchMonthlyPledge for why that distinction matters here
+// specifically (no saved payment method, no auto-charge — every month
+// still needs a real tap-through Midtrans/manual-transfer confirmation).
+function MonthlyPledgeCard({ user }) {
+  const { showToast } = useToast();
+  const [pledge, setPledge] = useState(null);
+  const [amount, setAmount] = useState(PLEDGE_AMOUNTS[0]);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => watchMonthlyPledge(user?.uid, setPledge), [user?.uid]);
+
+  if (!user) return null;
+
+  async function handleSet(amt) {
+    setSaving(true);
+    try {
+      await setMonthlyPledge(user.uid, amt);
+      showToast('Pengingat donasi bulanan diaktifkan');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleCancel() {
+    setSaving(true);
+    try {
+      await cancelMonthlyPledge(user.uid);
+      showToast('Pengingat donasi bulanan dimatikan');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (pledge?.active) {
+    return (
+      <div className="card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '14px 16px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <span style={{ fontSize: 13, fontWeight: 700 }}>🔔 Pengingat Donasi Bulanan Aktif</span>
+          <span style={{ fontSize: 11, color: 'var(--muted)' }}>Diingatkan tiap bulan buat donasi {formatRupiah(pledge.amount)}</span>
+        </div>
+        <button className="btn-outline" style={{ padding: '8px 12px', fontSize: 11.5, flexShrink: 0 }} disabled={saving} onClick={handleCancel}>
+          Matikan
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '14px 16px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <span style={{ fontSize: 13, fontWeight: 700 }}>🔔 Pengingat Donasi Bulanan</span>
+        <span style={{ fontSize: 11, color: 'var(--muted)' }}>
+          Diingatkan tiap bulan buat sedekah rutin — bukan auto-debit, kamu tetap konfirmasi bayar sendiri tiap kali.
+        </span>
+      </div>
+      <div style={{ display: 'flex', gap: 8 }}>
+        {PLEDGE_AMOUNTS.map((amt) => (
+          <button
+            key={amt}
+            onClick={() => setAmount(amt)}
+            style={{
+              flex: 1,
+              padding: '8px 0',
+              borderRadius: 10,
+              fontSize: 12,
+              fontWeight: 700,
+              border: amount === amt ? '1.5px solid var(--primary)' : '1px solid var(--border)',
+              background: amount === amt ? 'var(--mint)' : 'transparent',
+              color: amount === amt ? 'var(--primary)' : 'var(--muted)',
+              cursor: 'pointer',
+            }}
+          >
+            {formatRupiah(amt).replace('Rp ', '')}
+          </button>
+        ))}
+      </div>
+      <button className="btn-outline" disabled={saving} onClick={() => handleSet(amount)}>
+        Aktifkan Pengingat
+      </button>
+    </div>
+  );
+}
 
 const dateFmt = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
@@ -100,6 +187,7 @@ export default function Donasi() {
         </div>
 
         <DaftarkanMasjidCard user={user} />
+        <MonthlyPledgeCard user={user} />
 
         {!donations && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>

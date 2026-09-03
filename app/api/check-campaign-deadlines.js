@@ -1,15 +1,15 @@
 // Vercel serverless function — the daily admin/user checks that don't need
 // anything finer-grained than once a day: (1) campaign deadlines that just
 // passed (admin Telegram alert), (2) zakat maal haul countdowns that just
-// completed, and (3) the Friday Al-Kahf reminder — both (2) and (3) are
-// real FCM pushes to the user themselves. All three live in one function/
-// one cron entry deliberately — the Hobby plan caps a deployment at 12
-// Serverless Functions total, and this repo was already at that cap, so a
-// second daily-cron function for any one of these alone would have pushed
-// a `vercel --prod` deploy over the limit (hit for real, 2026-09-02: "No
-// more than 12 Serverless Functions can be added..."). None of the three
-// is time-sensitive enough to need its own schedule, so merging them
-// costs nothing.
+// completed, (3) the Friday Al-Kahf reminder, and (4) the monthly donation
+// pledge reminder — (2), (3), and (4) are real FCM pushes to the user
+// themselves. All four live in one function/one cron entry deliberately —
+// the Hobby plan caps a deployment at 12 Serverless Functions total, and
+// this repo was already at that cap, so a separate daily-cron function for
+// any one of these alone would have pushed a `vercel --prod` deploy over
+// the limit (hit for real, 2026-09-02: "No more than 12 Serverless
+// Functions can be added..."). None of the four is time-sensitive enough
+// to need its own schedule, so merging them costs nothing.
 //
 // Triggered once a day by Vercel's own native Cron Jobs (see the `crons`
 // entry in vercel.json) rather than the external cron-job.org pinger
@@ -141,6 +141,53 @@ async function checkJumatReminder(db) {
   return { notified, errors };
 }
 
+// Monthly donation reminder (2026-09-04) — see lib/donations.js's
+// watchMonthlyPledge for why this is a reminder push, not real recurring
+// billing. Idempotent per calendar month via lastPledgeReminderMonth
+// (Asia/Jakarta, same helper as the Jumat check below) rather than "30
+// days since last reminder", so it can't drift later into the month on
+// every run the way a rolling day-count would.
+async function checkMonthlyPledgeReminders(db) {
+  const { dateKey } = todayInJakarta();
+  const monthKey = dateKey.slice(0, 7); // YYYY-MM
+  const messaging = getMessaging();
+  const snap = await db.collection('users').where('monthlyPledge.active', '==', true).get();
+  const notified = [];
+  const errors = [];
+
+  for (const docSnap of snap.docs) {
+    try {
+      const u = docSnap.data();
+      const pledge = u.monthlyPledge;
+      const tokens = u.fcmTokens || [];
+      if (!tokens.length || !pledge?.amount || u.lastPledgeReminderMonth === monthKey) continue;
+
+      const amountStr = `Rp ${Number(pledge.amount).toLocaleString('id-ID')}`;
+      const result = await messaging.sendEachForMulticast({
+        tokens,
+        data: {
+          tag: 'pledge-reminder',
+          title: '🔔 Waktunya Donasi Bulanan',
+          body: `Yuk lanjutkan sedekah rutin kamu bulan ini — ${amountStr}.`,
+        },
+      });
+
+      await docSnap.ref.update({ lastPledgeReminderMonth: monthKey });
+
+      const deadTokens = result.responses.map((r, i) => (!r.success ? tokens[i] : null)).filter(Boolean);
+      if (deadTokens.length) {
+        await docSnap.ref.update({ fcmTokens: FieldValue.arrayRemove(...deadTokens) });
+      }
+
+      notified.push({ uid: docSnap.id, successCount: result.successCount });
+    } catch (err) {
+      errors.push({ uid: docSnap.id, error: err.message });
+    }
+  }
+
+  return { notified, errors };
+}
+
 function initAdmin() {
   if (getApps().length) return;
   const b64 = process.env.FIREBASE_SERVICE_ACCOUNT_B64;
@@ -195,12 +242,14 @@ export default async function handler(req, res) {
 
     const haulResult = await checkZakatHaul(db);
     const jumatResult = await checkJumatReminder(db);
+    const pledgeResult = await checkMonthlyPledgeReminders(db);
 
     return res.status(200).json({
       checked: snap.size,
       notified,
       zakatHaul: haulResult,
       jumatReminder: jumatResult,
+      pledgeReminder: pledgeResult,
     });
   } catch (err) {
     console.error('check-campaign-deadlines error:', err);

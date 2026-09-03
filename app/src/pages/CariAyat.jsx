@@ -1,16 +1,22 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import TopBar from '../components/TopBar';
 import { IconSearch } from '../components/icons';
 import { searchQuran } from '../lib/quranSearchApi';
+import { getSearchHistory, addSearchTerm, clearSearchHistory } from '../lib/searchHistory';
 import ErrorRetry from '../components/ErrorRetry';
 import { Skeleton } from '../components/Skeleton';
+
+const HISTORY_KEY = 'ayat';
 
 export default function CariAyat() {
   const [q, setQ] = useState('');
   const [results, setResults] = useState(null); // null = no search run yet
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [history, setHistory] = useState([]);
+
+  useEffect(() => setHistory(getSearchHistory(HISTORY_KEY)), []);
 
   async function doSearch(term) {
     if (!term) return;
@@ -18,6 +24,8 @@ export default function CariAyat() {
     setError('');
     try {
       setResults(await searchQuran(term));
+      addSearchTerm(HISTORY_KEY, term);
+      setHistory(getSearchHistory(HISTORY_KEY));
     } catch {
       setError('Gagal mencari ayat.');
       setResults(null);
@@ -65,9 +73,43 @@ export default function CariAyat() {
         )}
 
         {!loading && results === null && !error && (
-          <p style={{ fontSize: 12.5, color: 'var(--muted)', textAlign: 'center', padding: '24px 12px' }}>
-            Ketik kata kunci (Bahasa Indonesia atau Arab) lalu tekan Enter untuk mencari di seluruh Al-Qur'an.
-          </p>
+          <>
+            <p style={{ fontSize: 12.5, color: 'var(--muted)', textAlign: 'center', padding: '24px 12px 8px' }}>
+              Ketik kata kunci (Bahasa Indonesia atau Arab) lalu tekan Enter untuk mencari di seluruh Al-Qur'an.
+            </p>
+            {history.length > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span className="section-label" style={{ color: 'var(--muted)', fontSize: 11, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                    Pencarian Terakhir
+                  </span>
+                  <button
+                    onClick={() => {
+                      clearSearchHistory(HISTORY_KEY);
+                      setHistory([]);
+                    }}
+                    style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: 11, textDecoration: 'underline', cursor: 'pointer', padding: 0 }}
+                  >
+                    Hapus
+                  </button>
+                </div>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {history.map((term) => (
+                    <button
+                      key={term}
+                      onClick={() => {
+                        setQ(term);
+                        doSearch(term);
+                      }}
+                      style={{ padding: '7px 13px', borderRadius: 999, fontSize: 11.5, fontWeight: 600, border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--ink)', cursor: 'pointer' }}
+                    >
+                      {term}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
         )}
 
         {!loading && results?.length > 0 && (

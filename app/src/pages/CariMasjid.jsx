@@ -5,8 +5,11 @@ import { useLang } from '../context/LangContext';
 import PageHeaderPhoto from '../components/PageHeaderPhoto';
 import { PAGE_PHOTOS } from '../data/photos';
 import { IconSearch } from '../components/icons';
+import { getSearchHistory, addSearchTerm } from '../lib/searchHistory';
 import ErrorRetry from '../components/ErrorRetry';
 import { Skeleton } from '../components/Skeleton';
+
+const HISTORY_KEY = 'masjid';
 
 export default function CariMasjid() {
   const { t } = useLang();
@@ -16,6 +19,15 @@ export default function CariMasjid() {
   const [source, setSource] = useState(null);
   const [query, setQuery] = useState('');
   const [retryTick, setRetryTick] = useState(0);
+  const [history, setHistory] = useState([]);
+
+  useEffect(() => setHistory(getSearchHistory(HISTORY_KEY)), []);
+
+  function commitSearchTerm() {
+    if (!query.trim()) return;
+    addSearchTerm(HISTORY_KEY, query.trim());
+    setHistory(getSearchHistory(HISTORY_KEY));
+  }
 
   useEffect(() => {
     setStatus('loading');
@@ -46,8 +58,28 @@ export default function CariMasjid() {
 
         <div className="input-row" style={{ borderRadius: 999 }}>
           <IconSearch style={{ color: 'var(--muted)' }} />
-          <input placeholder={t('cari_masjid_placeholder')} value={query} onChange={(e) => setQuery(e.target.value)} />
+          <input
+            placeholder={t('cari_masjid_placeholder')}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onBlur={commitSearchTerm}
+            onKeyDown={(e) => e.key === 'Enter' && commitSearchTerm()}
+          />
         </div>
+
+        {!query && history.length > 0 && (
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {history.map((term) => (
+              <button
+                key={term}
+                onClick={() => setQuery(term)}
+                style={{ padding: '6px 12px', borderRadius: 999, fontSize: 11, fontWeight: 600, border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--ink)', cursor: 'pointer' }}
+              >
+                {term}
+              </button>
+            ))}
+          </div>
+        )}
 
         {source === 'osm' && (
           <div style={{ padding: '9px 14px', borderRadius: 12, background: 'var(--cream)', fontSize: 11, color: 'var(--gold-ink-dark)' }}>

@@ -29,3 +29,18 @@ export async function addFavoriteAyat(uid, ayat) {
 export async function removeFavoriteAyat(uid, chapter, verse) {
   await deleteDoc(doc(db, 'users', uid, 'favoriteAyat', `${chapter}:${verse}`));
 }
+
+// Collections/folders (2026-09-04) — a flat `collection` string field on
+// the same doc rather than a separate collection-of-collections: someone's
+// favorite list stays small enough that grouping by a field and filtering
+// client-side is simpler than a second synced data structure, and it means
+// an ayat can never end up in an "orphaned" collection reference. `null`/
+// unset means "Semua" (ungrouped) — AyatFavorit.jsx treats that as the
+// default bucket, not a real named collection.
+export async function setFavoriteCollection(uid, chapter, verse, collectionName) {
+  await setDoc(
+    doc(db, 'users', uid, 'favoriteAyat', `${chapter}:${verse}`),
+    { collection: collectionName || null },
+    { merge: true }
+  );
+}

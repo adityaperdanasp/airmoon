@@ -1,4 +1,4 @@
-import { collection, query, where, orderBy, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, orderBy, onSnapshot, doc, setDoc } from 'firebase/firestore';
 import { db } from './firebase';
 
 // Live-updating list of every campaign an admin has approved (see
@@ -96,4 +96,31 @@ export async function reportManualPayment(donation, amount, method, user) {
 export function watchMyContributions(uid, callback) {
   const q = query(collection(db, 'users', uid, 'contributions'), orderBy('createdAt', 'desc'));
   return onSnapshot(q, (snap) => callback(snap.docs.map((d) => ({ id: d.id, ...d.data() }))));
+}
+
+// "Pengingat Donasi Bulanan" — deliberately a REMINDER, not real recurring
+// billing. Actually auto-charging someone's card every month needs a
+// tokenized/saved payment method and Midtrans's own subscription API,
+// neither of which this app has — building a fake "berlangganan otomatis"
+// label on top of a plain reminder would misrepresent what happens with
+// someone's money. What this really does: save a monthly target amount,
+// and once a month (folded into check-campaign-deadlines.js's existing
+// daily cron, same 12-function Hobby-plan reasoning as the zakat haul/
+// Jumat reminders) send a push nudging the user back to Donasi — they
+// still tap through and confirm the actual payment themselves every time,
+// same Midtrans Snap/manual-transfer flow as any other donation.
+export function watchMonthlyPledge(uid, callback) {
+  if (!uid) {
+    callback(null);
+    return () => {};
+  }
+  return onSnapshot(doc(db, 'users', uid), (snap) => callback(snap.data()?.monthlyPledge || null));
+}
+
+export async function setMonthlyPledge(uid, amount) {
+  await setDoc(doc(db, 'users', uid), { monthlyPledge: { amount, active: true, createdAt: new Date().toISOString() } }, { merge: true });
+}
+
+export async function cancelMonthlyPledge(uid) {
+  await setDoc(doc(db, 'users', uid), { monthlyPledge: null }, { merge: true });
 }

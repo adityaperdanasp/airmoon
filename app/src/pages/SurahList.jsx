@@ -4,6 +4,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
 import { fetchSurahList } from '../lib/quranApi';
+import { getReadingHistory } from '../lib/readingHistory';
 import BottomNav from '../components/BottomNav';
 import PageHeaderPhoto from '../components/PageHeaderPhoto';
 import { PAGE_PHOTOS } from '../data/photos';
@@ -20,6 +21,9 @@ export default function SurahList() {
   const [lastReadAyat, setLastReadAyat] = useState(null);
   const [lastReadMushaf, setLastReadMushaf] = useState(null);
   const [retryTick, setRetryTick] = useState(0);
+  const [history, setHistory] = useState([]);
+
+  useEffect(() => setHistory(getReadingHistory()), []);
 
   async function refresh() {
     setError('');
@@ -180,6 +184,36 @@ export default function SurahList() {
               <span style={{ fontSize: 14.5, fontWeight: 800 }}>{lastReadMushaf.chapterName} &middot; Halaman {lastReadMushaf.page}</span>
             </div>
           </Link>
+        )}
+
+        {history.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <span className="section-label" style={{ color: 'var(--muted)', fontSize: 11.5, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+              Riwayat Baca
+            </span>
+            <div style={{ display: 'flex', gap: 8, overflowX: 'auto' }}>
+              {history.map((s) => (
+                <Link
+                  key={s.nomor}
+                  to={`/quran/${s.nomor}`}
+                  style={{
+                    flexShrink: 0,
+                    padding: '9px 14px',
+                    borderRadius: 999,
+                    background: 'var(--card)',
+                    border: '1px solid var(--border)',
+                    textDecoration: 'none',
+                    color: 'inherit',
+                    fontSize: 11.5,
+                    fontWeight: 700,
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {s.namaLatin}
+                </Link>
+              ))}
+            </div>
+          </div>
         )}
 
         {error && <ErrorRetry message={error} onRetry={() => setRetryTick((n) => n + 1)} />}

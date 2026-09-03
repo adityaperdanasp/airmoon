@@ -29,6 +29,30 @@ export function useNightMode() {
 // found by shipping without it first: backgrounds/borders went dark
 // correctly (each of those is set via an explicit var() on its own
 // element), but body text stayed near-invisible dark-on-dark.
+// Adjustable Arabic text size for Mode Ayat only — deliberately not wired
+// into Mode Mushaf. A real Mushaf page's per-line font size is already
+// auto-computed by MushafReader's own shrink-to-fit loop to preserve the
+// authentic "one printed line = one screen line" pagination; layering a
+// second, user-controlled size on top of that would either overflow a
+// line or force a wrap a real Mushaf page can't have. Mode Ayat has no
+// such constraint (each ayat just flows as its own block), so it's the
+// one place a plain user preference is safe to apply.
+const ARABIC_SIZE_KEY = 'airmoon-arabic-font-size';
+export const MIN_ARABIC_SIZE = 18;
+export const MAX_ARABIC_SIZE = 34;
+export const DEFAULT_ARABIC_SIZE = 24;
+
+export function useArabicFontSize() {
+  const [size, setSize] = useState(() => {
+    const saved = Number(localStorage.getItem(ARABIC_SIZE_KEY));
+    return saved >= MIN_ARABIC_SIZE && saved <= MAX_ARABIC_SIZE ? saved : DEFAULT_ARABIC_SIZE;
+  });
+  useEffect(() => {
+    localStorage.setItem(ARABIC_SIZE_KEY, String(size));
+  }, [size]);
+  return [size, setSize];
+}
+
 export const NIGHT_STYLE_VARS = {
   '--bg': '#0d0d0d',
   '--ink': '#ececec',

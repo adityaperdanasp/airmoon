@@ -9,7 +9,7 @@ import { isNativeApp } from '../lib/notifications';
 import { AVATAR_COLORS, watchUserProfile, setAvatarColor } from '../lib/profile';
 import InstallAppCard from '../components/InstallAppCard';
 import ConfirmDialog from '../components/ConfirmDialog';
-import { exportAndDownloadUserData } from '../lib/exportData';
+import { exportAndDownloadUserData, importUserDataFromFile } from '../lib/exportData';
 
 function SegButton({ active, onClick, children }) {
   return (
@@ -233,6 +233,8 @@ export default function Pengaturan() {
   const navigate = useNavigate();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [pendingImportFile, setPendingImportFile] = useState(null); // File awaiting confirmation, or null
 
   // Export/backup personal data — dzikir streak, ayat favorit, tabungan
   // umroh, and a few other personal records had no way for a user to get
@@ -248,6 +250,30 @@ export default function Pengaturan() {
       showToast('Gagal ekspor data, coba lagi.');
     } finally {
       setExporting(false);
+    }
+  }
+
+  // File picker just stages the file — actually applying it needs
+  // confirmation first, since it can silently overwrite whatever's
+  // currently saved (dzikir streak, tabungan umroh goal, ayat favorit).
+  function handlePickImportFile(e) {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // so picking the same file again still fires onChange
+    if (file) setPendingImportFile(file);
+  }
+
+  async function handleConfirmImport() {
+    const file = pendingImportFile;
+    setPendingImportFile(null);
+    if (!user || !file) return;
+    setImporting(true);
+    try {
+      const result = await importUserDataFromFile(user, file);
+      showToast(`Data dipulihkan (${result.restoredFavorites} ayat favorit)`);
+    } catch (err) {
+      showToast(err.message || 'Gagal impor data.');
+    } finally {
+      setImporting(false);
     }
   }
 
@@ -377,6 +403,35 @@ export default function Pengaturan() {
             {!exporting && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)"><path d="m9 6 6 6-6 6" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>}
           </button>
 
+          <label
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '14px 16px',
+              borderRadius: 18,
+              border: '1px solid var(--border)',
+              cursor: importing ? 'default' : 'pointer',
+              opacity: importing ? 0.6 : 1,
+              color: 'inherit',
+              fontFamily: 'inherit',
+            }}
+          >
+            <input type="file" accept="application/json" onChange={handlePickImportFile} disabled={importing} style={{ display: 'none' }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: 'var(--cream)' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gold-ink)">
+                  <path d="M12 15V3m0 0 4 4m-4-4L8 7M5 17v2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <span style={{ fontSize: 13, fontWeight: 700 }}>{importing ? 'Memulihkan data…' : 'Impor / Pulihkan Data'}</span>
+                <span style={{ fontSize: 11, color: 'var(--muted)' }}>Pulihkan dari file cadangan hasil Ekspor Data Saya</span>
+              </div>
+            </div>
+            {!importing && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)"><path d="m9 6 6 6-6 6" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+          </label>
+
           <Link
             to="/privacy-policy"
             style={{
@@ -403,6 +458,17 @@ export default function Pengaturan() {
           </button>
         </div>
       </div>
+
+      {pendingImportFile && (
+        <ConfirmDialog
+          title="Pulihkan data dari file ini?"
+          message={`Dzikir streak, tabungan umroh, ayat favorit, dan bookmark yang tersimpan sekarang bakal ditimpa isi "${pendingImportFile.name}".`}
+          confirmLabel="Ya, Pulihkan"
+          danger
+          onCancel={() => setPendingImportFile(null)}
+          onConfirm={handleConfirmImport}
+        />
+      )}
 
       {showLogoutConfirm && (
         <ConfirmDialog

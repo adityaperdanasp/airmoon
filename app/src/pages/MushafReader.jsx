@@ -6,9 +6,11 @@ import { useAuth } from '../context/AuthContext';
 import { fetchChapters, fetchMushafPage, layoutPage, TOTAL_MUSHAF_PAGES, TAJWEED_COLORS, parseTajweedHtml } from '../lib/mushafApi';
 import { fetchSurahDetail } from '../lib/quranApi';
 import { useNightMode, NIGHT_STYLE_VARS } from '../lib/readingPrefs';
+import { fetchSurahTafsir } from '../lib/tafsirApi';
 import { IconBack } from '../components/icons';
 import ErrorRetry from '../components/ErrorRetry';
 import Portal from '../components/Portal';
+import TafsirSheet from '../components/TafsirSheet';
 
 // Same Bismillah text as Al-Fatihah's own first ayah, standard convention
 // for rendering it as a separate banner line before a new surah — every
@@ -178,8 +180,25 @@ function AyahActionSheet({ verse, chapterName, isBookmarked, onClose, onBookmark
   const [playing, setPlaying] = useState(false);
   const audioRef = useRef(null);
   const [copied, setCopied] = useState(false);
+  const [showTafsir, setShowTafsir] = useState(false);
+  const [tafsirText, setTafsirText] = useState(null);
+  const [tafsirLoading, setTafsirLoading] = useState(false);
 
   const [chapterId, verseNumber] = verse.verse_key.split(':').map(Number);
+
+  async function handleTafsir() {
+    setShowTafsir(true);
+    if (tafsirText !== null) return;
+    setTafsirLoading(true);
+    try {
+      const map = await fetchSurahTafsir(chapterId);
+      setTafsirText(map[verseNumber] || '');
+    } catch {
+      setTafsirText('');
+    } finally {
+      setTafsirLoading(false);
+    }
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -261,9 +280,18 @@ function AyahActionSheet({ verse, chapterName, isBookmarked, onClose, onBookmark
         <ActionRow icon={playing ? '⏸' : '▶'} label={playing ? 'Hentikan Murotal' : 'Putar Murotal'} onClick={handlePlay} disabled={loadingExtra || !audioUrl} />
         <ActionRow icon="↗" label="Bagikan Ayat" onClick={handleShare} />
         <ActionRow icon="⧉" label={copied ? 'Tersalin!' : 'Salin Ayat'} onClick={handleCopy} />
+        <ActionRow icon="📖" label="Lihat Tafsir" onClick={handleTafsir} />
         <ActionRow icon={isBookmarked ? '★' : '☆'} label="Tandai Terakhir Baca" onClick={onBookmark} />
       </div>
     </div>
+    {showTafsir && (
+      <TafsirSheet
+        title={`${chapterName} : ${verseNumber}`}
+        loading={tafsirLoading}
+        text={tafsirText}
+        onClose={() => setShowTafsir(false)}
+      />
+    )}
     </Portal>
   );
 }

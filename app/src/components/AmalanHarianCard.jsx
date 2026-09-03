@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { SHOLAT_KEYS, SHOLAT_LABELS, watchAmalanHarian, setSholatDone, setTilawahDone } from '../lib/amalanHarian';
 import { watchDzikirStreak, markDzikirDone, isDoneToday } from '../lib/dzikirStreak';
+import { highestTier } from '../lib/badges';
+import AmalanShareModal from './AmalanShareModal';
 
 function Chip({ done, label, onClick, disabled }) {
   return (
@@ -38,6 +40,7 @@ function Chip({ done, label, onClick, disabled }) {
 export default function AmalanHarianCard({ uid }) {
   const [amalan, setAmalan] = useState({ sholat: {}, tilawah: false });
   const [streaks, setStreaks] = useState({});
+  const [showShare, setShowShare] = useState(false);
 
   useEffect(() => watchAmalanHarian(uid, setAmalan), [uid]);
   useEffect(() => watchDzikirStreak(uid, setStreaks), [uid]);
@@ -48,14 +51,48 @@ export default function AmalanHarianCard({ uid }) {
   const totalDone = sholatDoneCount + (dzikirPagiDone ? 1 : 0) + (dzikirPetangDone ? 1 : 0) + (amalan.tilawah ? 1 : 0);
   const totalItems = SHOLAT_KEYS.length + 3;
 
+  // Badges are keyed off dzikir streaks specifically (the one thing here
+  // that's actually a consecutive-day count) — the sholat/tilawah checklist
+  // resets to 0 every midnight with no "best streak" of its own to badge.
+  const pagiTier = highestTier(streaks.pagi?.best || 0);
+  const petangTier = highestTier(streaks.petang?.best || 0);
+
   return (
     <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: 16 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <span style={{ fontSize: 13, fontWeight: 800 }}>📋 Amalan Harian</span>
-        <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--primary)' }}>
-          {totalDone}/{totalItems} selesai
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--primary)' }}>
+            {totalDone}/{totalItems} selesai
+          </span>
+          <button
+            onClick={() => setShowShare(true)}
+            aria-label="Bagikan progress"
+            title="Bagikan progress"
+            style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'var(--muted-soft)', display: 'flex' }}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path d="M12 3v13M12 3 8 7M12 3l4 4" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M5 14v4.5A2.5 2.5 0 0 0 7.5 21h9a2.5 2.5 0 0 0 2.5-2.5V14" strokeWidth="1.6" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
       </div>
+
+      {(pagiTier || petangTier) && (
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          {pagiTier && (
+            <span style={{ fontSize: 10.5, fontWeight: 700, padding: '4px 9px', borderRadius: 999, background: 'var(--cream)', color: 'var(--gold-ink)' }}>
+              {pagiTier.icon} Dzikir Pagi {pagiTier.label}
+            </span>
+          )}
+          {petangTier && (
+            <span style={{ fontSize: 10.5, fontWeight: 700, padding: '4px 9px', borderRadius: 999, background: 'var(--cream)', color: 'var(--gold-ink)' }}>
+              {petangTier.icon} Dzikir Petang {petangTier.label}
+            </span>
+          )}
+        </div>
+      )}
 
       <div style={{ height: 5, borderRadius: 999, background: 'var(--border)', overflow: 'hidden' }}>
         <div
@@ -94,6 +131,10 @@ export default function AmalanHarianCard({ uid }) {
         />
         <Chip done={!!amalan.tilawah} label="Tilawah" onClick={() => uid && setTilawahDone(uid, !amalan.tilawah)} />
       </div>
+
+      {showShare && (
+        <AmalanShareModal totalDone={totalDone} totalItems={totalItems} onClose={() => setShowShare(false)} />
+      )}
     </div>
   );
 }

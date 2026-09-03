@@ -17,12 +17,71 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
+// In-app notification history (2026-09-04) — inlined here rather than
+// imported from src/lib/notificationLog.js because a classic (non-module)
+// service worker can't `import` an ES module; the app's own copy (used by
+// the Notifikasi page and the foreground listener) targets the exact same
+// DB_NAME/STORE/schema so both halves land in one combined list. Keep
+// both copies in sync if the schema ever changes.
+const NOTIF_DB_NAME = 'airmoon-notifications';
+const NOTIF_STORE = 'log';
+const NOTIF_MAX_ENTRIES = 50;
+
+function openNotifDb() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(NOTIF_DB_NAME, 1);
+    req.onupgradeneeded = () => {
+      req.result.createObjectStore(NOTIF_STORE, { keyPath: 'id', autoIncrement: true });
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function logNotificationToDb({ title, body, tag }) {
+  try {
+    const db = await openNotifDb();
+    const tx = db.transaction(NOTIF_STORE, 'readwrite');
+    tx.objectStore(NOTIF_STORE).add({ title: title || 'airmoon', body: body || '', tag: tag || '', receivedAt: Date.now() });
+    await new Promise((resolve, reject) => {
+      tx.oncomplete = resolve;
+      tx.onerror = reject;
+    });
+    // Trim oldest-first once over the cap — same approach as SHELL_CACHE's
+    // trimCache below, just against IndexedDB instead of the Cache API.
+    const countTx = db.transaction(NOTIF_STORE, 'readwrite');
+    const store = countTx.objectStore(NOTIF_STORE);
+    const count = await new Promise((resolve, reject) => {
+      const r = store.count();
+      r.onsuccess = () => resolve(r.result);
+      r.onerror = () => reject(r.error);
+    });
+    const excess = count - NOTIF_MAX_ENTRIES;
+    if (excess > 0) {
+      const cursorReq = store.openCursor();
+      let deleted = 0;
+      cursorReq.onsuccess = (e) => {
+        const cursor = e.target.result;
+        if (cursor && deleted < excess) {
+          cursor.delete();
+          deleted++;
+          cursor.continue();
+        }
+      };
+    }
+  } catch {
+    // IndexedDB unavailable — the push itself still shows via the OS
+    // below, this log is just a convenience history.
+  }
+}
+
 messaging.onBackgroundMessage((payload) => {
   // Backend sends data-only messages now (no top-level `notification`
   // field) so this handler always runs instead of the browser sometimes
   // auto-displaying the push itself — see send-prayer-notifications.js's
   // comment for why.
   const { title, body } = payload.data || {};
+  logNotificationToDb({ title, body, tag: payload.data?.tag });
   self.registration.showNotification(title || 'airmoon', {
     body: body || '',
     icon: '/icons/icon-192.png',
@@ -60,6 +119,7 @@ self.addEventListener('notificationclick', (event) => {
   else if (tag === 'jumat-al-kahf') url = '/quran/18'; // Al-Kahf
   else if (tag === 'imsak') url = '/lainnya/mode-ramadan';
   else if (tag === 'dzikir-streak') url = '/lainnya/doa-harian';
+  else if (tag === 'pledge-reminder') url = '/donasi';
   event.waitUntil(clients.openWindow(url));
 });
 
