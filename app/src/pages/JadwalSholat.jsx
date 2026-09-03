@@ -3,13 +3,14 @@ import { Link } from 'react-router-dom';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { usePrayerTimes } from '../lib/usePrayerTimes';
 import { useAuth } from '../context/AuthContext';
-import { enablePrayerNotifications, disablePrayerNotifications, isNativeApp } from '../lib/notifications';
+import { enablePrayerNotifications, disablePrayerNotifications, isNativeApp, LEAD_MINUTE_OPTIONS, setNotifLeadMinutes } from '../lib/notifications';
 import { db } from '../lib/firebase';
 import PageHeaderPhoto from '../components/PageHeaderPhoto';
 import { PAGE_PHOTOS } from '../data/photos';
 import BottomNav from '../components/BottomNav';
 import NotificationPrimer from '../components/NotificationPrimer';
 import { SkeletonCard } from '../components/Skeleton';
+import LocationSearch from '../components/LocationSearch';
 
 // Background push (works with the app closed) — Firestore's notifEnabled
 // flag is the source of truth, kept live via onSnapshot so a toggle flipped
@@ -18,12 +19,16 @@ import { SkeletonCard } from '../components/Skeleton';
 // server side that actually fires the push at prayer time.
 function useNotifyToggle(uid, location) {
   const [enabled, setEnabled] = useState(false);
+  const [leadMinutes, setLeadMinutes] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
     if (!uid) return;
-    return onSnapshot(doc(db, 'users', uid), (snap) => setEnabled(!!snap.data()?.notifEnabled));
+    return onSnapshot(doc(db, 'users', uid), (snap) => {
+      setEnabled(!!snap.data()?.notifEnabled);
+      setLeadMinutes(snap.data()?.notifLeadMinutes || 0);
+    });
   }, [uid]);
 
   async function toggle() {
@@ -44,16 +49,17 @@ function useNotifyToggle(uid, location) {
     }
   }
 
-  return { enabled, toggle, busy, error };
+  return { enabled, toggle, busy, error, leadMinutes };
 }
 
 export default function JadwalSholat() {
   const { user } = useAuth();
-  const { status, data, next, prayerOrder, prayerLabel } = usePrayerTimes();
+  const { status, data, next, prayerOrder, prayerLabel, override, setOverride } = usePrayerTimes();
   const location = data ? { lat: data.lat, lng: data.lng } : null;
-  const { enabled, toggle, busy, error: notifError } = useNotifyToggle(user?.uid, location);
+  const { enabled, toggle, busy, error: notifError, leadMinutes } = useNotifyToggle(user?.uid, location);
   const adzanSound = localStorage.getItem('airmoon-adzan-sound') || 'Adzan Makkah';
   const [showPrimer, setShowPrimer] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   // Prime before the browser's own permission prompt, but only the very
   // first time — once `Notification.permission` is anything other than
@@ -89,12 +95,33 @@ export default function JadwalSholat() {
               <span>{data ? data.locationLabel : status === 'denied' ? 'Lokasi tidak diizinkan' : 'Mendeteksi lokasi…'}</span>
               {data && (
                 <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 999, color: '#0d4d47', background: '#fff' }}>
-                  GPS
+                  {override ? 'Manual' : 'GPS'}
                 </span>
               )}
             </div>
           }
         />
+
+        {!searchOpen ? (
+          <button
+            onClick={() => setSearchOpen(true)}
+            style={{ background: 'none', border: 'none', color: 'var(--primary)', fontSize: 11.5, fontWeight: 700, cursor: 'pointer', padding: 0, alignSelf: 'flex-start' }}
+          >
+            📍 Ganti Lokasi
+          </button>
+        ) : (
+          <LocationSearch
+            onPick={(loc) => {
+              setOverride(loc);
+              setSearchOpen(false);
+            }}
+            onUseGps={() => {
+              setOverride(null);
+              setSearchOpen(false);
+            }}
+            onClose={() => setSearchOpen(false)}
+          />
+        )}
 
         {status === 'denied' && (
           <div className="card" style={{ padding: 16, fontSize: 12.5, lineHeight: 1.5 }}>
@@ -180,6 +207,32 @@ export default function JadwalSholat() {
                 <div style={{ width: 20, height: 20, borderRadius: '50%', background: '#fff' }} />
               </button>
             </div>
+
+            {enabled && (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '12px 16px', borderRadius: 18, border: '1px solid var(--border)' }}>
+                <span style={{ fontSize: 12, color: 'var(--muted)' }}>Ingatkan berapa menit sebelum waktu sholat?</span>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  {LEAD_MINUTE_OPTIONS.map((m) => (
+                    <button
+                      key={m}
+                      onClick={() => user && setNotifLeadMinutes(user.uid, m)}
+                      style={{
+                        padding: '6px 10px',
+                        borderRadius: 999,
+                        fontSize: 11,
+                        fontWeight: 700,
+                        border: leadMinutes === m ? 'none' : '1px solid var(--border)',
+                        background: leadMinutes === m ? 'var(--primary)' : 'var(--card)',
+                        color: leadMinutes === m ? 'var(--on-primary)' : 'var(--ink)',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {m === 0 ? 'Pas waktu' : `${m}m`}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {notifError && (
               <p style={{ margin: 0, fontSize: 11.5, color: 'var(--danger)' }}>{notifError}</p>

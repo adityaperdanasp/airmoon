@@ -3,14 +3,15 @@
 // passed (admin Telegram alert), (2) zakat maal haul countdowns that just
 // completed, (3) the Friday Al-Kahf reminder, (4) the monthly donation
 // pledge reminder, (5) the Zakat Fitrah reminder (last 5 days of Ramadan),
-// (6) the Puasa Sunnah reminder (Senin/Kamis + Ayyamul Bidh), and (7) the
-// daily "Kutipan Hari Ini" push — everything but (1) is a real FCM push to
-// the user themselves. All seven live in one function/one cron entry
-// deliberately — the Hobby plan caps a deployment at 12 Serverless
+// (6) the Puasa Sunnah reminder (Senin/Kamis + Ayyamul Bidh), (7) the
+// daily "Kutipan Hari Ini" push, (8) the monthly sedekah recap, and (9)
+// the monthly Zakat Penghasilan reminder — everything but (1) is a real
+// FCM push to the user themselves. All nine live in one function/one cron
+// entry deliberately — the Hobby plan caps a deployment at 12 Serverless
 // Functions total, and this repo was already at that cap, so a separate
 // daily-cron function for any one of these alone would have pushed a
 // `vercel --prod` deploy over the limit (hit for real, 2026-09-02: "No
-// more than 12 Serverless Functions can be added..."). None of the seven
+// more than 12 Serverless Functions can be added..."). None of the nine
 // is time-sensitive enough to need its own schedule, so merging them costs
 // nothing.
 //
@@ -54,7 +55,7 @@ async function checkZakatHaul(db) {
       const u = docSnap.data();
       const haul = u.zakatHaul;
       const tokens = u.fcmTokens || [];
-      if (!haul?.startDate || !tokens.length) continue;
+      if (!haul?.startDate || !tokens.length || u.notifPrefs?.pengingat === false) continue;
 
       const elapsed = daysSince(haul.startDate);
       const alreadyNotifiedThisCycle = haul.lastNotifiedCycle === haul.startDate;
@@ -117,7 +118,7 @@ async function checkJumatReminder(db) {
     try {
       const u = docSnap.data();
       const tokens = u.fcmTokens || [];
-      if (!tokens.length || u.lastJumatReminderDate === dateKey) continue;
+      if (!tokens.length || u.lastJumatReminderDate === dateKey || u.notifPrefs?.pengingat === false) continue;
 
       const result = await messaging.sendEachForMulticast({
         tokens,
@@ -163,7 +164,7 @@ async function checkMonthlyPledgeReminders(db) {
       const u = docSnap.data();
       const pledge = u.monthlyPledge;
       const tokens = u.fcmTokens || [];
-      if (!tokens.length || !pledge?.amount || u.lastPledgeReminderMonth === monthKey) continue;
+      if (!tokens.length || !pledge?.amount || u.lastPledgeReminderMonth === monthKey || u.notifPrefs?.donasi === false) continue;
 
       const amountStr = `Rp ${Number(pledge.amount).toLocaleString('id-ID')}`;
       const result = await messaging.sendEachForMulticast({
@@ -247,7 +248,7 @@ async function checkZakatFitrahReminder(db) {
     try {
       const u = docSnap.data();
       const tokens = u.fcmTokens || [];
-      if (!tokens.length || u.lastZakatFitrahReminderYear === hijriYear) continue;
+      if (!tokens.length || u.lastZakatFitrahReminderYear === hijriYear || u.notifPrefs?.pengingat === false) continue;
 
       const result = await messaging.sendEachForMulticast({
         tokens,
@@ -313,7 +314,7 @@ async function checkPuasaSunnahReminder(db) {
     try {
       const u = docSnap.data();
       const tokens = u.fcmTokens || [];
-      if (!tokens.length || u.lastPuasaSunnahReminderDate === dateKey) continue;
+      if (!tokens.length || u.lastPuasaSunnahReminderDate === dateKey || u.notifPrefs?.pengingat === false) continue;
 
       const result = await messaging.sendEachForMulticast({
         tokens,
@@ -376,7 +377,7 @@ async function checkDailyQuoteReminder(db) {
     try {
       const u = docSnap.data();
       const tokens = u.fcmTokens || [];
-      if (!tokens.length || u.lastQuoteReminderDate === dateKey) continue;
+      if (!tokens.length || u.lastQuoteReminderDate === dateKey || u.notifPrefs?.konten === false) continue;
 
       const result = await messaging.sendEachForMulticast({
         tokens,
@@ -384,6 +385,127 @@ async function checkDailyQuoteReminder(db) {
       });
 
       await docSnap.ref.update({ lastQuoteReminderDate: dateKey });
+
+      const deadTokens = result.responses.map((r, i) => (!r.success ? tokens[i] : null)).filter(Boolean);
+      if (deadTokens.length) {
+        await docSnap.ref.update({ fcmTokens: FieldValue.arrayRemove(...deadTokens) });
+      }
+
+      notified.push({ uid: docSnap.id, successCount: result.successCount });
+    } catch (err) {
+      errors.push({ uid: docSnap.id, error: err.message });
+    }
+  }
+
+  return { notified, errors };
+}
+
+// Monthly sedekah recap (2026-09-04) — a positive-reinforcement push
+// distinct from the Pengingat Donasi Bulanan reminder above: that one
+// proactively asks for a donation, this one recaps what someone has
+// *already* given, once a month. Fires only on the 1st of the month
+// (dateKey ends in -01), summing every contribution from the month that
+// just ended via a collectionGroup query across all users' contributions
+// subcollections in one call, rather than a per-user subcollection query
+// — needs the createdAt collection-group index in firestore.indexes.json.
+async function checkMonthlySedekahRecap(db) {
+  const { dateKey } = todayInJakarta();
+  const [yearStr, monthStr, dayStr] = dateKey.split('-');
+  if (dayStr !== '01') return { skipped: 'not-first-of-month' };
+
+  const year = Number(yearStr);
+  const month = Number(monthStr); // 1-12, the month that just started
+  const prevMonthStart = new Date(Date.UTC(month === 1 ? year - 1 : year, month === 1 ? 11 : month - 2, 1));
+  const thisMonthStart = new Date(Date.UTC(year, month - 1, 1));
+  const prevMonthLabel = prevMonthStart.toLocaleDateString('id-ID', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+  const monthKey = `${prevMonthStart.getUTCFullYear()}-${String(prevMonthStart.getUTCMonth() + 1).padStart(2, '0')}`;
+
+  const contribSnap = await db
+    .collectionGroup('contributions')
+    .where('createdAt', '>=', prevMonthStart)
+    .where('createdAt', '<', thisMonthStart)
+    .get();
+
+  const totals = new Map();
+  for (const doc of contribSnap.docs) {
+    const uid = doc.ref.parent.parent.id;
+    totals.set(uid, (totals.get(uid) || 0) + (doc.data().amount || 0));
+  }
+  if (!totals.size) return { skipped: 'no-contributions' };
+
+  const messaging = getMessaging();
+  const notified = [];
+  const errors = [];
+
+  for (const [uid, total] of totals) {
+    try {
+      const userRef = db.collection('users').doc(uid);
+      const userSnap = await userRef.get();
+      const u = userSnap.data();
+      if (!u) continue;
+      const tokens = u.fcmTokens || [];
+      if (!tokens.length || u.notifPrefs?.donasi === false || u.lastSedekahRecapMonth === monthKey) continue;
+
+      const result = await messaging.sendEachForMulticast({
+        tokens,
+        data: {
+          tag: 'sedekah-recap',
+          title: '💝 Rekap Sedekah Bulan Lalu',
+          body: `Alhamdulillah, total sedekah kamu ${prevMonthLabel}: Rp ${total.toLocaleString('id-ID')}. Terima kasih atas sedekahnya!`,
+        },
+      });
+
+      await userRef.update({ lastSedekahRecapMonth: monthKey });
+
+      const deadTokens = result.responses.map((r, i) => (!r.success ? tokens[i] : null)).filter(Boolean);
+      if (deadTokens.length) {
+        await userRef.update({ fcmTokens: FieldValue.arrayRemove(...deadTokens) });
+      }
+
+      notified.push({ uid, successCount: result.successCount });
+    } catch (err) {
+      errors.push({ uid, error: err.message });
+    }
+  }
+
+  return { notified, errors, totalDonors: totals.size };
+}
+
+// Monthly Zakat Penghasilan reminder (2026-09-04) — distinct from the
+// Zakat Maal haul reminder above (that one only fires once a full lunar
+// year, this fires every month, matching how income zakat is actually
+// paid). Fires on the 1st of the month, same as the sedekah recap check,
+// but gated on an explicit per-user opt-in
+// (zakatPenghasilanReminder.active) rather than everyone with
+// notifEnabled — unlike the other reminders here, this one has no
+// existing signal (a haul date, a pledge amount) implying someone wants
+// it, so it needs its own real toggle (KalkulatorZakat.jsx).
+async function checkZakatPenghasilanReminder(db) {
+  const { dateKey } = todayInJakarta();
+  const monthKey = dateKey.slice(0, 7); // YYYY-MM
+  if (!dateKey.endsWith('-01')) return { skipped: 'not-first-of-month' };
+
+  const messaging = getMessaging();
+  const snap = await db.collection('users').where('zakatPenghasilanReminder.active', '==', true).get();
+  const notified = [];
+  const errors = [];
+
+  for (const docSnap of snap.docs) {
+    try {
+      const u = docSnap.data();
+      const tokens = u.fcmTokens || [];
+      if (!tokens.length || u.notifPrefs?.pengingat === false || u.lastZakatPenghasilanReminderMonth === monthKey) continue;
+
+      const result = await messaging.sendEachForMulticast({
+        tokens,
+        data: {
+          tag: 'zakat-penghasilan',
+          title: '💰 Waktunya Zakat Penghasilan',
+          body: 'Sudah gajian bulan ini? Yuk hitung & tunaikan zakat penghasilanmu.',
+        },
+      });
+
+      await docSnap.ref.update({ lastZakatPenghasilanReminderMonth: monthKey });
 
       const deadTokens = result.responses.map((r, i) => (!r.success ? tokens[i] : null)).filter(Boolean);
       if (deadTokens.length) {
@@ -457,6 +579,8 @@ export default async function handler(req, res) {
     const fitrahResult = await checkZakatFitrahReminder(db);
     const puasaSunnahResult = await checkPuasaSunnahReminder(db);
     const quoteResult = await checkDailyQuoteReminder(db);
+    const sedekahRecapResult = await checkMonthlySedekahRecap(db);
+    const zakatPenghasilanResult = await checkZakatPenghasilanReminder(db);
 
     return res.status(200).json({
       checked: snap.size,
@@ -467,6 +591,8 @@ export default async function handler(req, res) {
       zakatFitrah: fitrahResult,
       puasaSunnah: puasaSunnahResult,
       dailyQuote: quoteResult,
+      sedekahRecap: sedekahRecapResult,
+      zakatPenghasilan: zakatPenghasilanResult,
     });
   } catch (err) {
     console.error('check-campaign-deadlines error:', err);

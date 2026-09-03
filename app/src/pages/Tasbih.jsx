@@ -1,8 +1,62 @@
 import { useEffect, useState } from 'react';
 import TopBar from '../components/TopBar';
 import ConfirmDialog from '../components/ConfirmDialog';
+import TasbihShareModal from '../components/TasbihShareModal';
 import { useToast } from '../context/ToastContext';
-import { DZIKIR_PHRASES, TARGETS, loadCounts, saveCounts } from '../lib/tasbih';
+import { useEscapeKey } from '../lib/useEscapeKey';
+import Portal from '../components/Portal';
+import { DZIKIR_PHRASES, TARGETS, loadCounts, saveCounts, loadCustomPhrases, addCustomPhrase, removeCustomPhrase } from '../lib/tasbih';
+
+function AddPhraseSheet({ onClose, onAdd }) {
+  const [label, setLabel] = useState('');
+  const [arab, setArab] = useState('');
+  const [arti, setArti] = useState('');
+  useEscapeKey(onClose);
+
+  return (
+    <Portal>
+      <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 50, display: 'flex', alignItems: 'flex-end' }}>
+        <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: 480, margin: '0 auto', background: 'var(--card)', borderRadius: '20px 20px 0 0', padding: '0 20px 20px' }}>
+          <div style={{ width: 36, height: 4, borderRadius: 999, background: 'var(--border)', margin: '10px auto 16px' }} />
+          <span style={{ fontSize: 14, fontWeight: 800, display: 'block', marginBottom: 12 }}>Tambah Dzikir Sendiri</span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <input
+              value={label}
+              onChange={(e) => setLabel(e.target.value)}
+              placeholder="Nama dzikir (wajib) — misal: Shalawat"
+              autoFocus
+              style={{ padding: '11px 13px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--ink)', fontSize: 13 }}
+            />
+            <input
+              value={arab}
+              onChange={(e) => setArab(e.target.value)}
+              placeholder="Teks Arab (opsional)"
+              dir="rtl"
+              style={{ padding: '11px 13px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--ink)', fontSize: 15, fontFamily: "'Amiri', serif" }}
+            />
+            <input
+              value={arti}
+              onChange={(e) => setArti(e.target.value)}
+              placeholder="Arti (opsional)"
+              style={{ padding: '11px 13px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--ink)', fontSize: 13 }}
+            />
+          </div>
+          <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
+            <button className="btn-outline" style={{ flex: 1 }} onClick={onClose}>Batal</button>
+            <button
+              className="btn"
+              style={{ flex: 1 }}
+              disabled={!label.trim()}
+              onClick={() => onAdd({ label: label.trim(), arab: arab.trim(), arti: arti.trim() })}
+            >
+              Tambah
+            </button>
+          </div>
+        </div>
+      </div>
+    </Portal>
+  );
+}
 
 function getLastPhrase() {
   return localStorage.getItem('airmoon-tasbih-phrase') || DZIKIR_PHRASES[0].id;
@@ -18,12 +72,17 @@ const RING_CIRC = 2 * Math.PI * RING_R;
 export default function Tasbih() {
   const { showToast } = useToast();
   const [counts, setCounts] = useState(() => loadCounts());
+  const [customPhrases, setCustomPhrases] = useState(() => loadCustomPhrases());
   const [phraseId, setPhraseId] = useState(getLastPhrase);
   const [target, setTarget] = useState(getLastTarget);
   const [pulse, setPulse] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [showAddPhrase, setShowAddPhrase] = useState(false);
+  const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
+  const [showShare, setShowShare] = useState(false);
 
-  const phrase = DZIKIR_PHRASES.find((p) => p.id === phraseId) || DZIKIR_PHRASES[0];
+  const allPhrases = [...DZIKIR_PHRASES, ...customPhrases];
+  const phrase = allPhrases.find((p) => p.id === phraseId) || DZIKIR_PHRASES[0];
   const count = counts[phraseId] || 0;
   const inLap = count % target;
   const laps = Math.floor(count / target);
@@ -64,13 +123,34 @@ export default function Tasbih() {
     updateCount(0);
   }
 
+  function handleAddPhrase({ label, arab, arti }) {
+    const id = addCustomPhrase({ label, arab, arti });
+    setCustomPhrases(loadCustomPhrases());
+    setPhraseId(id);
+    setShowAddPhrase(false);
+    showToast('Dzikir baru ditambahkan');
+  }
+
+  function handleRemovePhrase() {
+    removeCustomPhrase(phraseId);
+    setCustomPhrases(loadCustomPhrases());
+    setCounts((prev) => {
+      const { [phraseId]: _removed, ...rest } = prev;
+      saveCounts(rest);
+      return rest;
+    });
+    setPhraseId(DZIKIR_PHRASES[0].id);
+    setShowRemoveConfirm(false);
+    showToast('Dzikir dihapus');
+  }
+
   return (
     <div className="screen">
       <div className="screen-content" style={{ paddingBottom: 'calc(40px + env(safe-area-inset-bottom))' }}>
         <TopBar title="Tasbih Digital" subtitle="Ketuk untuk menghitung" />
 
         <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 2 }}>
-          {DZIKIR_PHRASES.map((p) => (
+          {allPhrases.map((p) => (
             <button
               key={p.id}
               onClick={() => setPhraseId(p.id)}
@@ -92,11 +172,26 @@ export default function Tasbih() {
               )}
             </button>
           ))}
+          <button
+            onClick={() => setShowAddPhrase(true)}
+            aria-label="Tambah dzikir sendiri"
+            style={{ flexShrink: 0, width: 34, height: 34, borderRadius: '50%', border: '1px dashed var(--border)', background: 'none', color: 'var(--muted)', fontSize: 16, fontWeight: 800, cursor: 'pointer' }}
+          >
+            +
+          </button>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, marginTop: 6 }}>
-          <span style={{ fontFamily: "'Amiri', serif", fontSize: 26 }}>{phrase.arab}</span>
-          <span style={{ fontSize: 12, color: 'var(--muted)' }}>{phrase.arti}</span>
+          {phrase.arab && <span style={{ fontFamily: "'Amiri', serif", fontSize: 26 }}>{phrase.arab}</span>}
+          {phrase.arti && <span style={{ fontSize: 12, color: 'var(--muted)' }}>{phrase.arti}</span>}
+          {phrase.custom && (
+            <button
+              onClick={() => setShowRemoveConfirm(true)}
+              style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: 10.5, textDecoration: 'underline', cursor: 'pointer', padding: 0, marginTop: 2 }}
+            >
+              Hapus dzikir ini
+            </button>
+          )}
         </div>
 
         <button
@@ -183,8 +278,35 @@ export default function Tasbih() {
           <button className="btn-outline" style={{ flex: 'none', padding: '10px 20px', color: 'var(--danger)', borderColor: 'var(--danger)' }} onClick={() => setShowResetConfirm(true)} disabled={count === 0}>
             Reset
           </button>
+          <button className="btn-outline" style={{ flex: 'none', padding: '10px 16px' }} onClick={() => setShowShare(true)} disabled={count === 0} aria-label="Bagikan progress">
+            ↗
+          </button>
         </div>
       </div>
+
+      {showAddPhrase && <AddPhraseSheet onClose={() => setShowAddPhrase(false)} onAdd={handleAddPhrase} />}
+
+      {showShare && (
+        <TasbihShareModal
+          phraseLabel={phrase.label}
+          phraseArab={phrase.arab}
+          count={count}
+          laps={laps}
+          target={target}
+          onClose={() => setShowShare(false)}
+        />
+      )}
+
+      {showRemoveConfirm && (
+        <ConfirmDialog
+          title="Hapus dzikir ini?"
+          message={`"${phrase.label}" dan hitungannya bakal dihapus permanen.`}
+          confirmLabel="Ya, Hapus"
+          danger
+          onCancel={() => setShowRemoveConfirm(false)}
+          onConfirm={handleRemovePhrase}
+        />
+      )}
 
       {showResetConfirm && (
         <ConfirmDialog

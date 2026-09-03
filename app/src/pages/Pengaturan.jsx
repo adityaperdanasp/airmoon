@@ -10,6 +10,8 @@ import { AVATAR_COLORS, watchUserProfile, setAvatarColor } from '../lib/profile'
 import InstallAppCard from '../components/InstallAppCard';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { exportAndDownloadUserData, importUserDataFromFile } from '../lib/exportData';
+import DeleteAccountSheet from '../components/DeleteAccountSheet';
+import { NOTIF_CATEGORIES, watchNotifPrefs, setNotifPref } from '../lib/notifPrefs';
 
 function SegButton({ active, onClick, children }) {
   return (
@@ -42,6 +44,53 @@ function SegButton({ active, onClick, children }) {
 // writes the selection through window.AndroidBridge (MainActivity.kt's
 // AndroidBridge inner class), which is the source of truth — this
 // component holds no state of its own beyond what's needed to render it.
+// Per-category toggles on top of the existing master notifEnabled switch
+// (JadwalSholat.jsx's own toggle) — see lib/notifPrefs.js for the full
+// reasoning and how each server-side check reads this. A category with no
+// explicit false is enabled, so a brand-new user (or anyone who's never
+// opened this section) sees every toggle on and nothing changes for them.
+function NotifPrefsCard({ uid }) {
+  const [prefs, setPrefs] = useState({});
+
+  useEffect(() => watchNotifPrefs(uid, setPrefs), [uid]);
+
+  return (
+    <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 14, padding: 16 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ width: 36, height: 36, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: 'var(--mint)' }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)">
+            <path d="M12 3a2 2 0 0 0-2 2v1.2c-3 .9-5 3.6-5 6.8v3l-1.5 2h17l-1.5-2v-3c0-3.2-2-5.9-5-6.8V5a2 2 0 0 0-2-2Z" strokeWidth="1.6" strokeLinejoin="round" />
+            <path d="M9.5 20.5a2.5 2.5 0 0 0 5 0" strokeWidth="1.6" strokeLinecap="round" />
+          </svg>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <span style={{ fontSize: 13, fontWeight: 700 }}>Preferensi Notifikasi</span>
+          <span style={{ fontSize: 11, color: 'var(--muted)' }}>Pilih jenis notifikasi yang mau kamu terima</span>
+        </div>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        {NOTIF_CATEGORIES.map((cat) => {
+          const enabled = prefs[cat.key] !== false;
+          return (
+            <div key={cat.key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <span style={{ fontSize: 12.5, fontWeight: 700 }}>{cat.label}</span>
+                <span style={{ fontSize: 10.5, color: 'var(--muted)' }}>{cat.desc}</span>
+              </div>
+              <div
+                onClick={() => uid && setNotifPref(uid, cat.key, !enabled)}
+                style={{ width: 42, height: 24, borderRadius: 999, background: enabled ? 'var(--primary)' : 'var(--border)', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 3, flexShrink: 0 }}
+              >
+                <div style={{ width: 18, height: 18, borderRadius: '50%', background: '#fff', transform: enabled ? 'translateX(18px)' : 'translateX(0)', transition: 'transform 0.15s ease' }} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function AzanSoundPicker() {
   const [options, setOptions] = useState([]);
   const [selected, setSelected] = useState(null);
@@ -232,6 +281,7 @@ export default function Pengaturan() {
   const { showToast } = useToast();
   const navigate = useNavigate();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showDeleteAccount, setShowDeleteAccount] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [importing, setImporting] = useState(false);
   const [pendingImportFile, setPendingImportFile] = useState(null); // File awaiting confirmation, or null
@@ -334,6 +384,8 @@ export default function Pengaturan() {
           </div>
 
           {isNativeApp() && <AzanSoundPicker />}
+
+          {user && <NotifPrefsCard uid={user.uid} />}
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -456,6 +508,13 @@ export default function Pengaturan() {
           >
             {t('keluar')}
           </button>
+
+          <button
+            onClick={() => setShowDeleteAccount(true)}
+            style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: 11.5, textDecoration: 'underline', cursor: 'pointer', padding: '4px 0', alignSelf: 'center' }}
+          >
+            Hapus Akun
+          </button>
         </div>
       </div>
 
@@ -467,6 +526,13 @@ export default function Pengaturan() {
           danger
           onCancel={() => setPendingImportFile(null)}
           onConfirm={handleConfirmImport}
+        />
+      )}
+
+      {showDeleteAccount && (
+        <DeleteAccountSheet
+          onClose={() => setShowDeleteAccount(false)}
+          onDeleted={() => navigate('/login')}
         />
       )}
 

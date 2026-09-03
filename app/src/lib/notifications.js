@@ -100,3 +100,13 @@ export async function enablePrayerNotifications(uid, location) {
 export async function disablePrayerNotifications(uid) {
   await setDoc(doc(db, 'users', uid), { notifEnabled: false }, { merge: true });
 }
+
+// How many minutes before the exact prayer time the adzan push should
+// fire — was always exactly 0 (the push only ever went out right at the
+// prayer time, per api/send-prayer-notifications.js's due-window check)
+// with no way to get a heads-up for wudhu/getting to the mosque first.
+export const LEAD_MINUTE_OPTIONS = [0, 5, 10, 15];
+
+export async function setNotifLeadMinutes(uid, minutes) {
+  await setDoc(doc(db, 'users', uid), { notifLeadMinutes: minutes }, { merge: true });
+}

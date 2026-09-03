@@ -112,6 +112,18 @@ export default async function handler(req, res) {
       const tokens = u.fcmTokens || [];
       const loc = u.notifLocation;
       if (!tokens.length || !loc?.lat || !loc?.lng) continue;
+      // Granular per-category opt-out (2026-09-04) — see lib/notifPrefs.js.
+      // Missing/undefined reads as enabled, so an existing user who's
+      // never opened the new settings section sees no behavior change.
+      const adzanEnabled = u.notifPrefs?.adzan !== false;
+      const pengingatEnabled = u.notifPrefs?.pengingat !== false;
+      if (!adzanEnabled && !pengingatEnabled) continue; // nothing this loop can send would be wanted
+      // How many minutes before the exact prayer time to fire — was always
+      // 0 before this (see lib/notifications.js's LEAD_MINUTE_OPTIONS).
+      // Only applies to the 5 daily prayers, not Imsak (which already has
+      // its own fixed "~10 min before Fajr" convention independent of
+      // this setting).
+      const leadMinutes = Number(u.notifLeadMinutes) || 0;
 
       try {
         const timestamp = Math.floor(Date.now() / 1000);
@@ -128,8 +140,8 @@ export default async function handler(req, res) {
         const { dateKey, minutes: nowMin } = nowInTimezone(meta.timezone);
         const lastNotified = u.lastNotified || {};
 
-        for (const key of PRAYER_ORDER) {
-          const prayerMin = minutesSinceMidnight(timings[key]);
+        for (const key of adzanEnabled ? PRAYER_ORDER : []) {
+          const prayerMin = minutesSinceMidnight(timings[key]) - leadMinutes;
           const due = nowMin >= prayerMin && nowMin < prayerMin + WINDOW_MINUTES;
           const alreadySent = lastNotified.date === dateKey && lastNotified.prayer === key;
           if (!due || alreadySent) continue;
@@ -150,7 +162,7 @@ export default async function handler(req, res) {
             tokens,
             data: {
               tag: `adzan-${key}`,
-              title: `Waktunya Sholat ${label}`,
+              title: leadMinutes > 0 ? `${leadMinutes} Menit Lagi Sholat ${label}` : `Waktunya Sholat ${label}`,
               body: pickPrayerMessage(dateKey, prayerIndex, label),
             },
           });
@@ -169,7 +181,7 @@ export default async function handler(req, res) {
         // (Imsak always falls chronologically before Fajr, so there's no
         // same-day ambiguity sharing one lastNotified field with it).
         const hijriMonth = date?.hijri?.month?.number;
-        if (hijriMonth === RAMADAN_HIJRI_MONTH && timings.Imsak) {
+        if (adzanEnabled && hijriMonth === RAMADAN_HIJRI_MONTH && timings.Imsak) {
           const imsakMin = minutesSinceMidnight(timings.Imsak);
           const due = nowMin >= imsakMin && nowMin < imsakMin + WINDOW_MINUTES;
           const alreadySent = lastNotified.date === dateKey && lastNotified.prayer === 'Imsak';
@@ -197,7 +209,7 @@ export default async function handler(req, res) {
         // reasoning already applied to the zakat haul and Jumat reminders
         // in api/check-campaign-deadlines.js.
         const petangStreak = u.dzikirStreak?.petang;
-        if (petangStreak?.current > 0 && timings.Maghrib) {
+        if (pengingatEnabled && petangStreak?.current > 0 && timings.Maghrib) {
           const streakWindowStart = minutesSinceMidnight(timings.Maghrib) + STREAK_REMINDER_DELAY_MINUTES;
           const due = nowMin >= streakWindowStart && nowMin < streakWindowStart + WINDOW_MINUTES;
           const alreadyDoneToday = petangStreak.lastDate === dateKey;
@@ -226,7 +238,7 @@ export default async function handler(req, res) {
         // (whether or not a push actually goes out) so a user who finishes
         // everything before the window doesn't get re-queried the rest of
         // the day.
-        if (timings.Isha) {
+        if (pengingatEnabled && timings.Isha) {
           const amalanWindowStart = minutesSinceMidnight(timings.Isha) + AMALAN_REMINDER_DELAY_MINUTES;
           const due = nowMin >= amalanWindowStart && nowMin < amalanWindowStart + WINDOW_MINUTES;
           const alreadyReminded = u.lastAmalanReminderDate === dateKey;

@@ -6,8 +6,12 @@ import {
   signInWithPopup,
   signOut,
   updateProfile,
+  deleteUser,
+  reauthenticateWithCredential,
+  reauthenticateWithPopup,
+  EmailAuthProvider,
 } from 'firebase/auth';
-import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, getDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db, googleProvider, facebookProvider } from '../lib/firebase';
 
 const AuthContext = createContext(null);
@@ -102,7 +106,51 @@ export function AuthProvider({ children }) {
     setUser({ ...auth.currentUser });
   }
 
-  const value = { user, signUpWithEmail, signInWithEmail, signInWithGoogle, signInWithFacebook, logOut, updateDisplayName };
+  // Deleting an account is a two-step problem: Firebase Auth requires a
+  // "recent" sign-in before it'll allow deleteUser() (auth/requires-
+  // recent-login otherwise), and the sign-in method determines how that
+  // re-auth happens — a password re-entry for email/password accounts,
+  // re-triggering the OAuth popup for Google/Facebook (no password to ask
+  // for there). Pengaturan.jsx's delete flow calls this with a password
+  // only when providerData actually says 'password'.
+  //
+  // Only the top-level users/{uid} doc is removable from here — Firestore
+  // doesn't cascade-delete subcollections, and a client has no way to
+  // recursively delete an unbounded number of docs (contributions,
+  // favoriteAyat, amalanHarian, ...) safely. Those become permanently
+  // orphaned, not a security exposure (firestore.rules still requires
+  // request.auth.uid == uid, and that uid can never authenticate again
+  // once deleteUser() below succeeds) but not actually erased either —
+  // disclosed to the user in Pengaturan.jsx's confirm dialog rather than
+  // silently overclaiming "semua data akan dihapus".
+  async function deleteAccount(password) {
+    const currentUser = auth.currentUser;
+    if (!currentUser) throw new Error('Belum masuk.');
+    const providerId = currentUser.providerData[0]?.providerId;
+
+    if (providerId === 'password') {
+      if (!password) throw new Error('Masukkan password buat konfirmasi.');
+      const credential = EmailAuthProvider.credential(currentUser.email, password);
+      await reauthenticateWithCredential(currentUser, credential);
+    } else if (providerId === 'google.com') {
+      await reauthenticateWithPopup(currentUser, googleProvider);
+    } else if (providerId === 'facebook.com') {
+      await reauthenticateWithPopup(currentUser, facebookProvider);
+    }
+
+    try {
+      await deleteDoc(doc(db, 'users', currentUser.uid));
+    } catch (err) {
+      // A failed profile-doc delete shouldn't block the actual account
+      // deletion below — the auth account going away is what actually
+      // matters for "delete my account".
+      console.error('Gagal hapus data profil sebelum hapus akun:', err);
+    }
+
+    await deleteUser(currentUser);
+  }
+
+  const value = { user, signUpWithEmail, signInWithEmail, signInWithGoogle, signInWithFacebook, logOut, updateDisplayName, deleteAccount };
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 

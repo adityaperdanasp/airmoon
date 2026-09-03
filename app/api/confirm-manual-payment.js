@@ -13,6 +13,7 @@
 import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { appendLedgerRow } from './_lib/sheetsLedger.js';
+import { notifyDonorsIfFunded } from './_lib/notifyDonorsFunded.js';
 
 function initAdmin() {
   if (getApps().length) return;
@@ -80,6 +81,11 @@ export default async function handler(req, res) {
       // Same reasoning as midtrans-notify.js -- a Sheets hiccup shouldn't
       // block the confirmation itself, which already succeeded above.
       console.error('appendLedgerRow failed:', err);
+    }
+    try {
+      await notifyDonorsIfFunded(db, report.donationId);
+    } catch (err) {
+      console.error('notifyDonorsIfFunded failed:', err);
     }
 
     return res.status(200).send(

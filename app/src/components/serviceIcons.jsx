@@ -540,3 +540,28 @@ export function InheritanceScaleIcon({ size = 42 }) {
     </svg>
   );
 }
+
+// A gift-box shape — "Yang Baru" (changelog), distinct from the bell
+// (Notifikasi) since this is app-update news, not a personal alert.
+export function WhatsNewIcon({ size = 42 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 42 42" fill="none">
+      <defs>
+        <linearGradient id="giftBodyG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#2fa190" />
+          <stop offset="1" stopColor="#0a4a43" />
+        </linearGradient>
+        <linearGradient id="giftGoldG" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor="#fff2cf" />
+          <stop offset="0.55" stopColor="#f0c04d" />
+          <stop offset="1" stopColor="#c98f22" />
+        </linearGradient>
+      </defs>
+      <rect x="7" y="16" width="28" height="17" rx="2" fill="url(#giftBodyG)" />
+      <rect x="5" y="11" width="32" height="7" rx="2" fill="url(#giftGoldG)" />
+      <rect x="19" y="11" width="4" height="22" fill="url(#giftGoldG)" />
+      <path d="M21 11c0-4-3-7-6-7s-3 5 0 6 6 1 6 1Z" fill="url(#giftGoldG)" />
+      <path d="M21 11c0-4 3-7 6-7s3 5 0 6-6 1-6 1Z" fill="url(#giftGoldG)" />
+    </svg>
+  );
+}

@@ -48,6 +48,7 @@ const AyatFavorit = lazy(() => import('./pages/AyatFavorit'));
 const NotifikasiCenter = lazy(() => import('./pages/NotifikasiCenter'));
 const CariGlobal = lazy(() => import('./pages/CariGlobal'));
 const KalkulatorWaris = lazy(() => import('./pages/KalkulatorWaris'));
+const Changelog = lazy(() => import('./pages/Changelog'));
 
 function P({ children }) {
   return <ProtectedRoute>{children}</ProtectedRoute>;
@@ -119,6 +120,7 @@ export default function App() {
         <Route path="/notifikasi" element={<P><NotifikasiCenter /></P>} />
         <Route path="/cari" element={<P><CariGlobal /></P>} />
         <Route path="/lainnya/kalkulator-waris" element={<P><KalkulatorWaris /></P>} />
+        <Route path="/yang-baru" element={<P><Changelog /></P>} />
       </Routes>
     </Suspense>
     </>

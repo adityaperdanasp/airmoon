@@ -4,6 +4,21 @@ import { getLocation, fetchPrayerTimes, reverseGeocode } from './prayerApi';
 const PRAYER_ORDER = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
 const PRAYER_LABEL = { Fajr: 'Subuh', Dhuhr: 'Dzuhur', Asr: 'Ashar', Maghrib: 'Maghrib', Isha: 'Isya' };
 
+// Same localStorage-override pattern as lib/useQibla.js's OVERRIDE_KEY —
+// separate key since picking a city for "what's the qibla direction from
+// there" and "what are the prayer times there" are two independent
+// intents someone might want set differently at the same time.
+const OVERRIDE_KEY = 'airmoon-prayertimes-override-location';
+
+function loadOverride() {
+  try {
+    const raw = localStorage.getItem(OVERRIDE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
 function parseTimeToday(hhmm) {
   const [h, m] = hhmm.split(':').map(Number);
   const d = new Date();
@@ -15,6 +30,18 @@ export function usePrayerTimes() {
   const [status, setStatus] = useState('loading'); // loading | denied | error | ready
   const [data, setData] = useState(null); // { timings, hijri, gregorian, locationLabel }
   const [now, setNow] = useState(new Date());
+  const [override, setOverrideState] = useState(loadOverride);
+
+  function setOverride(loc) {
+    setOverrideState(loc);
+    try {
+      if (loc) localStorage.setItem(OVERRIDE_KEY, JSON.stringify(loc));
+      else localStorage.removeItem(OVERRIDE_KEY);
+    } catch {
+      // Private-browsing/full storage — the override still applies this
+      // session, it just won't survive a reload.
+    }
+  }
 
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 1000);
@@ -23,10 +50,14 @@ export function usePrayerTimes() {
 
   useEffect(() => {
     let cancelled = false;
+    setStatus('loading');
     (async () => {
       try {
-        const { lat, lng } = await getLocation();
-        const [times, label] = await Promise.all([fetchPrayerTimes(lat, lng), reverseGeocode(lat, lng)]);
+        const { lat, lng } = override || (await getLocation());
+        const [times, label] = await Promise.all([
+          fetchPrayerTimes(lat, lng),
+          override?.label ? Promise.resolve(override.label) : reverseGeocode(lat, lng),
+        ]);
         if (cancelled) return;
         setData({
           timings: times.timings,
@@ -45,7 +76,7 @@ export function usePrayerTimes() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [override]);
 
   let next = null;
   if (data) {
@@ -77,5 +108,5 @@ export function usePrayerTimes() {
     };
   }
 
-  return { status, data, next, prayerOrder: PRAYER_ORDER, prayerLabel: PRAYER_LABEL };
+  return { status, data, next, prayerOrder: PRAYER_ORDER, prayerLabel: PRAYER_LABEL, override, setOverride };
 }

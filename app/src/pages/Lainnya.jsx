@@ -4,6 +4,7 @@ import { useLang } from '../context/LangContext';
 import TopBar from '../components/TopBar';
 import { getRecentLainnya, markLainnyaVisited } from '../lib/recentLainnya';
 import { hasUnseenNotifications } from '../lib/notificationLog';
+import { hasUnseenChangelog } from '../lib/changelogSeen';
 import {
   QiblaCompassIcon,
   CalculatorIcon,
@@ -20,6 +21,7 @@ import {
   NotificationBellIcon,
   GlobalSearchIcon,
   InheritanceScaleIcon,
+  WhatsNewIcon,
 } from '../components/serviceIcons';
 
 // All hand-drawn gradient icons now (see serviceIcons.jsx) — this grid
@@ -44,16 +46,19 @@ const ITEMS = [
   { to: '/notifikasi', label: 'Notifikasi', bg: 'var(--cream)', node: <NotificationBellIcon size={30} /> },
   { to: '/cari', label: 'Cari', bg: 'var(--mint)', node: <GlobalSearchIcon size={30} /> },
   { to: '/lainnya/kalkulator-waris', label: 'Kalkulator Waris', bg: 'var(--peach)', node: <InheritanceScaleIcon size={30} /> },
+  { to: '/yang-baru', label: 'Yang Baru', bg: 'var(--blue-gray)', node: <WhatsNewIcon size={30} /> },
 ];
 
 export default function Lainnya() {
   const { t } = useLang();
   const [recent, setRecent] = useState([]);
   const [hasUnseenNotif, setHasUnseenNotif] = useState(false);
+  const [hasUnseenNews, setHasUnseenNews] = useState(false);
 
   useEffect(() => setRecent(getRecentLainnya()), []);
   useEffect(() => {
     hasUnseenNotifications().then(setHasUnseenNotif);
+    setHasUnseenNews(hasUnseenChangelog());
   }, []);
 
   const recentItems = recent.map((to) => ITEMS.find((it) => it.to === to)).filter(Boolean);
@@ -120,7 +125,7 @@ export default function Lainnya() {
               >
                 <div style={{ position: 'relative', width: 48, height: 48, borderRadius: 16, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: it.bg }}>
                   {it.node}
-                  {it.to === '/notifikasi' && hasUnseenNotif && (
+                  {((it.to === '/notifikasi' && hasUnseenNotif) || (it.to === '/yang-baru' && hasUnseenNews)) && (
                     <div style={{ position: 'absolute', top: 4, right: 4, width: 9, height: 9, borderRadius: '50%', background: 'var(--danger)', border: '1.5px solid var(--card)' }} />
                   )}
                 </div>

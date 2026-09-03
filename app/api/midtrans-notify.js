@@ -16,6 +16,7 @@ import { createHash } from 'crypto';
 import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { appendLedgerRow } from './_lib/sheetsLedger.js';
+import { notifyDonorsIfFunded } from './_lib/notifyDonorsFunded.js';
 
 function initAdmin() {
   if (getApps().length) return;
@@ -145,6 +146,13 @@ export default async function handler(req, res) {
         // already real and credited above regardless of whether it made
         // it into the founder's report spreadsheet.
         console.error('appendLedgerRow failed:', err);
+      }
+      try {
+        await notifyDonorsIfFunded(db, txn.donationId);
+      } catch (err) {
+        // Same reasoning — a donor-notification hiccup must never fail
+        // the webhook itself, the payment is already credited above.
+        console.error('notifyDonorsIfFunded failed:', err);
       }
     } else if (isFinalFailure(body)) {
       await txnRef.set({ status: 'failed', midtransStatus: body.transaction_status }, { merge: true });

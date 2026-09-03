@@ -60,8 +60,14 @@ export default async function handler(req, res) {
     const usersSnap = await db.collection('users').get();
     const tokens = [];
     for (const docSnap of usersSnap.docs) {
-      const t = docSnap.data().fcmTokens || [];
-      tokens.push(...t);
+      const data = docSnap.data();
+      // Granular opt-out (2026-09-04, see lib/notifPrefs.js) — this
+      // broadcast previously reached every registered device
+      // unconditionally (deliberate, see this file's own header comment),
+      // with no way to opt out short of disabling push entirely. Missing/
+      // undefined still reads as enabled, so default reach is unchanged.
+      if (data.notifPrefs?.komunitas === false) continue;
+      tokens.push(...(data.fcmTokens || []));
     }
     if (!tokens.length) {
       return res.status(200).json({ ok: true, skipped: 'no tokens' });

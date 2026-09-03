@@ -124,6 +124,7 @@ export async function hasUnseenNotifications() {
 // in sync if a new notification type/tag is ever added.
 export function routeForTag(tag = '') {
   if (tag.startsWith('doa-')) return '/doa';
+  if (tag.startsWith('campaign-funded-')) return '/donasi';
   if (tag === 'zakat-haul') return '/lainnya/kalkulator-zakat';
   if (tag === 'jumat-al-kahf') return '/quran/18';
   if (tag === 'imsak') return '/lainnya/mode-ramadan';
@@ -133,5 +134,7 @@ export function routeForTag(tag = '') {
   if (tag === 'kutipan-harian') return '/lainnya/kutipan-inspirasi';
   if (tag === 'amalan-belum-selesai') return '/?focus=amalan';
   if (tag === 'puasa-sunnah') return '/';
+  if (tag === 'sedekah-recap') return '/donasi';
+  if (tag === 'zakat-penghasilan') return '/lainnya/kalkulator-zakat';
   return '/jadwal-sholat'; // adzan-* and any unrecognized tag
 }

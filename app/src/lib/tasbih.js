@@ -15,6 +15,34 @@ export const DZIKIR_PHRASES = [
 export const TARGETS = [33, 99, 100];
 
 const STORAGE_KEY = 'airmoon-tasbih-counts';
+const CUSTOM_KEY = 'airmoon-tasbih-custom';
+
+// Custom phrases (2026-09-04) — the 5 built-in ones covered the most
+// common dzikir, but someone doing shalawat, istighfar variants, or their
+// own regular wird had no way to add it. Local-only, same as the counts
+// themselves; no Arabic script required (arab is optional) since not
+// everyone can type it, `label` alone is enough to tell entries apart.
+export function loadCustomPhrases() {
+  try {
+    const raw = localStorage.getItem(CUSTOM_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function addCustomPhrase({ label, arab, arti }) {
+  const phrases = loadCustomPhrases();
+  const id = `custom-${Date.now()}`;
+  const next = [...phrases, { id, label, arab: arab || '', arti: arti || '', custom: true }];
+  localStorage.setItem(CUSTOM_KEY, JSON.stringify(next));
+  return id;
+}
+
+export function removeCustomPhrase(id) {
+  const next = loadCustomPhrases().filter((p) => p.id !== id);
+  localStorage.setItem(CUSTOM_KEY, JSON.stringify(next));
+}
 
 export function loadCounts() {
   try {

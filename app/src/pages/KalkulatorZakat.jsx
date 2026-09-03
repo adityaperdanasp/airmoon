@@ -3,6 +3,7 @@ import { calcZakatPenghasilan, calcZakatMaal, formatRupiah, NISAB_GOLD_GRAMS } f
 import { useLang } from '../context/LangContext';
 import { useAuth } from '../context/AuthContext';
 import { watchZakatHaul, startZakatHaul, clearZakatHaul, daysUntilHaulDue } from '../lib/zakatHaul';
+import { watchZakatPenghasilanReminder, setZakatPenghasilanReminder } from '../lib/zakatPenghasilanReminder';
 import PageHeaderPhoto from '../components/PageHeaderPhoto';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { useToast } from '../context/ToastContext';
@@ -46,6 +47,8 @@ export default function KalkulatorZakat() {
   const incomeN = Number(digitsOnly(income)) || 0;
   const needsN = Number(digitsOnly(needs)) || 0;
   const zakatPenghasilan = calcZakatPenghasilan(incomeN, needsN);
+  const [penghasilanReminderOn, setPenghasilanReminderOn] = useState(false);
+  useEffect(() => watchZakatPenghasilanReminder(user?.uid, setPenghasilanReminderOn), [user?.uid]);
 
   // Zakat Maal
   const [assets, setAssets] = useState('100000000');
@@ -103,6 +106,21 @@ export default function KalkulatorZakat() {
             </div>
 
             <button className="btn">{t('bayar_zakat_btn')}</button>
+
+            {user && (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '12px 14px', borderRadius: 14, background: 'var(--card)' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  <span style={{ fontSize: 12.5, fontWeight: 700 }}>🔔 Pengingat Bulanan</span>
+                  <span style={{ fontSize: 10.5, color: 'var(--muted)' }}>Diingatkan tiap bulan buat hitung & bayar zakat penghasilan</span>
+                </div>
+                <div
+                  onClick={() => user && setZakatPenghasilanReminder(user.uid, !penghasilanReminderOn)}
+                  style={{ width: 42, height: 24, borderRadius: 999, background: penghasilanReminderOn ? 'var(--primary)' : 'var(--border)', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 3, flexShrink: 0 }}
+                >
+                  <div style={{ width: 18, height: 18, borderRadius: '50%', background: '#fff', transform: penghasilanReminderOn ? 'translateX(18px)' : 'translateX(0)', transition: 'transform 0.15s ease' }} />
+                </div>
+              </div>
+            )}
 
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '13px 14px', borderRadius: 14, background: 'var(--card)' }}>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" style={{ flexShrink: 0, marginTop: 1 }}>

@@ -115,6 +115,7 @@ self.addEventListener('notificationclick', (event) => {
   const tag = event.notification.tag || '';
   let url = '/jadwal-sholat'; // adzan-* and any unrecognized tag
   if (tag.startsWith('doa-')) url = '/doa';
+  else if (tag.startsWith('campaign-funded-')) url = '/donasi';
   else if (tag === 'zakat-haul') url = '/lainnya/kalkulator-zakat';
   else if (tag === 'jumat-al-kahf') url = '/quran/18'; // Al-Kahf
   else if (tag === 'imsak') url = '/lainnya/mode-ramadan';
@@ -124,6 +125,8 @@ self.addEventListener('notificationclick', (event) => {
   else if (tag === 'kutipan-harian') url = '/lainnya/kutipan-inspirasi';
   else if (tag === 'amalan-belum-selesai') url = '/?focus=amalan';
   else if (tag === 'puasa-sunnah') url = '/'; // no dedicated non-Ramadan fasting page exists yet — ModeRamadan is specifically Ramadan-scoped
+  else if (tag === 'sedekah-recap') url = '/donasi';
+  else if (tag === 'zakat-penghasilan') url = '/lainnya/kalkulator-zakat';
   event.waitUntil(clients.openWindow(url));
 });
 
