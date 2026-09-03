@@ -3,12 +3,20 @@ import { fetchRecentAmalanHarian } from '../lib/amalanHarian';
 
 const DAYS = 35; // 5 full weeks — enough to see a real pattern without the row getting unreadably long
 
-function cellColor(score, max) {
-  if (score === 0) return 'var(--border)';
-  const pct = score / max;
-  if (pct < 0.4) return 'rgba(47, 161, 144, 0.35)';
-  if (pct < 0.8) return 'rgba(47, 161, 144, 0.65)';
-  return 'var(--primary)';
+// A real per-score gradient (2026-09-04, after a founder question — the
+// original 3-bucket version made e.g. 1 and 2, or 3 and 4, render as the
+// literal same shade with no way to tell them apart at a glance). Reuses
+// var(--primary) itself rather than a hardcoded teal rgba() — this app's
+// --primary is teal in light theme but bronze/gold in dark theme (see
+// CLAUDE.md's dark-mode redesign note), so scaling that color's own
+// opacity keeps the ramp correct in both themes instead of a fixed teal
+// clashing with dark mode's bronze accent at the top of the scale.
+function cellStyle(score, max) {
+  if (score === 0) return { background: 'var(--border)', opacity: 1 };
+  // Floors at 0.3 so a lone score of 1 is still clearly visible next to an
+  // empty cell, not near-invisible; scales up to a fully solid 1.0 at max.
+  const opacity = 0.3 + 0.7 * (score / max);
+  return { background: 'var(--primary)', opacity };
 }
 
 // A GitHub-contribution-graph-style view of sholat/tilawah completion over
@@ -45,7 +53,7 @@ export default function AmalanHeatmap({ uid }) {
             <div
               key={d.dateKey}
               title={`${d.dateKey}: ${d.score}/${d.max}`}
-              style={{ aspectRatio: '1', borderRadius: 4, background: cellColor(d.score, d.max) }}
+              style={{ aspectRatio: '1', borderRadius: 4, ...cellStyle(d.score, d.max) }}
             />
           ) : (
             <div key={`pad-${i}`} style={{ aspectRatio: '1' }} />
