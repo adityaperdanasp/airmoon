@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { usePwaInstall, isStandalone, isIosSafari, promptInstall } from '../lib/pwaInstall';
 import { isNativeApp } from '../lib/notifications';
+import AddToHomeScreenSheet from './AddToHomeScreenSheet';
 
 const DISMISS_KEY = 'airmoon-install-banner-dismissed';
 
@@ -18,6 +19,7 @@ export default function InstallAppCard({ variant = 'banner' }) {
   const { canInstall, installed } = usePwaInstall();
   const [dismissed, setDismissed] = useState(() => variant === 'banner' && localStorage.getItem(DISMISS_KEY) === '1');
   const [busy, setBusy] = useState(false);
+  const [showIosSheet, setShowIosSheet] = useState(false);
 
   if (isNativeApp() || isStandalone() || installed || dismissed) return null;
   if (!canInstall && !isIosSafari()) return null;
@@ -38,16 +40,24 @@ export default function InstallAppCard({ variant = 'banner' }) {
   }
 
   const isBanner = variant === 'banner';
+  // iOS Safari has no API to trigger "Add to Home Screen" — the whole
+  // card used to just be a static text line, which read as a broken
+  // button (a real complaint: "gak bisa dipencet"). Now tapping it opens
+  // AddToHomeScreenSheet with the real steps, instead of doing nothing.
+  const iosNoPrompt = isIosSafari() && !canInstall;
 
   return (
+    <>
     <div
       className="card"
+      onClick={iosNoPrompt ? () => setShowIosSheet(true) : undefined}
       style={{
         display: 'flex',
         alignItems: 'center',
         gap: 12,
         padding: '14px 16px',
         position: 'relative',
+        cursor: iosNoPrompt ? 'pointer' : 'default',
       }}
     >
       <div style={{ width: 38, height: 38, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: 'var(--mint)' }}>
@@ -60,8 +70,8 @@ export default function InstallAppCard({ variant = 'banner' }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 1, flex: 1, minWidth: 0 }}>
         <span style={{ fontSize: 13, fontWeight: 700 }}>Pasang airmoon di Layar Utama</span>
         <span style={{ fontSize: 10.5, color: 'var(--muted)', lineHeight: 1.4 }}>
-          {isIosSafari() && !canInstall
-            ? 'Tap tombol Share, lalu "Add to Home Screen"'
+          {iosNoPrompt
+            ? 'Ketuk buat lihat caranya →'
             : 'Akses lebih cepat, notifikasi & baca offline lebih lancar'}
         </span>
       </div>
@@ -72,7 +82,10 @@ export default function InstallAppCard({ variant = 'banner' }) {
       )}
       {isBanner && (
         <button
-          onClick={dismiss}
+          onClick={(e) => {
+            e.stopPropagation();
+            dismiss();
+          }}
           aria-label="Tutup"
           style={{ position: 'absolute', top: 6, right: 6, background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--muted-soft)' }}
         >
@@ -80,5 +93,7 @@ export default function InstallAppCard({ variant = 'banner' }) {
         </button>
       )}
     </div>
+    {showIosSheet && <AddToHomeScreenSheet onClose={() => setShowIosSheet(false)} />}
+    </>
   );
 }

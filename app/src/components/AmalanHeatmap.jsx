@@ -31,11 +31,13 @@ export default function AmalanHeatmap({ uid }) {
   const firstDow = new Date(`${days[0].dateKey}T00:00:00`).getDay();
   const padded = [...Array(firstDow).fill(null), ...days];
 
+  const max = days[0]?.max || 6;
+
   return (
     <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: 16 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <span style={{ fontSize: 12.5, fontWeight: 800 }}>📅 Konsistensi 5 Minggu Terakhir</span>
-        <span style={{ fontSize: 10, color: 'var(--muted)' }}>Sholat &amp; Tilawah</span>
+        <span style={{ fontSize: 10, color: 'var(--muted)' }}>Sholat &amp; Tilawah (dari {max})</span>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}>
         {padded.map((d, i) =>
@@ -50,6 +52,15 @@ export default function AmalanHeatmap({ uid }) {
           )
         )}
       </div>
+      {/* This grid's max is 6 (5 sholat + tilawah), not the 8 shown on
+          Amalan Harian's card above — Dzikir Pagi/Petang aren't counted
+          here on purpose. dzikirStreak only ever remembers the *current*
+          streak's last-done date, not a full daily history, so a past
+          day's dzikir completion genuinely can't be recovered to color
+          these cells with. */}
+      <span style={{ fontSize: 9.5, color: 'var(--muted-soft)', lineHeight: 1.4 }}>
+        *Dzikir Pagi/Petang gak ikut dihitung di sini — histori dzikir harian gak tersimpan, cuma rentetan (streak) yang aktif.
+      </span>
     </div>
   );
 }

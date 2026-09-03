@@ -426,6 +426,25 @@ export default function Home() {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <span className="section-label">🕌 {t('donasi_kamu')}</span>
+          {donations === null && <SkeletonCard height={140} />}
+          {donations && donations.length === 0 && (
+            <EmptyState
+              icon="🕌"
+              title="Belum ada campaign aktif"
+              subtitle="Campaign donasi listrik masjid baru bakal muncul di sini begitu ada yang disetujui."
+            />
+          )}
+          {donations && donations.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {donations.map((donation) => (
+                <DonationCard key={donation.id} donation={donation} />
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span className="section-label">🤲 Doa & Aminkan</span>
             <Link to="/doa" style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 11, fontWeight: 700, color: 'var(--primary)', textDecoration: 'none' }}>
@@ -457,30 +476,10 @@ export default function Home() {
           )}
         </div>
 
-        {/* Moved below the core content (was near the top, right after
-            Amalan Harian) — this is a low-priority, dismiss-once nudge,
-            not something that should compete with actual ibadah content
-            for the first screenful of Home. */}
+        {/* Very last thing on the page now, per an explicit ask — a
+            low-priority, dismiss-once nudge shouldn't compete with any
+            real content, Doa & Aminkan included, for attention. */}
         <InstallAppCard variant="banner" />
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <span className="section-label">🕌 {t('donasi_kamu')}</span>
-          {donations === null && <SkeletonCard height={140} />}
-          {donations && donations.length === 0 && (
-            <EmptyState
-              icon="🕌"
-              title="Belum ada campaign aktif"
-              subtitle="Campaign donasi listrik masjid baru bakal muncul di sini begitu ada yang disetujui."
-            />
-          )}
-          {donations && donations.length > 0 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {donations.map((donation) => (
-                <DonationCard key={donation.id} donation={donation} />
-              ))}
-            </div>
-          )}
-        </div>
       </PullToRefresh>
       </div>
       <BottomNav />
