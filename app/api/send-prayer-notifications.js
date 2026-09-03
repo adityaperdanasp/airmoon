@@ -20,8 +20,35 @@
 import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { getMessaging } from 'firebase-admin/messaging';
-import { getAuth } from 'firebase-admin/auth';
 import { pickPrayerMessage } from './_lib/prayerMessages.js';
+
+// Same public Web API key already embedded client-side (see public/
+// firebase-messaging-sw.js and firebase-config.js) — not a secret, safe
+// to reuse here.
+const FIREBASE_WEB_API_KEY = 'AIzaSyCabOhScJEoa96NrOuFBv6De_8zAi2Uh8E';
+
+// Verifies a Firebase ID token via Google's own REST endpoint instead of
+// firebase-admin/auth's verifyIdToken() — that import pulls in jwks-rsa,
+// which requires the ESM-only `jose` package via require(), and crashed
+// this ENTIRE function on Vercel with ERR_REQUIRE_ESM (confirmed via
+// `vercel logs` right after this first shipped — a real production
+// outage, this function also runs the live 5x-daily adzan cron, not just
+// the test-notification feature that introduced the import). A plain
+// fetch to Google's identitytoolkit `accounts:lookup` endpoint verifies
+// the token's signature/expiry and returns the uid, with zero new
+// dependencies.
+async function verifyIdTokenViaRest(idToken) {
+  const res = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${FIREBASE_WEB_API_KEY}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ idToken }),
+  });
+  if (!res.ok) throw new Error('Token gak valid.');
+  const data = await res.json();
+  const uid = data.users?.[0]?.localId;
+  if (!uid) throw new Error('Token gak valid.');
+  return uid;
+}
 
 const PRAYER_ORDER = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
 const PRAYER_LABEL = { Fajr: 'Subuh', Dhuhr: 'Dzuhur', Asr: 'Ashar', Maghrib: 'Maghrib', Isha: 'Isya' };
@@ -105,10 +132,10 @@ async function handleTestNotification(req, res) {
   if (!idToken) return res.status(401).json({ error: 'Missing ID token' });
 
   try {
+    const uid = await verifyIdTokenViaRest(idToken);
     initAdmin();
-    const decoded = await getAuth().verifyIdToken(idToken);
     const db = getFirestore();
-    const userSnap = await db.collection('users').doc(decoded.uid).get();
+    const userSnap = await db.collection('users').doc(uid).get();
     const tokens = userSnap.data()?.fcmTokens || [];
     if (!tokens.length) {
       return res.status(400).json({ error: 'Belum ada perangkat terdaftar buat notifikasi — aktifkan dulu di Jadwal Sholat.' });
