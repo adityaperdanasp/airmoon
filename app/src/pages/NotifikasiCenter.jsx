@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import TopBar from '../components/TopBar';
 import EmptyState from '../components/EmptyState';
 import ConfirmDialog from '../components/ConfirmDialog';
+import PageHeaderPhoto from '../components/PageHeaderPhoto';
+import { PAGE_PHOTOS } from '../data/photos';
 import { getNotificationLog, clearNotificationLog, routeForTag, markNotificationsSeen } from '../lib/notificationLog';
 
 const dateFmt = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
@@ -33,14 +34,16 @@ export default function NotifikasiCenter() {
   return (
     <div className="screen">
       <div className="screen-content">
-        <TopBar
+        <PageHeaderPhoto
           title="Notifikasi"
+          photo={PAGE_PHOTOS.notifikasi}
           right={
             log?.length > 0 && (
               <button
                 onClick={() => setShowClearConfirm(true)}
                 className="icon-btn"
                 aria-label="Hapus semua notifikasi"
+                style={{ background: 'rgba(255,255,255,0.22)', color: '#fff' }}
               >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                   <path d="M6 7h12M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m2 0-.8 12.1a2 2 0 0 1-2 1.9H9.8a2 2 0 0 1-2-1.9L7 7" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />

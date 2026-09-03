@@ -118,10 +118,18 @@ export default function SurahReader() {
 
   useEffect(() => watchFavoriteAyat(user?.uid, setFavorites), [user?.uid]);
   const favoriteKeys = new Set(favorites.map((f) => f.id));
+  // Per-ayat pop tracking, not lib/usePopAnimation.js's hook — this button
+  // lives inside a .map() over every ayat in the surah, so a single
+  // shared "popped" boolean would bounce every star at once instead of
+  // just the one actually tapped. A single key is enough since only one
+  // tap can be in flight at a time in practice.
+  const [poppedFavorite, setPoppedFavorite] = useState(null);
 
   async function toggleFavorite(a) {
     if (!user || !surah) return;
     const key = `${surah.nomor}:${a.nomorAyat}`;
+    setPoppedFavorite(key);
+    setTimeout(() => setPoppedFavorite((cur) => (cur === key ? null : cur)), 220);
     if (favoriteKeys.has(key)) {
       await removeFavoriteAyat(user.uid, surah.nomor, a.nomorAyat);
       showToast('Dihapus dari favorit');
@@ -492,7 +500,16 @@ export default function SurahReader() {
                   </button>
                   <button
                     onClick={() => toggleFavorite(a)}
-                    style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: favoriteKeys.has(`${surah.nomor}:${a.nomorAyat}`) ? 'var(--accent)' : 'var(--muted-soft)' }}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      padding: 0,
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      color: favoriteKeys.has(`${surah.nomor}:${a.nomorAyat}`) ? 'var(--accent)' : 'var(--muted-soft)',
+                      transform: poppedFavorite === `${surah.nomor}:${a.nomorAyat}` ? 'scale(1.35)' : 'scale(1)',
+                      transition: 'transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                    }}
                     aria-label="Simpan ke favorit"
                   >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill={favoriteKeys.has(`${surah.nomor}:${a.nomorAyat}`) ? 'currentColor' : 'none'} stroke="currentColor">

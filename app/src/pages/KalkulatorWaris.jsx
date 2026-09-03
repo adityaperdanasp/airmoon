@@ -3,6 +3,7 @@ import { calcWaris } from '../lib/warisCalc';
 import { formatRupiah } from '../lib/zakat';
 import PageHeaderPhoto from '../components/PageHeaderPhoto';
 import { PAGE_PHOTOS } from '../data/photos';
+import WarisShareModal from '../components/WarisShareModal';
 
 function digitsOnly(v) {
   return v.replace(/\D/g, '');
@@ -63,6 +64,7 @@ export default function KalkulatorWaris() {
   const [hasIbu, setHasIbu] = useState(false);
   const [harta, setHarta] = useState('500000000');
   const hartaN = Number(digitsOnly(harta)) || 0;
+  const [showShare, setShowShare] = useState(false);
 
   const noHeirs = !hasSuami && jumlahIstri === 0 && anakLaki === 0 && anakPerempuan === 0 && !hasAyah && !hasIbu;
   const { results, warnings } = noHeirs
@@ -108,9 +110,17 @@ export default function KalkulatorWaris() {
 
         {!noHeirs && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <span className="section-label" style={{ color: 'var(--muted)', fontSize: 11.5, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-              Pembagian
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span className="section-label" style={{ color: 'var(--muted)', fontSize: 11.5, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                Pembagian
+              </span>
+              <button
+                onClick={() => setShowShare(true)}
+                style={{ background: 'none', border: 'none', color: 'var(--primary)', fontSize: 11, fontWeight: 700, cursor: 'pointer', padding: 0 }}
+              >
+                ↗ Bagikan
+              </button>
+            </div>
             {warnings.map((w) => (
               <div key={w} style={{ padding: '10px 14px', borderRadius: 12, background: 'var(--cream)', fontSize: 11, color: 'var(--gold-ink-dark)', lineHeight: 1.5 }}>
                 {WARNING_TEXT[w]}
@@ -130,6 +140,8 @@ export default function KalkulatorWaris() {
           </div>
         )}
       </div>
+
+      {showShare && <WarisShareModal totalHarta={hartaN} results={results} onClose={() => setShowShare(false)} />}
     </div>
   );
 }

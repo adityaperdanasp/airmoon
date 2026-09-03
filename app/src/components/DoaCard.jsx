@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { watchMyAmin, toggleAmin } from '../lib/doa';
 import { useAuth } from '../context/AuthContext';
+import { usePopAnimation } from '../lib/usePopAnimation';
 
 const dateFmt = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 
@@ -8,11 +9,13 @@ function AminButton({ doaId, aminCount, compact }) {
   const { user } = useAuth();
   const [amined, setAmined] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [popStyle, triggerPop] = usePopAnimation();
 
   useEffect(() => watchMyAmin(doaId, user?.uid, setAmined), [doaId, user?.uid]);
 
   async function handleTap() {
     if (!user || busy) return;
+    triggerPop();
     setBusy(true);
     try {
       await toggleAmin(doaId, user.uid);
@@ -30,7 +33,6 @@ function AminButton({ doaId, aminCount, compact }) {
       onClick={handleTap}
       disabled={busy}
       style={{
-        display: 'flex',
         alignItems: 'center',
         gap: 6,
         padding: compact ? '6px 12px' : '7px 14px',
@@ -43,6 +45,7 @@ function AminButton({ doaId, aminCount, compact }) {
         cursor: 'pointer',
         opacity: busy ? 0.6 : 1,
         alignSelf: compact ? 'flex-start' : undefined,
+        ...popStyle,
       }}
     >
       <span>🤲</span>

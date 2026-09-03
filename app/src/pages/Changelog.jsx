@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
-import TopBar from '../components/TopBar';
+import PageHeaderPhoto from '../components/PageHeaderPhoto';
+import { PAGE_PHOTOS } from '../data/photos';
 import { CHANGELOG } from '../data/changelog';
 import { markChangelogSeen } from '../lib/changelogSeen';
 
@@ -16,7 +17,7 @@ export default function Changelog() {
   return (
     <div className="screen">
       <div className="screen-content">
-        <TopBar title="Yang Baru" subtitle="Pembaruan airmoon" />
+        <PageHeaderPhoto title="Yang Baru" photo={PAGE_PHOTOS.changelog} subtitle="Pembaruan airmoon" />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           {CHANGELOG.map((entry) => (
             <div key={entry.version} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>

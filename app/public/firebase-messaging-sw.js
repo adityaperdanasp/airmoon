@@ -126,6 +126,7 @@ self.addEventListener('notificationclick', (event) => {
   else if (tag === 'amalan-belum-selesai') url = '/?focus=amalan';
   else if (tag === 'puasa-sunnah') url = '/'; // no dedicated non-Ramadan fasting page exists yet — ModeRamadan is specifically Ramadan-scoped
   else if (tag === 'sedekah-recap') url = '/donasi';
+  else if (tag === 'test-notification') url = '/pengaturan';
   else if (tag === 'zakat-penghasilan') url = '/lainnya/kalkulator-zakat';
   event.waitUntil(clients.openWindow(url));
 });

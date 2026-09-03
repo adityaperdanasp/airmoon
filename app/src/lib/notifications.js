@@ -107,6 +107,22 @@ export async function disablePrayerNotifications(uid) {
 // with no way to get a heads-up for wudhu/getting to the mosque first.
 export const LEAD_MINUTE_OPTIONS = [0, 5, 10, 15];
 
+// "Tes Notifikasi" — see api/send-prayer-notifications.js's
+// handleTestNotification for the server side (verifies this ID token
+// instead of a CRON_SECRET, so any signed-in user can trigger exactly one
+// push to their own device on demand).
+export async function sendTestNotification(user) {
+  const idToken = await user.getIdToken();
+  const res = await fetch('https://airmoon.vercel.app/api/send-prayer-notifications', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
+    body: JSON.stringify({ action: 'test' }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Gagal mengirim tes notifikasi.');
+  return data;
+}
+
 export async function setNotifLeadMinutes(uid, minutes) {
   await setDoc(doc(db, 'users', uid), { notifLeadMinutes: minutes }, { merge: true });
 }

@@ -98,6 +98,29 @@ export function watchMyContributions(uid, callback) {
   return onSnapshot(q, (snap) => callback(snap.docs.map((d) => ({ id: d.id, ...d.data() }))));
 }
 
+// Target sedekah pribadi bulanan (2026-09-04) — a visual goal distinct
+// from "Pengingat Donasi Bulanan" below: that one is a push notification
+// asking for a donation, this is a progress bar showing how much of a
+// self-set monthly target has actually been given so far. Just an amount,
+// no month-tracking field needed — progress is computed live by summing
+// `myContributions` (already fetched by watchMyContributions) against the
+// current calendar month, not a separate stored running total.
+export function watchSedekahGoal(uid, callback) {
+  if (!uid) {
+    callback(null);
+    return () => {};
+  }
+  return onSnapshot(doc(db, 'users', uid), (snap) => callback(snap.data()?.sedekahGoal?.amount || null));
+}
+
+export async function setSedekahGoal(uid, amount) {
+  await setDoc(doc(db, 'users', uid), { sedekahGoal: { amount } }, { merge: true });
+}
+
+export async function clearSedekahGoal(uid) {
+  await setDoc(doc(db, 'users', uid), { sedekahGoal: null }, { merge: true });
+}
+
 // "Pengingat Donasi Bulanan" — deliberately a REMINDER, not real recurring
 // billing. Actually auto-charging someone's card every month needs a
 // tokenized/saved payment method and Midtrans's own subscription API,

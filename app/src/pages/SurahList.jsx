@@ -4,7 +4,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
 import { fetchSurahList } from '../lib/quranApi';
-import { getReadingHistory } from '../lib/readingHistory';
+import { getReadingHistory, clearReadingHistory } from '../lib/readingHistory';
 import KhatamProgressCard from '../components/KhatamProgressCard';
 import SurahPreviewSheet from '../components/SurahPreviewSheet';
 import BottomNav from '../components/BottomNav';
@@ -193,9 +193,20 @@ export default function SurahList() {
 
         {history.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <span className="section-label" style={{ color: 'var(--muted)', fontSize: 11.5, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-              Riwayat Baca
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span className="section-label" style={{ color: 'var(--muted)', fontSize: 11.5, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                Riwayat Baca
+              </span>
+              <button
+                onClick={() => {
+                  clearReadingHistory();
+                  setHistory([]);
+                }}
+                style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: 11, textDecoration: 'underline', cursor: 'pointer', padding: 0 }}
+              >
+                Hapus
+              </button>
+            </div>
             <div style={{ display: 'flex', gap: 8, overflowX: 'auto' }}>
               {history.map((s) => (
                 <Link

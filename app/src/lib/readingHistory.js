@@ -25,3 +25,11 @@ export function markSurahOpened({ nomor, namaLatin }) {
     // Private-browsing/full storage — the row just won't remember this visit.
   }
 }
+
+export function clearReadingHistory() {
+  try {
+    localStorage.removeItem(KEY);
+  } catch {
+    // Nothing to clear if it was never set.
+  }
+}

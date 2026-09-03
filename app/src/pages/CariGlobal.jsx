@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import TopBar from '../components/TopBar';
 import { IconSearch } from '../components/icons';
 import { searchAll } from '../lib/globalSearch';
 import { Skeleton } from '../components/Skeleton';
+import PageHeaderPhoto from '../components/PageHeaderPhoto';
+import { PAGE_PHOTOS } from '../data/photos';
 
 const CATEGORY_LABEL = { pagi: 'Dzikir Pagi', petang: 'Dzikir Petang', kegiatan: 'Doa Kegiatan' };
 
@@ -41,7 +42,7 @@ export default function CariGlobal() {
   return (
     <div className="screen">
       <div className="screen-content">
-        <TopBar title="Cari" subtitle="Cari di seluruh konten airmoon" />
+        <PageHeaderPhoto title="Cari" photo={PAGE_PHOTOS.cariGlobal} subtitle="Cari di seluruh konten airmoon" />
 
         <form onSubmit={runSearch} className="input-row" style={{ borderRadius: 999 }}>
           <IconSearch style={{ color: 'var(--muted)' }} />

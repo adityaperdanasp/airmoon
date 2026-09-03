@@ -9,8 +9,119 @@ import { markSeen } from '../lib/unseenBadges';
 import EmptyState from '../components/EmptyState';
 import { SkeletonCard } from '../components/Skeleton';
 import ReceiptShareModal from '../components/ReceiptShareModal';
+import { watchSedekahGoal, setSedekahGoal, clearSedekahGoal } from '../lib/donations';
 
 const PLEDGE_AMOUNTS = [25000, 50000, 100000];
+const GOAL_AMOUNTS = [100000, 250000, 500000, 1000000];
+
+// A visual progress goal, distinct from MonthlyPledgeCard above (that's a
+// push notification asking for a donation; this is a progress bar showing
+// how much of a self-set target has actually been given this calendar
+// month). Computed live from myContributions (already fetched by the
+// parent) filtered to the current month, not a separately stored running
+// total — same "sum on read, don't keep a denormalized counter in sync"
+// reasoning already used elsewhere in this app (lib/umrohTabungan.js).
+function SedekahGoalCard({ user, myContributions }) {
+  const { showToast } = useToast();
+  const [goal, setGoal] = useState(null);
+  const [editing, setEditing] = useState(false);
+  const [customAmount, setCustomAmount] = useState('100000');
+
+  useEffect(() => watchSedekahGoal(user?.uid, setGoal), [user?.uid]);
+
+  if (!user) return null;
+
+  const now = new Date();
+  const monthTotal = myContributions
+    .filter((c) => {
+      const d = c.createdAt?.toDate?.();
+      return d && d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+    })
+    .reduce((sum, c) => sum + c.amount, 0);
+
+  if (!goal) {
+    if (!editing) {
+      return (
+        <button
+          onClick={() => setEditing(true)}
+          className="card"
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '14px 16px', border: 'none', width: '100%', textAlign: 'left', cursor: 'pointer', font: 'inherit', color: 'inherit' }}
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <span style={{ fontSize: 13, fontWeight: 700 }}>🎯 Set Target Sedekah Bulanan</span>
+            <span style={{ fontSize: 11, color: 'var(--muted)' }}>Pantau progres sedekah kamu bulan ini</span>
+          </div>
+          <span style={{ fontSize: 18, color: 'var(--primary)' }}>+</span>
+        </button>
+      );
+    }
+    return (
+      <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '14px 16px' }}>
+        <span style={{ fontSize: 13, fontWeight: 700 }}>🎯 Target Sedekah Bulanan</span>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {GOAL_AMOUNTS.map((amt) => (
+            <button
+              key={amt}
+              onClick={() => setCustomAmount(String(amt))}
+              style={{
+                padding: '7px 12px',
+                borderRadius: 999,
+                fontSize: 11.5,
+                fontWeight: 700,
+                border: Number(customAmount) === amt ? '1.5px solid var(--primary)' : '1px solid var(--border)',
+                background: Number(customAmount) === amt ? 'var(--mint)' : 'transparent',
+                color: Number(customAmount) === amt ? 'var(--primary)' : 'var(--muted)',
+                cursor: 'pointer',
+              }}
+            >
+              {formatRupiah(amt).replace('Rp ', '')}
+            </button>
+          ))}
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button className="btn-outline" style={{ flex: 1 }} onClick={() => setEditing(false)}>Batal</button>
+          <button
+            className="btn"
+            style={{ flex: 1 }}
+            onClick={() => {
+              setSedekahGoal(user.uid, Number(customAmount) || 0);
+              setEditing(false);
+              showToast('Target sedekah bulanan diset');
+            }}
+          >
+            Simpan
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const pct = Math.min(100, Math.round((monthTotal / goal) * 100));
+
+  return (
+    <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '14px 16px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span style={{ fontSize: 13, fontWeight: 700 }}>🎯 Target Sedekah Bulan Ini</span>
+        <button
+          onClick={() => {
+            clearSedekahGoal(user.uid);
+            showToast('Target dihapus');
+          }}
+          style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: 10.5, textDecoration: 'underline', cursor: 'pointer', padding: 0 }}
+        >
+          Hapus
+        </button>
+      </div>
+      <div style={{ height: 7, borderRadius: 999, background: 'var(--border)', overflow: 'hidden' }}>
+        <div style={{ height: '100%', width: `${pct}%`, background: 'var(--primary)', transition: 'width 0.25s ease' }} />
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--muted)' }}>
+        <span><strong style={{ color: 'var(--ink)' }}>{formatRupiah(monthTotal)}</strong> dari {formatRupiah(goal)}</span>
+        <span>{pct}%</span>
+      </div>
+    </div>
+  );
+}
 
 // A monthly REMINDER, not real recurring billing — see lib/donations.js's
 // own comment on watchMonthlyPledge for why that distinction matters here
@@ -190,6 +301,7 @@ export default function Donasi() {
 
         <DaftarkanMasjidCard user={user} />
         <MonthlyPledgeCard user={user} />
+        <SedekahGoalCard user={user} myContributions={myContributions} />
 
         {!donations && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>

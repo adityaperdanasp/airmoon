@@ -46,6 +46,16 @@ export const PAGE_PHOTOS = {
   // silhouette dark-mode set better than a bright daylight shot.
   modeRamadan: '/photos/home-dark-1.jpg',
   askMe: '/photos/home-light-2.jpg',
+  // Added 2026-09-04 for pages that had shipped on a plain TopBar with no
+  // photo treatment at all — same "reuse an existing asset, no dedicated
+  // shoot" reasoning as modeRamadan/askMe above.
+  ayatFavorit: '/photos/page-quran.jpg',
+  doa: '/photos/page-doa-harian.jpg',
+  notifikasi: '/photos/home-light-3.jpg',
+  cariGlobal: '/photos/home-light-4.jpg',
+  changelog: '/photos/home-dark-2.jpg',
+  pilihQari: '/photos/page-quran.jpg',
+  pilihAdzan: '/photos/page-jadwal-sholat.jpg',
 };
 
 // A wider rotation pool for purely decorative use (KutipanInspirasi.jsx's

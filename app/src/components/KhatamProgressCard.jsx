@@ -3,6 +3,9 @@ import { watchKhatamProgress, resetKhatamProgress, TOTAL_MUSHAF_PAGES, TOTAL_JUZ
 import { watchReadingStats } from '../lib/readingTime';
 import ConfirmDialog from './ConfirmDialog';
 import KhatamCertificateModal from './KhatamCertificateModal';
+import Confetti from './Confetti';
+
+const CELEBRATED_KEY = 'airmoon-khatam-celebrated';
 
 // A compact progress display on SurahList.jsx — "how much of the whole
 // Mushaf have I actually paged through" (filled in by MushafReader.jsx's
@@ -16,23 +19,48 @@ export default function KhatamProgressCard({ uid }) {
   const [readingStats, setReadingStats] = useState({ totalMinutes: 0 });
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showCertificate, setShowCertificate] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
 
   useEffect(() => watchKhatamProgress(uid, setProgress), [uid]);
   useEffect(() => watchReadingStats(uid, setReadingStats), [uid]);
 
   const pageCount = progress.pages.length;
   const totalMinutes = readingStats.totalMinutes || 0;
+  const isKhatam = pageCount >= TOTAL_MUSHAF_PAGES;
+
+  // Celebrates once per completion, not once per visit — a localStorage
+  // flag rather than comparing against a previous render, since this
+  // card unmounts/remounts every time someone navigates away from
+  // SurahList and back. Cleared on reset (below) so a future re-khatam
+  // gets its own celebration.
+  useEffect(() => {
+    if (!isKhatam) return;
+    if (localStorage.getItem(CELEBRATED_KEY) === '1') return;
+    localStorage.setItem(CELEBRATED_KEY, '1');
+    setShowConfetti(true);
+  }, [isKhatam]);
+
   if (pageCount === 0 && totalMinutes === 0) return null; // nothing to show before any reading has happened at all
 
   const pct = pageCount > 0 ? Math.min(100, Math.round((pageCount / TOTAL_MUSHAF_PAGES) * 100)) : 0;
   const juzCount = progress.juz.length;
-  const isKhatam = pageCount >= TOTAL_MUSHAF_PAGES;
   const hours = Math.floor(totalMinutes / 60);
   const mins = totalMinutes % 60;
   const timeLabel = hours > 0 ? `${hours} jam ${mins} menit` : `${mins} menit`;
 
   return (
-    <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: 14 }}>
+    <div
+      className="card"
+      style={{
+        position: 'relative',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 10,
+        padding: 14,
+        background: 'linear-gradient(155deg, var(--card) 55%, var(--mint-soft) 130%)',
+      }}
+    >
+      {showConfetti && <Confetti onComplete={() => setShowConfetti(false)} />}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <span style={{ fontSize: 12.5, fontWeight: 800 }}>📖 Progress Khatam Qur'an</span>
         {pageCount > 0 && (
@@ -81,6 +109,7 @@ export default function KhatamProgressCard({ uid }) {
           onCancel={() => setShowResetConfirm(false)}
           onConfirm={() => {
             resetKhatamProgress(uid);
+            localStorage.removeItem(CELEBRATED_KEY);
             setShowResetConfirm(false);
           }}
         />

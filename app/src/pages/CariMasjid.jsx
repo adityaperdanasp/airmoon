@@ -5,7 +5,7 @@ import { useLang } from '../context/LangContext';
 import PageHeaderPhoto from '../components/PageHeaderPhoto';
 import { PAGE_PHOTOS } from '../data/photos';
 import { IconSearch } from '../components/icons';
-import { getSearchHistory, addSearchTerm } from '../lib/searchHistory';
+import { getSearchHistory, addSearchTerm, clearSearchHistory } from '../lib/searchHistory';
 import ErrorRetry from '../components/ErrorRetry';
 import { Skeleton } from '../components/Skeleton';
 
@@ -68,7 +68,7 @@ export default function CariMasjid() {
         </div>
 
         {!query && history.length > 0 && (
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
             {history.map((term) => (
               <button
                 key={term}
@@ -78,6 +78,15 @@ export default function CariMasjid() {
                 {term}
               </button>
             ))}
+            <button
+              onClick={() => {
+                clearSearchHistory(HISTORY_KEY);
+                setHistory([]);
+              }}
+              style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: 11, textDecoration: 'underline', cursor: 'pointer', padding: 0 }}
+            >
+              Hapus
+            </button>
           </div>
         )}
 

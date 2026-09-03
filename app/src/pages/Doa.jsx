@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
 import { watchDoas, createDoa } from '../lib/doa';
 import { useAuth } from '../context/AuthContext';
-import TopBar from '../components/TopBar';
 import BottomNav from '../components/BottomNav';
 import DoaCard from '../components/DoaCard';
 import { SkeletonCard } from '../components/Skeleton';
 import EmptyState from '../components/EmptyState';
 import { markSeen } from '../lib/unseenBadges';
 import PullToRefresh from '../components/PullToRefresh';
+import PageHeaderPhoto from '../components/PageHeaderPhoto';
+import { PAGE_PHOTOS } from '../data/photos';
 
 const MAX_LENGTH = 500;
 
@@ -119,7 +120,7 @@ export default function Doa() {
     <div className="screen">
       <div className="screen-content">
       <PullToRefresh onRefresh={handlePullRefresh}>
-        <TopBar title="Doa & Aminkan" subtitle="Baca & aminkan doa sahabat lain" />
+        <PageHeaderPhoto title="Doa & Aminkan" photo={PAGE_PHOTOS.doa} subtitle="Baca & aminkan doa sahabat lain" />
 
         <ComposeDoa user={user} />
 

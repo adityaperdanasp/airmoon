@@ -7,9 +7,11 @@ import { fetchChapters, fetchMushafPage, layoutPage, TOTAL_MUSHAF_PAGES, TAJWEED
 import { fetchSurahDetail } from '../lib/quranApi';
 import { useNightMode, NIGHT_STYLE_VARS } from '../lib/readingPrefs';
 import { fetchSurahTafsir } from '../lib/tafsirApi';
+import { addFavoriteAyat, removeFavoriteAyat } from '../lib/favoriteAyat';
 import { markPageRead } from '../lib/khatamProgress';
 import { useEscapeKey } from '../lib/useEscapeKey';
 import { useReadingTimeTracker } from '../lib/readingTime';
+import { usePopAnimation } from '../lib/usePopAnimation';
 import { IconBack } from '../components/icons';
 import ErrorRetry from '../components/ErrorRetry';
 import Portal from '../components/Portal';
@@ -178,6 +180,7 @@ function ActionRow({ icon, label, onClick, disabled }) {
 // screen — Mode Mushaf doesn't need its own separate reciter setting.
 function AyahActionSheet({ verse, chapterName, isBookmarked, onClose, onBookmark }) {
   useEscapeKey(onClose);
+  const { user } = useAuth();
   const [audioUrl, setAudioUrl] = useState(null);
   const [translation, setTranslation] = useState(null);
   const [loadingExtra, setLoadingExtra] = useState(true);
@@ -187,8 +190,43 @@ function AyahActionSheet({ verse, chapterName, isBookmarked, onClose, onBookmark
   const [showTafsir, setShowTafsir] = useState(false);
   const [tafsirText, setTafsirText] = useState(null);
   const [tafsirLoading, setTafsirLoading] = useState(false);
+  const [isFavorited, setIsFavorited] = useState(false);
 
   const [chapterId, verseNumber] = verse.verse_key.split(':').map(Number);
+  const [favoritePopStyle, triggerFavoritePop] = usePopAnimation();
+
+  // One-shot check (not the live watchFavoriteAyat list — this sheet
+  // only ever cares about one specific ayah) — favoriteAyat.js's doc id
+  // is exactly this same "chapter:verse" verse_key format already, so it
+  // doubles as the lookup key with no reformatting needed.
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    getDoc(doc(db, 'users', user.uid, 'favoriteAyat', verse.verse_key)).then((snap) => {
+      if (!cancelled) setIsFavorited(snap.exists());
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [user, verse.verse_key]);
+
+  async function handleFavoriteToggle() {
+    if (!user) return;
+    triggerFavoritePop();
+    if (isFavorited) {
+      await removeFavoriteAyat(user.uid, chapterId, verseNumber);
+      setIsFavorited(false);
+    } else {
+      await addFavoriteAyat(user.uid, {
+        chapter: chapterId,
+        chapterName,
+        verse: verseNumber,
+        arabic: verse.text_uthmani,
+        translation: translation || '',
+      });
+      setIsFavorited(true);
+    }
+  }
 
   async function handleTafsir() {
     setShowTafsir(true);
@@ -285,6 +323,7 @@ function AyahActionSheet({ verse, chapterName, isBookmarked, onClose, onBookmark
         <ActionRow icon="↗" label="Bagikan Ayat" onClick={handleShare} />
         <ActionRow icon="⧉" label={copied ? 'Tersalin!' : 'Salin Ayat'} onClick={handleCopy} />
         <ActionRow icon="📖" label="Lihat Tafsir" onClick={handleTafsir} />
+        <ActionRow icon={<span style={favoritePopStyle}>{isFavorited ? '♥' : '♡'}</span>} label={isFavorited ? 'Hapus dari Favorit' : 'Simpan ke Favorit'} onClick={handleFavoriteToggle} disabled={!user} />
         <ActionRow icon={isBookmarked ? '★' : '☆'} label="Tandai Terakhir Baca" onClick={onBookmark} />
       </div>
     </div>

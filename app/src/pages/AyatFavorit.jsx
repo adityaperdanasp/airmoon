@@ -2,11 +2,12 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { watchFavoriteAyat, removeFavoriteAyat, setFavoriteCollection } from '../lib/favoriteAyat';
-import TopBar from '../components/TopBar';
 import EmptyState from '../components/EmptyState';
 import ConfirmDialog from '../components/ConfirmDialog';
 import CollectionPickerSheet from '../components/CollectionPickerSheet';
 import { useToast } from '../context/ToastContext';
+import PageHeaderPhoto from '../components/PageHeaderPhoto';
+import { PAGE_PHOTOS } from '../data/photos';
 
 export default function AyatFavorit() {
   const { user } = useAuth();
@@ -15,6 +16,7 @@ export default function AyatFavorit() {
   const [pendingRemove, setPendingRemove] = useState(null); // the favorite object awaiting confirmation, or null
   const [pickerFor, setPickerFor] = useState(null); // the favorite object being moved to a collection, or null
   const [activeCollection, setActiveCollection] = useState(null); // null = "Semua"
+  const [sortBy, setSortBy] = useState('terbaru'); // 'terbaru' | 'surah'
 
   useEffect(() => watchFavoriteAyat(user?.uid, setFavorites), [user?.uid]);
 
@@ -28,14 +30,17 @@ export default function AyatFavorit() {
 
   const filtered = useMemo(() => {
     if (!favorites) return favorites;
-    if (!activeCollection) return favorites;
-    return favorites.filter((f) => f.collection === activeCollection);
-  }, [favorites, activeCollection]);
+    const byCollection = activeCollection ? favorites.filter((f) => f.collection === activeCollection) : favorites;
+    // 'terbaru' is already the query's own order (createdAt desc from
+    // watchFavoriteAyat) — only 'surah' needs an actual client-side sort.
+    if (sortBy !== 'surah') return byCollection;
+    return [...byCollection].sort((a, b) => a.chapter - b.chapter || a.verse - b.verse);
+  }, [favorites, activeCollection, sortBy]);
 
   return (
     <div className="screen">
       <div className="screen-content">
-        <TopBar title="Ayat Favorit" subtitle={favorites ? `${favorites.length} ayat tersimpan` : 'Memuat…'} />
+        <PageHeaderPhoto title="Ayat Favorit" photo={PAGE_PHOTOS.ayatFavorit} subtitle={favorites ? `${favorites.length} ayat tersimpan` : 'Memuat…'} />
 
         {favorites?.length === 0 && (
           <EmptyState
@@ -73,6 +78,32 @@ export default function AyatFavorit() {
                 }}
               >
                 {name || 'Semua'}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {favorites && favorites.length > 1 && (
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6 }}>
+            {[
+              { key: 'terbaru', label: 'Terbaru' },
+              { key: 'surah', label: 'Per Surah' },
+            ].map((opt) => (
+              <button
+                key={opt.key}
+                onClick={() => setSortBy(opt.key)}
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: 999,
+                  fontSize: 10.5,
+                  fontWeight: 700,
+                  border: sortBy === opt.key ? 'none' : '1px solid var(--border)',
+                  background: sortBy === opt.key ? 'var(--mint)' : 'transparent',
+                  color: sortBy === opt.key ? 'var(--primary)' : 'var(--muted)',
+                  cursor: 'pointer',
+                }}
+              >
+                {opt.label}
               </button>
             ))}
           </div>

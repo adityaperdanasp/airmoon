@@ -20,6 +20,7 @@
 import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { getMessaging } from 'firebase-admin/messaging';
+import { getAuth } from 'firebase-admin/auth';
 import { pickPrayerMessage } from './_lib/prayerMessages.js';
 
 const PRAYER_ORDER = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
@@ -88,9 +89,49 @@ async function pruneDeadTokens(docRef, tokens, result) {
   }
 }
 
+// Self-service "Tes Notifikasi" (2026-09-04) — a different auth model
+// than the cron-secret-gated path below: verifies the CALLER's own
+// Firebase ID token instead, so any signed-in user can trigger exactly
+// one push to their own device(s) on demand, no CRON_SECRET involved.
+// Folded into this file rather than a 13th api/*.js file — same
+// Hobby-plan 12-function-cap reasoning as check-campaign-deadlines.js's
+// own multi-check merging. Real value: this app now has 5 notification
+// categories + a lead-time setting + a master switch — a lot of
+// configuration to get right with no fast way to confirm it's actually
+// working short of waiting for a real prayer time.
+async function handleTestNotification(req, res) {
+  const authHeader = req.headers.authorization || '';
+  const idToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  if (!idToken) return res.status(401).json({ error: 'Missing ID token' });
+
+  try {
+    initAdmin();
+    const decoded = await getAuth().verifyIdToken(idToken);
+    const db = getFirestore();
+    const userSnap = await db.collection('users').doc(decoded.uid).get();
+    const tokens = userSnap.data()?.fcmTokens || [];
+    if (!tokens.length) {
+      return res.status(400).json({ error: 'Belum ada perangkat terdaftar buat notifikasi — aktifkan dulu di Jadwal Sholat.' });
+    }
+
+    const messaging = getMessaging();
+    const result = await messaging.sendEachForMulticast({
+      tokens,
+      data: { tag: 'test-notification', title: '🔔 Tes Notifikasi', body: 'Kalau kamu lihat ini, notifikasi airmoon udah aktif dengan benar!' },
+    });
+    return res.status(200).json({ ok: true, successCount: result.successCount, totalTokens: tokens.length });
+  } catch (err) {
+    return res.status(401).json({ error: err.message || 'Token gak valid.' });
+  }
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'GET' && req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  if (req.method === 'POST' && req.body?.action === 'test') {
+    return handleTestNotification(req, res);
   }
 
   const secret = req.query.secret || req.headers['x-cron-secret'];

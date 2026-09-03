@@ -8,6 +8,7 @@ import PageHeaderPhoto from '../components/PageHeaderPhoto';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { useToast } from '../context/ToastContext';
 import { PAGE_PHOTOS } from '../data/photos';
+import CountUp from '../components/CountUp';
 
 function digitsOnly(v) {
   return v.replace(/\D/g, '');
@@ -99,7 +100,7 @@ export default function KalkulatorZakat() {
               <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--accent)' }}>
                 {t('zakat_wajib_label')}
               </span>
-              <div style={{ fontSize: 30, fontWeight: 800, color: '#fff', marginTop: 8 }}>{formatRupiah(zakatPenghasilan)}</div>
+              <div style={{ fontSize: 30, fontWeight: 800, color: '#fff', marginTop: 8 }}><CountUp value={zakatPenghasilan} formatter={formatRupiah} /></div>
               <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)' }}>
                 2.5% &times; ({formatRupiah(incomeN)} &minus; {formatRupiah(needsN)})
               </span>
@@ -152,7 +153,7 @@ export default function KalkulatorZakat() {
               <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--accent)' }}>
                 {t('zakat_wajib_label')}
               </span>
-              <div style={{ fontSize: 30, fontWeight: 800, color: '#fff', marginTop: 8 }}>{formatRupiah(zakatMaal)}</div>
+              <div style={{ fontSize: 30, fontWeight: 800, color: '#fff', marginTop: 8 }}><CountUp value={zakatMaal} formatter={formatRupiah} /></div>
               <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)' }}>
                 {reachesNisab ? `2.5% × ${formatRupiah(assetsN)}` : t('belum_capai_nisab')}
               </span>

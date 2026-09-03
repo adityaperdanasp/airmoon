@@ -42,7 +42,7 @@ export default function AmalanHeatmap({ uid }) {
   const max = days[0]?.max || 6;
 
   return (
-    <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: 16 }}>
+    <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: 16, background: 'linear-gradient(155deg, var(--card) 55%, var(--mint-soft) 130%)' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <span style={{ fontSize: 12.5, fontWeight: 800 }}>📅 Konsistensi 5 Minggu Terakhir</span>
         <span style={{ fontSize: 10, color: 'var(--muted)' }}>Sholat &amp; Tilawah (dari {max})</span>

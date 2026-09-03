@@ -3,6 +3,9 @@ import { SHOLAT_KEYS, SHOLAT_LABELS, watchAmalanHarian, setSholatDone, setTilawa
 import { watchDzikirStreak, markDzikirDone, isDoneToday } from '../lib/dzikirStreak';
 import { highestTier } from '../lib/badges';
 import AmalanShareModal from './AmalanShareModal';
+import Confetti from './Confetti';
+
+const BADGE_CELEBRATED_KEY = 'airmoon-badge-celebrated-days';
 
 function Chip({ done, label, onClick, disabled }) {
   return (
@@ -41,6 +44,7 @@ export default function AmalanHarianCard({ uid }) {
   const [amalan, setAmalan] = useState({ sholat: {}, tilawah: false });
   const [streaks, setStreaks] = useState({});
   const [showShare, setShowShare] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
 
   useEffect(() => watchAmalanHarian(uid, setAmalan), [uid]);
   useEffect(() => watchDzikirStreak(uid, setStreaks), [uid]);
@@ -57,8 +61,26 @@ export default function AmalanHarianCard({ uid }) {
   const pagiTier = highestTier(streaks.pagi?.best || 0);
   const petangTier = highestTier(streaks.petang?.best || 0);
 
+  // Celebrates the moment a NEW badge tier is actually reached, not every
+  // time this card happens to render with an already-earned tier —
+  // tracked via the highest tier-days already celebrated (localStorage,
+  // not per-render state, since this card remounts on every Home visit).
+  useEffect(() => {
+    const highestReached = Math.max(pagiTier?.days || 0, petangTier?.days || 0);
+    if (highestReached === 0) return;
+    const lastCelebrated = Number(localStorage.getItem(BADGE_CELEBRATED_KEY)) || 0;
+    if (highestReached > lastCelebrated) {
+      localStorage.setItem(BADGE_CELEBRATED_KEY, String(highestReached));
+      setShowConfetti(true);
+    }
+  }, [pagiTier?.days, petangTier?.days]);
+
   return (
-    <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: 16 }}>
+    <div
+      className="card"
+      style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 12, padding: 16, background: 'linear-gradient(155deg, var(--card) 55%, var(--mint-soft) 130%)' }}
+    >
+      {showConfetti && <Confetti onComplete={() => setShowConfetti(false)} />}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <span style={{ fontSize: 13, fontWeight: 800 }}>📋 Amalan Harian</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>

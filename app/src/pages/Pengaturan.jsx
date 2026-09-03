@@ -5,7 +5,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useToast } from '../context/ToastContext';
 import { useNavigate, Link } from 'react-router-dom';
 import TopBar from '../components/TopBar';
-import { isNativeApp } from '../lib/notifications';
+import { isNativeApp, sendTestNotification } from '../lib/notifications';
 import { AVATAR_COLORS, watchUserProfile, setAvatarColor } from '../lib/profile';
 import InstallAppCard from '../components/InstallAppCard';
 import ConfirmDialog from '../components/ConfirmDialog';
@@ -49,10 +49,25 @@ function SegButton({ active, onClick, children }) {
 // reasoning and how each server-side check reads this. A category with no
 // explicit false is enabled, so a brand-new user (or anyone who's never
 // opened this section) sees every toggle on and nothing changes for them.
-function NotifPrefsCard({ uid }) {
+function NotifPrefsCard({ user }) {
+  const uid = user?.uid;
+  const { showToast } = useToast();
   const [prefs, setPrefs] = useState({});
+  const [testing, setTesting] = useState(false);
 
   useEffect(() => watchNotifPrefs(uid, setPrefs), [uid]);
+
+  async function handleTest() {
+    setTesting(true);
+    try {
+      await sendTestNotification(user);
+      showToast('Tes notifikasi dikirim — cek HP kamu');
+    } catch (err) {
+      showToast(err.message || 'Gagal kirim tes notifikasi');
+    } finally {
+      setTesting(false);
+    }
+  }
 
   return (
     <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 14, padding: 16 }}>
@@ -87,6 +102,9 @@ function NotifPrefsCard({ uid }) {
           );
         })}
       </div>
+      <button className="btn-outline" style={{ padding: '9px 0', fontSize: 12 }} onClick={handleTest} disabled={testing}>
+        {testing ? 'Mengirim...' : '🔔 Tes Notifikasi'}
+      </button>
     </div>
   );
 }
@@ -385,7 +403,7 @@ export default function Pengaturan() {
 
           {isNativeApp() && <AzanSoundPicker />}
 
-          {user && <NotifPrefsCard uid={user.uid} />}
+          {user && <NotifPrefsCard user={user} />}
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>

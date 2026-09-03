@@ -9,6 +9,17 @@ const ASK_ME_ENDPOINT = 'https://airmoon.vercel.app/api/ask-me';
 
 const WELCOME_MESSAGE = { role: 'assistant', content: 'Assalamu\'alaikum! Saya Ust. Rewin. Tanya apa aja seputar Islam — sholat, puasa, zakat, Qur\'an, atau fitur di airmoon.' };
 
+// Shown only on a fresh chat (just the welcome message, nothing sent yet)
+// — a blank input with just a placeholder was a real barrier for someone
+// who wants to try this out but doesn't know what's reasonable to ask an
+// AI about Islam. Tapping one sends it immediately, not just fills the box.
+const SUGGESTED_QUESTIONS = [
+  'Bagaimana niat sholat witir?',
+  'Apa syarat wajib zakat?',
+  'Doa buka puasa yang benar?',
+  'Rukun umrah apa saja?',
+];
+
 // Persisted per-device (localStorage, not Firestore — this is scratch
 // conversation history, not something that needs to sync across a
 // user's devices) so leaving the page and coming back doesn't lose the
@@ -54,8 +65,8 @@ export default function AskMe() {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: 'smooth' });
   }, [messages, busy]);
 
-  async function send() {
-    const text = input.trim();
+  async function send(override) {
+    const text = (override ?? input).trim();
     if (!text || busy) return;
     setInput('');
     setError('');
@@ -182,6 +193,20 @@ export default function AskMe() {
             </div>
           </div>
         )}
+        {messages.length === 1 && !busy && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, paddingLeft: 34 }}>
+            {SUGGESTED_QUESTIONS.map((q) => (
+              <button
+                key={q}
+                onClick={() => send(q)}
+                style={{ padding: '8px 13px', borderRadius: 999, fontSize: 12, fontWeight: 600, border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--ink)', cursor: 'pointer' }}
+              >
+                {q}
+              </button>
+            ))}
+          </div>
+        )}
+
         {error && <p style={{ fontSize: 12, color: 'var(--danger)', textAlign: 'center' }}>{error}</p>}
       </div>
 

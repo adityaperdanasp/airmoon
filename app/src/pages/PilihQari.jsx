@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { RECITERS, fetchSurahDetail } from '../lib/quranApi';
 import { hasWordSync } from '../lib/quranTimingApi';
-import TopBar from '../components/TopBar';
+import PageHeaderPhoto from '../components/PageHeaderPhoto';
+import { PAGE_PHOTOS } from '../data/photos';
 
 export default function PilihQari() {
   const navigate = useNavigate();
@@ -49,7 +50,7 @@ export default function PilihQari() {
   return (
     <div className="screen">
       <div className="screen-content">
-        <TopBar title="Pilih Qari" subtitle="Ketuk ▶ buat dengar contoh (Al-Fatihah)" />
+        <PageHeaderPhoto title="Pilih Qari" photo={PAGE_PHOTOS.pilihQari} subtitle="Ketuk ▶ buat dengar contoh (Al-Fatihah)" />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {RECITERS.map((r) => {
             const active = r.id === current;

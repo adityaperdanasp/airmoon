@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import TopBar from '../components/TopBar';
+import PageHeaderPhoto from '../components/PageHeaderPhoto';
+import { PAGE_PHOTOS } from '../data/photos';
+import { isNativeApp } from '../lib/notifications';
 
 // Preview clips are ~14s trims of the real adzan recordings (source:
 // github.com/achaudhry/adhan), re-encoded to 80kbps mono and bundled as
@@ -64,7 +66,12 @@ export default function PilihAdzan() {
   return (
     <div className="screen">
       <div className="screen-content">
-        <TopBar title="Suara Adzan" />
+        <PageHeaderPhoto title="Suara Adzan" photo={PAGE_PHOTOS.pilihAdzan} />
+        {!isNativeApp() && (
+          <div style={{ padding: '10px 14px', borderRadius: 12, background: 'var(--cream)', fontSize: 11, color: 'var(--gold-ink-dark)', lineHeight: 1.5 }}>
+            Di web/PWA, pilihan di sini cuma buat preview — belum bisa ngatur suara notifikasi adzan yang beneran (keterbatasan browser). Buat suara adzan asli, pasang aplikasi Android airmoon.
+          </div>
+        )}
         <p className="muted" style={{ margin: 0, fontSize: 11.5 }}>Ketuk ikon speaker buat dengerin dulu sebelum pilih.</p>
         {previewError && <p style={{ margin: 0, fontSize: 11.5, color: 'var(--danger)' }}>{previewError}</p>}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>

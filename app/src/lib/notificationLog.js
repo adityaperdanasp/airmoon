@@ -135,6 +135,7 @@ export function routeForTag(tag = '') {
   if (tag === 'amalan-belum-selesai') return '/?focus=amalan';
   if (tag === 'puasa-sunnah') return '/';
   if (tag === 'sedekah-recap') return '/donasi';
+  if (tag === 'test-notification') return '/pengaturan';
   if (tag === 'zakat-penghasilan') return '/lainnya/kalkulator-zakat';
   return '/jadwal-sholat'; // adzan-* and any unrecognized tag
 }

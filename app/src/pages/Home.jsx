@@ -23,6 +23,7 @@ import InstallAppCard from '../components/InstallAppCard';
 import EmptyState from '../components/EmptyState';
 import AmalanHarianCard from '../components/AmalanHarianCard';
 import AmalanHeatmap from '../components/AmalanHeatmap';
+import CountUp from '../components/CountUp';
 import PullToRefresh from '../components/PullToRefresh';
 
 const dateFmt = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
@@ -279,7 +280,7 @@ export default function Home() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1 }}>
             <span style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--muted)' }}>Total Sedekah</span>
             <span style={{ fontSize: 16, fontWeight: 800, color: 'var(--primary)' }}>
-              {formatRupiah(mySedekahTotal)}
+              <CountUp value={mySedekahTotal} formatter={formatRupiah} />
             </span>
           </div>
           <span style={{ fontSize: 11, color: 'var(--muted)' }}>{showSedekahHistory ? 'Tutup' : 'Rincian'}</span>
