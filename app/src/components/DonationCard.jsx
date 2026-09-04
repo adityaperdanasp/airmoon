@@ -175,9 +175,21 @@ export default function DonationCard({ donation, amounts = [10000, 25000, 50000]
           <span><strong style={{ color: 'var(--ink)' }}>{formatRupiah(donation.collected)}</strong> terkumpul</span>
           <span>dari {formatRupiah(donation.target)}</span>
         </div>
-        {donation.deadline && (
-          <span style={{ fontSize: 10.5, color: 'var(--muted)' }}>Batas waktu {dateFmt.format(new Date(donation.deadline))}</span>
-        )}
+        {donation.deadline && (() => {
+          const daysLeft = Math.ceil((new Date(donation.deadline) - Date.now()) / 86400000);
+          // Urgency only kicks in inside a real, close window (≤7 days,
+          // still in the future) — a deadline months away shouldn't read
+          // as alarming, and one already passed is a different state
+          // entirely (not this card's job to handle).
+          const urgent = daysLeft >= 0 && daysLeft <= 7;
+          return (
+            <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 10.5, fontWeight: urgent ? 700 : 400, color: urgent ? 'var(--danger)' : 'var(--muted)' }}>
+              {urgent && <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--danger)', flexShrink: 0 }} />}
+              Batas waktu {dateFmt.format(new Date(donation.deadline))}
+              {urgent && ` · ${daysLeft === 0 ? 'hari ini!' : `${daysLeft} hari lagi`}`}
+            </span>
+          );
+        })()}
       </div>
       <div style={{ display: 'flex', gap: 8 }}>
         {amounts.map((amt) => (

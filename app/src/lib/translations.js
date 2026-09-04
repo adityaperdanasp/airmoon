@@ -91,6 +91,11 @@ export const translations = {
     haul_sisa_hari: 'hari lagi menuju 1 haul',
     haul_jatuh_tempo: 'Sudah 1 haul — saatnya cek & bayar zakat maal',
 
+    zakat_tab_fitrah: 'Fitrah',
+    jumlah_jiwa_label: 'Jumlah Jiwa',
+    harga_beras_label: 'Harga Beras per Kg',
+    fitrah_info: 'Standar 2.5 kg (atau 3.5 liter) beras per jiwa, dikonversi ke harga beras yang biasa dikonsumsi. Boleh dibayar dalam bentuk beras langsung ke amil/masjid, bukan cuma uang.',
+
     pilih_template: 'Pilih Template',
     simpan: 'Simpan',
     bagikan: 'Bagikan',
@@ -231,6 +236,11 @@ export const translations = {
     haul_tersimpan: 'Haul started',
     haul_sisa_hari: 'days left until 1 haul',
     haul_jatuh_tempo: "1 haul is up — time to check & pay zakat maal",
+
+    zakat_tab_fitrah: 'Fitrah',
+    jumlah_jiwa_label: 'Number of People',
+    harga_beras_label: 'Rice Price per Kg',
+    fitrah_info: 'Standard 2.5 kg (or 3.5 liters) of rice per person, converted to the price of rice commonly consumed. Can be paid as rice directly to an amil/mosque, not just cash.',
 
     pilih_template: 'Choose Template',
     simpan: 'Save',

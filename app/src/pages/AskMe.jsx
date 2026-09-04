@@ -6,6 +6,7 @@ import { shareText } from '../lib/share';
 import { useToast } from '../context/ToastContext';
 import { loadStarredAnswers, starAnswer, unstarAnswer } from '../lib/starredAnswers';
 import StarredAnswersSheet from '../components/StarredAnswersSheet';
+import { useVoiceInput } from '../lib/useVoiceInput';
 
 // Filled in after the Vercel deploy — see CLAUDE.md. Absolute URL so this
 // works no matter which host (Firebase or Vercel) serves the frontend.
@@ -59,6 +60,9 @@ export default function AskMe() {
   const [starred, setStarred] = useState(loadStarredAnswers);
   const [showStarred, setShowStarred] = useState(false);
   const [input, setInput] = useState('');
+  const { supported: voiceSupported, listening, start: startVoice, stop: stopVoice } = useVoiceInput({
+    onResult: (transcript) => setInput((prev) => (prev.trim() ? `${prev.trim()} ${transcript}` : transcript)),
+  });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const listRef = useRef(null);
@@ -274,11 +278,33 @@ export default function AskMe() {
       <div style={{ padding: 16, borderTop: '1px solid var(--border)', display: 'flex', gap: 10 }}>
         <div className="input-row" style={{ flex: 1 }}>
           <input
-            placeholder="Tanya seputar Islam…"
+            placeholder={listening ? 'Mendengarkan…' : 'Tanya seputar Islam…'}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && send()}
           />
+          {voiceSupported && (
+            <button
+              type="button"
+              onClick={listening ? stopVoice : startVoice}
+              aria-label={listening ? 'Berhenti merekam' : 'Tanya pakai suara'}
+              style={{
+                background: 'none',
+                border: 'none',
+                padding: 4,
+                cursor: 'pointer',
+                color: listening ? 'var(--danger)' : 'var(--muted)',
+                flexShrink: 0,
+                display: 'flex',
+                animation: listening ? 'splash-pulse 1.2s ease-in-out infinite' : 'none',
+              }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <rect x="9" y="2" width="6" height="12" rx="3" strokeWidth="1.6" />
+                <path d="M5 11a7 7 0 0 0 14 0M12 18v3" strokeWidth="1.6" strokeLinecap="round" />
+              </svg>
+            </button>
+          )}
         </div>
         <button
           onClick={send}

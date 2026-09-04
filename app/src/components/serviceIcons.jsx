@@ -616,3 +616,27 @@ export function PuasaSunnahIcon({ size = 42 }) {
     </svg>
   );
 }
+
+// Three ascending bars — Ringkasan Ibadah's dashboard tile, distinct from
+// the plain single-metric icons elsewhere (this page combines multiple
+// trackers, so a chart-shaped icon reads better than reusing e.g. the
+// dzikir or khatam icon for just one of the things it shows).
+export function StatsIcon({ size = 42 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 42 42" fill="none">
+      <defs>
+        <linearGradient id="statsBarG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#2fa190" />
+          <stop offset="1" stopColor="#0a4a43" />
+        </linearGradient>
+        <linearGradient id="statsGoldG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#fff2cf" />
+          <stop offset="1" stopColor="#c98f22" />
+        </linearGradient>
+      </defs>
+      <rect x="8" y="22" width="7" height="13" rx="2" fill="url(#statsBarG)" />
+      <rect x="17.5" y="14" width="7" height="21" rx="2" fill="url(#statsGoldG)" />
+      <rect x="27" y="8" width="7" height="27" rx="2" fill="url(#statsBarG)" />
+    </svg>
+  );
+}

@@ -38,6 +38,35 @@ export default function AyatFavorit() {
     return [...byCollection].sort((a, b) => a.chapter - b.chapter || a.verse - b.verse);
   }, [favorites, activeCollection, sortBy]);
 
+  // Export ke Teks — a plain-text file listing every favorite (grouped by
+  // collection where set), so someone can keep/print/back up their
+  // favorites outside the app instead of them only ever existing as a
+  // Firestore doc. Kept deliberately separate from lib/exportData.js's
+  // JSON backup — that's a machine-readable full-account backup meant to
+  // be re-imported later, this is a human-readable reading list.
+  function handleExportText() {
+    const grouped = new Map();
+    for (const f of filtered) {
+      const key = f.collection || 'Tanpa Koleksi';
+      if (!grouped.has(key)) grouped.set(key, []);
+      grouped.get(key).push(f);
+    }
+    const lines = ['Ayat Favorit — airmoon', ''];
+    for (const [name, items] of grouped) {
+      lines.push(`## ${name}`, '');
+      for (const f of items) {
+        lines.push(`${f.chapterName} : ${f.verse}`, f.arabic, `"${f.translation}"`, '');
+      }
+    }
+    const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'ayat-favorit-airmoon.txt';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   // favorites is already `onSnapshot`-live (watchFavoriteAyat) — nothing
   // to actually re-fetch, so this just resolves after a short delay for
   // the gesture's expected completion feel, same as Doa.jsx's own
@@ -94,28 +123,36 @@ export default function AyatFavorit() {
         )}
 
         {favorites && favorites.length > 1 && (
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6 }}>
-            {[
-              { key: 'terbaru', label: 'Terbaru' },
-              { key: 'surah', label: 'Per Surah' },
-            ].map((opt) => (
-              <button
-                key={opt.key}
-                onClick={() => setSortBy(opt.key)}
-                style={{
-                  padding: '6px 12px',
-                  borderRadius: 999,
-                  fontSize: 10.5,
-                  fontWeight: 700,
-                  border: sortBy === opt.key ? 'none' : '1px solid var(--border)',
-                  background: sortBy === opt.key ? 'var(--mint)' : 'transparent',
-                  color: sortBy === opt.key ? 'var(--primary)' : 'var(--muted)',
-                  cursor: 'pointer',
-                }}
-              >
-                {opt.label}
-              </button>
-            ))}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6 }}>
+            <button
+              onClick={handleExportText}
+              style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'none', border: 'none', color: 'var(--primary)', fontSize: 11, fontWeight: 700, cursor: 'pointer', padding: 0 }}
+            >
+              ↓ Ekspor ke Teks
+            </button>
+            <div style={{ display: 'flex', gap: 6 }}>
+              {[
+                { key: 'terbaru', label: 'Terbaru' },
+                { key: 'surah', label: 'Per Surah' },
+              ].map((opt) => (
+                <button
+                  key={opt.key}
+                  onClick={() => setSortBy(opt.key)}
+                  style={{
+                    padding: '6px 12px',
+                    borderRadius: 999,
+                    fontSize: 10.5,
+                    fontWeight: 700,
+                    border: sortBy === opt.key ? 'none' : '1px solid var(--border)',
+                    background: sortBy === opt.key ? 'var(--mint)' : 'transparent',
+                    color: sortBy === opt.key ? 'var(--primary)' : 'var(--muted)',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
           </div>
         )}
 

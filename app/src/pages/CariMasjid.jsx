@@ -26,6 +26,18 @@ function MosqueRow({ m, origin, isFav, onToggleFav }) {
             <span style={{ display: 'flex', alignItems: 'center', gap: 2, fontSize: 10.5, fontWeight: 700, color: 'var(--gold-ink)' }}>
               <svg width="10" height="10" viewBox="0 0 24 24" fill="var(--gold-ink)" stroke="none"><path d="M12 2.5 14 9l6.5.4-5.1 4.2 1.8 6.4L12 16.7 6.8 20l1.8-6.4L3.5 9.4 10 9 12 2.5Z" /></svg>
               {m.rating}
+              {m.ratingCount != null && <span style={{ color: 'var(--muted)', fontWeight: 600 }}>({m.ratingCount})</span>}
+            </span>
+          )}
+          {/* openNow is only present from the Google Places source — the
+              OSM fallback carries no opening-hours data at all, so this
+              badge simply doesn't render there rather than showing a
+              fabricated status. `!== null` (not just truthy) so an
+              explicit "tutup" still renders, distinct from "unknown". */}
+          {m.openNow != null && (
+            <span style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 9.5, fontWeight: 700, padding: '2px 7px', borderRadius: 999, color: m.openNow ? 'var(--success)' : 'var(--danger)', background: m.openNow ? 'rgba(79,191,130,0.14)' : 'rgba(217,45,45,0.1)' }}>
+              <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'currentColor' }} />
+              {m.openNow ? 'Buka' : 'Tutup'}
             </span>
           )}
         </div>

@@ -6,7 +6,12 @@
 // runs server-side on Vercel's network instead, sidestepping the client's
 // own IPv6 path entirely. No API key needed — Aladhan is a free public API.
 
-const METHOD = 20; // Kementerian Agama RI
+const DEFAULT_METHOD = 20; // Kementerian Agama RI
+// Whitelisted Aladhan calculation-method ids — see lib/prayerMethod.js for
+// the matching curated picker shown to the user. Whitelisted rather than
+// passed straight through so a request can't smuggle an arbitrary value
+// into the upstream URL.
+const ALLOWED_METHODS = new Set([0, 1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 20]);
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -26,7 +31,9 @@ export default async function handler(req, res) {
     if (!Number.isFinite(timestamp) || !Number.isFinite(lat) || !Number.isFinite(lng)) {
       return res.status(400).json({ error: 'timestamp/lat/lng tidak valid.' });
     }
-    upstreamUrl = `https://api.aladhan.com/v1/timings/${timestamp}?latitude=${lat}&longitude=${lng}&method=${METHOD}`;
+    const requestedMethod = Number(req.query.method);
+    const method = ALLOWED_METHODS.has(requestedMethod) ? requestedMethod : DEFAULT_METHOD;
+    upstreamUrl = `https://api.aladhan.com/v1/timings/${timestamp}?latitude=${lat}&longitude=${lng}&method=${method}`;
   } else if (type === 'hijri-calendar') {
     const month = Number(req.query.month);
     const year = Number(req.query.year);

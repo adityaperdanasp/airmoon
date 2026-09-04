@@ -7,6 +7,7 @@ import { SkeletonCard } from '../components/Skeleton';
 import EmptyState from '../components/EmptyState';
 import { markSeen } from '../lib/unseenBadges';
 import PullToRefresh from '../components/PullToRefresh';
+import ScrollToTopButton from '../components/ScrollToTopButton';
 import PageHeaderPhoto from '../components/PageHeaderPhoto';
 import { PAGE_PHOTOS } from '../data/photos';
 
@@ -138,14 +139,17 @@ export default function Doa() {
 
         {doas && doas.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {doas.map((doa) => (
-              <DoaCard key={doa.id} doa={doa} />
+            {doas.map((doa, i) => (
+              <div key={doa.id} className="stagger-item" style={{ animationDelay: `${Math.min(i, 10) * 30}ms` }}>
+                <DoaCard doa={doa} />
+              </div>
             ))}
           </div>
         )}
       </PullToRefresh>
       </div>
       <BottomNav />
+      <ScrollToTopButton />
     </div>
   );
 }

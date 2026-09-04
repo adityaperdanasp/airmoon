@@ -307,6 +307,46 @@ a {
   color: var(--primary);
 }
 
+/* Icon micro-bounce on tab switch — the sliding pill was the only motion
+   BottomNav had; the icons themselves just sat there static. Scoped to
+   .nav-icon specifically (not the whole .nav-item) so the label text
+   underneath doesn't bounce along with it. */
+.nav-item.active .nav-icon {
+  animation: nav-icon-bounce 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+/* Stagger-in for list rows (SurahList's 114 surah, Doa's feed) — every
+   row used to appear all at once the instant data loaded, no different
+   from a static table. `animation-delay` is set inline per-row (capped
+   at a handful of items — see each call site) rather than via
+   nth-child, since these lists are dynamically long and CSS nth-child
+   delay math doesn't scale cleanly to "first 8 rows, then no more
+   delay" the way a capped inline value does. */
+.stagger-item {
+  animation: stagger-in 0.32s ease both;
+}
+@keyframes stagger-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes nav-icon-bounce {
+  0% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.28);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
 .nav-item span {
   font-size: 8.5px;
   font-weight: 700;
@@ -522,11 +562,46 @@ textarea:focus-visible,
   }
 }
 
+/* Unseen-content dot (Lainnya.jsx's Notifikasi/Yang Baru tiles) — was a
+   flat static circle, easy to miss against a busy 12-tile grid. A soft
+   expanding ring behind the dot itself (not a scale-pulse on the dot,
+   which would just make it wobble in place) reads as "new" the way a
+   real notification badge does. */
+.unseen-dot {
+  position: relative;
+}
+.unseen-dot::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  background: var(--danger);
+  opacity: 0.5;
+  animation: unseen-dot-ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+@keyframes unseen-dot-ping {
+  0% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  75%,
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .unseen-dot::after {
+    animation: none;
+    display: none;
+  }
   .skeleton,
   .screen,
   .splash-pulse,
   .typing-dot,
+  .nav-icon,
+  .stagger-item,
   button:not(:disabled) {
     animation: none !important;
     transition: none !important;

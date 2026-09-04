@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { calcZakatPenghasilan, calcZakatMaal, formatRupiah, NISAB_GOLD_GRAMS } from '../lib/zakat';
+import { calcZakatPenghasilan, calcZakatMaal, calcZakatFitrah, formatRupiah, NISAB_GOLD_GRAMS } from '../lib/zakat';
 import { useLang } from '../context/LangContext';
 import { useAuth } from '../context/AuthContext';
 import { watchZakatHaul, startZakatHaul, clearZakatHaul, daysUntilHaulDue } from '../lib/zakatHaul';
@@ -113,6 +113,20 @@ export default function KalkulatorZakat() {
   useEffect(() => watchZakatHaul(user?.uid, setHaul), [user?.uid]);
   const daysLeft = haul?.startDate ? daysUntilHaulDue(haul.startDate) : null;
 
+  // Zakat Fitrah — calcZakatFitrah() already existed in lib/zakat.js but
+  // was never actually wired into any tab here (same "built but never
+  // shipped" gap the Zakat Maal tab itself once was, per this file's own
+  // git history). 2.5 kg is the standard fiqh amount per jiwa (some
+  // ulama use 3.5 liter beras instead — close enough in practice that a
+  // single fixed constant is fine here, same simplification level as the
+  // rest of this calculator).
+  const RICE_KG_PER_PERSON = 2.5;
+  const [jumlahJiwa, setJumlahJiwa] = useState('1');
+  const [ricePricePerKg, setRicePricePerKg] = useState('15000');
+  const jumlahJiwaN = Number(digitsOnly(jumlahJiwa)) || 0;
+  const ricePricePerKgN = Number(digitsOnly(ricePricePerKg)) || 0;
+  const zakatFitrah = calcZakatFitrah(RICE_KG_PER_PERSON, ricePricePerKgN, jumlahJiwaN);
+
   const [zakatHistory, setZakatHistory] = useState(loadZakatHistory);
   const [showHistory, setShowHistory] = useState(false);
   const [deleteHistoryId, setDeleteHistoryId] = useState(null);
@@ -120,8 +134,10 @@ export default function KalkulatorZakat() {
   function handleSaveHistory() {
     if (tab === 'penghasilan') {
       setZakatHistory(saveZakatHistoryEntry('penghasilan', { income: incomeN, needs: needsN }, zakatPenghasilan));
-    } else {
+    } else if (tab === 'maal') {
       setZakatHistory(saveZakatHistoryEntry('maal', { assets: assetsN, goldPrice: goldPriceN }, zakatMaal));
+    } else {
+      setZakatHistory(saveZakatHistoryEntry('fitrah', { jumlahJiwa: jumlahJiwaN, ricePricePerKg: ricePricePerKgN }, zakatFitrah));
     }
     showToast('Perhitungan disimpan ke riwayat.');
   }
@@ -137,6 +153,9 @@ export default function KalkulatorZakat() {
           </TabBtn>
           <TabBtn active={tab === 'maal'} onClick={() => setTab('maal')}>
             {t('zakat_tab_maal')}
+          </TabBtn>
+          <TabBtn active={tab === 'fitrah'} onClick={() => setTab('fitrah')}>
+            {t('zakat_tab_fitrah')}
           </TabBtn>
         </div>
 
@@ -203,7 +222,7 @@ export default function KalkulatorZakat() {
               <span style={{ fontSize: 11, lineHeight: 1.5, color: 'var(--muted)' }}>{t('zakat_info')}</span>
             </div>
           </>
-        ) : (
+        ) : tab === 'maal' ? (
           <>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
               <span style={{ fontSize: 12, fontWeight: 700 }}>{t('harta_label')}</span>
@@ -287,6 +306,45 @@ export default function KalkulatorZakat() {
               <span style={{ fontSize: 11, lineHeight: 1.5, color: 'var(--muted)' }}>{t('zakat_info')}</span>
             </div>
           </>
+        ) : (
+          <>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+              <span style={{ fontSize: 12, fontWeight: 700 }}>{t('jumlah_jiwa_label')}</span>
+              <div className="input-row">
+                <input inputMode="numeric" value={jumlahJiwaN.toLocaleString('id-ID')} onChange={(e) => setJumlahJiwa(e.target.value)} />
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+              <span style={{ fontSize: 12, fontWeight: 700 }}>{t('harga_beras_label')}</span>
+              <div className="input-row">
+                <span style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--muted)' }}>Rp</span>
+                <input inputMode="numeric" value={ricePricePerKgN.toLocaleString('id-ID')} onChange={(e) => setRicePricePerKg(e.target.value)} />
+              </div>
+              <span style={{ fontSize: 10.5, color: 'var(--muted)' }}>Standar: {RICE_KG_PER_PERSON} kg beras per jiwa</span>
+            </div>
+
+            <div style={{ borderRadius: 20, padding: 20, textAlign: 'center', background: `linear-gradient(135deg, var(--primary), var(--primary-dark))` }}>
+              <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--accent)' }}>
+                {t('zakat_wajib_label')}
+              </span>
+              <div style={{ fontSize: 30, fontWeight: 800, color: '#fff', marginTop: 8 }}><CountUp value={zakatFitrah} formatter={formatRupiah} /></div>
+              <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)' }}>
+                {RICE_KG_PER_PERSON} kg &times; {formatRupiah(ricePricePerKgN)} &times; {jumlahJiwaN} jiwa
+              </span>
+            </div>
+
+            <button className="btn-outline" onClick={handleSaveHistory}>
+              📌 Simpan ke Riwayat
+            </button>
+
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '13px 14px', borderRadius: 14, background: 'var(--card)' }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" style={{ flexShrink: 0, marginTop: 1 }}>
+                <circle cx="12" cy="12" r="9" strokeWidth="1.6" /><path d="M12 11v5.5M12 8v.01" strokeWidth="1.8" strokeLinecap="round" />
+              </svg>
+              <span style={{ fontSize: 11, lineHeight: 1.5, color: 'var(--muted)' }}>{t('fitrah_info')}</span>
+            </div>
+          </>
         )}
 
         {zakatHistory.length > 0 && (
@@ -309,13 +367,15 @@ export default function KalkulatorZakat() {
                   <div key={e.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '12px 14px', borderRadius: 14, background: 'var(--card)' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
                       <span style={{ fontSize: 11.5, fontWeight: 700 }}>
-                        {e.type === 'penghasilan' ? 'Zakat Penghasilan' : 'Zakat Maal'} &middot; {formatHistoryDate(e.at)}
+                        {e.type === 'penghasilan' ? 'Zakat Penghasilan' : e.type === 'maal' ? 'Zakat Maal' : 'Zakat Fitrah'} &middot; {formatHistoryDate(e.at)}
                       </span>
                       <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--primary)' }}>{formatRupiah(e.amount)}</span>
                       <span style={{ fontSize: 10, color: 'var(--muted)' }}>
                         {e.type === 'penghasilan'
                           ? `Penghasilan ${formatRupiah(e.inputs.income)} · Kebutuhan ${formatRupiah(e.inputs.needs)}`
-                          : `Harta ${formatRupiah(e.inputs.assets)} · Emas ${formatRupiah(e.inputs.goldPrice)}/gr`}
+                          : e.type === 'maal'
+                            ? `Harta ${formatRupiah(e.inputs.assets)} · Emas ${formatRupiah(e.inputs.goldPrice)}/gr`
+                            : `${e.inputs.jumlahJiwa} jiwa · Beras ${formatRupiah(e.inputs.ricePricePerKg)}/kg`}
                       </span>
                     </div>
                     <button

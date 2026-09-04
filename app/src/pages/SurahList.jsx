@@ -14,6 +14,7 @@ import { IconMenu, IconSearch } from '../components/icons';
 import { SkeletonSurahRow } from '../components/Skeleton';
 import ErrorRetry from '../components/ErrorRetry';
 import PullToRefresh from '../components/PullToRefresh';
+import ScrollToTopButton from '../components/ScrollToTopButton';
 
 export default function SurahList() {
   const { user } = useAuth();
@@ -243,8 +244,8 @@ export default function SurahList() {
 
         {filtered && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {filtered.map((s) => (
-              <div key={s.nomor} style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            {filtered.map((s, i) => (
+              <div key={s.nomor} className="stagger-item" style={{ display: 'flex', alignItems: 'center', gap: 2, animationDelay: `${Math.min(i, 10) * 30}ms` }}>
                 <Link
                   to={`/quran/${s.nomor}`}
                   style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 4px', textDecoration: 'none', color: 'inherit', flex: 1, minWidth: 0 }}
@@ -278,6 +279,7 @@ export default function SurahList() {
       <BottomNav />
 
       {previewSurah && <SurahPreviewSheet surah={previewSurah} onClose={() => setPreviewSurah(null)} />}
+      <ScrollToTopButton />
     </div>
   );
 }

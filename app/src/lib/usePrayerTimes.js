@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { getLocation, fetchPrayerTimes, reverseGeocode } from './prayerApi';
+import { loadPrayerMethod, watchPrayerMethod, setPrayerMethod as persistPrayerMethod } from './prayerMethod';
+import { useAuth } from '../context/AuthContext';
 
 const PRAYER_ORDER = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
 const PRAYER_LABEL = { Fajr: 'Subuh', Dhuhr: 'Dzuhur', Asr: 'Ashar', Maghrib: 'Maghrib', Isha: 'Isya' };
@@ -27,10 +29,22 @@ function parseTimeToday(hhmm) {
 }
 
 export function usePrayerTimes() {
+  const { user } = useAuth();
   const [status, setStatus] = useState('loading'); // loading | denied | error | ready
   const [data, setData] = useState(null); // { timings, hijri, gregorian, locationLabel }
   const [now, setNow] = useState(new Date());
   const [override, setOverrideState] = useState(loadOverride);
+  // Metode Perhitungan (2026-09-05) — localStorage by default, synced to
+  // Firestore when signed in so the notification cron's own /api/aladhan
+  // call (api/send-prayer-notifications.js) computes against the same
+  // method this page displays, not always the Kemenag default.
+  const [method, setMethodState] = useState(loadPrayerMethod);
+  useEffect(() => watchPrayerMethod(user?.uid, setMethodState), [user?.uid]);
+
+  function setMethod(id) {
+    setMethodState(id);
+    persistPrayerMethod(id, user?.uid);
+  }
 
   function setOverride(loc) {
     setOverrideState(loc);
@@ -55,7 +69,7 @@ export function usePrayerTimes() {
       try {
         const { lat, lng } = override || (await getLocation());
         const [times, label] = await Promise.all([
-          fetchPrayerTimes(lat, lng),
+          fetchPrayerTimes(lat, lng, new Date(), method),
           override?.label ? Promise.resolve(override.label) : reverseGeocode(lat, lng),
         ]);
         if (cancelled) return;
@@ -76,7 +90,7 @@ export function usePrayerTimes() {
     return () => {
       cancelled = true;
     };
-  }, [override]);
+  }, [override, method]);
 
   let next = null;
   if (data) {
@@ -108,5 +122,5 @@ export function usePrayerTimes() {
     };
   }
 
-  return { status, data, next, prayerOrder: PRAYER_ORDER, prayerLabel: PRAYER_LABEL, override, setOverride };
+  return { status, data, next, prayerOrder: PRAYER_ORDER, prayerLabel: PRAYER_LABEL, override, setOverride, method, setMethod };
 }

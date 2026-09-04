@@ -9,6 +9,7 @@ function Dot() {
   return (
     <span
       aria-hidden="true"
+      className="unseen-dot"
       style={{
         position: 'absolute',
         top: -1,
@@ -101,7 +102,7 @@ export default function BottomNav() {
             onMouseEnter={prefetch}
             onTouchStart={prefetch}
           >
-            <span style={{ position: 'relative', display: 'inline-flex' }}>
+            <span className="nav-icon" style={{ position: 'relative', display: 'inline-flex' }}>
               <Icon strokeWidth="1.8" />
               {to === '/' && (hasNewDoa || hasNewDonasi) && <Dot />}
               {to === '/donasi' && hasNewDonasi && <Dot />}

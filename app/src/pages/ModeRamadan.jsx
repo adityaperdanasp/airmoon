@@ -7,6 +7,7 @@ import { isRamadan, nextRamadanYear, fetchRamadanStart, daysBetween } from '../l
 import PageHeaderPhoto from '../components/PageHeaderPhoto';
 import { PAGE_PHOTOS } from '../data/photos';
 import { SkeletonCard } from '../components/Skeleton';
+import RamadanShareModal from '../components/RamadanShareModal';
 
 function Toggle({ checked, onChange }) {
   return (
@@ -108,6 +109,7 @@ export default function ModeRamadan() {
   const inRamadan = data ? isRamadan(data.hijri.month.number) : false;
   const hijriYear = data ? Number(data.hijri.year) : null;
   const tracker = useRamadanTracker(inRamadan ? user?.uid : null, hijriYear);
+  const [showShare, setShowShare] = useState(false);
 
   let imsakBukaLabel = null;
   let imsakBukaCountdown = null;
@@ -205,9 +207,23 @@ export default function ModeRamadan() {
                 <Toggle checked={!!tracker.tarawih[today]} onChange={(v) => tracker.setDay('tarawih', today, v)} />
               </div>
             </div>
+
+            <button className="btn-outline" onClick={() => setShowShare(true)}>
+              ↗ Bagikan Progress
+            </button>
           </>
         )}
       </div>
+
+      {showShare && (
+        <RamadanShareModal
+          puasaCount={tracker.puasaCount}
+          tarawihCount={tracker.tarawihCount}
+          monthDays={monthDays}
+          hijriYear={hijriYear}
+          onClose={() => setShowShare(false)}
+        />
+      )}
     </div>
   );
 }

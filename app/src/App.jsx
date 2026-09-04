@@ -51,6 +51,7 @@ const KalkulatorWaris = lazy(() => import('./pages/KalkulatorWaris'));
 const Changelog = lazy(() => import('./pages/Changelog'));
 const SejarahIslam = lazy(() => import('./pages/SejarahIslam'));
 const PuasaSunnah = lazy(() => import('./pages/PuasaSunnah'));
+const RingkasanIbadah = lazy(() => import('./pages/RingkasanIbadah'));
 
 function P({ children }) {
   return <ProtectedRoute>{children}</ProtectedRoute>;
@@ -125,6 +126,7 @@ export default function App() {
         <Route path="/yang-baru" element={<P><Changelog /></P>} />
         <Route path="/lainnya/sejarah-islam" element={<P><SejarahIslam /></P>} />
         <Route path="/lainnya/puasa-sunnah" element={<P><PuasaSunnah /></P>} />
+        <Route path="/lainnya/ringkasan-ibadah" element={<P><RingkasanIbadah /></P>} />
       </Routes>
     </Suspense>
     </>

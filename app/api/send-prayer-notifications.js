@@ -94,6 +94,20 @@ function minutesSinceMidnight(hhmm) {
   return h * 60 + m;
 }
 
+// Jam Tenang (2026-09-05) — only ever applied to the 3 "pengingat" checks
+// below (Dzikir Petang, Amalan Harian, Target Baca), never to adzan
+// itself. Handles the overnight-wrap case (start=22:00, end=05:00) — a
+// plain nowMin >= start && nowMin < end comparison breaks the moment the
+// window crosses midnight.
+function isWithinQuietHours(nowMin, quietHours) {
+  if (!quietHours?.enabled) return false;
+  const start = minutesSinceMidnight(quietHours.start || '22:00');
+  const end = minutesSinceMidnight(quietHours.end || '05:00');
+  if (start === end) return false; // a zero-length window is treated as "off" rather than "always on"
+  if (start < end) return nowMin >= start && nowMin < end;
+  return nowMin >= start || nowMin < end; // wraps past midnight
+}
+
 function nowInTimezone(timezone) {
   const parts = new Intl.DateTimeFormat('en-GB', {
     timeZone: timezone,
@@ -200,8 +214,13 @@ export default async function handler(req, res) {
 
       try {
         const timestamp = Math.floor(Date.now() / 1000);
+        // Reads the same lib/prayerMethod.js preference JadwalSholat.jsx
+        // syncs to users/{uid}.prayerMethod, so a push fires against the
+        // same calculation method the user actually sees on screen —
+        // falls back to Kemenag (api/aladhan.js's own default) when unset.
+        const methodParam = u.prayerMethod ? `&method=${u.prayerMethod}` : '';
         const alRes = await fetch(
-          `https://airmoon.vercel.app/api/aladhan?type=timings&timestamp=${timestamp}&lat=${loc.lat}&lng=${loc.lng}`
+          `https://airmoon.vercel.app/api/aladhan?type=timings&timestamp=${timestamp}&lat=${loc.lat}&lng=${loc.lng}${methodParam}`
         );
         const alJson = await alRes.json();
         if (!alRes.ok) {
@@ -212,6 +231,10 @@ export default async function handler(req, res) {
         const { timings, meta, date } = alJson.data;
         const { dateKey, minutes: nowMin } = nowInTimezone(meta.timezone);
         const lastNotified = u.lastNotified || {};
+        // Computed once nowMin is known (the user's own local time) —
+        // adzanEnabled/pengingatEnabled above are the category opt-outs,
+        // this is the separate, temporary "not right now" window.
+        const pengingatActiveNow = pengingatEnabled && !isWithinQuietHours(nowMin, u.quietHours);
 
         for (const key of adzanEnabled ? PRAYER_ORDER : []) {
           const prayerMin = minutesSinceMidnight(timings[key]) - leadMinutes;
@@ -282,7 +305,7 @@ export default async function handler(req, res) {
         // reasoning already applied to the zakat haul and Jumat reminders
         // in api/check-campaign-deadlines.js.
         const petangStreak = u.dzikirStreak?.petang;
-        if (pengingatEnabled && petangStreak?.current > 0 && timings.Maghrib) {
+        if (pengingatActiveNow && petangStreak?.current > 0 && timings.Maghrib) {
           const streakWindowStart = minutesSinceMidnight(timings.Maghrib) + STREAK_REMINDER_DELAY_MINUTES;
           const due = nowMin >= streakWindowStart && nowMin < streakWindowStart + WINDOW_MINUTES;
           const alreadyDoneToday = petangStreak.lastDate === dateKey;
@@ -311,7 +334,7 @@ export default async function handler(req, res) {
         // (whether or not a push actually goes out) so a user who finishes
         // everything before the window doesn't get re-queried the rest of
         // the day.
-        if (pengingatEnabled && timings.Isha) {
+        if (pengingatActiveNow && timings.Isha) {
           const amalanWindowStart = minutesSinceMidnight(timings.Isha) + AMALAN_REMINDER_DELAY_MINUTES;
           const due = nowMin >= amalanWindowStart && nowMin < amalanWindowStart + WINDOW_MINUTES;
           const alreadyReminded = u.lastAmalanReminderDate === dateKey;
@@ -345,7 +368,7 @@ export default async function handler(req, res) {
         // no default goal exists, so this never nags someone who never
         // opted into a target in the first place.
         const goal = u.readingGoal;
-        if (pengingatEnabled && timings.Isha && goal?.pagesPerDay > 0) {
+        if (pengingatActiveNow && timings.Isha && goal?.pagesPerDay > 0) {
           const goalWindowStart = minutesSinceMidnight(timings.Isha) + READING_GOAL_REMINDER_DELAY_MINUTES;
           const due = nowMin >= goalWindowStart && nowMin < goalWindowStart + WINDOW_MINUTES;
           const alreadyReminded = u.lastReadingGoalReminderDate === dateKey;

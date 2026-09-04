@@ -7,6 +7,8 @@ import { PAGE_PHOTOS } from '../data/photos';
 import { getNotificationLog, clearNotificationLog, routeForTag, markNotificationsSeen, categoryForTag } from '../lib/notificationLog';
 import { NOTIF_CATEGORIES } from '../lib/notifPrefs';
 import PullToRefresh from '../components/PullToRefresh';
+import ScrollToTopButton from '../components/ScrollToTopButton';
+import { IconSearch } from '../components/icons';
 
 const dateFmt = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 
@@ -24,8 +26,11 @@ export default function NotifikasiCenter() {
   const [log, setLog] = useState(null);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [filter, setFilter] = useState(FILTER_ALL);
+  const [query, setQuery] = useState('');
 
-  const filteredLog = log && (filter === FILTER_ALL ? log : log.filter((n) => categoryForTag(n.tag) === filter));
+  const byCategory = log && (filter === FILTER_ALL ? log : log.filter((n) => categoryForTag(n.tag) === filter));
+  const q = query.trim().toLowerCase();
+  const filteredLog = byCategory && (q ? byCategory.filter((n) => n.title?.toLowerCase().includes(q) || n.body?.toLowerCase().includes(q)) : byCategory);
   // Only show a category chip if the log actually has an entry for it —
   // no point offering to filter by "Konten Harian" if nothing of that
   // category has ever arrived on this device.
@@ -83,6 +88,13 @@ export default function NotifikasiCenter() {
           />
         )}
 
+        {log && log.length > 3 && (
+          <div className="input-row" style={{ borderRadius: 999 }}>
+            <IconSearch style={{ color: 'var(--muted)' }} />
+            <input placeholder="Cari notifikasi…" value={query} onChange={(e) => setQuery(e.target.value)} />
+          </div>
+        )}
+
         {log && log.length > 0 && presentCategories.length > 1 && (
           <div className="hide-scrollbar" style={{ display: 'flex', gap: 8, overflowX: 'auto' }}>
             <button
@@ -104,7 +116,7 @@ export default function NotifikasiCenter() {
         )}
 
         {log && log.length > 0 && filteredLog.length === 0 && (
-          <p className="state-msg">Gak ada notifikasi di kategori ini.</p>
+          <p className="state-msg">{q ? `Gak ketemu notifikasi yang cocok dengan "${query}".` : 'Gak ada notifikasi di kategori ini.'}</p>
         )}
 
         {log && filteredLog?.length > 0 && (
@@ -138,6 +150,7 @@ export default function NotifikasiCenter() {
           onConfirm={handleClear}
         />
       )}
+      <ScrollToTopButton />
     </div>
   );
 }

@@ -27,6 +27,9 @@ import CountUp from '../components/CountUp';
 import PullToRefresh from '../components/PullToRefresh';
 import OnboardingTour from '../components/OnboardingTour';
 import { hasSeenOnboarding, markOnboardingSeen } from '../lib/onboarding';
+import RatingPromptModal from '../components/RatingPromptModal';
+import { shouldShowRatingPrompt, markRatingPromptShown, dismissRatingPromptForever } from '../lib/ratingPrompt';
+import { submitFeedback } from '../lib/feedback';
 
 const dateFmt = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
@@ -99,6 +102,15 @@ export default function Home() {
   const [searchParams] = useSearchParams();
   const [highlightAmalan, setHighlightAmalan] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(() => !hasSeenOnboarding());
+  // Only ever offered to signed-in users — submitFeedback() needs a uid,
+  // and never shown on the same visit as the onboarding tour (that's
+  // already one full-screen interruption; stacking a second unrelated
+  // prompt on top of it would be a lot for one visit).
+  const [showRatingPrompt, setShowRatingPrompt] = useState(false);
+  useEffect(() => {
+    if (showOnboarding || !user) return;
+    if (shouldShowRatingPrompt()) setShowRatingPrompt(true);
+  }, [showOnboarding, user]);
 
   useEffect(() => watchActiveDonations(setDonations), []);
   useEffect(() => watchUserProfile(user?.uid, (p) => setAvatarColor(p?.avatarColor || null)), [user?.uid]);
@@ -493,6 +505,23 @@ export default function Home() {
           onFinish={() => {
             markOnboardingSeen();
             setShowOnboarding(false);
+          }}
+        />
+      )}
+
+      {showRatingPrompt && (
+        <RatingPromptModal
+          onSubmit={({ stars, text }) => {
+            markRatingPromptShown();
+            if (user) submitFeedback(user.uid, { stars, text });
+          }}
+          onLater={() => {
+            markRatingPromptShown();
+            setShowRatingPrompt(false);
+          }}
+          onNever={() => {
+            dismissRatingPromptForever();
+            setShowRatingPrompt(false);
           }}
         />
       )}

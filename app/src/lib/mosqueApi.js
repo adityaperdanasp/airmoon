@@ -9,16 +9,22 @@ async function fetchFromGoogleMaps(lat, lng, radiusM) {
   const res = await fetch(`${NEARBY_ENDPOINT}?lat=${lat}&lng=${lng}&radius=${radiusM}`);
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || 'Gagal memuat data masjid dari Google Maps');
-  return data.places.map((p) => ({
-    id: p.id,
-    name: p.name,
-    lat: p.lat,
-    lng: p.lng,
-    address: p.address,
-    rating: p.rating,
-    ratingCount: p.ratingCount,
-    openNow: p.openNow,
-  }));
+  return data.places
+    // The backend already fetches `businessStatus` for this — a
+    // permanently/temporarily closed listing showing up in "masjid
+    // terdekat" results is worse than just leaving it out, since the
+    // whole point of this list is somewhere to actually go pray.
+    .filter((p) => p.operational !== false)
+    .map((p) => ({
+      id: p.id,
+      name: p.name,
+      lat: p.lat,
+      lng: p.lng,
+      address: p.address,
+      rating: p.rating,
+      ratingCount: p.ratingCount,
+      openNow: p.openNow,
+    }));
 }
 
 async function fetchFromOverpass(lat, lng, radiusM) {

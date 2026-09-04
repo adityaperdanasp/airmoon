@@ -11,6 +11,7 @@ import BottomNav from '../components/BottomNav';
 import NotificationPrimer from '../components/NotificationPrimer';
 import { SkeletonCard } from '../components/Skeleton';
 import LocationSearch from '../components/LocationSearch';
+import { PRAYER_METHODS } from '../lib/prayerMethod';
 
 // Background push (works with the app closed) — Firestore's notifEnabled
 // flag is the source of truth, kept live via onSnapshot so a toggle flipped
@@ -54,7 +55,8 @@ function useNotifyToggle(uid, location) {
 
 export default function JadwalSholat() {
   const { user } = useAuth();
-  const { status, data, next, prayerOrder, prayerLabel, override, setOverride } = usePrayerTimes();
+  const { status, data, next, prayerOrder, prayerLabel, override, setOverride, method, setMethod } = usePrayerTimes();
+  const [methodOpen, setMethodOpen] = useState(false);
   const location = data ? { lat: data.lat, lng: data.lng } : null;
   const { enabled, toggle, busy, error: notifError, leadMinutes } = useNotifyToggle(user?.uid, location);
   const adzanSound = localStorage.getItem('airmoon-adzan-sound') || 'Adzan Makkah';
@@ -121,6 +123,43 @@ export default function JadwalSholat() {
             }}
             onClose={() => setSearchOpen(false)}
           />
+        )}
+
+        {!methodOpen ? (
+          <button
+            onClick={() => setMethodOpen(true)}
+            style={{ background: 'none', border: 'none', color: 'var(--primary)', fontSize: 11.5, fontWeight: 700, cursor: 'pointer', padding: 0, alignSelf: 'flex-start' }}
+          >
+            🕌 Metode: {PRAYER_METHODS.find((m) => m.id === method)?.label || 'Kemenag RI'}
+          </button>
+        ) : (
+          <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: 14 }}>
+            <span style={{ fontSize: 11.5, fontWeight: 700 }}>Metode Perhitungan</span>
+            {PRAYER_METHODS.map((m) => (
+              <button
+                key={m.id}
+                onClick={() => {
+                  setMethod(m.id);
+                  setMethodOpen(false);
+                }}
+                style={{
+                  textAlign: 'left',
+                  padding: '10px 12px',
+                  borderRadius: 10,
+                  border: 'none',
+                  background: method === m.id ? 'var(--mint)' : 'transparent',
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                }}
+              >
+                <div style={{ fontSize: 12.5, fontWeight: 700, color: method === m.id ? 'var(--primary)' : 'var(--ink)' }}>{m.label}</div>
+                <div style={{ fontSize: 10.5, color: 'var(--muted)' }}>{m.sub}</div>
+              </button>
+            ))}
+            <button className="btn-outline" style={{ marginTop: 4 }} onClick={() => setMethodOpen(false)}>
+              Tutup
+            </button>
+          </div>
         )}
 
         {status === 'denied' && (

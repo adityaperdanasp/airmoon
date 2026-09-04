@@ -19,9 +19,9 @@ export function getLocation() {
   });
 }
 
-export async function fetchPrayerTimes(lat, lng, date = new Date()) {
+export async function fetchPrayerTimes(lat, lng, date = new Date(), method) {
   const timestamp = Math.floor(date.getTime() / 1000);
-  const url = `${ALADHAN_PROXY}?type=timings&timestamp=${timestamp}&lat=${lat}&lng=${lng}`;
+  const url = `${ALADHAN_PROXY}?type=timings&timestamp=${timestamp}&lat=${lat}&lng=${lng}${method ? `&method=${method}` : ''}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error('Gagal memuat jadwal sholat');
   const json = await res.json();

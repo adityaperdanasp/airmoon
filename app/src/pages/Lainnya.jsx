@@ -24,6 +24,7 @@ import {
   WhatsNewIcon,
   HistoryBookIcon,
   PuasaSunnahIcon,
+  StatsIcon,
 } from '../components/serviceIcons';
 
 // All hand-drawn gradient icons now (see serviceIcons.jsx) — this grid
@@ -51,6 +52,7 @@ const ITEMS = [
   { to: '/yang-baru', label: 'Yang Baru', bg: 'var(--blue-gray)', node: <WhatsNewIcon size={30} /> },
   { to: '/lainnya/sejarah-islam', label: 'Sejarah Islam', bg: 'var(--cream)', node: <HistoryBookIcon size={30} /> },
   { to: '/lainnya/puasa-sunnah', label: 'Puasa Sunnah', bg: 'var(--mint)', node: <PuasaSunnahIcon size={30} /> },
+  { to: '/lainnya/ringkasan-ibadah', label: 'Ringkasan Ibadah', bg: 'var(--peach)', node: <StatsIcon size={30} /> },
 ];
 
 export default function Lainnya() {
@@ -130,7 +132,7 @@ export default function Lainnya() {
                 <div style={{ position: 'relative', width: 48, height: 48, borderRadius: 16, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: it.bg }}>
                   {it.node}
                   {((it.to === '/notifikasi' && hasUnseenNotif) || (it.to === '/yang-baru' && hasUnseenNews)) && (
-                    <div style={{ position: 'absolute', top: 4, right: 4, width: 9, height: 9, borderRadius: '50%', background: 'var(--danger)', border: '1.5px solid var(--card)' }} />
+                    <div className="unseen-dot" style={{ position: 'absolute', top: 4, right: 4, width: 9, height: 9, borderRadius: '50%', background: 'var(--danger)', border: '1.5px solid var(--card)' }} />
                   )}
                 </div>
                 <span style={{ fontSize: 11.5, fontWeight: 700, textAlign: 'center' }}>{label}</span>

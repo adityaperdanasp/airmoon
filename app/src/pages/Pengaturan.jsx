@@ -13,6 +13,7 @@ import { exportAndDownloadUserData, importUserDataFromFile } from '../lib/export
 import DeleteAccountSheet from '../components/DeleteAccountSheet';
 import { resetAllLocalData } from '../lib/resetLocalData';
 import { NOTIF_CATEGORIES, watchNotifPrefs, setNotifPref } from '../lib/notifPrefs';
+import { DEFAULT_QUIET_HOURS, watchQuietHours, setQuietHours } from '../lib/quietHours';
 import AchievementShareModal from '../components/AchievementShareModal';
 import { ACCENT_OPTIONS, loadAccentColor, setAccentColor } from '../lib/accentColor';
 
@@ -57,8 +58,16 @@ function NotifPrefsCard({ user }) {
   const { showToast } = useToast();
   const [prefs, setPrefs] = useState({});
   const [testing, setTesting] = useState(false);
+  const [quietHours, setQuietHoursState] = useState(DEFAULT_QUIET_HOURS);
 
   useEffect(() => watchNotifPrefs(uid, setPrefs), [uid]);
+  useEffect(() => watchQuietHours(uid, setQuietHoursState), [uid]);
+
+  function updateQuietHours(patch) {
+    const next = { ...quietHours, ...patch };
+    setQuietHoursState(next);
+    if (uid) setQuietHours(uid, next);
+  }
 
   async function handleTest() {
     setTesting(true);
@@ -105,6 +114,39 @@ function NotifPrefsCard({ user }) {
           );
         })}
       </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingTop: 4, borderTop: '1px solid var(--border)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <span style={{ fontSize: 12.5, fontWeight: 700 }}>🌙 Jam Tenang</span>
+            <span style={{ fontSize: 10.5, color: 'var(--muted)' }}>Bisukan Pengingat/Komunitas/Donasi/Konten di jam ini — Adzan tetap bunyi</span>
+          </div>
+          <div
+            onClick={() => updateQuietHours({ enabled: !quietHours.enabled })}
+            style={{ width: 42, height: 24, borderRadius: 999, background: quietHours.enabled ? 'var(--primary)' : 'var(--border)', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 3, flexShrink: 0 }}
+          >
+            <div style={{ width: 18, height: 18, borderRadius: '50%', background: '#fff', transform: quietHours.enabled ? 'translateX(18px)' : 'translateX(0)', transition: 'transform 0.15s ease' }} />
+          </div>
+        </div>
+        {quietHours.enabled && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <input
+              type="time"
+              value={quietHours.start}
+              onChange={(e) => updateQuietHours({ start: e.target.value })}
+              style={{ flex: 1, padding: '9px 10px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--ink)', fontSize: 13 }}
+            />
+            <span style={{ fontSize: 11, color: 'var(--muted)' }}>sampai</span>
+            <input
+              type="time"
+              value={quietHours.end}
+              onChange={(e) => updateQuietHours({ end: e.target.value })}
+              style={{ flex: 1, padding: '9px 10px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--ink)', fontSize: 13 }}
+            />
+          </div>
+        )}
+      </div>
+
       <button className="btn-outline" style={{ padding: '9px 0', fontSize: 12 }} onClick={handleTest} disabled={testing}>
         {testing ? 'Mengirim...' : '🔔 Tes Notifikasi'}
       </button>
