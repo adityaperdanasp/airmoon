@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { watchFavoriteAyat, removeFavoriteAyat, setFavoriteCollection } from '../lib/favoriteAyat';
+import { watchFavoriteAyat, removeFavoriteAyat, addFavoriteAyat, setFavoriteCollection } from '../lib/favoriteAyat';
 import EmptyState from '../components/EmptyState';
 import ConfirmDialog from '../components/ConfirmDialog';
 import CollectionPickerSheet from '../components/CollectionPickerSheet';
@@ -230,8 +230,22 @@ export default function AyatFavorit() {
           danger
           onCancel={() => setPendingRemove(null)}
           onConfirm={() => {
-            removeFavoriteAyat(user.uid, pendingRemove.chapter, pendingRemove.verse);
-            showToast('Dihapus dari favorit');
+            const removed = pendingRemove;
+            removeFavoriteAyat(user.uid, removed.chapter, removed.verse);
+            showToast('Dihapus dari favorit', {
+              actionLabel: 'Batalkan',
+              onAction: () => {
+                addFavoriteAyat(user.uid, {
+                  chapter: removed.chapter,
+                  chapterName: removed.chapterName,
+                  verse: removed.verse,
+                  arabic: removed.arabic,
+                  translation: removed.translation,
+                }).then(() => {
+                  if (removed.collection) setFavoriteCollection(user.uid, removed.chapter, removed.verse, removed.collection);
+                });
+              },
+            });
             setPendingRemove(null);
           }}
         />

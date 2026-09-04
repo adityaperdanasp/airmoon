@@ -5,12 +5,14 @@ import { watchDzikirStreak } from '../lib/dzikirStreak';
 import { watchMyContributions } from '../lib/donations';
 import { watchPuasaSunnahLog } from '../lib/puasaSunnahLog';
 import { watchReadingStats } from '../lib/readingTime';
+import { watchReadingStreak } from '../lib/readingStreak';
 import { highestTier } from '../lib/badges';
 import { formatRupiah } from '../lib/zakat';
 import PageHeaderPhoto from '../components/PageHeaderPhoto';
 import { PAGE_PHOTOS } from '../data/photos';
 import CountUp from '../components/CountUp';
 import EmptyState from '../components/EmptyState';
+import { SkeletonCard } from '../components/Skeleton';
 
 function StatCard({ icon, label, value, sub }) {
   return (
@@ -36,15 +38,26 @@ export default function RingkasanIbadah() {
   const [contributions, setContributions] = useState([]);
   const [puasaDates, setPuasaDates] = useState(null);
   const [readingStats, setReadingStats] = useState({ totalMinutes: 0 });
+  const [readingStreak, setReadingStreak] = useState({ current: 0, best: 0 });
+  // Every stat card used to flash "0" for a moment before its own
+  // Firestore listener delivered its first snapshot — a real, if brief,
+  // gap since none of these default states (empty arrays, zeroed
+  // objects) can be told apart from "actually zero" at a glance. Tracks
+  // each source's first-callback separately (rather than one combined
+  // guess) since they resolve at genuinely different times.
+  const [loaded, setLoaded] = useState({ khatam: false, streaks: false, contributions: false, puasa: false, readingStats: false, readingStreak: false });
+  const markLoaded = (key) => setLoaded((prev) => (prev[key] ? prev : { ...prev, [key]: true }));
+  const allLoaded = Object.values(loaded).every(Boolean);
 
-  useEffect(() => watchKhatamProgress(user?.uid, setKhatam), [user?.uid]);
-  useEffect(() => watchDzikirStreak(user?.uid, setStreaks), [user?.uid]);
+  useEffect(() => watchKhatamProgress(user?.uid, (v) => { setKhatam(v); markLoaded('khatam'); }), [user?.uid]);
+  useEffect(() => watchDzikirStreak(user?.uid, (v) => { setStreaks(v); markLoaded('streaks'); }), [user?.uid]);
   useEffect(() => {
     if (!user?.uid) return;
-    return watchMyContributions(user.uid, setContributions);
+    return watchMyContributions(user.uid, (v) => { setContributions(v); markLoaded('contributions'); });
   }, [user?.uid]);
-  useEffect(() => watchPuasaSunnahLog(user?.uid, setPuasaDates), [user?.uid]);
-  useEffect(() => watchReadingStats(user?.uid, setReadingStats), [user?.uid]);
+  useEffect(() => watchPuasaSunnahLog(user?.uid, (v) => { setPuasaDates(v); markLoaded('puasa'); }), [user?.uid]);
+  useEffect(() => watchReadingStats(user?.uid, (v) => { setReadingStats(v); markLoaded('readingStats'); }), [user?.uid]);
+  useEffect(() => watchReadingStreak(user?.uid, (v) => { setReadingStreak(v); markLoaded('readingStreak'); }), [user?.uid]);
 
   if (!user) {
     return (
@@ -70,6 +83,16 @@ export default function RingkasanIbadah() {
       <div className="screen-content">
         <PageHeaderPhoto title="Ringkasan Ibadah" photo={PAGE_PHOTOS.zakat} subtitle="Semua progres kamu, satu tempat" />
 
+        {!allLoaded && (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            {Array.from({ length: 5 }).map((_, i) => (
+              <SkeletonCard key={i} height={92} radius={16} />
+            ))}
+          </div>
+        )}
+
+        {allLoaded && (
+        <>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
           <StatCard icon="📖" label="Progress Khatam" value={<CountUp value={khatamPct} formatter={(v) => `${v}%`} />} sub={`${khatam.pages.length}/${TOTAL_MUSHAF_PAGES} halaman · ${khatam.juz.length}/${TOTAL_JUZ} juz`} />
           <StatCard
@@ -80,6 +103,7 @@ export default function RingkasanIbadah() {
           />
           <StatCard icon="💝" label="Total Sedekah" value={<CountUp value={totalSedekah} formatter={formatRupiah} />} sub={`${contributions.length} kali berdonasi`} />
           <StatCard icon="🌙" label="Puasa Sunnah" value={puasaDates === null ? '…' : <CountUp value={puasaDates.length} formatter={(v) => `${v}x`} />} sub="Senin/Kamis & Ayyamul Bidh" />
+          <StatCard icon="📚" label="Streak Baca Qur'an" value={<CountUp value={readingStreak.current} formatter={(v) => `${v} hari`} />} sub={readingStreak.best > readingStreak.current ? `Rekor ${readingStreak.best} hari` : 'Buka Qur\'an tiap hari buat jaga streak'} />
         </div>
 
         <div className="card" style={{ display: 'flex', alignItems: 'center', gap: 14, padding: 16 }}>
@@ -89,6 +113,8 @@ export default function RingkasanIbadah() {
             <span style={{ fontSize: 11, color: 'var(--muted)' }}>Total waktu baca Qur'an (Mode Ayat + Mushaf)</span>
           </div>
         </div>
+        </>
+        )}
 
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '13px 14px', borderRadius: 14, background: 'var(--card)' }}>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" style={{ flexShrink: 0, marginTop: 1 }}>

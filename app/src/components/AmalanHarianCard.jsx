@@ -3,6 +3,7 @@ import { SHOLAT_KEYS, SHOLAT_LABELS, watchAmalanHarian, setSholatDone, setTilawa
 import { watchDzikirStreak, markDzikirDone, isDoneToday } from '../lib/dzikirStreak';
 import { highestTier } from '../lib/badges';
 import { usePopAnimation } from '../lib/usePopAnimation';
+import { hapticTick, hapticSuccess } from '../lib/haptics';
 import AmalanShareModal from './AmalanShareModal';
 import Confetti from './Confetti';
 
@@ -32,7 +33,10 @@ function Chip({ done, label, onClick, disabled }) {
 
   return (
     <button
-      onClick={onClick}
+      onClick={() => {
+        hapticTick();
+        onClick();
+      }}
       disabled={disabled}
       style={{
         display: 'flex',
@@ -96,6 +100,7 @@ export default function AmalanHarianCard({ uid }) {
     const lastCelebrated = Number(localStorage.getItem(BADGE_CELEBRATED_KEY)) || 0;
     if (highestReached > lastCelebrated) {
       localStorage.setItem(BADGE_CELEBRATED_KEY, String(highestReached));
+      hapticSuccess();
       setShowConfetti(true);
     }
   }, [pagiTier?.days, petangTier?.days]);

@@ -16,12 +16,18 @@
 import { doc, onSnapshot, setDoc } from 'firebase/firestore';
 import { db } from './firebase';
 
+// `icon`/`bg` added (2026-09-06) so NotifikasiCenter.jsx's category chips
+// and list items can carry a distinct identity each — every category used
+// to render in the exact same primary/muted styling, making the list hard
+// to scan at a glance despite the filter chips already existing. `bg`
+// reuses this app's existing pastel-tile tokens (same ones Lainnya.jsx's
+// grid tiles use), not new colors.
 export const NOTIF_CATEGORIES = [
-  { key: 'adzan', label: 'Adzan & Imsak', desc: 'Pengingat waktu sholat dan Imsak Ramadan' },
-  { key: 'pengingat', label: 'Pengingat Ibadah', desc: 'Zakat, dzikir, puasa sunnah, Jumat, amalan harian' },
-  { key: 'komunitas', label: 'Doa & Komunitas', desc: 'Notifikasi doa baru dari sesama pengguna' },
-  { key: 'donasi', label: 'Donasi', desc: 'Pengingat donasi bulanan & campaign yang tercapai' },
-  { key: 'konten', label: 'Konten Harian', desc: 'Kutipan inspirasi harian' },
+  { key: 'adzan', label: 'Adzan & Imsak', desc: 'Pengingat waktu sholat dan Imsak Ramadan', icon: '🕌', bg: 'var(--mint)' },
+  { key: 'pengingat', label: 'Pengingat Ibadah', desc: 'Zakat, dzikir, puasa sunnah, Jumat, amalan harian', icon: '🔔', bg: 'var(--cream)' },
+  { key: 'komunitas', label: 'Doa & Komunitas', desc: 'Notifikasi doa baru dari sesama pengguna', icon: '🤲', bg: 'var(--blue-gray)' },
+  { key: 'donasi', label: 'Donasi', desc: 'Pengingat donasi bulanan & campaign yang tercapai', icon: '💝', bg: 'var(--peach)' },
+  { key: 'konten', label: 'Konten Harian', desc: 'Kutipan inspirasi harian', icon: '📜', bg: 'var(--mint)' },
 ];
 
 export function watchNotifPrefs(uid, callback) {

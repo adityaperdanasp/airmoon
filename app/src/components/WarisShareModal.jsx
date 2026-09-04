@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { drawWarisCard } from '../lib/warisCardCanvas';
 import { canvasToFile } from '../lib/ayatCardCanvas';
-import { shareFile } from '../lib/share';
+import { shareFile, shareText } from '../lib/share';
+import { formatRupiah } from '../lib/zakat';
 import { useTheme } from '../context/ThemeContext';
 import { useEscapeKey } from '../lib/useEscapeKey';
 import Portal from './Portal';
@@ -34,6 +35,21 @@ export default function WarisShareModal({ totalHarta, results, onClose }) {
     } finally {
       setBusy(false);
     }
+  }
+
+  // Ekspor ke Teks — the image card is the same fixed-size canvas as
+  // every other share feature, which only has room for a handful of
+  // rows before truncating ("+N lagi"); a plain-text version lists every
+  // heir's share in full, useful to paste into a chat or note instead of
+  // (or alongside) the image.
+  async function handleShareText() {
+    const lines = [
+      'Hasil Kalkulator Waris — airmoon',
+      `Total Harta: ${formatRupiah(totalHarta)}`,
+      '',
+      ...results.map((r) => `${r.label}: ${formatRupiah(r.amount)} (${(r.fraction * 100).toFixed(2)}%)`),
+    ];
+    await shareText({ text: lines.join('\n'), title: 'Hasil Kalkulator Waris' });
   }
 
   function handleDownload() {
@@ -71,6 +87,13 @@ export default function WarisShareModal({ totalHarta, results, onClose }) {
               {busy ? '...' : 'Bagikan'}
             </button>
           </div>
+
+          <button
+            onClick={handleShareText}
+            style={{ background: 'none', border: 'none', color: '#fff', fontSize: 12, fontWeight: 700, textDecoration: 'underline', cursor: 'pointer', opacity: 0.9 }}
+          >
+            ↗ Bagikan sebagai Teks
+          </button>
 
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#fff', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', opacity: 0.8 }}>
             Tutup

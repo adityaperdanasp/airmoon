@@ -11,12 +11,19 @@ const ToastContext = createContext(null);
 export function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([]);
 
-  const showToast = useCallback((message, { type = 'default', duration = 2400 } = {}) => {
+  // `actionLabel`/`onAction` add an inline button to the toast itself —
+  // used for Undo on destructive-but-recoverable actions (Hapus Ayat
+  // Favorit) where a full ConfirmDialog would be overkill for something
+  // this easy to reverse. Longer default duration when an action is
+  // present (5s vs 2.4s) — reading a label and deciding whether to tap it
+  // takes longer than just reading a plain confirmation message.
+  const showToast = useCallback((message, { type = 'default', duration, actionLabel, onAction } = {}) => {
     const id = `${Date.now()}-${Math.random()}`;
-    setToasts((prev) => [...prev, { id, message, type }]);
+    const resolvedDuration = duration ?? (actionLabel ? 5000 : 2400);
+    setToasts((prev) => [...prev, { id, message, type, actionLabel, onAction }]);
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, duration);
+    }, resolvedDuration);
   }, []);
 
   return (
@@ -57,7 +64,29 @@ export function ToastProvider({ children }) {
               maxWidth: '100%',
             }}
           >
-            {t.message}
+            <span>{t.message}</span>
+            {t.actionLabel && (
+              <button
+                onClick={() => {
+                  t.onAction?.();
+                  setToasts((prev) => prev.filter((x) => x.id !== t.id));
+                }}
+                style={{
+                  pointerEvents: 'auto',
+                  background: 'none',
+                  border: 'none',
+                  padding: 0,
+                  fontSize: 12.5,
+                  fontWeight: 800,
+                  textDecoration: 'underline',
+                  color: 'inherit',
+                  cursor: 'pointer',
+                  flexShrink: 0,
+                }}
+              >
+                {t.actionLabel}
+              </button>
+            )}
           </div>
         ))}
       </div>

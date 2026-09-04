@@ -19,3 +19,23 @@ export function highestTier(days) {
   }
   return earned;
 }
+
+// Milestone tiers for lib/puasaSunnahLog.js's lifetime count — a
+// COUNT, not a consecutive-day streak (Senin/Kamis/Ayyamul Bidh aren't
+// daily habits the way dzikir is, so "days in a row" doesn't apply the
+// same way), otherwise the same simple highest-tier-reached idea as
+// STREAK_TIERS above.
+export const PUASA_TIERS = [
+  { count: 10, icon: '🌙', label: '10 Kali' },
+  { count: 30, icon: '⭐', label: '30 Kali' },
+  { count: 50, icon: '🏅', label: '50 Kali' },
+  { count: 100, icon: '💎', label: '100 Kali' },
+];
+
+export function highestPuasaTier(count) {
+  let earned = null;
+  for (const tier of PUASA_TIERS) {
+    if (count >= tier.count) earned = tier;
+  }
+  return earned;
+}

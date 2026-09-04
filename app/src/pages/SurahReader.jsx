@@ -11,6 +11,8 @@ import { watchFavoriteAyat, addFavoriteAyat, removeFavoriteAyat } from '../lib/f
 import { useNightMode, NIGHT_STYLE_VARS, useArabicFontSize, MIN_ARABIC_SIZE, MAX_ARABIC_SIZE, useArabicFont, ARABIC_FONTS, useAutoNextSurah } from '../lib/readingPrefs';
 import { fetchSurahTafsir } from '../lib/tafsirApi';
 import { markSurahOpened } from '../lib/readingHistory';
+import { markReadingDone } from '../lib/readingStreak';
+import { hapticTick } from '../lib/haptics';
 import { useReadingTimeTracker } from '../lib/readingTime';
 import TopBar from '../components/TopBar';
 import StickyMiniHeader from '../components/StickyMiniHeader';
@@ -84,6 +86,7 @@ export default function SurahReader() {
       .then((s) => {
         setSurah(s);
         markSurahOpened({ nomor: s.nomor, namaLatin: s.namaLatin });
+        if (user) markReadingDone(user.uid);
       })
       .catch(() => setError('Gagal memuat surat.'));
   }, [nomor, retryTick]);
@@ -171,6 +174,7 @@ export default function SurahReader() {
     if (!user || !surah) return;
     const key = `${surah.nomor}:${a.nomorAyat}`;
     setPoppedFavorite(key);
+    hapticTick();
     setTimeout(() => setPoppedFavorite((cur) => (cur === key ? null : cur)), 220);
     if (favoriteKeys.has(key)) {
       await removeFavoriteAyat(user.uid, surah.nomor, a.nomorAyat);

@@ -76,6 +76,11 @@ const STREAK_REMINDER_DELAY_MINUTES = 90;
 // the same instant for someone who'd get both.
 const AMALAN_REMINDER_DELAY_MINUTES = 150;
 
+// Sits between AMALAN_REMINDER_DELAY_MINUTES (150) and
+// READING_GOAL_REMINDER_DELAY_MINUTES (210, below) so someone who'd get
+// all 4 evening nudges sees them spread out rather than all at once.
+const READING_STREAK_REMINDER_DELAY_MINUTES = 180;
+
 // Later still than AMALAN_REMINDER_DELAY_MINUTES (150) so a user who'd get
 // all 3 evening nudges (Dzikir Petang, Amalan Harian, Target Baca) sees
 // them spread out rather than all at once.
@@ -360,6 +365,32 @@ export default async function handler(req, res) {
               await pruneDeadTokens(docSnap.ref, tokens, result);
               sent.push({ uid: docSnap.id, prayer: 'AmalanReminder', successCount: result.successCount });
             }
+          }
+        }
+
+        // Streak Baca Qur'an reminder (2026-09-05) — same shape as the
+        // Dzikir Petang streak reminder above (only fires for someone who
+        // already has a real streak worth protecting), but for
+        // lib/readingStreak.js's separate "did you open the Qur'an today"
+        // signal rather than a dzikir category.
+        const bacaStreak = u.readingStreak;
+        if (pengingatActiveNow && bacaStreak?.current > 0 && timings.Isha) {
+          const bacaWindowStart = minutesSinceMidnight(timings.Isha) + READING_STREAK_REMINDER_DELAY_MINUTES;
+          const due = nowMin >= bacaWindowStart && nowMin < bacaWindowStart + WINDOW_MINUTES;
+          const alreadyDoneToday = bacaStreak.lastDate === dateKey;
+          const alreadyReminded = bacaStreak.lastReminderDate === dateKey;
+          if (due && !alreadyDoneToday && !alreadyReminded) {
+            const result = await messaging.sendEachForMulticast({
+              tokens,
+              data: {
+                tag: 'reading-streak',
+                title: '📚 Jangan Putus Streak Baca Qur\'an',
+                body: `Streak baca ${bacaStreak.current} hari kamu bisa putus kalau belum buka Qur'an hari ini.`,
+              },
+            });
+            await docSnap.ref.update({ 'readingStreak.lastReminderDate': dateKey });
+            await pruneDeadTokens(docSnap.ref, tokens, result);
+            sent.push({ uid: docSnap.id, prayer: 'ReadingStreak', successCount: result.successCount });
           }
         }
 

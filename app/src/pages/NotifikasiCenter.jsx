@@ -14,6 +14,16 @@ const dateFmt = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short
 
 const FILTER_ALL = 'semua';
 
+// Fallback for categoryForTag's 'lainnya' bucket (test-notification) —
+// NOTIF_CATEGORIES has no entry for it since it's not a real opt-out
+// category in Pengaturan.jsx, but every log entry still needs an
+// icon/color to render.
+const FALLBACK_CATEGORY = { icon: '🔔', bg: 'var(--card)' };
+
+function categoryFor(tag) {
+  return NOTIF_CATEGORIES.find((c) => c.key === categoryForTag(tag)) || FALLBACK_CATEGORY;
+}
+
 // A real gap this fills: every push this app sends (adzan, doa broadcasts,
 // zakat haul, Jumat Al-Kahf, Imsak, dzikir streak) only ever showed once
 // in the OS notification tray — swipe it away, or have the phone
@@ -107,8 +117,9 @@ export default function NotifikasiCenter() {
               <button
                 key={c.key}
                 onClick={() => setFilter(c.key)}
-                style={{ flexShrink: 0, padding: '7px 14px', borderRadius: 999, border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', color: filter === c.key ? 'var(--on-primary)' : 'var(--ink)', background: filter === c.key ? 'var(--primary)' : 'var(--card)' }}
+                style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 5, padding: '7px 14px', borderRadius: 999, border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', color: filter === c.key ? 'var(--on-primary)' : 'var(--ink)', background: filter === c.key ? 'var(--primary)' : 'var(--card)' }}
               >
+                <span>{c.icon}</span>
                 {c.label}
               </button>
             ))}
@@ -121,20 +132,28 @@ export default function NotifikasiCenter() {
 
         {log && filteredLog?.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {filteredLog.map((n) => (
-              <button
-                key={n.id}
-                onClick={() => navigate(routeForTag(n.tag))}
-                className="card"
-                style={{ display: 'flex', flexDirection: 'column', gap: 4, padding: 14, textAlign: 'left', border: 'none', cursor: 'pointer', color: 'inherit', fontFamily: 'inherit' }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                  <span style={{ fontSize: 13, fontWeight: 700 }}>{n.title}</span>
-                  <span style={{ fontSize: 10.5, color: 'var(--muted)', flexShrink: 0 }}>{dateFmt.format(new Date(n.receivedAt))}</span>
-                </div>
-                {n.body && <span style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.5 }}>{n.body}</span>}
-              </button>
-            ))}
+            {filteredLog.map((n) => {
+              const cat = categoryFor(n.tag);
+              return (
+                <button
+                  key={n.id}
+                  onClick={() => navigate(routeForTag(n.tag))}
+                  className="card"
+                  style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: 14, textAlign: 'left', border: 'none', cursor: 'pointer', color: 'inherit', fontFamily: 'inherit' }}
+                >
+                  <div style={{ width: 34, height: 34, borderRadius: 11, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 15, background: cat.bg }}>
+                    {cat.icon}
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                      <span style={{ fontSize: 13, fontWeight: 700 }}>{n.title}</span>
+                      <span style={{ fontSize: 10.5, color: 'var(--muted)', flexShrink: 0 }}>{dateFmt.format(new Date(n.receivedAt))}</span>
+                    </div>
+                    {n.body && <span style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.5 }}>{n.body}</span>}
+                  </div>
+                </button>
+              );
+            })}
           </div>
         )}
       </PullToRefresh>

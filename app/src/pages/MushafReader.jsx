@@ -10,6 +10,8 @@ import { fetchSurahTafsir } from '../lib/tafsirApi';
 import { addFavoriteAyat, removeFavoriteAyat } from '../lib/favoriteAyat';
 import { markPageRead } from '../lib/khatamProgress';
 import { recordPageReadForGoal } from '../lib/readingGoal';
+import { markReadingDone } from '../lib/readingStreak';
+import { hapticTick } from '../lib/haptics';
 import { useEscapeKey } from '../lib/useEscapeKey';
 import { useSwipeDismiss } from '../lib/useSwipeDismiss';
 import { useReadingTimeTracker } from '../lib/readingTime';
@@ -217,6 +219,7 @@ function AyahActionSheet({ verse, chapterName, isBookmarked, onClose, onBookmark
   async function handleFavoriteToggle() {
     if (!user) return;
     triggerFavoritePop();
+    hapticTick();
     if (isFavorited) {
       await removeFavoriteAyat(user.uid, chapterId, verseNumber);
       setIsFavorited(false);
@@ -483,6 +486,7 @@ export default function MushafReader() {
         if (user) {
           markPageRead(user.uid, page, v?.[0]?.juz_number);
           recordPageReadForGoal(user.uid, page);
+          markReadingDone(user.uid);
         }
       })
       .catch(() => setError('Gagal memuat halaman mushaf.'));

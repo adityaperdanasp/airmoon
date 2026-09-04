@@ -12,6 +12,7 @@ import NotificationPrimer from '../components/NotificationPrimer';
 import { SkeletonCard } from '../components/Skeleton';
 import LocationSearch from '../components/LocationSearch';
 import { PRAYER_METHODS } from '../lib/prayerMethod';
+import { buildPrayerTimesIcs, downloadIcs } from '../lib/icsExport';
 
 // Background push (works with the app closed) — Firestore's notifEnabled
 // flag is the source of truth, kept live via onSnapshot so a toggle flipped
@@ -160,6 +161,21 @@ export default function JadwalSholat() {
               Tutup
             </button>
           </div>
+        )}
+
+        {status === 'ready' && data && (
+          <button
+            onClick={() => {
+              const ics = buildPrayerTimesIcs(
+                prayerOrder.map((key) => ({ label: prayerLabel[key], time: data.timings[key] })),
+                { locationLabel: data.locationLabel }
+              );
+              downloadIcs(ics, 'jadwal-sholat-airmoon.ics');
+            }}
+            style={{ background: 'none', border: 'none', color: 'var(--primary)', fontSize: 11.5, fontWeight: 700, cursor: 'pointer', padding: 0, alignSelf: 'flex-start' }}
+          >
+            📅 Ekspor ke Kalender
+          </button>
         )}
 
         {status === 'denied' && (

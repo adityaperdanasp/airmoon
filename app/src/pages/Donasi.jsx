@@ -266,6 +266,8 @@ export default function Donasi() {
   const [donations, setDonations] = useState(null);
   const [myContributions, setMyContributions] = useState([]);
   const [receiptFor, setReceiptFor] = useState(null); // the contribution being shared as a receipt image, or null
+  const [campaignFilter, setCampaignFilter] = useState('semua');
+  const [monthFilter, setMonthFilter] = useState('semua');
 
   useEffect(() => watchActiveDonations(setDonations), []);
 
@@ -279,6 +281,27 @@ export default function Donasi() {
   }, []);
 
   const myTotal = myContributions.reduce((sum, c) => sum + c.amount, 0);
+
+  // Filter Riwayat Donasi Kamu — distinct campaign titles and calendar
+  // months actually present in the contribution list, so the filter
+  // options are only ever real ones (never an empty "Ramadan 2025" chip
+  // if nothing was actually given that month).
+  const monthFmt2 = new Intl.DateTimeFormat('id-ID', { month: 'long', year: 'numeric' });
+  const campaignTitles = [...new Set(myContributions.map((c) => c.donationTitle).filter(Boolean))];
+  const monthOptions = [...new Set(myContributions.filter((c) => c.createdAt).map((c) => {
+    const d = c.createdAt.toDate();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  }))].sort().reverse();
+  const filteredContributions = myContributions.filter((c) => {
+    if (campaignFilter !== 'semua' && c.donationTitle !== campaignFilter) return false;
+    if (monthFilter !== 'semua') {
+      if (!c.createdAt) return false;
+      const d = c.createdAt.toDate();
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      if (key !== monthFilter) return false;
+    }
+    return true;
+  });
 
   // Both donations and myContributions are already `onSnapshot`-live —
   // nothing to actually re-fetch, so this just resolves after a short
@@ -346,8 +369,44 @@ export default function Donasi() {
             {myContributions.length === 0 ? (
               <EmptyState icon="💝" title="Belum ada riwayat sedekah" subtitle="Yuk mulai sedekah hari ini, sekecil apapun — pilih salah satu campaign di atas." />
             ) : (
+              <>
+                {(campaignTitles.length > 1 || monthOptions.length > 1) && (
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    {campaignTitles.length > 1 && (
+                      <select
+                        value={campaignFilter}
+                        onChange={(e) => setCampaignFilter(e.target.value)}
+                        style={{ flex: 1, minWidth: 0, padding: '8px 10px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--ink)', fontSize: 11.5 }}
+                      >
+                        <option value="semua">Semua Campaign</option>
+                        {campaignTitles.map((title) => (
+                          <option key={title} value={title}>{title}</option>
+                        ))}
+                      </select>
+                    )}
+                    {monthOptions.length > 1 && (
+                      <select
+                        value={monthFilter}
+                        onChange={(e) => setMonthFilter(e.target.value)}
+                        style={{ flex: 1, minWidth: 0, padding: '8px 10px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--ink)', fontSize: 11.5 }}
+                      >
+                        <option value="semua">Semua Bulan</option>
+                        {monthOptions.map((key) => {
+                          const [y, m] = key.split('-').map(Number);
+                          return (
+                            <option key={key} value={key}>{monthFmt2.format(new Date(y, m - 1, 1))}</option>
+                          );
+                        })}
+                      </select>
+                    )}
+                  </div>
+                )}
+
+                {filteredContributions.length === 0 ? (
+                  <p className="state-msg">Gak ada donasi yang cocok dengan filter ini.</p>
+                ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {myContributions.map((c) => (
+                {filteredContributions.map((c) => (
                   <div
                     key={c.id}
                     style={{
@@ -380,6 +439,8 @@ export default function Donasi() {
                   </div>
                 ))}
               </div>
+                )}
+              </>
             )}
           </div>
         )}

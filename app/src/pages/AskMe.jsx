@@ -86,21 +86,20 @@ export default function AskMe() {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: 'smooth' });
   }, [messages, busy]);
 
-  async function send(override) {
-    const text = (override ?? input).trim();
-    if (!text || busy) return;
-    setInput('');
+  // Shared by send() and handleRegenerate() below — streams the reply and
+  // appends it as a fresh assistant message. `historyForApi` is everything
+  // that should be sent as prior context (NOT including `question` itself,
+  // that's passed separately as `message`).
+  async function streamAnswer(question, historyForApi) {
     setError('');
-    const next = [...messages, { role: 'user', content: text }];
-    setMessages(next);
     setBusy(true);
     try {
       const res = await fetch(ASK_ME_ENDPOINT, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
-          message: text,
-          history: next.slice(0, -1).map((m) => ({ role: m.role, content: m.content })),
+          message: question,
+          history: historyForApi.map((m) => ({ role: m.role, content: m.content })),
         }),
       });
       if (!res.ok) {
@@ -134,6 +133,32 @@ export default function AskMe() {
     } finally {
       setBusy(false);
     }
+  }
+
+  async function send(override) {
+    const text = (override ?? input).trim();
+    if (!text || busy) return;
+    setInput('');
+    const next = [...messages, { role: 'user', content: text }];
+    setMessages(next);
+    await streamAnswer(text, next.slice(0, -1));
+  }
+
+  // Tanya Ulang — regenerates the last answer without retyping the
+  // question, dropping the old (unsatisfying) reply rather than
+  // appending a duplicate Q&A pair. Only offered on the LAST assistant
+  // message (see the render site below) — regenerating a mid-conversation
+  // answer would leave the rest of the thread referencing a reply that no
+  // longer exists.
+  async function handleRegenerate() {
+    if (busy) return;
+    const lastIdx = messages.length - 1;
+    if (messages[lastIdx]?.role !== 'assistant') return;
+    const historyForApi = messages.slice(0, lastIdx);
+    const question = historyForApi[historyForApi.length - 1];
+    if (question?.role !== 'user') return;
+    setMessages(historyForApi);
+    await streamAnswer(question.content, historyForApi.slice(0, -1));
   }
 
   function handleToggleStar(index) {
@@ -242,6 +267,16 @@ export default function AskMe() {
                 style={{ flexShrink: 0, alignSelf: 'flex-end', background: 'none', border: 'none', color: starred.some((e) => e.answer === m.content) ? 'var(--gold-ink)' : 'var(--muted-soft)', fontSize: 15, cursor: 'pointer', padding: '4px 2px' }}
               >
                 {starred.some((e) => e.answer === m.content) ? '⭐' : '☆'}
+              </button>
+            )}
+            {m.role === 'assistant' && m !== WELCOME_MESSAGE && i === messages.length - 1 && !busy && (
+              <button
+                onClick={handleRegenerate}
+                aria-label="Tanya ulang"
+                title="Tanya ulang"
+                style={{ flexShrink: 0, alignSelf: 'flex-end', background: 'none', border: 'none', color: 'var(--muted-soft)', fontSize: 15, cursor: 'pointer', padding: '4px 2px' }}
+              >
+                🔄
               </button>
             )}
           </div>

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { IconSearch } from '../components/icons';
 import { searchAll } from '../lib/globalSearch';
+import { useAuth } from '../context/AuthContext';
 import { Skeleton } from '../components/Skeleton';
 import PageHeaderPhoto from '../components/PageHeaderPhoto';
 import { PAGE_PHOTOS } from '../data/photos';
@@ -21,6 +22,7 @@ function SectionLabel({ children }) {
 // to find, say, "sabar" across Asmaul Husna's meanings or a specific
 // dzikir's title without knowing exactly which page it lived on.
 export default function CariGlobal() {
+  const { user } = useAuth();
   const [q, setQ] = useState('');
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -31,13 +33,13 @@ export default function CariGlobal() {
     if (!term) return;
     setLoading(true);
     try {
-      setResults(await searchAll(term));
+      setResults(await searchAll(term, { uid: user?.uid }));
     } finally {
       setLoading(false);
     }
   }
 
-  const totalResults = results ? results.ayat.length + results.asmaulHusna.length + results.doa.length : 0;
+  const totalResults = results ? results.ayat.length + results.asmaulHusna.length + results.doa.length + results.favoriteAyat.length : 0;
 
   return (
     <div className="screen">
@@ -70,6 +72,23 @@ export default function CariGlobal() {
           <p style={{ fontSize: 12.5, color: 'var(--muted)', textAlign: 'center', padding: '24px 12px' }}>
             Ketik kata kunci lalu tekan Enter — nyari di ayat Qur'an, Asmaul Husna, dan Doa Harian sekaligus.
           </p>
+        )}
+
+        {!loading && results && results.favoriteAyat.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <SectionLabel>⭐ Ayat Favorit Kamu</SectionLabel>
+            {results.favoriteAyat.map((f) => (
+              <Link
+                key={f.id}
+                to={`/quran/${f.chapter}?ayat=${f.verse}`}
+                className="card"
+                style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: 12, textDecoration: 'none', color: 'inherit' }}
+              >
+                <span style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--primary)' }}>{f.chapterName} : {f.verse}</span>
+                <p style={{ margin: 0, fontSize: 12, lineHeight: 1.5, color: 'var(--muted)' }}>{f.translation}</p>
+              </Link>
+            ))}
+          </div>
         )}
 
         {!loading && results && results.ayat.length > 0 && (

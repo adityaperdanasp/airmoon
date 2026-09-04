@@ -13,6 +13,8 @@
 // (non-module) service worker using importScripts — so its own copy of
 // this logic is inlined there directly. Keep the DB_NAME/STORE/schema in
 // sync if either ever changes.
+import { clearAppBadge } from './appBadge';
+
 const DB_NAME = 'airmoon-notifications';
 const STORE = 'log';
 const MAX_ENTRIES = 50;
@@ -109,6 +111,10 @@ export function markNotificationsSeen() {
   } catch {
     // Private-browsing/full storage — badge just won't clear this session.
   }
+  // Clears the PWA app-icon badge too (lib/appBadge.js) — opening this
+  // page is exactly the "I've seen what's new" moment the badge exists to
+  // prompt.
+  clearAppBadge();
 }
 
 export async function hasUnseenNotifications() {
@@ -116,6 +122,15 @@ export async function hasUnseenNotifications() {
   if (!log.length) return false;
   const lastSeen = Number(localStorage.getItem(LAST_SEEN_KEY)) || 0;
   return log[0].receivedAt > lastSeen;
+}
+
+// Same "unseen" definition as hasUnseenNotifications, just returning a
+// count instead of a boolean — used to set the actual number on the PWA
+// app icon badge (lib/appBadge.js) rather than just a dot.
+export async function getUnseenNotificationCount() {
+  const log = await getNotificationLog();
+  const lastSeen = Number(localStorage.getItem(LAST_SEEN_KEY)) || 0;
+  return log.filter((n) => n.receivedAt > lastSeen).length;
 }
 
 // Same tag-prefix → route mapping firebase-messaging-sw.js's own
@@ -138,6 +153,7 @@ export function routeForTag(tag = '') {
   if (tag === 'test-notification') return '/pengaturan';
   if (tag === 'zakat-penghasilan') return '/lainnya/kalkulator-zakat';
   if (tag === 'target-baca') return '/quran';
+  if (tag === 'reading-streak') return '/quran';
   return '/jadwal-sholat'; // adzan-* and any unrecognized tag
 }
 

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { watchKhatamProgress, resetKhatamProgress, TOTAL_MUSHAF_PAGES, TOTAL_JUZ } from '../lib/khatamProgress';
 import { watchReadingStats } from '../lib/readingTime';
 import { watchReadingGoal, setReadingGoalTarget } from '../lib/readingGoal';
+import { watchReadingStreak } from '../lib/readingStreak';
 import ConfirmDialog from './ConfirmDialog';
 import KhatamCertificateModal from './KhatamCertificateModal';
 import Confetti from './Confetti';
@@ -20,6 +21,7 @@ export default function KhatamProgressCard({ uid }) {
   const [progress, setProgress] = useState({ pages: [], juz: [] });
   const [readingStats, setReadingStats] = useState({ totalMinutes: 0 });
   const [readingGoal, setReadingGoalState] = useState({ pagesPerDay: 0, pagesToday: [] });
+  const [readingStreak, setReadingStreak] = useState({ current: 0, best: 0 });
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showCertificate, setShowCertificate] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
@@ -28,6 +30,7 @@ export default function KhatamProgressCard({ uid }) {
   useEffect(() => watchKhatamProgress(uid, setProgress), [uid]);
   useEffect(() => watchReadingStats(uid, setReadingStats), [uid]);
   useEffect(() => watchReadingGoal(uid, setReadingGoalState), [uid]);
+  useEffect(() => watchReadingStreak(uid, setReadingStreak), [uid]);
 
   const pageCount = progress.pages.length;
   const totalMinutes = readingStats.totalMinutes || 0;
@@ -93,6 +96,12 @@ export default function KhatamProgressCard({ uid }) {
       {totalMinutes > 0 && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--muted)' }}>
           <span>⏱ Total waktu baca: <strong style={{ color: 'var(--ink)' }}>{timeLabel}</strong></span>
+        </div>
+      )}
+
+      {readingStreak.current > 0 && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--muted)' }}>
+          <span>🔥 Streak baca: <strong style={{ color: 'var(--ink)' }}>{readingStreak.current} hari</strong> berturut-turut{readingStreak.best > readingStreak.current ? ` (rekor ${readingStreak.best} hari)` : ''}</span>
         </div>
       )}
 

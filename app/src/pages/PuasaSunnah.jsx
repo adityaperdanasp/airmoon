@@ -2,11 +2,80 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { watchPuasaSunnahLog, markPuasaSunnah, unmarkPuasaSunnah, todayDateKey } from '../lib/puasaSunnahLog';
+import { highestPuasaTier } from '../lib/badges';
 import PageHeaderPhoto from '../components/PageHeaderPhoto';
 import { PAGE_PHOTOS } from '../data/photos';
+import Confetti from '../components/Confetti';
+import { hapticTick, hapticSuccess } from '../lib/haptics';
 
 const MONTH_FMT = new Intl.DateTimeFormat('id-ID', { month: 'long', year: 'numeric' });
 const DAY_FMT = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+const CELEBRATED_KEY = 'airmoon-puasa-badge-celebrated-count';
+const WEEKDAY_LABELS = ['M', 'S', 'S', 'R', 'K', 'J', 'S'];
+
+function pad2(n) {
+  return String(n).padStart(2, '0');
+}
+
+// A real month calendar grid — replacing the flat "Riwayat" date list,
+// which read fine for a handful of entries but gave no sense of pattern
+// (which weeks were consistent, whether Senin/Kamis actually landed on
+// Mondays/Thursdays) the way a calendar view does at a glance. Only
+// TODAY's cell is tappable (same "only today is editable" rule
+// AmalanHeatmap.jsx's read-only design already established) — past days
+// are just a record, not something to retroactively edit here.
+function PuasaCalendar({ dateSet, viewMonth, onPrevMonth, onNextMonth, today, onToggleToday }) {
+  const year = viewMonth.getFullYear();
+  const month = viewMonth.getMonth();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const firstDow = new Date(year, month, 1).getDay();
+  const cells = [...Array(firstDow).fill(null), ...Array.from({ length: daysInMonth }, (_, i) => i + 1)];
+
+  return (
+    <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: 16 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <button onClick={onPrevMonth} aria-label="Bulan sebelumnya" style={{ background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', padding: 6, fontSize: 15 }}>
+          ←
+        </button>
+        <span style={{ fontSize: 12.5, fontWeight: 800 }}>{MONTH_FMT.format(viewMonth)}</span>
+        <button onClick={onNextMonth} aria-label="Bulan berikutnya" style={{ background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', padding: 6, fontSize: 15 }}>
+          →
+        </button>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}>
+        {WEEKDAY_LABELS.map((w, i) => (
+          <span key={i} style={{ textAlign: 'center', fontSize: 9.5, fontWeight: 700, color: 'var(--muted)' }}>{w}</span>
+        ))}
+        {cells.map((day, i) => {
+          if (!day) return <span key={i} />;
+          const key = `${year}-${pad2(month + 1)}-${pad2(day)}`;
+          const isMarked = dateSet.has(key);
+          const isToday = key === today;
+          return (
+            <button
+              key={i}
+              onClick={isToday ? onToggleToday : undefined}
+              disabled={!isToday}
+              style={{
+                aspectRatio: '1',
+                borderRadius: 8,
+                border: isToday ? '1.5px solid var(--primary)' : 'none',
+                background: isMarked ? 'var(--primary)' : 'var(--border)',
+                color: isMarked ? 'var(--on-primary)' : 'var(--muted)',
+                fontSize: 10.5,
+                fontWeight: 700,
+                cursor: isToday ? 'pointer' : 'default',
+                opacity: isMarked ? 1 : 0.5,
+              }}
+            >
+              {day}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 // Catatan Puasa Sunnah — the reminder push (check-campaign-deadlines.js's
 // checkPuasaSunnahReminder) previously had nowhere to send someone to
@@ -19,13 +88,35 @@ export default function PuasaSunnah() {
   const { showToast } = useToast();
   const [dates, setDates] = useState(null);
   const [marking, setMarking] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [viewMonth, setViewMonth] = useState(() => {
+    const d = new Date();
+    return new Date(d.getFullYear(), d.getMonth(), 1);
+  });
   const today = todayDateKey();
   const isMarkedToday = dates?.includes(today);
+  const totalCount = dates?.length || 0;
+  const badgeTier = highestPuasaTier(totalCount);
 
   useEffect(() => watchPuasaSunnahLog(user?.uid, setDates), [user?.uid]);
 
+  // Celebrates the moment a NEW milestone is actually reached, not every
+  // time this page happens to render with an already-earned tier —
+  // same localStorage-tracked-highest-celebrated pattern as
+  // AmalanHarianCard.jsx's own dzikir-badge celebration.
+  useEffect(() => {
+    if (!badgeTier) return;
+    const lastCelebrated = Number(localStorage.getItem(CELEBRATED_KEY)) || 0;
+    if (badgeTier.count > lastCelebrated) {
+      localStorage.setItem(CELEBRATED_KEY, String(badgeTier.count));
+      hapticSuccess();
+      setShowConfetti(true);
+    }
+  }, [badgeTier]);
+
   async function handleToggleToday() {
     if (!user) return;
+    hapticTick();
     setMarking(true);
     try {
       if (isMarkedToday) {
@@ -41,7 +132,6 @@ export default function PuasaSunnah() {
 
   const thisMonthPrefix = today.slice(0, 7);
   const thisMonthCount = dates?.filter((d) => d.startsWith(thisMonthPrefix)).length || 0;
-  const totalCount = dates?.length || 0;
 
   return (
     <div className="screen">
@@ -82,9 +172,15 @@ export default function PuasaSunnah() {
             <span style={{ fontSize: 22, fontWeight: 800, color: 'var(--primary)' }}>{thisMonthCount}</span>
             <span style={{ fontSize: 10.5, color: 'var(--muted)', textAlign: 'center' }}>Kali Bulan {MONTH_FMT.format(new Date())}</span>
           </div>
-          <div className="card" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 3, padding: 16, alignItems: 'center' }}>
+          <div className="card" style={{ position: 'relative', flex: 1, display: 'flex', flexDirection: 'column', gap: 3, padding: 16, alignItems: 'center' }}>
+            {showConfetti && <Confetti onComplete={() => setShowConfetti(false)} />}
             <span style={{ fontSize: 22, fontWeight: 800, color: 'var(--gold-ink)' }}>{totalCount}</span>
             <span style={{ fontSize: 10.5, color: 'var(--muted)', textAlign: 'center' }}>Total Sepanjang Waktu</span>
+            {badgeTier && (
+              <span style={{ marginTop: 2, fontSize: 10, fontWeight: 700, padding: '3px 9px', borderRadius: 999, color: 'var(--primary)', background: 'var(--mint)' }}>
+                {badgeTier.icon} {badgeTier.label}
+              </span>
+            )}
           </div>
         </div>
 
@@ -103,25 +199,15 @@ export default function PuasaSunnah() {
           </div>
         )}
 
-        {dates && dates.length > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <span className="section-label" style={{ color: 'var(--muted)', fontSize: 11.5, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-              Riwayat
-            </span>
-            {dates.slice(0, 30).map((d) => (
-              <div key={d} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderRadius: 12, background: 'var(--card)' }}>
-                <span style={{ fontSize: 12.5, fontWeight: 600 }}>{DAY_FMT.format(new Date(`${d}T00:00:00`))}</span>
-                {d === today && (
-                  <button
-                    onClick={handleToggleToday}
-                    style={{ background: 'none', border: 'none', color: 'var(--danger)', fontSize: 11, textDecoration: 'underline', cursor: 'pointer', padding: 0 }}
-                  >
-                    Batal
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
+        {dates && (
+          <PuasaCalendar
+            dateSet={new Set(dates)}
+            viewMonth={viewMonth}
+            onPrevMonth={() => setViewMonth((d) => new Date(d.getFullYear(), d.getMonth() - 1, 1))}
+            onNextMonth={() => setViewMonth((d) => new Date(d.getFullYear(), d.getMonth() + 1, 1))}
+            today={today}
+            onToggleToday={handleToggleToday}
+          />
         )}
       </div>
     </div>
