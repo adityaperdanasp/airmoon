@@ -33,6 +33,13 @@ export function watchDzikirStreak(uid, callback) {
   });
 }
 
+// Maps a streak category to its field on the SAME day's amalanHarian doc
+// (users/{uid}/amalanHarian/{dateKey}) — see lib/amalanHarian.js's Poin &
+// Medali note. Only 'pagi'/'petang' are real Amalan Harian items;
+// anything else (there isn't another category today, but this stays
+// defensive) is simply not scored.
+const AMALAN_FIELD = { pagi: 'dzikirPagi', petang: 'dzikirPetang' };
+
 // Idempotent for the day — tapping twice in the same day is a no-op past
 // the first tap, so there's no way to inflate the streak by re-tapping.
 export async function markDzikirDone(uid, categoryId) {
@@ -46,6 +53,11 @@ export async function markDzikirDone(uid, categoryId) {
   const current = s.lastDate === yesterdayKey() ? s.current + 1 : 1;
   const best = Math.max(s.best || 0, current);
   await setDoc(ref, { dzikirStreak: { ...streaks, [categoryId]: { lastDate: today, current, best } } }, { merge: true });
+
+  const amalanField = AMALAN_FIELD[categoryId];
+  if (amalanField) {
+    await setDoc(doc(db, 'users', uid, 'amalanHarian', today), { [amalanField]: true }, { merge: true });
+  }
 }
 
 export function isDoneToday(streak) {

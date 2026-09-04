@@ -30,6 +30,8 @@ import { hasSeenOnboarding, markOnboardingSeen } from '../lib/onboarding';
 import RatingPromptModal from '../components/RatingPromptModal';
 import { shouldShowRatingPrompt, markRatingPromptShown, dismissRatingPromptForever } from '../lib/ratingPrompt';
 import { submitFeedback } from '../lib/feedback';
+import PointsBadge from '../components/PointsBadge';
+import { markLoginPoint } from '../lib/amalanHarian';
 
 const dateFmt = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
@@ -111,6 +113,13 @@ export default function Home() {
     if (showOnboarding || !user) return;
     if (shouldShowRatingPrompt()) setShowRatingPrompt(true);
   }, [showOnboarding, user]);
+
+  // Poin & Medali's daily login point — markLoginPoint() itself checks
+  // whether today's point is already recorded before writing, so this
+  // firing on every Home mount (not just once ever) is fine.
+  useEffect(() => {
+    if (user) markLoginPoint(user.uid);
+  }, [user]);
 
   useEffect(() => watchActiveDonations(setDonations), []);
   useEffect(() => watchUserProfile(user?.uid, (p) => setAvatarColor(p?.avatarColor || null)), [user?.uid]);
@@ -248,14 +257,17 @@ export default function Home() {
                 <span style={{ fontSize: 15.5, fontWeight: 700, color: '#fff' }}>{user?.displayName || user?.email}</span>
               </div>
             </div>
-            <Link
-              to="/pengaturan"
-              className="icon-btn"
-              aria-label={t('pengaturan')}
-              style={{ textDecoration: 'none', background: 'rgba(255,255,255,0.2)', color: '#fff' }}
-            >
-              <IconBell width="17" height="17" />
-            </Link>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              {user && <PointsBadge uid={user.uid} />}
+              <Link
+                to="/pengaturan"
+                className="icon-btn"
+                aria-label={t('pengaturan')}
+                style={{ textDecoration: 'none', background: 'rgba(255,255,255,0.2)', color: '#fff' }}
+              >
+                <IconBell width="17" height="17" />
+              </Link>
+            </div>
           </div>
 
           <h1
