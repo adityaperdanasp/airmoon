@@ -29,37 +29,35 @@ function drawImageCover(ctx, img, w, h) {
   ctx.drawImage(img, (w - iw) / 2, (h - ih) / 2, iw, ih);
 }
 
-async function draw(canvas, tpl) {
+// Draws from fully custom inputs now (title/sub/2 colors/photo index) —
+// the 4 TEMPLATES below are just starting points that populate these same
+// inputs, not a fixed set the render is locked to. Was `draw(canvas, tpl)`
+// reading straight off a TEMPLATES entry before the "custom text/foto/
+// warna" ask; kept the same drawing logic, just parameterized.
+async function draw(canvas, { title, sub, color1, color2, photoIndex }) {
   const ctx = canvas.getContext('2d');
   const w = canvas.width;
   const h = canvas.height;
 
-  // A real photo backdrop instead of a flat two-color gradient — same
-  // brand-tinted-overlay-over-photo approach lib/ayatCardCanvas.js's Ayat
-  // Card and KutipanInspirasi.jsx's quote card both already use. Picked
-  // deterministically per template (not randomly) so "Selamat Idul Fitri"
-  // always shows the same photo rather than a different one each time the
-  // card re-renders.
-  const photoSrc = DECORATIVE_PHOTOS_LIGHT[(tpl.id * 3 + 1) % DECORATIVE_PHOTOS_LIGHT.length];
+  const photoSrc = DECORATIVE_PHOTOS_LIGHT[((photoIndex % DECORATIVE_PHOTOS_LIGHT.length) + DECORATIVE_PHOTOS_LIGHT.length) % DECORATIVE_PHOTOS_LIGHT.length];
   try {
     const img = await loadImage(photoSrc);
     drawImageCover(ctx, img, w, h);
   } catch {
-    // Offline or the photo failed to load — fall back to this card's own
-    // flat two-color gradient rather than leaving a blank canvas.
+    // Offline or the photo failed to load — fall back to a flat two-color
+    // gradient from the same chosen colors rather than leaving a blank canvas.
     const fallback = ctx.createLinearGradient(0, 0, w, h);
-    fallback.addColorStop(0, tpl.colors[0]);
-    fallback.addColorStop(1, tpl.colors[1]);
+    fallback.addColorStop(0, color1);
+    fallback.addColorStop(1, color2);
     ctx.fillStyle = fallback;
     ctx.fillRect(0, 0, w, h);
   }
 
-  // Each template keeps its own two-color identity as a tinted overlay
-  // over the photo, rather than a flat fill — "Idul Fitri" stays teal-
-  // toned, "Idul Adha" stays terracotta-toned, etc.
+  // The chosen 2-color gradient as a tinted overlay over the photo,
+  // rather than a flat fill.
   const overlay = ctx.createLinearGradient(0, 0, w, h);
-  overlay.addColorStop(0, `${tpl.colors[0]}b3`); // ~70% opacity (hex alpha)
-  overlay.addColorStop(1, `${tpl.colors[1]}e6`); // ~90% opacity
+  overlay.addColorStop(0, `${color1}b3`); // ~70% opacity (hex alpha)
+  overlay.addColorStop(1, `${color2}e6`); // ~90% opacity
   ctx.fillStyle = overlay;
   ctx.fillRect(0, 0, w, h);
 
@@ -81,11 +79,11 @@ async function draw(canvas, tpl) {
 
   ctx.fillStyle = '#ffffff';
   ctx.font = '800 40px Poppins, sans-serif';
-  wrapText(ctx, tpl.title, w / 2, h * 0.56, w * 0.8, 46);
+  wrapText(ctx, title || ' ', w / 2, h * 0.56, w * 0.8, 46);
 
   ctx.fillStyle = 'rgba(255,255,255,0.8)';
   ctx.font = '400 20px Poppins, sans-serif';
-  ctx.fillText(tpl.sub, w / 2, h * 0.68);
+  wrapText(ctx, sub || ' ', w / 2, h * 0.68, w * 0.8, 26);
 }
 
 function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
@@ -106,24 +104,46 @@ function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
   lines.forEach((l, i) => ctx.fillText(l.trim(), x, startY + i * lineHeight));
 }
 
+function photoIndexForTemplate(tp) {
+  return (tp.id * 3 + 1) % DECORATIVE_PHOTOS_LIGHT.length;
+}
+
 export default function KartuUcapan() {
   const { t } = useLang();
   const canvasRef = useRef(null);
   const [tplId, setTplId] = useState(0);
   const [ready, setReady] = useState(false);
   const [history, setHistory] = useState(() => getKartuUcapanHistory());
-  const tpl = TEMPLATES[tplId];
+
+  // Free-text title/subtitle, a photo pick, and a 2-color gradient — all
+  // independently editable now, seeded from whichever template was last
+  // tapped (see selectTemplate below) rather than locked to it. This is
+  // the actual state the card draws from; TEMPLATES is just presets.
+  const [title, setTitle] = useState(TEMPLATES[0].title);
+  const [sub, setSub] = useState(TEMPLATES[0].sub);
+  const [color1, setColor1] = useState(TEMPLATES[0].colors[0]);
+  const [color2, setColor2] = useState(TEMPLATES[0].colors[1]);
+  const [photoIndex, setPhotoIndex] = useState(photoIndexForTemplate(TEMPLATES[0]));
+
+  function selectTemplate(tp) {
+    setTplId(tp.id);
+    setTitle(tp.title);
+    setSub(tp.sub);
+    setColor1(tp.colors[0]);
+    setColor2(tp.colors[1]);
+    setPhotoIndex(photoIndexForTemplate(tp));
+  }
 
   useEffect(() => {
     let cancelled = false;
     setReady(false);
-    draw(canvasRef.current, tpl).then(() => {
+    draw(canvasRef.current, { title, sub, color1, color2, photoIndex }).then(() => {
       if (!cancelled) setReady(true);
     });
     return () => {
       cancelled = true;
     };
-  }, [tpl]);
+  }, [title, sub, color1, color2, photoIndex]);
 
   function handleDownload() {
     const url = canvasRef.current.toDataURL('image/png');
@@ -158,7 +178,7 @@ export default function KartuUcapan() {
             style={{ width: '100%', display: 'block', aspectRatio: '4 / 5' }}
           />
           {!ready && (
-            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: `linear-gradient(160deg, ${tpl.colors[0]}, ${tpl.colors[1]})` }}>
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: `linear-gradient(160deg, ${color1}, ${color2})` }}>
               <div className="spinner" style={{ borderTopColor: '#fff' }} />
             </div>
           )}
@@ -170,7 +190,7 @@ export default function KartuUcapan() {
             {TEMPLATES.map((tp) => (
               <button
                 key={tp.id}
-                onClick={() => setTplId(tp.id)}
+                onClick={() => selectTemplate(tp)}
                 aria-label={`Template ${tp.title}`}
                 aria-pressed={tp.id === tplId}
                 style={{
@@ -183,6 +203,65 @@ export default function KartuUcapan() {
                 }}
               />
             ))}
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <span className="section-label">Teks Ucapan</span>
+          <input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Judul, misal 'Selamat Idul Fitri'"
+            maxLength={60}
+            style={{ padding: '11px 13px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--ink)', fontSize: 13.5, fontWeight: 700 }}
+          />
+          <input
+            value={sub}
+            onChange={(e) => setSub(e.target.value)}
+            placeholder="Sub-judul, misal 'Mohon maaf lahir & batin'"
+            maxLength={80}
+            style={{ padding: '11px 13px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--ink)', fontSize: 12.5 }}
+          />
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <span className="section-label">Foto Latar</span>
+          <div className="hide-scrollbar" style={{ display: 'flex', gap: 8, overflowX: 'auto' }}>
+            {DECORATIVE_PHOTOS_LIGHT.map((src, i) => (
+              <button
+                key={src}
+                onClick={() => setPhotoIndex(i)}
+                aria-label={`Foto latar ${i + 1}`}
+                aria-pressed={photoIndex === i}
+                style={{
+                  flexShrink: 0,
+                  width: 52,
+                  height: 65,
+                  borderRadius: 10,
+                  padding: 0,
+                  overflow: 'hidden',
+                  border: photoIndex === i ? '2.5px solid var(--primary)' : '2px solid transparent',
+                  cursor: 'pointer',
+                  background: 'none',
+                }}
+              >
+                <img src={src} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <span className="section-label">Warna Gradasi</span>
+          <div style={{ display: 'flex', gap: 16 }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--muted)', cursor: 'pointer' }}>
+              <input type="color" value={color1} onChange={(e) => setColor1(e.target.value)} style={{ width: 34, height: 34, border: 'none', borderRadius: 8, padding: 0, background: 'none', cursor: 'pointer' }} />
+              Warna 1
+            </label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--muted)', cursor: 'pointer' }}>
+              <input type="color" value={color2} onChange={(e) => setColor2(e.target.value)} style={{ width: 34, height: 34, border: 'none', borderRadius: 8, padding: 0, background: 'none', cursor: 'pointer' }} />
+              Warna 2
+            </label>
           </div>
         </div>
 
@@ -203,7 +282,7 @@ export default function KartuUcapan() {
                 return (
                   <button
                     key={h.templateId}
-                    onClick={() => setTplId(h.templateId)}
+                    onClick={() => selectTemplate(t2)}
                     style={{
                       flexShrink: 0,
                       width: 46,

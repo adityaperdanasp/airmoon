@@ -7,7 +7,7 @@ import { DECORATIVE_PHOTOS_LIGHT, DECORATIVE_PHOTOS_DARK } from '../data/photos'
 import TopBar from '../components/TopBar';
 import ErrorRetry from '../components/ErrorRetry';
 import { SkeletonCard } from '../components/Skeleton';
-import { shareText } from '../lib/share';
+import QuoteCardModal from '../components/QuoteCardModal';
 
 export default function KutipanInspirasi() {
   const { lang } = useLang();
@@ -21,6 +21,7 @@ export default function KutipanInspirasi() {
   // glance or jump straight to one — this grid is the real "jelajah
   // semua" view.
   const [browsing, setBrowsing] = useState(false);
+  const [showCardModal, setShowCardModal] = useState(false);
 
   useEffect(() => {
     setQuote(null);
@@ -30,9 +31,14 @@ export default function KutipanInspirasi() {
       .catch(() => setError(lang === 'en' ? 'Failed to load the quote.' : 'Gagal memuat kutipan.'));
   }, [idx, retryTick]);
 
-  async function handleShare() {
+  // Was plain-text-only (navigator.share with just a string, no image and
+  // no way to download at all) — a real gap once every other shareable
+  // piece of content in this app (Ayat Card, Kartu Ucapan, Amalan
+  // progress, receipts) had a proper canvas card. Opens the same kind of
+  // preview-then-Unduh/Bagikan modal those already use instead.
+  function handleShare() {
     if (!quote) return;
-    await shareText({ text: `"${quote[lang]}" — ${quote.source}`, title: 'Kutipan dari airmoon' });
+    setShowCardModal(true);
   }
 
   const photoPool = theme === 'dark' ? DECORATIVE_PHOTOS_DARK : DECORATIVE_PHOTOS_LIGHT;
@@ -155,6 +161,10 @@ export default function KutipanInspirasi() {
           </>
         )}
       </div>
+
+      {showCardModal && quote && (
+        <QuoteCardModal quote={quote} quoteIndex={idx} onClose={() => setShowCardModal(false)} />
+      )}
     </div>
   );
 }

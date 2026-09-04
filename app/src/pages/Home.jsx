@@ -343,21 +343,6 @@ export default function Home() {
           </div>
         </Link>
 
-        {user && (
-          <div
-            id="amalan-harian"
-            style={{
-              borderRadius: 20,
-              boxShadow: highlightAmalan ? '0 0 0 2px var(--primary)' : 'none',
-              transition: 'box-shadow 0.3s ease',
-            }}
-          >
-            <AmalanHarianCard uid={user.uid} />
-          </div>
-        )}
-
-        {user && <AmalanHeatmap uid={user.uid} />}
-
         {(lastReadAyat || lastReadMushaf) && (
           // Side-by-side when both bookmarks exist (Mode Ayat and Mode
           // Mushaf keep separate bookmarks, see the fetch effect above) —
@@ -447,6 +432,21 @@ export default function Home() {
             </div>
           )}
         </div>
+
+        {user && (
+          <div
+            id="amalan-harian"
+            style={{
+              borderRadius: 20,
+              boxShadow: highlightAmalan ? '0 0 0 2px var(--primary)' : 'none',
+              transition: 'box-shadow 0.3s ease',
+            }}
+          >
+            <AmalanHarianCard uid={user.uid} />
+          </div>
+        )}
+
+        {user && <AmalanHeatmap uid={user.uid} />}
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
