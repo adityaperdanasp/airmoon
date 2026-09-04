@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Portal from './Portal';
 import { useEscapeKey } from '../lib/useEscapeKey';
+import { useSwipeDismiss } from '../lib/useSwipeDismiss';
 import { useAuth } from '../context/AuthContext';
 
 // Deleting an account needs a fresh sign-in first (Firebase Auth's
@@ -20,6 +21,7 @@ export default function DeleteAccountSheet({ onClose, onDeleted }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   useEscapeKey(onClose);
+  const { dragY, dragging, handlers } = useSwipeDismiss(onClose);
 
   async function handleDelete() {
     setBusy(true);
@@ -45,7 +47,8 @@ export default function DeleteAccountSheet({ onClose, onDeleted }) {
       <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 50, display: 'flex', alignItems: 'flex-end' }}>
         <div
           onClick={(e) => e.stopPropagation()}
-          style={{ width: '100%', maxWidth: 480, margin: '0 auto', background: 'var(--card)', borderRadius: '20px 20px 0 0', padding: '0 20px 20px' }}
+          {...handlers}
+          style={{ width: '100%', maxWidth: 480, margin: '0 auto', background: 'var(--card)', borderRadius: '20px 20px 0 0', padding: '0 20px 20px', transform: `translateY(${dragY}px)`, transition: dragging ? 'none' : 'transform 0.2s ease' }}
         >
           <div style={{ width: 36, height: 4, borderRadius: 999, background: 'var(--border)', margin: '10px auto 16px' }} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 16 }}>

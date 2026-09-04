@@ -2,12 +2,34 @@ import { useEffect, useState } from 'react';
 import { SHOLAT_KEYS, SHOLAT_LABELS, watchAmalanHarian, setSholatDone, setTilawahDone } from '../lib/amalanHarian';
 import { watchDzikirStreak, markDzikirDone, isDoneToday } from '../lib/dzikirStreak';
 import { highestTier } from '../lib/badges';
+import { usePopAnimation } from '../lib/usePopAnimation';
 import AmalanShareModal from './AmalanShareModal';
 import Confetti from './Confetti';
 
 const BADGE_CELEBRATED_KEY = 'airmoon-badge-celebrated-days';
 
+// Tracks the false→true transition specifically (not just "is it
+// currently done") so the checkmark's draw-in animation plays exactly
+// once, right when someone actually taps a chip to complete it — not
+// every time this card mounts/re-renders showing already-done items from
+// earlier today.
 function Chip({ done, label, onClick, disabled }) {
+  const [justChecked, setJustChecked] = useState(false);
+  const [wasDone, setWasDone] = useState(done);
+  const [popStyle, triggerPop] = usePopAnimation();
+
+  useEffect(() => {
+    if (done && !wasDone) {
+      setJustChecked(true);
+      triggerPop();
+      const t = setTimeout(() => setJustChecked(false), 400);
+      setWasDone(true);
+      return () => clearTimeout(t);
+    }
+    setWasDone(done);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only re-run on `done` itself changing, wasDone is just this effect's own memory
+  }, [done]);
+
   return (
     <button
       onClick={onClick}
@@ -24,10 +46,13 @@ function Chip({ done, label, onClick, disabled }) {
         border: done ? 'none' : '1px solid var(--border)',
         color: done ? 'var(--on-primary)' : 'var(--ink)',
         background: done ? 'var(--primary)' : 'var(--card)',
+        ...popStyle,
       }}
     >
       {done && (
-        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 12.5 10 17 19 7" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" /></svg>
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" className={justChecked ? 'checkmark-draw' : undefined}>
+          <path d="M5 12.5 10 17 19 7" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
       )}
       {label}
     </button>

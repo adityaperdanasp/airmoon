@@ -25,6 +25,8 @@ import AmalanHarianCard from '../components/AmalanHarianCard';
 import AmalanHeatmap from '../components/AmalanHeatmap';
 import CountUp from '../components/CountUp';
 import PullToRefresh from '../components/PullToRefresh';
+import OnboardingTour from '../components/OnboardingTour';
+import { hasSeenOnboarding, markOnboardingSeen } from '../lib/onboarding';
 
 const dateFmt = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
@@ -96,6 +98,7 @@ export default function Home() {
   const [lastReadMushaf, setLastReadMushaf] = useState(null);
   const [searchParams] = useSearchParams();
   const [highlightAmalan, setHighlightAmalan] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(() => !hasSeenOnboarding());
 
   useEffect(() => watchActiveDonations(setDonations), []);
   useEffect(() => watchUserProfile(user?.uid, (p) => setAvatarColor(p?.avatarColor || null)), [user?.uid]);
@@ -484,6 +487,15 @@ export default function Home() {
       </PullToRefresh>
       </div>
       <BottomNav />
+
+      {showOnboarding && (
+        <OnboardingTour
+          onFinish={() => {
+            markOnboardingSeen();
+            setShowOnboarding(false);
+          }}
+        />
+      )}
     </div>
   );
 }

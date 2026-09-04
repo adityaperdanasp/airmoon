@@ -8,6 +8,7 @@ import CollectionPickerSheet from '../components/CollectionPickerSheet';
 import { useToast } from '../context/ToastContext';
 import PageHeaderPhoto from '../components/PageHeaderPhoto';
 import { PAGE_PHOTOS } from '../data/photos';
+import PullToRefresh from '../components/PullToRefresh';
 
 export default function AyatFavorit() {
   const { user } = useAuth();
@@ -37,9 +38,18 @@ export default function AyatFavorit() {
     return [...byCollection].sort((a, b) => a.chapter - b.chapter || a.verse - b.verse);
   }, [favorites, activeCollection, sortBy]);
 
+  // favorites is already `onSnapshot`-live (watchFavoriteAyat) — nothing
+  // to actually re-fetch, so this just resolves after a short delay for
+  // the gesture's expected completion feel, same as Doa.jsx's own
+  // handlePullRefresh.
+  function refresh() {
+    return new Promise((resolve) => setTimeout(resolve, 400));
+  }
+
   return (
     <div className="screen">
       <div className="screen-content">
+      <PullToRefresh onRefresh={refresh}>
         <PageHeaderPhoto title="Ayat Favorit" photo={PAGE_PHOTOS.ayatFavorit} subtitle={favorites ? `${favorites.length} ayat tersimpan` : 'Memuat…'} />
 
         {favorites?.length === 0 && (
@@ -172,6 +182,7 @@ export default function AyatFavorit() {
             )}
           </div>
         )}
+      </PullToRefresh>
       </div>
 
       {pendingRemove && (

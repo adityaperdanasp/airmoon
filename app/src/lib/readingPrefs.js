@@ -79,6 +79,22 @@ export function useArabicFont() {
   return [font, setFont];
 }
 
+// Auto-lanjut ke surah berikutnya (2026-09-05) — Mode Ayat's audio used
+// to just stop after the last ayat of a surah (SurahReader.jsx's own
+// handleEnded()), same as a physical mushaf naturally pausing at a surah
+// boundary. Opt-in (default off) since jumping straight into the next
+// surah's audio without any pause could surprise someone who didn't ask
+// for continuous playback.
+const AUTO_NEXT_SURAH_KEY = 'airmoon-auto-next-surah';
+
+export function useAutoNextSurah() {
+  const [autoNext, setAutoNext] = useState(() => localStorage.getItem(AUTO_NEXT_SURAH_KEY) === '1');
+  useEffect(() => {
+    localStorage.setItem(AUTO_NEXT_SURAH_KEY, autoNext ? '1' : '0');
+  }, [autoNext]);
+  return [autoNext, setAutoNext];
+}
+
 export const NIGHT_STYLE_VARS = {
   '--bg': '#0d0d0d',
   '--ink': '#ececec',

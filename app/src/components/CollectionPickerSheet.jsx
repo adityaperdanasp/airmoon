@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Portal from './Portal';
 import { useEscapeKey } from '../lib/useEscapeKey';
+import { useSwipeDismiss } from '../lib/useSwipeDismiss';
 
 // A small bottom sheet for assigning an ayat favorite to a collection —
 // existing collection names as tappable rows, plus a text field to create
@@ -11,6 +12,7 @@ import { useEscapeKey } from '../lib/useEscapeKey';
 export default function CollectionPickerSheet({ existingCollections, current, onPick, onClose }) {
   const [newName, setNewName] = useState('');
   useEscapeKey(onClose);
+  const { dragY, dragging, handlers } = useSwipeDismiss(onClose);
 
   function submitNew(e) {
     e.preventDefault();
@@ -24,7 +26,8 @@ export default function CollectionPickerSheet({ existingCollections, current, on
       <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 52, display: 'flex', alignItems: 'flex-end' }}>
         <div
           onClick={(e) => e.stopPropagation()}
-          style={{ width: '100%', maxWidth: 480, margin: '0 auto', background: 'var(--card)', borderRadius: '20px 20px 0 0', paddingBottom: 16 }}
+          {...handlers}
+          style={{ width: '100%', maxWidth: 480, margin: '0 auto', background: 'var(--card)', borderRadius: '20px 20px 0 0', paddingBottom: 16, transform: `translateY(${dragY}px)`, transition: dragging ? 'none' : 'transform 0.2s ease' }}
         >
           <div style={{ width: 36, height: 4, borderRadius: 999, background: 'var(--border)', margin: '10px auto 12px' }} />
           <div style={{ padding: '0 20px 12px', textAlign: 'center', fontSize: 12.5, fontWeight: 700, color: 'var(--gold-ink)' }}>

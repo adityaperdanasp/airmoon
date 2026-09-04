@@ -14,6 +14,7 @@ import DeleteAccountSheet from '../components/DeleteAccountSheet';
 import { resetAllLocalData } from '../lib/resetLocalData';
 import { NOTIF_CATEGORIES, watchNotifPrefs, setNotifPref } from '../lib/notifPrefs';
 import AchievementShareModal from '../components/AchievementShareModal';
+import { ACCENT_OPTIONS, loadAccentColor, setAccentColor } from '../lib/accentColor';
 
 function SegButton({ active, onClick, children }) {
   return (
@@ -304,6 +305,7 @@ export default function Pengaturan() {
   const [showDeleteAccount, setShowDeleteAccount] = useState(false);
   const [showResetDataConfirm, setShowResetDataConfirm] = useState(false);
   const [showAchievement, setShowAchievement] = useState(false);
+  const [accentId, setAccentId] = useState(loadAccentColor);
   const [exporting, setExporting] = useState(false);
   const [importing, setImporting] = useState(false);
   const [pendingImportFile, setPendingImportFile] = useState(null); // File awaiting confirmation, or null
@@ -419,6 +421,34 @@ export default function Pengaturan() {
               <SegButton active={themePreference === 'light'} onClick={() => setTheme('light')}>{t('light')}</SegButton>
               <SegButton active={themePreference === 'dark'} onClick={() => setTheme('dark')}>{t('dark')}</SegButton>
               <SegButton active={themePreference === 'system'} onClick={() => setTheme('system')}>{t('system')}</SegButton>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 4, borderTop: '1px solid var(--border)' }}>
+              <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--muted)' }}>Warna Aksen</span>
+              <div style={{ display: 'flex', gap: 10 }}>
+                {ACCENT_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.id}
+                    onClick={() => {
+                      setAccentColor(opt.id);
+                      setAccentId(opt.id);
+                    }}
+                    aria-label={opt.label}
+                    title={opt.label}
+                    style={{
+                      width: 34,
+                      height: 34,
+                      borderRadius: '50%',
+                      border: accentId === opt.id ? '2.5px solid var(--ink)' : '2px solid transparent',
+                      padding: 2,
+                      background: 'none',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <span style={{ display: 'block', width: '100%', height: '100%', borderRadius: '50%', background: opt.swatch }} />
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 

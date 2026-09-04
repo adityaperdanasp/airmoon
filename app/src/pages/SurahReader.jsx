@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useParams, useSearchParams, Link } from 'react-router-dom';
+import { useParams, useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
@@ -8,7 +8,7 @@ import { fetchSurahDetail, RECITERS } from '../lib/quranApi';
 import { hasWordSync, fetchChapterTiming } from '../lib/quranTimingApi';
 import { fetchWordGloss } from '../lib/wordGlossApi';
 import { watchFavoriteAyat, addFavoriteAyat, removeFavoriteAyat } from '../lib/favoriteAyat';
-import { useNightMode, NIGHT_STYLE_VARS, useArabicFontSize, MIN_ARABIC_SIZE, MAX_ARABIC_SIZE, useArabicFont, ARABIC_FONTS } from '../lib/readingPrefs';
+import { useNightMode, NIGHT_STYLE_VARS, useArabicFontSize, MIN_ARABIC_SIZE, MAX_ARABIC_SIZE, useArabicFont, ARABIC_FONTS, useAutoNextSurah } from '../lib/readingPrefs';
 import { fetchSurahTafsir } from '../lib/tafsirApi';
 import { markSurahOpened } from '../lib/readingHistory';
 import { useReadingTimeTracker } from '../lib/readingTime';
@@ -19,6 +19,7 @@ import TafsirSheet from '../components/TafsirSheet';
 import ErrorRetry from '../components/ErrorRetry';
 import { Skeleton, SkeletonCard } from '../components/Skeleton';
 import Portal from '../components/Portal';
+import { IconSearch } from '../components/icons';
 
 function getReciterId() {
   return localStorage.getItem('airmoon-qari') || '05';
@@ -26,7 +27,8 @@ function getReciterId() {
 
 export default function SurahReader() {
   const { nomor } = useParams();
-  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const jumpToAyat = Number(searchParams.get('ayat')) || null; // deep-link from Cari Ayat search results
   const { user } = useAuth();
   const { showToast } = useToast();
@@ -41,6 +43,13 @@ export default function SurahReader() {
   const [night, setNight] = useNightMode();
   const [arabicSize, setArabicSize] = useArabicFontSize();
   const [arabicFont, setArabicFont] = useArabicFont();
+  const [autoNextSurah, setAutoNextSurah] = useAutoNextSurah();
+  // Cari di Dalam Surah (2026-09-05) — CariAyat.jsx already searches the
+  // whole Qur'an via a network call; this is a plain local filter over
+  // the surah already loaded in memory, for "which ayat in THIS surah
+  // mentions X" without leaving the page or hitting the network again.
+  const [showInSurahSearch, setShowInSurahSearch] = useState(false);
+  const [inSurahQuery, setInSurahQuery] = useState('');
   const [showSizeControls, setShowSizeControls] = useState(false);
   const [tafsirMap, setTafsirMap] = useState(null);
   const [tafsirOpenAyat, setTafsirOpenAyat] = useState(null);
@@ -79,6 +88,19 @@ export default function SurahReader() {
       .catch(() => setError('Gagal memuat surat.'));
   }, [nomor, retryTick]);
 
+  // Continues auto-lanjut playback into the freshly-loaded surah — the
+  // ?autoplay=1 param is only ever set by this same page's own
+  // goToNextSurahIfEnabled() navigation below, never a real deep link.
+  // Stripped right after firing so a manual refresh/reshare of the URL
+  // doesn't unexpectedly start audio.
+  useEffect(() => {
+    if (!surah || searchParams.get('autoplay') !== '1') return;
+    const first = surah.ayat[0];
+    if (first) playAyat(first);
+    setSearchParams({}, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only re-run when a freshly loaded surah actually carries the autoplay flag
+  }, [surah]);
+
   // Reset the cached tafsir map whenever the surah changes so a stale
   // tafsir from the previous surah never gets shown against the wrong
   // ayat — same reasoning as the gloss reset effect below.
@@ -112,6 +134,25 @@ export default function SurahReader() {
     const t = setTimeout(() => setHighlightAyat(null), 2200);
     return () => clearTimeout(t);
   }, [surah, jumpToAyat]);
+
+  // Cari di Dalam Surah's own jump — same scroll+highlight affordance as
+  // the deep-link effect above, just triggered by tapping a local search
+  // result instead of a route param.
+  function jumpToLocalAyat(nomorAyat) {
+    setShowInSurahSearch(false);
+    setInSurahQuery('');
+    const el = document.getElementById(`ayat-${nomorAyat}`);
+    if (!el) return;
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setHighlightAyat(nomorAyat);
+    setTimeout(() => setHighlightAyat(null), 2200);
+  }
+
+  const inSurahMatches = (() => {
+    const iq = inSurahQuery.trim().toLowerCase();
+    if (!iq || !surah) return [];
+    return surah.ayat.filter((a) => a.teksIndonesia?.toLowerCase().includes(iq) || a.teksLatin?.toLowerCase().includes(iq)).slice(0, 20);
+  })();
 
   useEffect(() => {
     setReciterId(getReciterId());
@@ -217,17 +258,29 @@ export default function SurahReader() {
     setActiveWord(word ? word.index : null);
   }
 
+  // Auto-lanjut ke surah berikutnya (2026-09-05, opt-in via the "A+"
+  // panel toggle) — navigating resets this page's whole state (new
+  // surah, new audio), so this deliberately just changes the route and
+  // lets the next mount's own effects pick up playback fresh, rather
+  // than trying to carry playback state across a surah switch in place.
+  function goToNextSurahIfEnabled() {
+    setPlaying(null);
+    setActiveWord(null);
+    if (!autoNextSurah) return;
+    const next = Number(nomor) + 1;
+    if (next <= 114) navigate(`/quran/${next}?autoplay=1`);
+  }
+
   function handleEnded() {
     if (wordSyncReady) {
-      setPlaying(null);
-      setActiveWord(null);
+      goToNextSurahIfEnabled();
       return;
     }
     if (!surah) return;
     const idx = surah.ayat.findIndex((a) => a.nomorAyat === playing);
     const nextAyat = surah.ayat[idx + 1];
     if (nextAyat) playAyat(nextAyat);
-    else setPlaying(null);
+    else goToNextSurahIfEnabled();
   }
 
   async function markLastRead(ayat) {
@@ -319,6 +372,15 @@ export default function SurahReader() {
           <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z" strokeWidth="1.6" strokeLinejoin="round" />
         </svg>
       </button>
+      <button
+        className="icon-btn"
+        onClick={() => setShowInSurahSearch((v) => !v)}
+        aria-label="Cari di dalam surah ini"
+        style={{ color: showInSurahSearch ? 'var(--primary)' : 'var(--muted)' }}
+        title="Cari di dalam surah ini"
+      >
+        <IconSearch width="16" height="16" />
+      </button>
     </div>
   );
 
@@ -369,6 +431,50 @@ export default function SurahReader() {
                 </button>
               ))}
             </div>
+            <div
+              onClick={() => setAutoNextSurah((v) => !v)}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, cursor: 'pointer', padding: '2px 2px' }}
+            >
+              <span style={{ fontSize: 11.5, fontWeight: 700 }}>▶️ Auto-lanjut Surah Berikutnya</span>
+              <div style={{ width: 38, height: 22, borderRadius: 999, background: autoNextSurah ? 'var(--primary)' : 'var(--border)', display: 'flex', alignItems: 'center', padding: 3, flexShrink: 0 }}>
+                <div style={{ width: 16, height: 16, borderRadius: '50%', background: '#fff', transform: autoNextSurah ? 'translateX(16px)' : 'translateX(0)', transition: 'transform 0.15s ease' }} />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showInSurahSearch && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '10px 14px', borderRadius: 14, background: 'var(--mint-soft)' }}>
+            <div className="input-row" style={{ borderRadius: 999, background: 'var(--card)' }}>
+              <IconSearch style={{ color: 'var(--muted)' }} />
+              <input
+                autoFocus
+                value={inSurahQuery}
+                onChange={(e) => setInSurahQuery(e.target.value)}
+                placeholder={`Cari kata di ${surah.namaLatin}…`}
+              />
+            </div>
+            {inSurahQuery.trim() && inSurahMatches.length === 0 && (
+              <span style={{ fontSize: 11.5, color: 'var(--muted)', textAlign: 'center', padding: '4px 0' }}>
+                Gak ketemu ayat yang cocok di surah ini.
+              </span>
+            )}
+            {inSurahMatches.length > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 260, overflowY: 'auto' }}>
+                {inSurahMatches.map((a) => (
+                  <button
+                    key={a.nomorAyat}
+                    onClick={() => jumpToLocalAyat(a.nomorAyat)}
+                    style={{ textAlign: 'left', padding: '8px 10px', borderRadius: 10, border: 'none', background: 'var(--card)', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 2 }}
+                  >
+                    <span style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--primary)' }}>Ayat {a.nomorAyat}</span>
+                    <span style={{ fontSize: 11.5, color: 'var(--ink)', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                      {a.teksIndonesia}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         )}
 

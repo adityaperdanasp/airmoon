@@ -21,6 +21,10 @@ const PRESERVED_PREFIXES = [
   'airmoon-arabic-font',
   'airmoon-reading-night-mode',
   'airmoon-mushaf-tajwid',
+  'airmoon-auto-next-surah',
+  'airmoon-arabic-font-size',
+  'airmoon-arabic-font',
+  'airmoon-accent-color',
 ];
 
 export function resetAllLocalData() {

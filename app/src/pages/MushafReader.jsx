@@ -11,6 +11,7 @@ import { addFavoriteAyat, removeFavoriteAyat } from '../lib/favoriteAyat';
 import { markPageRead } from '../lib/khatamProgress';
 import { recordPageReadForGoal } from '../lib/readingGoal';
 import { useEscapeKey } from '../lib/useEscapeKey';
+import { useSwipeDismiss } from '../lib/useSwipeDismiss';
 import { useReadingTimeTracker } from '../lib/readingTime';
 import { usePopAnimation } from '../lib/usePopAnimation';
 import { IconBack } from '../components/icons';
@@ -182,6 +183,7 @@ function ActionRow({ icon, label, onClick, disabled }) {
 // screen — Mode Mushaf doesn't need its own separate reciter setting.
 function AyahActionSheet({ verse, chapterName, isBookmarked, onClose, onBookmark }) {
   useEscapeKey(onClose);
+  const { dragY, dragging, handlers } = useSwipeDismiss(onClose);
   const { user } = useAuth();
   const [audioUrl, setAudioUrl] = useState(null);
   const [translation, setTranslation] = useState(null);
@@ -315,7 +317,8 @@ function AyahActionSheet({ verse, chapterName, isBookmarked, onClose, onBookmark
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        style={{ width: '100%', maxWidth: 480, margin: '0 auto', background: 'var(--card)', borderRadius: '20px 20px 0 0', paddingBottom: 12 }}
+        {...handlers}
+        style={{ width: '100%', maxWidth: 480, margin: '0 auto', background: 'var(--card)', borderRadius: '20px 20px 0 0', paddingBottom: 12, transform: `translateY(${dragY}px)`, transition: dragging ? 'none' : 'transform 0.2s ease' }}
       >
         <div style={{ width: 36, height: 4, borderRadius: 999, background: 'var(--border)', margin: '10px auto 12px' }} />
         <div style={{ padding: '0 20px 14px', textAlign: 'center', fontSize: 12.5, fontWeight: 700, color: 'var(--gold-ink)' }}>

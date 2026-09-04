@@ -10,6 +10,7 @@ import EmptyState from '../components/EmptyState';
 import { SkeletonCard } from '../components/Skeleton';
 import ReceiptShareModal from '../components/ReceiptShareModal';
 import { watchSedekahGoal, setSedekahGoal, clearSedekahGoal } from '../lib/donations';
+import PullToRefresh from '../components/PullToRefresh';
 
 const PLEDGE_AMOUNTS = [25000, 50000, 100000];
 const GOAL_AMOUNTS = [100000, 250000, 500000, 1000000];
@@ -279,9 +280,18 @@ export default function Donasi() {
 
   const myTotal = myContributions.reduce((sum, c) => sum + c.amount, 0);
 
+  // Both donations and myContributions are already `onSnapshot`-live —
+  // nothing to actually re-fetch, so this just resolves after a short
+  // delay for the gesture's expected completion feel, same as
+  // Doa.jsx/AyatFavorit.jsx's own delay-only refresh.
+  function refresh() {
+    return new Promise((resolve) => setTimeout(resolve, 400));
+  }
+
   return (
     <div className="screen">
       <div className="screen-content">
+      <PullToRefresh onRefresh={refresh}>
         <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800 }}>Donasi</h1>
 
         <div
@@ -373,6 +383,7 @@ export default function Donasi() {
             )}
           </div>
         )}
+      </PullToRefresh>
       </div>
       <BottomNav />
 

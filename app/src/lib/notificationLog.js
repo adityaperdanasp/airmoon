@@ -133,10 +133,27 @@ export function routeForTag(tag = '') {
   if (tag === 'zakat-fitrah') return '/lainnya/kalkulator-zakat';
   if (tag === 'kutipan-harian') return '/lainnya/kutipan-inspirasi';
   if (tag === 'amalan-belum-selesai') return '/?focus=amalan';
-  if (tag === 'puasa-sunnah') return '/';
+  if (tag === 'puasa-sunnah') return '/lainnya/puasa-sunnah';
   if (tag === 'sedekah-recap') return '/donasi';
   if (tag === 'test-notification') return '/pengaturan';
   if (tag === 'zakat-penghasilan') return '/lainnya/kalkulator-zakat';
   if (tag === 'target-baca') return '/quran';
   return '/jadwal-sholat'; // adzan-* and any unrecognized tag
+}
+
+// Filter Kategori di Notifikasi Center (2026-09-05) — same 5-category
+// split lib/notifPrefs.js's opt-out toggles already use, so "which
+// category is this push" only has to be reasoned about once. Mirrors the
+// exact per-tag category assignment already wired into each backend
+// sender (api/send-prayer-notifications.js, api/check-campaign-deadlines.js,
+// api/broadcast-doa.js, api/_lib/notifyDonorsFunded.js) — keep this in
+// sync if a new tag/category is ever added on either side.
+export function categoryForTag(tag = '') {
+  if (tag.startsWith('doa-')) return 'komunitas';
+  if (tag.startsWith('campaign-funded-')) return 'donasi';
+  if (tag === 'pledge-reminder' || tag === 'sedekah-recap') return 'donasi';
+  if (tag === 'kutipan-harian') return 'konten';
+  if (tag === 'imsak' || tag.startsWith('adzan-')) return 'adzan';
+  if (tag === 'test-notification') return 'lainnya';
+  return 'pengingat'; // zakat-haul, jumat-al-kahf, dzikir-streak, amalan-belum-selesai, puasa-sunnah, zakat-fitrah, zakat-penghasilan, target-baca
 }

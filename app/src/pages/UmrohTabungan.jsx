@@ -18,6 +18,7 @@ export default function UmrohTabungan() {
   const [depositAmount, setDepositAmount] = useState('');
   const [depositNote, setDepositNote] = useState('');
   const [addingDeposit, setAddingDeposit] = useState(false);
+  const [startingSaving, setStartingSaving] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [pendingDeleteDeposit, setPendingDeleteDeposit] = useState(null);
 
@@ -33,9 +34,14 @@ export default function UmrohTabungan() {
   const progressPercent = goalTarget > 0 ? Math.min(100, Math.round((saved / goalTarget) * 100)) : 0;
 
   async function handleStartSaving() {
-    if (!user || targetNum <= 0 || monthsNum <= 0) return;
-    await setUmrohGoal(user.uid, { target: targetNum, months: monthsNum });
-    showToast('Target tabungan umroh dimulai');
+    if (!user || targetNum <= 0 || monthsNum <= 0 || startingSaving) return;
+    setStartingSaving(true);
+    try {
+      await setUmrohGoal(user.uid, { target: targetNum, months: monthsNum });
+      showToast('Target tabungan umroh dimulai');
+    } finally {
+      setStartingSaving(false);
+    }
   }
 
   async function handleAddDeposit(e) {
@@ -155,8 +161,8 @@ export default function UmrohTabungan() {
               </div>
             </div>
 
-            <button className="btn" onClick={handleStartSaving} disabled={!user || targetNum <= 0 || monthsNum <= 0}>
-              Mulai Menabung
+            <button className="btn" onClick={handleStartSaving} disabled={!user || targetNum <= 0 || monthsNum <= 0 || startingSaving}>
+              {startingSaving ? <div className="spinner" style={{ width: 16, height: 16, borderTopColor: 'var(--on-primary)' }} /> : 'Mulai Menabung'}
             </button>
           </div>
         )}

@@ -4,6 +4,8 @@ import { IconMoon, IconBack } from '../components/icons';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { shareText } from '../lib/share';
 import { useToast } from '../context/ToastContext';
+import { loadStarredAnswers, starAnswer, unstarAnswer } from '../lib/starredAnswers';
+import StarredAnswersSheet from '../components/StarredAnswersSheet';
 
 // Filled in after the Vercel deploy — see CLAUDE.md. Absolute URL so this
 // works no matter which host (Firebase or Vercel) serves the frontend.
@@ -54,6 +56,8 @@ export default function AskMe() {
   const { showToast } = useToast();
   const [messages, setMessages] = useState(loadHistory);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [starred, setStarred] = useState(loadStarredAnswers);
+  const [showStarred, setShowStarred] = useState(false);
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -128,6 +132,18 @@ export default function AskMe() {
     }
   }
 
+  function handleToggleStar(index) {
+    const answer = messages[index].content;
+    const existing = starred.find((e) => e.answer === answer);
+    if (existing) {
+      setStarred(unstarAnswer(existing.id));
+      return;
+    }
+    const question = messages[index - 1]?.role === 'user' ? messages[index - 1].content : '';
+    setStarred(starAnswer(question, answer));
+    showToast('Jawaban disimpan.');
+  }
+
   async function handleShareTranscript() {
     const result = await shareText({ text: formatTranscript(messages), title: 'Obrolan dengan Ust. Rewin' });
     if (result === 'copied') showToast('Obrolan disalin ke clipboard.');
@@ -154,6 +170,15 @@ export default function AskMe() {
           <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--on-primary)' }}>Ust. Rewin</span>
           <span style={{ fontSize: 10.5, color: 'var(--on-primary)', opacity: 0.85 }}>Asisten AI seputar Islam</span>
         </div>
+        {starred.length > 0 && (
+          <button
+            onClick={() => setShowStarred(true)}
+            aria-label="Jawaban tersimpan"
+            style={{ background: 'rgba(255,255,255,0.16)', border: 'none', width: 32, height: 32, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--on-primary)', cursor: 'pointer', flexShrink: 0, fontSize: 14 }}
+          >
+            ⭐
+          </button>
+        )}
         {messages.length > 1 && (
           <button
             onClick={handleShareTranscript}
@@ -206,6 +231,15 @@ export default function AskMe() {
             >
               {m.content}
             </div>
+            {m.role === 'assistant' && m !== WELCOME_MESSAGE && !(busy && i === messages.length - 1) && (
+              <button
+                onClick={() => handleToggleStar(i)}
+                aria-label={starred.some((e) => e.answer === m.content) ? 'Hapus dari tersimpan' : 'Simpan jawaban ini'}
+                style={{ flexShrink: 0, alignSelf: 'flex-end', background: 'none', border: 'none', color: starred.some((e) => e.answer === m.content) ? 'var(--gold-ink)' : 'var(--muted-soft)', fontSize: 15, cursor: 'pointer', padding: '4px 2px' }}
+              >
+                {starred.some((e) => e.answer === m.content) ? '⭐' : '☆'}
+              </button>
+            )}
           </div>
         ))}
         {busy && messages[messages.length - 1]?.role === 'user' && (
@@ -276,6 +310,14 @@ export default function AskMe() {
           danger
           onCancel={() => setShowClearConfirm(false)}
           onConfirm={clearHistory}
+        />
+      )}
+
+      {showStarred && (
+        <StarredAnswersSheet
+          entries={starred}
+          onRemove={(id) => setStarred(unstarAnswer(id))}
+          onClose={() => setShowStarred(false)}
         />
       )}
     </div>

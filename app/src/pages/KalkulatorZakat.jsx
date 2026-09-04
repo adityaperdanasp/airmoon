@@ -9,6 +9,11 @@ import ConfirmDialog from '../components/ConfirmDialog';
 import { useToast } from '../context/ToastContext';
 import { PAGE_PHOTOS } from '../data/photos';
 import CountUp from '../components/CountUp';
+import { loadZakatHistory, saveZakatHistoryEntry, deleteZakatHistoryEntry } from '../lib/zakatHistory';
+
+function formatHistoryDate(ts) {
+  return new Date(ts).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+}
 
 function digitsOnly(v) {
   return v.replace(/\D/g, '');
@@ -108,6 +113,19 @@ export default function KalkulatorZakat() {
   useEffect(() => watchZakatHaul(user?.uid, setHaul), [user?.uid]);
   const daysLeft = haul?.startDate ? daysUntilHaulDue(haul.startDate) : null;
 
+  const [zakatHistory, setZakatHistory] = useState(loadZakatHistory);
+  const [showHistory, setShowHistory] = useState(false);
+  const [deleteHistoryId, setDeleteHistoryId] = useState(null);
+
+  function handleSaveHistory() {
+    if (tab === 'penghasilan') {
+      setZakatHistory(saveZakatHistoryEntry('penghasilan', { income: incomeN, needs: needsN }, zakatPenghasilan));
+    } else {
+      setZakatHistory(saveZakatHistoryEntry('maal', { assets: assetsN, goldPrice: goldPriceN }, zakatMaal));
+    }
+    showToast('Perhitungan disimpan ke riwayat.');
+  }
+
   return (
     <div className="screen">
       <div className="screen-content">
@@ -149,6 +167,10 @@ export default function KalkulatorZakat() {
                 2.5% &times; ({formatRupiah(incomeN)} &minus; {formatRupiah(needsN)})
               </span>
             </div>
+
+            <button className="btn-outline" onClick={handleSaveHistory}>
+              📌 Simpan ke Riwayat
+            </button>
 
             {/* Was a dead button — no onClick at all, so tapping it did
                 nothing. No real zakat-payment flow exists in this app
@@ -212,6 +234,10 @@ export default function KalkulatorZakat() {
               </span>
             </div>
 
+            <button className="btn-outline" onClick={handleSaveHistory}>
+              📌 Simpan ke Riwayat
+            </button>
+
             <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: 16 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <span style={{ fontSize: 20, lineHeight: 1 }}>🌙</span>
@@ -262,7 +288,64 @@ export default function KalkulatorZakat() {
             </div>
           </>
         )}
+
+        {zakatHistory.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <button
+              onClick={() => setShowHistory((v) => !v)}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+            >
+              <span className="section-label" style={{ color: 'var(--muted)', fontSize: 11.5, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                Riwayat Perhitungan ({zakatHistory.length})
+              </span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" style={{ transform: showHistory ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s ease' }}>
+                <path d="m6 9 6 6 6-6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+
+            {showHistory && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {zakatHistory.map((e) => (
+                  <div key={e.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '12px 14px', borderRadius: 14, background: 'var(--card)' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+                      <span style={{ fontSize: 11.5, fontWeight: 700 }}>
+                        {e.type === 'penghasilan' ? 'Zakat Penghasilan' : 'Zakat Maal'} &middot; {formatHistoryDate(e.at)}
+                      </span>
+                      <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--primary)' }}>{formatRupiah(e.amount)}</span>
+                      <span style={{ fontSize: 10, color: 'var(--muted)' }}>
+                        {e.type === 'penghasilan'
+                          ? `Penghasilan ${formatRupiah(e.inputs.income)} · Kebutuhan ${formatRupiah(e.inputs.needs)}`
+                          : `Harta ${formatRupiah(e.inputs.assets)} · Emas ${formatRupiah(e.inputs.goldPrice)}/gr`}
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => setDeleteHistoryId(e.id)}
+                      aria-label="Hapus dari riwayat"
+                      style={{ width: 26, height: 26, borderRadius: '50%', border: 'none', background: 'rgba(0,0,0,0.06)', color: 'var(--muted)', fontSize: 14, cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
+
+      {deleteHistoryId && (
+        <ConfirmDialog
+          title="Hapus dari riwayat?"
+          message="Catatan perhitungan zakat ini bakal dihapus dari riwayat di HP ini."
+          confirmLabel="Ya, Hapus"
+          danger
+          onCancel={() => setDeleteHistoryId(null)}
+          onConfirm={() => {
+            setZakatHistory(deleteZakatHistoryEntry(deleteHistoryId));
+            setDeleteHistoryId(null);
+          }}
+        />
+      )}
 
       {showHaulResetConfirm && (
         <ConfirmDialog

@@ -1,5 +1,6 @@
 import Portal from './Portal';
 import { useEscapeKey } from '../lib/useEscapeKey';
+import { useSwipeDismiss } from '../lib/useSwipeDismiss';
 
 // A shared bottom sheet for tafsir text, used by both SurahReader.jsx
 // (its own toolbar button) and MushafReader.jsx's AyahActionSheet (a new
@@ -8,6 +9,7 @@ import { useEscapeKey } from '../lib/useEscapeKey';
 // without fighting it for paint order.
 export default function TafsirSheet({ title, loading, text, onClose }) {
   useEscapeKey(onClose);
+  const { dragY, dragging, handlers } = useSwipeDismiss(onClose);
   return (
     <Portal>
       <div
@@ -16,6 +18,7 @@ export default function TafsirSheet({ title, loading, text, onClose }) {
       >
         <div
           onClick={(e) => e.stopPropagation()}
+          {...handlers}
           style={{
             width: '100%',
             maxWidth: 480,
@@ -25,6 +28,8 @@ export default function TafsirSheet({ title, loading, text, onClose }) {
             flexDirection: 'column',
             background: 'var(--card)',
             borderRadius: '20px 20px 0 0',
+            transform: `translateY(${dragY}px)`,
+            transition: dragging ? 'none' : 'transform 0.2s ease',
           }}
         >
           <div style={{ width: 36, height: 4, borderRadius: 999, background: 'var(--border)', margin: '10px auto 4px', flexShrink: 0 }} />

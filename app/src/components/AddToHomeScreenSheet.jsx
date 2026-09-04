@@ -1,5 +1,6 @@
 import Portal from './Portal';
 import { useEscapeKey } from '../lib/useEscapeKey';
+import { useSwipeDismiss } from '../lib/useSwipeDismiss';
 
 // iOS Safari has no API to trigger "Add to Home Screen" programmatically —
 // the whole flow only exists behind the Share sheet, which JS can't open.
@@ -11,13 +12,15 @@ import { useEscapeKey } from '../lib/useEscapeKey';
 // not just repeating the one-line hint that was already there.
 export default function AddToHomeScreenSheet({ onClose }) {
   useEscapeKey(onClose);
+  const { dragY, dragging, handlers } = useSwipeDismiss(onClose);
 
   return (
     <Portal>
       <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 50, display: 'flex', alignItems: 'flex-end' }}>
         <div
           onClick={(e) => e.stopPropagation()}
-          style={{ width: '100%', maxWidth: 480, margin: '0 auto', background: 'var(--card)', borderRadius: '20px 20px 0 0', padding: '0 20px 24px' }}
+          {...handlers}
+          style={{ width: '100%', maxWidth: 480, margin: '0 auto', background: 'var(--card)', borderRadius: '20px 20px 0 0', padding: '0 20px 24px', transform: `translateY(${dragY}px)`, transition: dragging ? 'none' : 'transform 0.2s ease' }}
         >
           <div style={{ width: 36, height: 4, borderRadius: 999, background: 'var(--border)', margin: '10px auto 16px' }} />
           <span style={{ fontSize: 15, fontWeight: 800, display: 'block', marginBottom: 4 }}>Pasang airmoon di Layar Utama</span>

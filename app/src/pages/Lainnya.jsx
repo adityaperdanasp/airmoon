@@ -23,6 +23,7 @@ import {
   InheritanceScaleIcon,
   WhatsNewIcon,
   HistoryBookIcon,
+  PuasaSunnahIcon,
 } from '../components/serviceIcons';
 
 // All hand-drawn gradient icons now (see serviceIcons.jsx) — this grid
@@ -49,6 +50,7 @@ const ITEMS = [
   { to: '/lainnya/kalkulator-waris', label: 'Kalkulator Waris', bg: 'var(--peach)', node: <InheritanceScaleIcon size={30} /> },
   { to: '/yang-baru', label: 'Yang Baru', bg: 'var(--blue-gray)', node: <WhatsNewIcon size={30} /> },
   { to: '/lainnya/sejarah-islam', label: 'Sejarah Islam', bg: 'var(--cream)', node: <HistoryBookIcon size={30} /> },
+  { to: '/lainnya/puasa-sunnah', label: 'Puasa Sunnah', bg: 'var(--mint)', node: <PuasaSunnahIcon size={30} /> },
 ];
 
 export default function Lainnya() {

@@ -9,9 +9,12 @@
 // document.body — see Portal.jsx's own comment for why.
 import Portal from './Portal';
 import { useEscapeKey } from '../lib/useEscapeKey';
+import { useSwipeDismiss } from '../lib/useSwipeDismiss';
+import SheetDragHandle from './SheetDragHandle';
 
 export default function NotificationPrimer({ onConfirm, onCancel }) {
   useEscapeKey(onCancel);
+  const { dragY, dragging, handlers } = useSwipeDismiss(onCancel);
   return (
     <Portal>
     <div
@@ -28,20 +31,24 @@ export default function NotificationPrimer({ onConfirm, onCancel }) {
     >
       <div
         onClick={(e) => e.stopPropagation()}
+        {...handlers}
         style={{
           width: '100%',
           maxWidth: 480,
           background: 'var(--bg)',
           borderTopLeftRadius: 24,
           borderTopRightRadius: 24,
-          padding: '28px 24px 32px',
+          padding: '10px 24px 32px',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           gap: 14,
           textAlign: 'center',
+          transform: `translateY(${dragY}px)`,
+          transition: dragging ? 'none' : 'transform 0.2s ease',
         }}
       >
+        <SheetDragHandle />
         <div
           style={{
             width: 60,

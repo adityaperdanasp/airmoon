@@ -38,6 +38,14 @@ service cloud.firestore {
       match /umrohDeposits/{depositId} {
         allow read, write: if request.auth != null && request.auth.uid == uid;
       }
+
+      // Catatan Puasa Sunnah — one doc per fasted date, id = "YYYY-MM-DD".
+      // Pairs with the existing push reminder in
+      // check-campaign-deadlines.js (Senin/Kamis, Ayyamul Bidh), which
+      // only ever nudged without a way to actually record the fast.
+      match /puasaSunnah/{dateKey} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+      }
     }
 
     // Donation campaigns (e.g. "Listrik Masjid Al-Ikhlas") are public read

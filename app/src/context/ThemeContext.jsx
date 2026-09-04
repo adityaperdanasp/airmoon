@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react';
+import { loadAccentColor, applyAccentColor } from '../lib/accentColor';
 
 const ThemeContext = createContext(null);
 const STORAGE_KEY = 'airmoon-theme';
@@ -17,6 +18,14 @@ export function ThemeProvider({ children }) {
   // already expect — they never need to know about 'system' at all.
   const [preference, setPreference] = useState(() => localStorage.getItem(STORAGE_KEY) || 'system');
   const [systemDark, setSystemDark] = useState(systemPrefersDark);
+
+  // Pilihan Warna Aksen — applied once here at app boot (this provider
+  // wraps the whole app, so this runs exactly once regardless of which
+  // page someone lands on first) rather than only when visiting
+  // Pengaturan, which is where it's actually chosen.
+  useEffect(() => {
+    applyAccentColor(loadAccentColor());
+  }, []);
 
   useEffect(() => {
     const mq = window.matchMedia?.('(prefers-color-scheme: dark)');

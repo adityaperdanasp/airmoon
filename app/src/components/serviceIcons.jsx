@@ -591,3 +591,28 @@ export function HistoryBookIcon({ size = 42 }) {
     </svg>
   );
 }
+
+// A plate with a slashed-through line — the plainest, least ambiguous way
+// to represent "fasting" (not eating) rather than reaching for a crescent
+// moon again, which this app already uses heavily for Ramadan/Hijri
+// features and would read as one more of those rather than something
+// distinct.
+export function PuasaSunnahIcon({ size = 42 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 42 42" fill="none">
+      <defs>
+        <linearGradient id="puasaPlateG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#fdf8ec" />
+          <stop offset="1" stopColor="#f0e3bf" />
+        </linearGradient>
+        <linearGradient id="puasaSlashG" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#2fa190" />
+          <stop offset="1" stopColor="#0a4a43" />
+        </linearGradient>
+      </defs>
+      <circle cx="21" cy="21" r="14" fill="url(#puasaPlateG)" />
+      <circle cx="21" cy="21" r="8.5" fill="none" stroke="#c9a75c" strokeWidth="1.4" />
+      <line x1="10" y1="32" x2="32" y2="10" stroke="url(#puasaSlashG)" strokeWidth="3" strokeLinecap="round" />
+    </svg>
+  );
+}

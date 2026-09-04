@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { fetchSurahDetail } from '../lib/quranApi';
 import { useEscapeKey } from '../lib/useEscapeKey';
+import { useSwipeDismiss } from '../lib/useSwipeDismiss';
 import Portal from './Portal';
 
 function getReciterId() {
@@ -19,6 +20,7 @@ function getReciterId() {
 export default function SurahPreviewSheet({ surah, onClose }) {
   const navigate = useNavigate();
   useEscapeKey(onClose);
+  const { dragY, dragging, handlers } = useSwipeDismiss(onClose);
   const [detail, setDetail] = useState(null);
   const [playing, setPlaying] = useState(false);
   const audioRef = useRef(null);
@@ -57,7 +59,10 @@ export default function SurahPreviewSheet({ surah, onClose }) {
       <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 50, display: 'flex', alignItems: 'flex-end' }}>
         <div
           onClick={(e) => e.stopPropagation()}
-          style={{ width: '100%', maxWidth: 480, margin: '0 auto', maxHeight: '75vh', overflowY: 'auto', background: 'var(--card)', borderRadius: '20px 20px 0 0', padding: '0 0 20px' }}
+          onTouchStart={(e) => e.currentTarget.scrollTop === 0 && handlers.onTouchStart(e)}
+          onTouchMove={handlers.onTouchMove}
+          onTouchEnd={handlers.onTouchEnd}
+          style={{ width: '100%', maxWidth: 480, margin: '0 auto', maxHeight: '75vh', overflowY: 'auto', background: 'var(--card)', borderRadius: '20px 20px 0 0', padding: '0 0 20px', transform: `translateY(${dragY}px)`, transition: dragging ? 'none' : 'transform 0.2s ease' }}
         >
           <div style={{ width: 36, height: 4, borderRadius: 999, background: 'var(--border)', margin: '10px auto 12px' }} />
 
