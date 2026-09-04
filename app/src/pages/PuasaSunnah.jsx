@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { useToast } from '../context/ToastContext';
 import { watchPuasaSunnahLog, markPuasaSunnah, unmarkPuasaSunnah, todayDateKey } from '../lib/puasaSunnahLog';
 import { highestPuasaTier } from '../lib/badges';
@@ -7,6 +8,7 @@ import PageHeaderPhoto from '../components/PageHeaderPhoto';
 import { PAGE_PHOTOS } from '../data/photos';
 import Confetti from '../components/Confetti';
 import { hapticTick, hapticSuccess } from '../lib/haptics';
+import PuasaSunnahShareModal from '../components/PuasaSunnahShareModal';
 
 const MONTH_FMT = new Intl.DateTimeFormat('id-ID', { month: 'long', year: 'numeric' });
 const DAY_FMT = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -85,10 +87,12 @@ function PuasaCalendar({ dateSet, viewMonth, onPrevMonth, onNextMonth, today, on
 // one" precedent as Kalkulator Waris.
 export default function PuasaSunnah() {
   const { user } = useAuth();
+  const { theme } = useTheme();
   const { showToast } = useToast();
   const [dates, setDates] = useState(null);
   const [marking, setMarking] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
   const [viewMonth, setViewMonth] = useState(() => {
     const d = new Date();
     return new Date(d.getFullYear(), d.getMonth(), 1);
@@ -136,7 +140,21 @@ export default function PuasaSunnah() {
   return (
     <div className="screen">
       <div className="screen-content">
-        <PageHeaderPhoto title="Puasa Sunnah" photo={PAGE_PHOTOS.zakat} subtitle="Senin/Kamis & Ayyamul Bidh" />
+        <PageHeaderPhoto
+          title="Puasa Sunnah"
+          photo={PAGE_PHOTOS.zakat}
+          subtitle="Senin/Kamis & Ayyamul Bidh"
+          right={
+            dates !== null && (
+              <button className="icon-btn" onClick={() => setShowShareModal(true)} aria-label="Bagikan progress" title="Bagikan progress">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <circle cx="18" cy="5" r="3" strokeWidth="1.6" /><circle cx="6" cy="12" r="3" strokeWidth="1.6" /><circle cx="18" cy="19" r="3" strokeWidth="1.6" />
+                  <path d="M8.6 10.5 15.4 6.5M8.6 13.5 15.4 17.5" strokeWidth="1.6" />
+                </svg>
+              </button>
+            )
+          }
+        />
 
         <div style={{ borderRadius: 20, padding: 22, textAlign: 'center', background: 'linear-gradient(135deg, var(--primary), var(--primary-dark))' }}>
           <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--accent)' }}>
@@ -210,6 +228,17 @@ export default function PuasaSunnah() {
           />
         )}
       </div>
+
+      {showShareModal && (
+        <PuasaSunnahShareModal
+          totalCount={totalCount}
+          thisMonthCount={thisMonthCount}
+          monthLabel={MONTH_FMT.format(new Date())}
+          badgeLabel={badgeTier ? `${badgeTier.icon} ${badgeTier.label}` : ''}
+          theme={theme}
+          onClose={() => setShowShareModal(false)}
+        />
+      )}
     </div>
   );
 }

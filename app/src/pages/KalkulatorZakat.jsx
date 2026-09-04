@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { calcZakatPenghasilan, calcZakatMaal, calcZakatFitrah, formatRupiah, NISAB_GOLD_GRAMS } from '../lib/zakat';
 import { useLang } from '../context/LangContext';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { watchZakatHaul, startZakatHaul, clearZakatHaul, daysUntilHaulDue } from '../lib/zakatHaul';
 import { watchZakatPenghasilanReminder, setZakatPenghasilanReminder } from '../lib/zakatPenghasilanReminder';
 import PageHeaderPhoto from '../components/PageHeaderPhoto';
@@ -10,6 +11,7 @@ import { useToast } from '../context/ToastContext';
 import { PAGE_PHOTOS } from '../data/photos';
 import CountUp from '../components/CountUp';
 import { loadZakatHistory, saveZakatHistoryEntry, deleteZakatHistoryEntry } from '../lib/zakatHistory';
+import ZakatShareModal from '../components/ZakatShareModal';
 
 function formatHistoryDate(ts) {
   return new Date(ts).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -87,9 +89,11 @@ function TabBtn({ active, onClick, children }) {
 export default function KalkulatorZakat() {
   const { t } = useLang();
   const { user } = useAuth();
+  const { theme } = useTheme();
   const { showToast } = useToast();
   const [tab, setTab] = useState('penghasilan');
   const [showHaulResetConfirm, setShowHaulResetConfirm] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   // Zakat Penghasilan
   const [income, setIncome] = useState('15000000');
@@ -130,6 +134,8 @@ export default function KalkulatorZakat() {
   const [zakatHistory, setZakatHistory] = useState(loadZakatHistory);
   const [showHistory, setShowHistory] = useState(false);
   const [deleteHistoryId, setDeleteHistoryId] = useState(null);
+  const [historyFilter, setHistoryFilter] = useState('semua');
+  const filteredZakatHistory = historyFilter === 'semua' ? zakatHistory : zakatHistory.filter((e) => e.type === historyFilter);
 
   function handleSaveHistory() {
     if (tab === 'penghasilan') {
@@ -140,6 +146,28 @@ export default function KalkulatorZakat() {
       setZakatHistory(saveZakatHistoryEntry('fitrah', { jumlahJiwa: jumlahJiwaN, ricePricePerKg: ricePricePerKgN }, zakatFitrah));
     }
     showToast('Perhitungan disimpan ke riwayat.');
+  }
+
+  function currentShareData() {
+    if (tab === 'penghasilan') {
+      return {
+        typeLabel: 'Zakat Penghasilan',
+        amountLabel: formatRupiah(zakatPenghasilan),
+        formulaLabel: `2.5% × (${formatRupiah(incomeN)} − ${formatRupiah(needsN)})`,
+      };
+    }
+    if (tab === 'maal') {
+      return {
+        typeLabel: 'Zakat Maal',
+        amountLabel: formatRupiah(zakatMaal),
+        formulaLabel: reachesNisab ? `2.5% × ${formatRupiah(assetsN)}` : 'Belum mencapai nisab',
+      };
+    }
+    return {
+      typeLabel: 'Zakat Fitrah',
+      amountLabel: formatRupiah(zakatFitrah),
+      formulaLabel: `${RICE_KG_PER_PERSON} kg × ${formatRupiah(ricePricePerKgN)} × ${jumlahJiwaN} jiwa`,
+    };
   }
 
   return (
@@ -187,9 +215,14 @@ export default function KalkulatorZakat() {
               </span>
             </div>
 
-            <button className="btn-outline" onClick={handleSaveHistory}>
-              📌 Simpan ke Riwayat
-            </button>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button className="btn-outline" style={{ flex: 1 }} onClick={handleSaveHistory}>
+                📌 Simpan ke Riwayat
+              </button>
+              <button className="btn-outline" style={{ flex: 1 }} onClick={() => setShowShareModal(true)}>
+                Bagikan
+              </button>
+            </div>
 
             {/* Was a dead button — no onClick at all, so tapping it did
                 nothing. No real zakat-payment flow exists in this app
@@ -253,9 +286,14 @@ export default function KalkulatorZakat() {
               </span>
             </div>
 
-            <button className="btn-outline" onClick={handleSaveHistory}>
-              📌 Simpan ke Riwayat
-            </button>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button className="btn-outline" style={{ flex: 1 }} onClick={handleSaveHistory}>
+                📌 Simpan ke Riwayat
+              </button>
+              <button className="btn-outline" style={{ flex: 1 }} onClick={() => setShowShareModal(true)}>
+                Bagikan
+              </button>
+            </div>
 
             <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: 16 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -334,9 +372,14 @@ export default function KalkulatorZakat() {
               </span>
             </div>
 
-            <button className="btn-outline" onClick={handleSaveHistory}>
-              📌 Simpan ke Riwayat
-            </button>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button className="btn-outline" style={{ flex: 1 }} onClick={handleSaveHistory}>
+                📌 Simpan ke Riwayat
+              </button>
+              <button className="btn-outline" style={{ flex: 1 }} onClick={() => setShowShareModal(true)}>
+                Bagikan
+              </button>
+            </div>
 
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '13px 14px', borderRadius: 14, background: 'var(--card)' }}>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" style={{ flexShrink: 0, marginTop: 1 }}>
@@ -363,7 +406,26 @@ export default function KalkulatorZakat() {
 
             {showHistory && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {zakatHistory.map((e) => (
+                <div style={{ display: 'flex', gap: 6 }}>
+                  {[
+                    { key: 'semua', label: 'Semua' },
+                    { key: 'penghasilan', label: 'Penghasilan' },
+                    { key: 'maal', label: 'Maal' },
+                    { key: 'fitrah', label: 'Fitrah' },
+                  ].map((f) => (
+                    <button
+                      key={f.key}
+                      onClick={() => setHistoryFilter(f.key)}
+                      style={{ padding: '6px 12px', borderRadius: 999, border: 'none', fontSize: 11, fontWeight: 700, cursor: 'pointer', color: historyFilter === f.key ? 'var(--on-primary)' : 'var(--ink)', background: historyFilter === f.key ? 'var(--primary)' : 'var(--mint-soft)' }}
+                    >
+                      {f.label}
+                    </button>
+                  ))}
+                </div>
+                {filteredZakatHistory.length === 0 && (
+                  <span style={{ fontSize: 11, color: 'var(--muted)' }}>Belum ada riwayat di kategori ini.</span>
+                )}
+                {filteredZakatHistory.map((e) => (
                   <div key={e.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '12px 14px', borderRadius: 14, background: 'var(--card)' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
                       <span style={{ fontSize: 11.5, fontWeight: 700 }}>
@@ -404,6 +466,14 @@ export default function KalkulatorZakat() {
             setZakatHistory(deleteZakatHistoryEntry(deleteHistoryId));
             setDeleteHistoryId(null);
           }}
+        />
+      )}
+
+      {showShareModal && (
+        <ZakatShareModal
+          {...currentShareData()}
+          theme={theme}
+          onClose={() => setShowShareModal(false)}
         />
       )}
 

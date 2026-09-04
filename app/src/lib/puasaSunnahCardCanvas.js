@@ -1,9 +1,6 @@
-// Draws a shareable "bukti sedekah" (donation receipt) card — same plain
-// Canvas 2D approach as lib/ayatCardCanvas.js/lib/amalanCardCanvas.js
-// (photo backdrop + brand overlay + wrapped text), applied to a real
-// contribution record from Donasi.jsx's "Donasi Kamu" list. Gives someone
-// a shareable/keepable proof of their own sedekah instead of it only ever
-// living as a row in an in-app list.
+// Draws a shareable Puasa Sunnah progress card — same plain Canvas 2D
+// approach as lib/tasbihCardCanvas.js (big number + label), applied to
+// the lifetime + this-month puasa sunnah tally from pages/PuasaSunnah.jsx.
 import { DECORATIVE_PHOTOS_LIGHT, DECORATIVE_PHOTOS_DARK } from '../data/photos';
 import { drawAirmoonBrand } from './drawAirmoonLogo';
 
@@ -12,8 +9,8 @@ const H = 1350;
 
 async function ensureFontsReady() {
   await Promise.all([
-    document.fonts.load('800 60px Poppins'),
-    document.fonts.load('700 36px Poppins'),
+    document.fonts.load('800 150px Poppins'),
+    document.fonts.load('700 30px Poppins'),
     document.fonts.load('400 30px Poppins'),
     document.fonts.load("600 60px 'Fredoka'"),
   ]);
@@ -35,24 +32,7 @@ function drawImageCover(ctx, img) {
   ctx.drawImage(img, (W - w) / 2, (H - h) / 2, w, h);
 }
 
-function wrapLines(ctx, text, maxWidth) {
-  const words = text.split(' ');
-  const lines = [];
-  let line = '';
-  for (const word of words) {
-    const test = line ? `${line} ${word}` : word;
-    if (ctx.measureText(test).width > maxWidth && line) {
-      lines.push(line);
-      line = word;
-    } else {
-      line = test;
-    }
-  }
-  if (line) lines.push(line);
-  return lines;
-}
-
-export async function drawReceiptCard(canvas, { amountLabel, donationTitle, dateLabel, theme = 'light' }) {
+export async function drawPuasaSunnahCard(canvas, { totalCount, thisMonthCount, monthLabel, badgeLabel, theme = 'light' }) {
   canvas.width = W;
   canvas.height = H;
   const ctx = canvas.getContext('2d');
@@ -61,7 +41,7 @@ export async function drawReceiptCard(canvas, { amountLabel, donationTitle, date
 
   const pool = theme === 'dark' ? DECORATIVE_PHOTOS_DARK : DECORATIVE_PHOTOS_LIGHT;
   const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
-  const photoSrc = pool[(dayOfYear + 7) % pool.length]; // offset from amalanCardCanvas's index so the two don't always match on the same day
+  const photoSrc = pool[(dayOfYear + 5) % pool.length];
 
   try {
     const img = await loadImage(photoSrc);
@@ -93,26 +73,21 @@ export async function drawReceiptCard(canvas, { amountLabel, donationTitle, date
 
   ctx.textAlign = 'center';
 
-  ctx.font = '700 32px Poppins, sans-serif';
+  ctx.font = '700 30px Poppins, sans-serif';
   ctx.fillStyle = '#e8b84b';
-  ctx.fillText('BUKTI SEDEKAH', W / 2, H * 0.34);
+  ctx.fillText('PUASA SUNNAH', W / 2, H * 0.32);
 
-  ctx.font = '800 100px Poppins, sans-serif';
+  ctx.font = '800 160px Poppins, sans-serif';
   ctx.fillStyle = '#ffffff';
-  ctx.fillText(amountLabel, W / 2, H * 0.44);
+  ctx.fillText(String(totalCount), W / 2, H * 0.46);
 
-  ctx.font = '400 32px Poppins, sans-serif';
+  ctx.font = '400 34px Poppins, sans-serif';
   ctx.fillStyle = 'rgba(244,240,230,0.9)';
-  const titleLines = wrapLines(ctx, `untuk ${donationTitle}`, W - 220);
-  let y = H * 0.5;
-  for (const line of titleLines) {
-    ctx.fillText(line, W / 2, y);
-    y += 44;
-  }
+  ctx.fillText('kali sepanjang waktu', W / 2, H * 0.51);
 
-  ctx.font = '600 26px Poppins, sans-serif';
-  ctx.fillStyle = 'rgba(244,240,230,0.75)';
-  ctx.fillText(dateLabel, W / 2, H - 150);
+  ctx.font = '600 30px Poppins, sans-serif';
+  ctx.fillStyle = 'rgba(244,240,230,0.85)';
+  ctx.fillText(`${thisMonthCount}x bulan ${monthLabel}${badgeLabel ? ` · ${badgeLabel}` : ''}`, W / 2, H * 0.58);
 
   ctx.font = '800 40px Poppins, sans-serif';
   ctx.fillStyle = '#ffffff';

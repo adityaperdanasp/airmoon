@@ -61,6 +61,24 @@ export default function NotifikasiCenter() {
     setShowClearConfirm(false);
   }
 
+  // Ekspor Riwayat Notifikasi ke Teks — a plain human-readable .txt, same
+  // "readable export, separate from the JSON account backup" reasoning as
+  // AyatFavorit.jsx's own handleExportText. Exports whatever's currently
+  // filtered/searched, not always the whole log, so someone can grab just
+  // one category's history if that's what they searched for.
+  function handleExportText() {
+    const rows = filteredLog || [];
+    const lines = rows.map((n) => `[${dateFmt.format(new Date(n.receivedAt))}] ${n.title}${n.body ? `\n${n.body}` : ''}`);
+    const text = lines.join('\n\n') || 'Belum ada notifikasi.';
+    const blob = new Blob([text], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'riwayat-notifikasi-airmoon.txt';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <div className="screen">
       <div className="screen-content">
@@ -70,16 +88,29 @@ export default function NotifikasiCenter() {
           photo={PAGE_PHOTOS.notifikasi}
           right={
             log?.length > 0 && (
-              <button
-                onClick={() => setShowClearConfirm(true)}
-                className="icon-btn"
-                aria-label="Hapus semua notifikasi"
-                style={{ background: 'rgba(255,255,255,0.22)', color: '#fff' }}
-              >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <path d="M6 7h12M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m2 0-.8 12.1a2 2 0 0 1-2 1.9H9.8a2 2 0 0 1-2-1.9L7 7" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </button>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <button
+                  onClick={handleExportText}
+                  className="icon-btn"
+                  aria-label="Ekspor riwayat ke teks"
+                  title="Ekspor riwayat ke teks"
+                  style={{ background: 'rgba(255,255,255,0.22)', color: '#fff' }}
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M12 3v13m0 0-4-4m4 4 4-4M5 19h14" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </button>
+                <button
+                  onClick={() => setShowClearConfirm(true)}
+                  className="icon-btn"
+                  aria-label="Hapus semua notifikasi"
+                  style={{ background: 'rgba(255,255,255,0.22)', color: '#fff' }}
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M6 7h12M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m2 0-.8 12.1a2 2 0 0 1-2 1.9H9.8a2 2 0 0 1-2-1.9L7 7" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </button>
+              </div>
             )
           }
         />

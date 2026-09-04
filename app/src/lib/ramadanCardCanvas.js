@@ -3,6 +3,7 @@
 // number), applied to Ramadan Mode's puasa/tarawih tracker, which had no
 // share option at all despite already tracking both all month.
 import { DECORATIVE_PHOTOS_LIGHT, DECORATIVE_PHOTOS_DARK } from '../data/photos';
+import { drawAirmoonBrand } from './drawAirmoonLogo';
 
 const W = 1080;
 const H = 1350;
@@ -12,6 +13,7 @@ async function ensureFontsReady() {
     document.fonts.load('800 90px Poppins'),
     document.fonts.load('700 34px Poppins'),
     document.fonts.load('600 28px Poppins'),
+    document.fonts.load("600 60px 'Fredoka'"),
   ]);
 }
 
@@ -66,6 +68,8 @@ export async function drawRamadanCard(canvas, { puasaCount, tarawihCount, monthD
   ctx.strokeStyle = 'rgba(232,184,75,0.55)';
   ctx.lineWidth = 3;
   ctx.strokeRect(36, 36, W - 72, H - 72);
+
+  drawAirmoonBrand(ctx, { centerX: W / 2, y: 96, size: 52 });
 
   ctx.textAlign = 'center';
 

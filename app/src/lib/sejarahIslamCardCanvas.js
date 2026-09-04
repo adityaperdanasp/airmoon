@@ -1,9 +1,7 @@
-// Draws a shareable "bukti sedekah" (donation receipt) card — same plain
-// Canvas 2D approach as lib/ayatCardCanvas.js/lib/amalanCardCanvas.js
-// (photo backdrop + brand overlay + wrapped text), applied to a real
-// contribution record from Donasi.jsx's "Donasi Kamu" list. Gives someone
-// a shareable/keepable proof of their own sedekah instead of it only ever
-// living as a row in an in-app list.
+// Draws a shareable "Sejarah Islam" card — same plain Canvas 2D shell as
+// the app's other share cards. Sejarah Islam previously only had a
+// text-only "Bagikan" (navigator.share with a plain string), despite the
+// page itself already rendering a photo-backed card visually.
 import { DECORATIVE_PHOTOS_LIGHT, DECORATIVE_PHOTOS_DARK } from '../data/photos';
 import { drawAirmoonBrand } from './drawAirmoonLogo';
 
@@ -12,9 +10,9 @@ const H = 1350;
 
 async function ensureFontsReady() {
   await Promise.all([
-    document.fonts.load('800 60px Poppins'),
-    document.fonts.load('700 36px Poppins'),
-    document.fonts.load('400 30px Poppins'),
+    document.fonts.load('800 44px Poppins'),
+    document.fonts.load('700 28px Poppins'),
+    document.fonts.load('400 32px Poppins'),
     document.fonts.load("600 60px 'Fredoka'"),
   ]);
 }
@@ -52,16 +50,18 @@ function wrapLines(ctx, text, maxWidth) {
   return lines;
 }
 
-export async function drawReceiptCard(canvas, { amountLabel, donationTitle, dateLabel, theme = 'light' }) {
+export async function drawSejarahIslamCard(canvas, { title, year, text, photoIndex, theme = 'light' }) {
   canvas.width = W;
   canvas.height = H;
   const ctx = canvas.getContext('2d');
 
   await ensureFontsReady();
 
+  // Same photo pool + deterministic-pick-by-index reasoning as the
+  // on-screen card (SejarahIslam.jsx's own `photoPool[idx % ...]`) — this
+  // card should show the exact same backdrop the reader was just looking at.
   const pool = theme === 'dark' ? DECORATIVE_PHOTOS_DARK : DECORATIVE_PHOTOS_LIGHT;
-  const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
-  const photoSrc = pool[(dayOfYear + 7) % pool.length]; // offset from amalanCardCanvas's index so the two don't always match on the same day
+  const photoSrc = pool[photoIndex % pool.length];
 
   try {
     const img = await loadImage(photoSrc);
@@ -79,8 +79,8 @@ export async function drawReceiptCard(canvas, { amountLabel, donationTitle, date
     overlay.addColorStop(0, 'rgba(11,12,10,0.6)');
     overlay.addColorStop(1, 'rgba(11,12,10,0.92)');
   } else {
-    overlay.addColorStop(0, 'rgba(13,77,71,0.65)');
-    overlay.addColorStop(1, 'rgba(10,54,48,0.9)');
+    overlay.addColorStop(0, 'rgba(13,77,71,0.68)');
+    overlay.addColorStop(1, 'rgba(13,77,71,0.9)');
   }
   ctx.fillStyle = overlay;
   ctx.fillRect(0, 0, W, H);
@@ -93,28 +93,29 @@ export async function drawReceiptCard(canvas, { amountLabel, donationTitle, date
 
   ctx.textAlign = 'center';
 
-  ctx.font = '700 32px Poppins, sans-serif';
+  ctx.font = '700 28px Poppins, sans-serif';
   ctx.fillStyle = '#e8b84b';
-  ctx.fillText('BUKTI SEDEKAH', W / 2, H * 0.34);
+  ctx.fillText(year.toUpperCase(), W / 2, H * 0.34);
 
-  ctx.font = '800 100px Poppins, sans-serif';
+  ctx.font = '800 44px Poppins, sans-serif';
   ctx.fillStyle = '#ffffff';
-  ctx.fillText(amountLabel, W / 2, H * 0.44);
-
-  ctx.font = '400 32px Poppins, sans-serif';
-  ctx.fillStyle = 'rgba(244,240,230,0.9)';
-  const titleLines = wrapLines(ctx, `untuk ${donationTitle}`, W - 220);
-  let y = H * 0.5;
+  const titleLines = wrapLines(ctx, title, W - 200);
+  let y = H * 0.4;
   for (const line of titleLines) {
     ctx.fillText(line, W / 2, y);
-    y += 44;
+    y += 56;
   }
 
-  ctx.font = '600 26px Poppins, sans-serif';
-  ctx.fillStyle = 'rgba(244,240,230,0.75)';
-  ctx.fillText(dateLabel, W / 2, H - 150);
+  y += 20;
+  ctx.font = '400 32px Poppins, sans-serif';
+  ctx.fillStyle = 'rgba(244,240,230,0.9)';
+  const textLines = wrapLines(ctx, text, W - 220);
+  for (const line of textLines) {
+    ctx.fillText(line, W / 2, y);
+    y += 46;
+  }
 
-  ctx.font = '800 40px Poppins, sans-serif';
-  ctx.fillStyle = '#ffffff';
-  ctx.fillText('airmoon', W / 2, H - 90);
+  ctx.font = '700 26px Poppins, sans-serif';
+  ctx.fillStyle = 'rgba(244,240,230,0.7)';
+  ctx.fillText('Hari Ini dalam Sejarah Islam', W / 2, H - 90);
 }

@@ -3,7 +3,7 @@ import { useTheme } from '../context/ThemeContext';
 import { ISLAMIC_HISTORY, todaysHistoryIndex } from '../data/islamicHistory';
 import { DECORATIVE_PHOTOS_LIGHT, DECORATIVE_PHOTOS_DARK } from '../data/photos';
 import TopBar from '../components/TopBar';
-import { shareText } from '../lib/share';
+import SejarahIslamShareModal from '../components/SejarahIslamShareModal';
 
 // "Hari Ini dalam Sejarah Islam" — same day-of-year rotation pattern as
 // KutipanInspirasi.jsx, but fully local content (data/islamicHistory.js
@@ -13,15 +13,9 @@ export default function SejarahIslam() {
   const { theme } = useTheme();
   const [idx, setIdx] = useState(todaysHistoryIndex());
   const [browsing, setBrowsing] = useState(false);
+  const [showCardModal, setShowCardModal] = useState(false);
   const entry = ISLAMIC_HISTORY[idx];
   const photoPool = theme === 'dark' ? DECORATIVE_PHOTOS_DARK : DECORATIVE_PHOTOS_LIGHT;
-
-  async function handleShare() {
-    await shareText({
-      text: `${entry.title} (${entry.year})\n\n${entry.text}\n\n— via airmoon`,
-      title: 'Sejarah Islam dari airmoon',
-    });
-  }
 
   return (
     <div className="screen">
@@ -123,11 +117,22 @@ export default function SejarahIslam() {
           <button className="btn-outline" style={{ flex: 1 }} onClick={() => setIdx((i) => (i + 1) % ISLAMIC_HISTORY.length)}>
             Berikutnya
           </button>
-          <button className="btn" style={{ flex: 1 }} onClick={handleShare}>
+          <button className="btn" style={{ flex: 1 }} onClick={() => setShowCardModal(true)}>
             Bagikan
           </button>
         </div>
       </div>
+
+      {showCardModal && (
+        <SejarahIslamShareModal
+          title={entry.title}
+          year={entry.year}
+          text={entry.text}
+          photoIndex={idx}
+          theme={theme}
+          onClose={() => setShowCardModal(false)}
+        />
+      )}
     </div>
   );
 }

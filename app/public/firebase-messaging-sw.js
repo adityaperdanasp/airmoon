@@ -130,6 +130,7 @@ self.addEventListener('notificationclick', (event) => {
   else if (tag === 'zakat-penghasilan') url = '/lainnya/kalkulator-zakat';
   else if (tag === 'target-baca') url = '/quran';
   else if (tag === 'reading-streak') url = '/quran';
+  else if (tag === 'poin-login') url = '/';
   event.waitUntil(clients.openWindow(url));
 });
 

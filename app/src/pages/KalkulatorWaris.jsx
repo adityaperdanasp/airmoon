@@ -71,6 +71,9 @@ export default function KalkulatorWaris() {
   const [scenarioName, setScenarioName] = useState('');
   const [showSaveScenario, setShowSaveScenario] = useState(false);
   const [deleteScenarioId, setDeleteScenarioId] = useState(null);
+  const [showCompare, setShowCompare] = useState(false);
+  const [compareAId, setCompareAId] = useState(null);
+  const [compareBId, setCompareBId] = useState(null);
 
   function applyScenario(s) {
     setHasSuami(s.inputs.hasSuami);
@@ -94,6 +97,23 @@ export default function KalkulatorWaris() {
     ? { results: [], warnings: [] }
     : calcWaris({ hasSuami, jumlahIstri, anakLaki, anakPerempuan, hasAyah, hasIbu, totalHarta: hartaN });
 
+  // Bandingkan 2 Skenario Berdampingan — previously scenarios could only
+  // be applied one at a time, overwriting the form; comparing two meant
+  // manually remembering the first result while looking at the second.
+  // This computes both results fresh from the saved inputs, side by side,
+  // without touching the live form state above at all.
+  function scenarioResult(s) {
+    if (!s) return null;
+    const { hasSuami: hs, jumlahIstri: ji, anakLaki: al, anakPerempuan: ap, hasAyah: ha, hasIbu: hi, harta: h } = s.inputs;
+    const totalHarta = Number(digitsOnly(String(h))) || 0;
+    const noH = !hs && ji === 0 && al === 0 && ap === 0 && !ha && !hi;
+    return noH ? { results: [], warnings: [], totalHarta } : { ...calcWaris({ hasSuami: hs, jumlahIstri: ji, anakLaki: al, anakPerempuan: ap, hasAyah: ha, hasIbu: hi, totalHarta }), totalHarta };
+  }
+  const compareA = scenarios.find((s) => s.id === compareAId);
+  const compareB = scenarios.find((s) => s.id === compareBId);
+  const compareAResult = scenarioResult(compareA);
+  const compareBResult = scenarioResult(compareB);
+
   return (
     <div className="screen">
       <div className="screen-content">
@@ -108,12 +128,22 @@ export default function KalkulatorWaris() {
             <span className="section-label" style={{ color: 'var(--muted)', fontSize: 11.5, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
               Skenario Tersimpan
             </span>
-            <button
-              onClick={() => setShowSaveScenario((v) => !v)}
-              style={{ background: 'none', border: 'none', color: 'var(--primary)', fontSize: 11, fontWeight: 700, cursor: 'pointer', padding: 0 }}
-            >
-              + Simpan Ini
-            </button>
+            <div style={{ display: 'flex', gap: 12 }}>
+              {scenarios.length >= 2 && (
+                <button
+                  onClick={() => setShowCompare((v) => !v)}
+                  style={{ background: 'none', border: 'none', color: 'var(--primary)', fontSize: 11, fontWeight: 700, cursor: 'pointer', padding: 0 }}
+                >
+                  ⇄ Bandingkan
+                </button>
+              )}
+              <button
+                onClick={() => setShowSaveScenario((v) => !v)}
+                style={{ background: 'none', border: 'none', color: 'var(--primary)', fontSize: 11, fontWeight: 700, cursor: 'pointer', padding: 0 }}
+              >
+                + Simpan Ini
+              </button>
+            </div>
           </div>
 
           {showSaveScenario && (
@@ -148,6 +178,54 @@ export default function KalkulatorWaris() {
                   </button>
                 </div>
               ))}
+            </div>
+          )}
+
+          {showCompare && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingTop: 4 }}>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <select
+                  value={compareAId || ''}
+                  onChange={(e) => setCompareAId(e.target.value || null)}
+                  style={{ flex: 1, padding: '9px 10px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--ink)', fontSize: 12 }}
+                >
+                  <option value="">Pilih Skenario A</option>
+                  {scenarios.map((s) => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))}
+                </select>
+                <select
+                  value={compareBId || ''}
+                  onChange={(e) => setCompareBId(e.target.value || null)}
+                  style={{ flex: 1, padding: '9px 10px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--ink)', fontSize: 12 }}
+                >
+                  <option value="">Pilih Skenario B</option>
+                  {scenarios.map((s) => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              {compareA && compareB && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                  {[{ s: compareA, r: compareAResult }, { s: compareB, r: compareBResult }].map(({ s, r }, colIdx) => (
+                    <div key={colIdx} style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: 10, borderRadius: 12, background: 'var(--mint-soft)' }}>
+                      <span style={{ fontSize: 11.5, fontWeight: 800, color: 'var(--ink)' }}>{s.name}</span>
+                      <span style={{ fontSize: 9.5, color: 'var(--muted)' }}>{formatRupiah(r.totalHarta)}</span>
+                      {r.results.length === 0 ? (
+                        <span style={{ fontSize: 10, color: 'var(--muted)' }}>Tidak ada ahli waris.</span>
+                      ) : (
+                        r.results.map((row, i) => (
+                          <div key={i} style={{ display: 'flex', justifyContent: 'space-between', gap: 6 }}>
+                            <span style={{ fontSize: 10.5, color: 'var(--ink)' }}>{row.label}</span>
+                            <span style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--primary)', whiteSpace: 'nowrap' }}>{formatRupiah(row.amount)}</span>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>

@@ -1,10 +1,7 @@
-// A celebratory "khatam selesai" card — same plain Canvas 2D approach as
-// the app's other shareable cards (ayat/amalan/receipt), reserved
-// specifically for the moment someone's Progress Khatam Qur'an
-// (components/KhatamProgressCard.jsx) reaches all 604 Mushaf pages. A
-// distinct, more ornamental treatment than the plain progress bar it's
-// shown alongside — this is a real milestone worth a nicer image than a
-// percentage.
+// Draws a shareable "medal reached" card — same plain Canvas 2D approach
+// as the app's other share cards, for the moment PointsBadge.jsx's
+// lifetime point total crosses a new medal tier (Perunggu/Perak/Emas/
+// Platinum, lib/points.js's POINT_TIERS).
 import { DECORATIVE_PHOTOS_LIGHT, DECORATIVE_PHOTOS_DARK } from '../data/photos';
 import { drawAirmoonBrand } from './drawAirmoonLogo';
 
@@ -13,8 +10,8 @@ const H = 1350;
 
 async function ensureFontsReady() {
   await Promise.all([
-    document.fonts.load('800 90px Poppins'),
-    document.fonts.load('700 40px Poppins'),
+    document.fonts.load('800 130px Poppins'),
+    document.fonts.load('700 30px Poppins'),
     document.fonts.load('400 30px Poppins'),
     document.fonts.load("600 60px 'Fredoka'"),
   ]);
@@ -36,7 +33,7 @@ function drawImageCover(ctx, img) {
   ctx.drawImage(img, (W - w) / 2, (H - h) / 2, w, h);
 }
 
-export async function drawKhatamCertificate(canvas, { theme = 'light' }) {
+export async function drawMedalCard(canvas, { tierIcon, tierLabel, tierColor = '#e8b84b', points, theme = 'light' }) {
   canvas.width = W;
   canvas.height = H;
   const ctx = canvas.getContext('2d');
@@ -44,7 +41,7 @@ export async function drawKhatamCertificate(canvas, { theme = 'light' }) {
   await ensureFontsReady();
 
   const pool = theme === 'dark' ? DECORATIVE_PHOTOS_DARK : DECORATIVE_PHOTOS_LIGHT;
-  const photoSrc = pool[0]; // fixed, not day-rotated — this is a one-time milestone card, not a daily one
+  const photoSrc = pool[6 % pool.length]; // fixed pick — a milestone card, not a daily-rotating one
 
   try {
     const img = await loadImage(photoSrc);
@@ -60,17 +57,20 @@ export async function drawKhatamCertificate(canvas, { theme = 'light' }) {
   const overlay = ctx.createLinearGradient(0, 0, W, H);
   if (theme === 'dark') {
     overlay.addColorStop(0, 'rgba(11,12,10,0.65)');
-    overlay.addColorStop(1, 'rgba(11,12,10,0.92)');
+    overlay.addColorStop(1, 'rgba(11,12,10,0.94)');
   } else {
     overlay.addColorStop(0, 'rgba(13,77,71,0.68)');
-    overlay.addColorStop(1, 'rgba(10,54,48,0.92)');
+    overlay.addColorStop(1, 'rgba(10,54,48,0.94)');
   }
   ctx.fillStyle = overlay;
   ctx.fillRect(0, 0, W, H);
 
-  // A double gold frame — a step up from the single thin border the other
-  // share cards use, matching the "this is a special one" occasion.
-  ctx.strokeStyle = 'rgba(232,184,75,0.75)';
+  // Double frame in the tier's own characteristic color — [UI] so a
+  // Perunggu/Perak/Emas/Platinum card reads as visually distinct at a
+  // glance, not just via the icon+label text. Same "this is a special
+  // one" double-frame treatment as khatamCertificateCanvas.js's milestone
+  // card, just tier-colored instead of always gold.
+  ctx.strokeStyle = tierColor;
   ctx.lineWidth = 4;
   ctx.strokeRect(40, 40, W - 80, H - 80);
   ctx.lineWidth = 2;
@@ -80,22 +80,21 @@ export async function drawKhatamCertificate(canvas, { theme = 'light' }) {
 
   ctx.textAlign = 'center';
 
-  ctx.font = '400 60px Amiri, serif';
-  ctx.fillStyle = '#e8b84b';
-  ctx.fillText('الحمد لله', W / 2, H * 0.32);
-
   ctx.font = '700 30px Poppins, sans-serif';
-  ctx.fillStyle = 'rgba(244,240,230,0.9)';
-  ctx.fillText('ALHAMDULILLAH', W / 2, H * 0.38);
+  ctx.fillStyle = tierColor;
+  ctx.fillText('MEDALI BARU DIRAIH', W / 2, H * 0.3);
 
-  ctx.font = '800 78px Poppins, sans-serif';
+  ctx.font = '400 170px Poppins, sans-serif';
   ctx.fillStyle = '#ffffff';
-  ctx.fillText('Khatam', W / 2, H * 0.48);
-  ctx.fillText("Qur'an!", W / 2, H * 0.56);
+  ctx.fillText(tierIcon, W / 2, H * 0.46);
 
-  ctx.font = '400 30px Poppins, sans-serif';
-  ctx.fillStyle = 'rgba(244,240,230,0.85)';
-  ctx.fillText('604 halaman selesai dibaca', W / 2, H * 0.63);
+  ctx.font = '800 68px Poppins, sans-serif';
+  ctx.fillStyle = '#ffffff';
+  ctx.fillText(tierLabel, W / 2, H * 0.56);
+
+  ctx.font = '400 32px Poppins, sans-serif';
+  ctx.fillStyle = 'rgba(244,240,230,0.9)';
+  ctx.fillText(`${points} poin terkumpul`, W / 2, H * 0.61);
 
   ctx.font = '800 40px Poppins, sans-serif';
   ctx.fillStyle = '#ffffff';

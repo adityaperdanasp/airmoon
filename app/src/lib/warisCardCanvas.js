@@ -3,6 +3,7 @@
 // (up to a reasonable count) rather than just one big number, since a
 // waris result is inherently a breakdown, not a single figure.
 import { DECORATIVE_PHOTOS_LIGHT, DECORATIVE_PHOTOS_DARK } from '../data/photos';
+import { drawAirmoonBrand } from './drawAirmoonLogo';
 
 const W = 1080;
 const H = 1350;
@@ -13,6 +14,7 @@ async function ensureFontsReady() {
     document.fonts.load('800 44px Poppins'),
     document.fonts.load('700 32px Poppins'),
     document.fonts.load('400 28px Poppins'),
+    document.fonts.load("600 60px 'Fredoka'"),
   ]);
 }
 
@@ -69,14 +71,16 @@ export async function drawWarisCard(canvas, { totalHarta, results, theme = 'ligh
   ctx.lineWidth = 3;
   ctx.strokeRect(36, 36, W - 72, H - 72);
 
+  drawAirmoonBrand(ctx, { centerX: W / 2, y: 96, size: 52 });
+
   ctx.textAlign = 'center';
   ctx.font = '700 32px Poppins, sans-serif';
   ctx.fillStyle = '#e8b84b';
-  ctx.fillText('KALKULATOR WARIS', W / 2, 150);
+  ctx.fillText('KALKULATOR WARIS', W / 2, 175);
 
   ctx.font = '400 26px Poppins, sans-serif';
   ctx.fillStyle = 'rgba(244,240,230,0.85)';
-  ctx.fillText(`Total Harta: Rp ${totalHarta.toLocaleString('id-ID')}`, W / 2, 195);
+  ctx.fillText(`Total Harta: Rp ${totalHarta.toLocaleString('id-ID')}`, W / 2, 220);
 
   const rows = results.slice(0, MAX_ROWS);
   const rowH = 84;

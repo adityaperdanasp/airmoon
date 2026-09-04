@@ -5,6 +5,7 @@
 // rather than just a private in-app number. A social-growth angle on the
 // same feature, not a new subsystem.
 import { DECORATIVE_PHOTOS_LIGHT, DECORATIVE_PHOTOS_DARK } from '../data/photos';
+import { drawAirmoonBrand } from './drawAirmoonLogo';
 
 const W = 1080;
 const H = 1350;
@@ -14,6 +15,7 @@ async function ensureFontsReady() {
     document.fonts.load('800 120px Poppins'),
     document.fonts.load('700 40px Poppins'),
     document.fonts.load('600 30px Poppins'),
+    document.fonts.load("600 60px 'Fredoka'"),
   ]);
 }
 
@@ -71,6 +73,8 @@ export async function drawAmalanCard(canvas, { totalDone, totalItems, dateLabel,
   ctx.strokeStyle = 'rgba(232,184,75,0.55)';
   ctx.lineWidth = 3;
   ctx.strokeRect(36, 36, W - 72, H - 72);
+
+  drawAirmoonBrand(ctx, { centerX: W / 2, y: 96, size: 52 });
 
   ctx.textAlign = 'center';
 

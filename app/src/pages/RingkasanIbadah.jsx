@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { watchKhatamProgress, TOTAL_MUSHAF_PAGES, TOTAL_JUZ } from '../lib/khatamProgress';
 import { watchDzikirStreak } from '../lib/dzikirStreak';
 import { watchMyContributions } from '../lib/donations';
@@ -13,6 +14,7 @@ import { PAGE_PHOTOS } from '../data/photos';
 import CountUp from '../components/CountUp';
 import EmptyState from '../components/EmptyState';
 import { SkeletonCard } from '../components/Skeleton';
+import RingkasanIbadahShareModal from '../components/RingkasanIbadahShareModal';
 
 function StatCard({ icon, label, value, sub }) {
   return (
@@ -33,6 +35,8 @@ function StatCard({ icon, label, value, sub }) {
 // you'd actually revisit to check "how am I doing overall lately."
 export default function RingkasanIbadah() {
   const { user } = useAuth();
+  const { theme } = useTheme();
+  const [showShareModal, setShowShareModal] = useState(false);
   const [khatam, setKhatam] = useState({ pages: [], juz: [] });
   const [streaks, setStreaks] = useState({});
   const [contributions, setContributions] = useState([]);
@@ -81,7 +85,21 @@ export default function RingkasanIbadah() {
   return (
     <div className="screen">
       <div className="screen-content">
-        <PageHeaderPhoto title="Ringkasan Ibadah" photo={PAGE_PHOTOS.zakat} subtitle="Semua progres kamu, satu tempat" />
+        <PageHeaderPhoto
+          title="Ringkasan Ibadah"
+          photo={PAGE_PHOTOS.zakat}
+          subtitle="Semua progres kamu, satu tempat"
+          right={
+            allLoaded && (
+              <button className="icon-btn" onClick={() => setShowShareModal(true)} aria-label="Bagikan ringkasan" title="Bagikan ringkasan">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <circle cx="18" cy="5" r="3" strokeWidth="1.6" /><circle cx="6" cy="12" r="3" strokeWidth="1.6" /><circle cx="18" cy="19" r="3" strokeWidth="1.6" />
+                  <path d="M8.6 10.5 15.4 6.5M8.6 13.5 15.4 17.5" strokeWidth="1.6" />
+                </svg>
+              </button>
+            )
+          }
+        />
 
         {!allLoaded && (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
@@ -125,6 +143,19 @@ export default function RingkasanIbadah() {
           </span>
         </div>
       </div>
+
+      {showShareModal && (
+        <RingkasanIbadahShareModal
+          displayName={user.displayName || 'Sahabat airmoon'}
+          khatamPct={khatamPct}
+          badgeLabel={badgeTier ? `${badgeTier.icon} ${badgeTier.label}` : 'Belum ada badge'}
+          totalSedekah={formatRupiah(totalSedekah)}
+          puasaCount={puasaDates?.length || 0}
+          readingStreakDays={readingStreak.current}
+          theme={theme}
+          onClose={() => setShowShareModal(false)}
+        />
+      )}
     </div>
   );
 }

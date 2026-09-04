@@ -1,8 +1,7 @@
-// Draws a combined "Kartu Pencapaian" — same plain Canvas 2D approach as
-// the app's other share cards, but pulling together 3 separate stats
-// (Progress Khatam %, highest dzikir streak badge, lifetime sedekah
-// total) that previously only ever had their own separate, single-metric
-// share cards (Khatam certificate, Amalan daily progress, receipts).
+// Draws a shareable "Ringkasan Ibadah" card — same plain Canvas 2D shell
+// as the app's other share cards, pulling together the same 5 stats the
+// real RingkasanIbadah.jsx dashboard shows (a superset of what
+// achievementCardCanvas.js's older 3-stat Kartu Pencapaian covers).
 import { DECORATIVE_PHOTOS_LIGHT, DECORATIVE_PHOTOS_DARK } from '../data/photos';
 import { drawAirmoonBrand } from './drawAirmoonLogo';
 
@@ -11,9 +10,9 @@ const H = 1350;
 
 async function ensureFontsReady() {
   await Promise.all([
-    document.fonts.load('800 60px Poppins'),
-    document.fonts.load('700 32px Poppins'),
-    document.fonts.load('400 26px Poppins'),
+    document.fonts.load('800 52px Poppins'),
+    document.fonts.load('700 28px Poppins'),
+    document.fonts.load('400 22px Poppins'),
     document.fonts.load("600 60px 'Fredoka'"),
   ]);
 }
@@ -36,20 +35,20 @@ function drawImageCover(ctx, img) {
 
 function statRow(ctx, y, icon, label, value) {
   ctx.textAlign = 'left';
-  ctx.font = '400 50px Poppins, sans-serif';
+  ctx.font = '400 42px Poppins, sans-serif';
   ctx.fillStyle = '#ffffff';
   ctx.fillText(icon, 90, y);
 
-  ctx.font = '400 24px Poppins, sans-serif';
+  ctx.font = '400 21px Poppins, sans-serif';
   ctx.fillStyle = 'rgba(244,240,230,0.75)';
-  ctx.fillText(label, 160, y - 20);
+  ctx.fillText(label, 155, y - 16);
 
-  ctx.font = '800 36px Poppins, sans-serif';
+  ctx.font = '800 32px Poppins, sans-serif';
   ctx.fillStyle = '#e8b84b';
-  ctx.fillText(value, 160, y + 20);
+  ctx.fillText(value, 155, y + 20);
 }
 
-export async function drawAchievementCard(canvas, { displayName, khatamPct, badgeLabel, totalSedekah, theme = 'light' }) {
+export async function drawRingkasanIbadahCard(canvas, { displayName, khatamPct, badgeLabel, totalSedekah, puasaCount, readingStreakDays, theme = 'light' }) {
   canvas.width = W;
   canvas.height = H;
   const ctx = canvas.getContext('2d');
@@ -57,7 +56,7 @@ export async function drawAchievementCard(canvas, { displayName, khatamPct, badg
   await ensureFontsReady();
 
   const pool = theme === 'dark' ? DECORATIVE_PHOTOS_DARK : DECORATIVE_PHOTOS_LIGHT;
-  const photoSrc = pool[1 % pool.length]; // fixed pick — a personal achievement card, not a daily-rotating one
+  const photoSrc = pool[2 % pool.length]; // fixed pick — a personal dashboard card, not a daily-rotating one
 
   try {
     const img = await loadImage(photoSrc);
@@ -72,11 +71,11 @@ export async function drawAchievementCard(canvas, { displayName, khatamPct, badg
 
   const overlay = ctx.createLinearGradient(0, 0, W, H);
   if (theme === 'dark') {
-    overlay.addColorStop(0, 'rgba(11,12,10,0.68)');
-    overlay.addColorStop(1, 'rgba(11,12,10,0.94)');
+    overlay.addColorStop(0, 'rgba(11,12,10,0.7)');
+    overlay.addColorStop(1, 'rgba(11,12,10,0.95)');
   } else {
-    overlay.addColorStop(0, 'rgba(13,77,71,0.7)');
-    overlay.addColorStop(1, 'rgba(10,54,48,0.94)');
+    overlay.addColorStop(0, 'rgba(13,77,71,0.72)');
+    overlay.addColorStop(1, 'rgba(10,54,48,0.95)');
   }
   ctx.fillStyle = overlay;
   ctx.fillRect(0, 0, W, H);
@@ -88,17 +87,19 @@ export async function drawAchievementCard(canvas, { displayName, khatamPct, badg
   drawAirmoonBrand(ctx, { centerX: W / 2, y: 96, size: 52 });
 
   ctx.textAlign = 'center';
-  ctx.font = '700 30px Poppins, sans-serif';
+  ctx.font = '700 28px Poppins, sans-serif';
   ctx.fillStyle = '#e8b84b';
-  ctx.fillText('KARTU PENCAPAIAN', W / 2, 175);
+  ctx.fillText('RINGKASAN IBADAH', W / 2, 175);
 
-  ctx.font = '800 52px Poppins, sans-serif';
+  ctx.font = '800 46px Poppins, sans-serif';
   ctx.fillStyle = '#ffffff';
   ctx.fillText(displayName, W / 2, 235);
 
-  statRow(ctx, 480, '📖', 'Progress Khatam Qur\'an', `${khatamPct}%`);
-  statRow(ctx, 620, '🔥', 'Rentetan Dzikir Terbaik', badgeLabel);
-  statRow(ctx, 760, '💝', 'Total Sedekah', totalSedekah);
+  statRow(ctx, 400, '📖', 'Progress Khatam Qur\'an', `${khatamPct}%`);
+  statRow(ctx, 520, '🔥', 'Rentetan Dzikir Terbaik', badgeLabel);
+  statRow(ctx, 640, '💝', 'Total Sedekah', totalSedekah);
+  statRow(ctx, 760, '🌙', 'Puasa Sunnah', `${puasaCount}x`);
+  statRow(ctx, 880, '📚', 'Streak Baca Qur\'an', `${readingStreakDays} hari`);
 
   ctx.textAlign = 'center';
   ctx.font = '800 40px Poppins, sans-serif';

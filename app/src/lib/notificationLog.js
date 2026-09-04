@@ -154,6 +154,7 @@ export function routeForTag(tag = '') {
   if (tag === 'zakat-penghasilan') return '/lainnya/kalkulator-zakat';
   if (tag === 'target-baca') return '/quran';
   if (tag === 'reading-streak') return '/quran';
+  if (tag === 'poin-login') return '/';
   return '/jadwal-sholat'; // adzan-* and any unrecognized tag
 }
 

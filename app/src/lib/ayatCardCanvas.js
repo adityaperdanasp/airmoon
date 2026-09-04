@@ -6,6 +6,7 @@
 // engine, so Arabic joining/ligatures render correctly as long as the
 // font itself is loaded first — see ensureFontsReady below.
 import { DECORATIVE_PHOTOS_LIGHT, DECORATIVE_PHOTOS_DARK } from '../data/photos';
+import { drawAirmoonBrand } from './drawAirmoonLogo';
 
 const W = 1080;
 const H = 1350;
@@ -19,6 +20,7 @@ async function ensureFontsReady() {
     document.fonts.load('700 64px Amiri'),
     document.fonts.load('800 40px Poppins'),
     document.fonts.load('600 30px Poppins'),
+    document.fonts.load("600 60px 'Fredoka'"),
   ]);
 }
 
@@ -112,6 +114,8 @@ export async function drawAyatCard(canvas, { arabic, translation, chapterName, c
   ctx.strokeStyle = 'rgba(232,184,75,0.55)';
   ctx.lineWidth = 3;
   ctx.strokeRect(36, 36, W - 72, H - 72);
+
+  drawAirmoonBrand(ctx, { centerX: W / 2, y: 96, size: 52 });
 
   ctx.textAlign = 'center';
   ctx.direction = 'rtl';

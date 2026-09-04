@@ -86,6 +86,14 @@ const READING_STREAK_REMINDER_DELAY_MINUTES = 180;
 // them spread out rather than all at once.
 const READING_GOAL_REMINDER_DELAY_MINUTES = 210;
 
+// Last of the evening nudges — "Poin & Medali" (2026-09-06)'s daily login
+// point (lib/amalanHarian.js's markLoginPoint) is only ever awarded by
+// actually opening Home; someone who genuinely didn't open the app that
+// day would otherwise just quietly miss it with no signal at all. Sits
+// after every other evening reminder above so it reads as a last call,
+// not a duplicate of the Amalan Harian nudge.
+const LOGIN_POINT_REMINDER_DELAY_MINUTES = 240;
+
 function initAdmin() {
   if (getApps().length) return;
   const b64 = process.env.FIREBASE_SERVICE_ACCOUNT_B64;
@@ -417,6 +425,35 @@ export default async function handler(req, res) {
               });
               await pruneDeadTokens(docSnap.ref, tokens, result);
               sent.push({ uid: docSnap.id, prayer: 'ReadingGoalReminder', successCount: result.successCount });
+            }
+          }
+        }
+
+        // Poin login belum diambil (2026-09-06) — the last evening nudge,
+        // for the +1/day login point from Poin & Medali. Checks the same
+        // amalanHarian/{dateKey} doc the Amalan Harian reminder above
+        // reads, just its own loginPoint field and its own later window —
+        // fetched again rather than reused since AMALAN_REMINDER_DELAY_
+        // MINUTES's snapshot (90 minutes earlier) could be stale by now.
+        if (pengingatActiveNow && timings.Isha) {
+          const loginPointWindowStart = minutesSinceMidnight(timings.Isha) + LOGIN_POINT_REMINDER_DELAY_MINUTES;
+          const due = nowMin >= loginPointWindowStart && nowMin < loginPointWindowStart + WINDOW_MINUTES;
+          const alreadyReminded = u.lastLoginPointReminderDate === dateKey;
+          if (due && !alreadyReminded) {
+            await docSnap.ref.update({ lastLoginPointReminderDate: dateKey });
+            const amalanSnap2 = await docSnap.ref.collection('amalanHarian').doc(dateKey).get();
+            const loginPointDone = amalanSnap2.exists && amalanSnap2.data().loginPoint === true;
+            if (!loginPointDone) {
+              const result = await messaging.sendEachForMulticast({
+                tokens,
+                data: {
+                  tag: 'poin-login',
+                  title: '⭐ Poin Harian Belum Diambil',
+                  body: 'Kamu belum buka airmoon hari ini — +1 poin login masih nunggu, tinggal buka aplikasinya aja.',
+                },
+              });
+              await pruneDeadTokens(docSnap.ref, tokens, result);
+              sent.push({ uid: docSnap.id, prayer: 'LoginPointReminder', successCount: result.successCount });
             }
           }
         }

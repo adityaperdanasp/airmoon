@@ -34,10 +34,18 @@ function drawImageCover(ctx, img, w, h) {
 // inputs, not a fixed set the render is locked to. Was `draw(canvas, tpl)`
 // reading straight off a TEMPLATES entry before the "custom text/foto/
 // warna" ask; kept the same drawing logic, just parameterized.
-async function draw(canvas, { title, sub, color1, color2, photoIndex }) {
+async function draw(canvas, { title, sub, color1, color2, photoIndex, arabicText, arabicFont }) {
   const ctx = canvas.getContext('2d');
   const w = canvas.width;
   const h = canvas.height;
+
+  // Widget Kaligrafi Nama — the Arabic line was a fixed hardcoded string
+  // with no way to personalize it (a name, a different du'a); now a free
+  // RTL text input with a choice of the same 2 Arabic fonts this app
+  // already offers Mode Ayat readers (lib/readingPrefs.js's useArabicFont)
+  // — Scheherazade New is purpose-built for Quranic/classical Arabic,
+  // giving a genuinely different calligraphic feel than Amiri.
+  await document.fonts.load(`600 34px '${arabicFont}'`);
 
   const photoSrc = DECORATIVE_PHOTOS_LIGHT[((photoIndex % DECORATIVE_PHOTOS_LIGHT.length) + DECORATIVE_PHOTOS_LIGHT.length) % DECORATIVE_PHOTOS_LIGHT.length];
   try {
@@ -73,9 +81,9 @@ async function draw(canvas, { title, sub, color1, color2, photoIndex }) {
   }
 
   ctx.fillStyle = '#e8b84b';
-  ctx.font = '600 34px Amiri, serif';
+  ctx.font = `600 34px '${arabicFont}', serif`;
   ctx.textAlign = 'center';
-  ctx.fillText('تقبل الله منا ومنكم', w / 2, h * 0.42);
+  ctx.fillText(arabicText || ' ', w / 2, h * 0.42);
 
   ctx.fillStyle = '#ffffff';
   ctx.font = '800 40px Poppins, sans-serif';
@@ -124,6 +132,8 @@ export default function KartuUcapan() {
   const [color1, setColor1] = useState(TEMPLATES[0].colors[0]);
   const [color2, setColor2] = useState(TEMPLATES[0].colors[1]);
   const [photoIndex, setPhotoIndex] = useState(photoIndexForTemplate(TEMPLATES[0]));
+  const [arabicText, setArabicText] = useState('تقبل الله منا ومنكم');
+  const [arabicFont, setArabicFont] = useState('Amiri');
 
   function selectTemplate(tp) {
     setTplId(tp.id);
@@ -137,13 +147,13 @@ export default function KartuUcapan() {
   useEffect(() => {
     let cancelled = false;
     setReady(false);
-    draw(canvasRef.current, { title, sub, color1, color2, photoIndex }).then(() => {
+    draw(canvasRef.current, { title, sub, color1, color2, photoIndex, arabicText, arabicFont }).then(() => {
       if (!cancelled) setReady(true);
     });
     return () => {
       cancelled = true;
     };
-  }, [title, sub, color1, color2, photoIndex]);
+  }, [title, sub, color1, color2, photoIndex, arabicText, arabicFont]);
 
   function handleDownload() {
     const url = canvasRef.current.toDataURL('image/png');
@@ -170,7 +180,13 @@ export default function KartuUcapan() {
       <div className="screen-content">
         <TopBar title={t('item_kartu_ucapan')} />
 
-        <div style={{ position: 'relative', borderRadius: 22, overflow: 'hidden', boxShadow: 'var(--shadow-card)' }}>
+        {/* [UI] Preview enlarged slightly (a small negative margin eating
+            into .screen-content's own 20px side padding) so photo/text
+            detail reads more clearly before committing to a download —
+            was capped at the same width as every other element on the
+            page, which is narrower than it needs to be for the one thing
+            on this page that's actually an image. */}
+        <div style={{ position: 'relative', borderRadius: 22, overflow: 'hidden', boxShadow: 'var(--shadow-card)', margin: '0 -10px' }}>
           <canvas
             ref={canvasRef}
             width={800}
@@ -222,6 +238,41 @@ export default function KartuUcapan() {
             maxLength={80}
             style={{ padding: '11px 13px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--ink)', fontSize: 12.5 }}
           />
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <span className="section-label">Kaligrafi Arab</span>
+          <input
+            value={arabicText}
+            onChange={(e) => setArabicText(e.target.value)}
+            placeholder="مثال: تقبل الله منا ومنكم"
+            dir="rtl"
+            maxLength={40}
+            style={{ padding: '11px 13px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--ink)', fontSize: 16, fontFamily: `'${arabicFont}', serif` }}
+          />
+          <div style={{ display: 'flex', gap: 8 }}>
+            {['Amiri', 'Scheherazade New'].map((f) => (
+              <button
+                key={f}
+                onClick={() => setArabicFont(f)}
+                aria-pressed={arabicFont === f}
+                style={{
+                  flex: 1,
+                  padding: '8px 0',
+                  borderRadius: 999,
+                  border: 'none',
+                  fontSize: 12,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  fontFamily: `'${f}', serif`,
+                  color: arabicFont === f ? 'var(--on-primary)' : 'var(--ink)',
+                  background: arabicFont === f ? 'var(--primary)' : 'var(--mint-soft)',
+                }}
+              >
+                {f}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
