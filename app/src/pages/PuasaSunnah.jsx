@@ -19,19 +19,40 @@ function pad2(n) {
   return String(n).padStart(2, '0');
 }
 
-// Hari mana aja di bulan Gregorian yang lagi dilihat itu Ayyamul Bidh
-// (Hijriah 13/14/15) — reuses the exact same /api/aladhan?type=
-// hijri-calendar endpoint KalenderHijriah.jsx already calls (one row
-// per Gregorian day in the month, each carrying its own Hijri day), so
-// no new backend work is needed. Best-effort: if this fetch fails, the
-// calendar just renders without the Ayyamul Bidh markers rather than
-// blocking the whole page on a secondary enhancement.
-function useAyyamulBidhDays(viewMonth) {
-  const [bidhDays, setBidhDays] = useState(null);
+// Every recurring special-fasting occasion this calendar can mark, keyed
+// by a short id used both for the per-day badge and the legend below.
+// `test(hijriMonth, hijriDay)` decides whether a given Hijri date
+// qualifies — Puasa Syawal is the one genuinely flexible entry (any day
+// 2-30 of Syawal, since 1 Syawal is Eid itself and fasting is forbidden
+// that day), the other three are fixed single/paired days. All 4 share
+// one visual treatment (a gold ring) rather than a distinct color each —
+// this app's palette only has a handful of strongly-saturated tokens
+// (teal/gold/red/green), and teal is already reserved for "today"; the
+// corner emoji + tooltip + legend already disambiguate which occasion a
+// day is, a 4-color ring wouldn't add real information on top of that.
+const SPECIAL_FASTS = [
+  { id: 'bidh', icon: '🌕', label: 'Ayyamul Bidh (Hijriah 13-15)', test: (m, d) => d >= 13 && d <= 15 },
+  { id: 'syawal', icon: '6️⃣', label: 'Puasa Syawal (bebas 6 hari, Syawal 2-30)', test: (m, d) => m === 10 && d >= 2 },
+  { id: 'arafah', icon: '🕋', label: 'Puasa Arafah (9 Dzulhijjah)', test: (m, d) => m === 12 && d === 9 },
+  { id: 'muharram', icon: '📿', label: "Puasa Tasu'a & Asyura (9-10 Muharram)", test: (m, d) => m === 1 && (d === 9 || d === 10) },
+];
+const SPECIAL_FASTS_BY_ID = Object.fromEntries(SPECIAL_FASTS.map((f) => [f.id, f]));
+
+// Hari mana aja di bulan Gregorian yang lagi dilihat itu bertepatan sama
+// salah satu puasa sunnah tahunan di atas — reuses the exact same
+// /api/aladhan?type=hijri-calendar endpoint KalenderHijriah.jsx already
+// calls (one row per Gregorian day in the month, each carrying its own
+// Hijri day/month), so no new backend work is needed. Best-effort: if
+// this fetch fails, the calendar just renders without any markers rather
+// than blocking the whole page on a secondary enhancement. Returns a
+// Map<gregorianDay, string[]> — a day can match more than one occasion
+// (e.g. 14 Syawal is both Ayyamul Bidh and inside the Syawal window).
+function useSpecialFastingDays(viewMonth) {
+  const [specialDays, setSpecialDays] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
-    setBidhDays(null);
+    setSpecialDays(null);
     const month = viewMonth.getMonth() + 1;
     const year = viewMonth.getFullYear();
     fetch(`https://airmoon.vercel.app/api/aladhan?type=hijri-calendar&month=${month}&year=${year}`)
@@ -39,20 +60,24 @@ function useAyyamulBidhDays(viewMonth) {
       .then((json) => {
         if (cancelled) return;
         const days = json.data || [];
-        const marked = new Set(
-          days.filter((d) => [13, 14, 15].includes(Number(d.hijri.day))).map((d) => Number(d.gregorian.day))
-        );
-        setBidhDays(marked);
+        const marked = new Map();
+        for (const d of days) {
+          const hijriMonth = Number(d.hijri.month.number);
+          const hijriDay = Number(d.hijri.day);
+          const matches = SPECIAL_FASTS.filter((f) => f.test(hijriMonth, hijriDay)).map((f) => f.id);
+          if (matches.length) marked.set(Number(d.gregorian.day), matches);
+        }
+        setSpecialDays(marked);
       })
       .catch(() => {
-        if (!cancelled) setBidhDays(new Set());
+        if (!cancelled) setSpecialDays(new Map());
       });
     return () => {
       cancelled = true;
     };
   }, [viewMonth]);
 
-  return bidhDays;
+  return specialDays;
 }
 
 // A real month calendar grid — replacing the flat "Riwayat" date list,
@@ -63,19 +88,21 @@ function useAyyamulBidhDays(viewMonth) {
 // AmalanHeatmap.jsx's read-only design already established) — past days
 // are just a record, not something to retroactively edit here.
 //
-// Tanda Ayyamul Bidh (2026-09-07, founder request) — "jadi orang tau"
-// which Gregorian dates each month actually fall on Hijriah 13-15,
-// rather than someone having to work it out themselves against a
-// separate Hijri calendar. A small gold ring around the day number,
-// distinct from the filled-teal "sudah dicatat" state and the
-// primary-bordered "hari ini" state.
+// Tanda puasa sunnah tahunan (2026-09-07, founder request) — "jadi orang
+// tau" which Gregorian dates each month actually line up with Ayyamul
+// Bidh, Puasa Syawal's window, Arafah, or Tasu'a/Asyura, rather than
+// someone having to work it out themselves against a separate Hijri
+// calendar. A small gold ring around the day number (shared across all 4
+// occasions — see SPECIAL_FASTS's own note on why) plus a stacked corner
+// emoji per matching occasion, distinct from the filled-teal "sudah
+// dicatat" state and the primary-bordered "hari ini" state.
 function PuasaCalendar({ dateSet, viewMonth, onPrevMonth, onNextMonth, today, onToggleToday }) {
   const year = viewMonth.getFullYear();
   const month = viewMonth.getMonth();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstDow = new Date(year, month, 1).getDay();
   const cells = [...Array(firstDow).fill(null), ...Array.from({ length: daysInMonth }, (_, i) => i + 1)];
-  const bidhDays = useAyyamulBidhDays(viewMonth);
+  const specialDays = useSpecialFastingDays(viewMonth);
 
   return (
     <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: 16 }}>
@@ -97,18 +124,19 @@ function PuasaCalendar({ dateSet, viewMonth, onPrevMonth, onNextMonth, today, on
           const key = `${year}-${pad2(month + 1)}-${pad2(day)}`;
           const isMarked = dateSet.has(key);
           const isToday = key === today;
-          const isBidh = bidhDays?.has(day);
+          const specialIds = specialDays?.get(day) || [];
+          const isSpecial = specialIds.length > 0;
           return (
             <button
               key={i}
               onClick={isToday ? onToggleToday : undefined}
               disabled={!isToday}
-              title={isBidh ? 'Ayyamul Bidh' : undefined}
+              title={isSpecial ? specialIds.map((id) => SPECIAL_FASTS_BY_ID[id].label).join(' · ') : undefined}
               style={{
                 position: 'relative',
                 aspectRatio: '1',
                 borderRadius: 8,
-                border: isToday ? '1.5px solid var(--primary)' : isBidh ? '1.5px solid var(--gold-ink)' : 'none',
+                border: isToday ? '1.5px solid var(--primary)' : isSpecial ? '1.5px solid var(--gold-ink)' : 'none',
                 background: isMarked ? 'var(--primary)' : 'var(--border)',
                 color: isMarked ? 'var(--on-primary)' : 'var(--muted)',
                 fontSize: 10.5,
@@ -118,16 +146,24 @@ function PuasaCalendar({ dateSet, viewMonth, onPrevMonth, onNextMonth, today, on
               }}
             >
               {day}
-              {isBidh && (
-                <span style={{ position: 'absolute', top: 1, right: 1, fontSize: 7, lineHeight: 1, opacity: isMarked ? 1 : 0.85 }}>🌕</span>
+              {isSpecial && (
+                <span style={{ position: 'absolute', top: 0, right: 0, fontSize: 6.5, lineHeight: 1, opacity: isMarked ? 1 : 0.85, display: 'flex' }}>
+                  {specialIds.map((id) => (
+                    <span key={id}>{SPECIAL_FASTS_BY_ID[id].icon}</span>
+                  ))}
+                </span>
               )}
             </button>
           );
         })}
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-        <span style={{ width: 14, height: 14, borderRadius: 4, border: '1.5px solid var(--gold-ink)', flexShrink: 0 }} />
-        <span style={{ fontSize: 9.5, color: 'var(--muted)' }}>Ayyamul Bidh (Hijriah 13-15)</span>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        {SPECIAL_FASTS.map((f) => (
+          <div key={f.id} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ fontSize: 10, flexShrink: 0, width: 14, textAlign: 'center' }}>{f.icon}</span>
+            <span style={{ fontSize: 9.5, color: 'var(--muted)' }}>{f.label}</span>
+          </div>
+        ))}
       </div>
     </div>
   );
