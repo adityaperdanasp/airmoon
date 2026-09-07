@@ -82,6 +82,28 @@ export default function RingkasanIbadah() {
   const hours = Math.floor(totalMinutes / 60);
   const mins = totalMinutes % 60;
 
+  // Ekspor Ringkasan Ibadah ke Teks — a plain readable .txt of the same 6
+  // stats this page shows, separate from the image-share card (which is
+  // meant to be posted, not archived/re-read as text).
+  function handleExportText() {
+    const lines = [
+      `Progress Khatam Qur'an: ${khatamPct}% (${khatam.pages.length}/${TOTAL_MUSHAF_PAGES} halaman · ${khatam.juz.length}/${TOTAL_JUZ} juz)`,
+      `Rentetan Dzikir Terbaik: ${bestStreak} hari${badgeTier ? ` (${badgeTier.icon} Badge ${badgeTier.label})` : ''}`,
+      `Total Sedekah: ${formatRupiah(totalSedekah)} (${contributions.length} kali berdonasi)`,
+      `Puasa Sunnah: ${puasaDates?.length || 0}x (Senin/Kamis & Ayyamul Bidh)`,
+      `Streak Baca Qur'an: ${readingStreak.current} hari${readingStreak.best > readingStreak.current ? ` (rekor ${readingStreak.best} hari)` : ''}`,
+      `Total Waktu Baca Qur'an: ${hours > 0 ? `${hours} jam ${mins} menit` : `${mins} menit`}`,
+    ];
+    const text = `Ringkasan Ibadah — airmoon\n${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}\n\n${lines.join('\n')}`;
+    const blob = new Blob([text], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'ringkasan-ibadah-airmoon.txt';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <div className="screen">
       <div className="screen-content">
@@ -91,12 +113,19 @@ export default function RingkasanIbadah() {
           subtitle="Semua progres kamu, satu tempat"
           right={
             allLoaded && (
-              <button className="icon-btn" onClick={() => setShowShareModal(true)} aria-label="Bagikan ringkasan" title="Bagikan ringkasan">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <circle cx="18" cy="5" r="3" strokeWidth="1.6" /><circle cx="6" cy="12" r="3" strokeWidth="1.6" /><circle cx="18" cy="19" r="3" strokeWidth="1.6" />
-                  <path d="M8.6 10.5 15.4 6.5M8.6 13.5 15.4 17.5" strokeWidth="1.6" />
-                </svg>
-              </button>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <button className="icon-btn" onClick={handleExportText} aria-label="Ekspor ke teks" title="Ekspor ke teks">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M12 3v13m0 0-4-4m4 4 4-4M5 19h14" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </button>
+                <button className="icon-btn" onClick={() => setShowShareModal(true)} aria-label="Bagikan ringkasan" title="Bagikan ringkasan">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <circle cx="18" cy="5" r="3" strokeWidth="1.6" /><circle cx="6" cy="12" r="3" strokeWidth="1.6" /><circle cx="18" cy="19" r="3" strokeWidth="1.6" />
+                    <path d="M8.6 10.5 15.4 6.5M8.6 13.5 15.4 17.5" strokeWidth="1.6" />
+                  </svg>
+                </button>
+              </div>
             )
           }
         />

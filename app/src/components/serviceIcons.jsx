@@ -640,3 +640,38 @@ export function StatsIcon({ size = 42 }) {
     </svg>
   );
 }
+
+// Calendar body (same construction as HijriCalendarIcon) with a checkmark
+// accent instead of a crescent — for Kalender Ibadah, distinct from
+// HijriCalendarIcon's own accent so the two calendar-shaped tiles on the
+// Lainnya grid don't look identical at a glance.
+export function AmalanCalendarIcon({ size = 42 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 42 42" fill="none">
+      <defs>
+        <linearGradient id="amalCalBodyG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#2fa190" />
+          <stop offset="1" stopColor="#0a4a43" />
+        </linearGradient>
+        <linearGradient id="amalCalGoldG" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor="#fff2cf" />
+          <stop offset="0.55" stopColor="#f0c04d" />
+          <stop offset="1" stopColor="#c98f22" />
+        </linearGradient>
+      </defs>
+      <rect x="12" y="4" width="3" height="8" rx="1.5" fill="#0a4a43" />
+      <rect x="27" y="4" width="3" height="8" rx="1.5" fill="#0a4a43" />
+      <rect x="7" y="9" width="28" height="26" rx="4" fill="url(#amalCalBodyG)" />
+      <rect x="7" y="9" width="28" height="8" rx="4" fill="url(#amalCalGoldG)" />
+      <rect x="7" y="13" width="28" height="4" fill="url(#amalCalGoldG)" />
+      <g fill="#eaf6f0">
+        <rect x="11" y="21" width="5" height="4.5" rx="1" />
+        <rect x="18.5" y="21" width="5" height="4.5" rx="1" />
+        <rect x="26" y="27.5" width="5" height="4.5" rx="1" />
+        <rect x="11" y="27.5" width="5" height="4.5" rx="1" />
+        <rect x="18.5" y="27.5" width="5" height="4.5" rx="1" />
+      </g>
+      <path d="M23.5 24.3l2 2 4-4.2" stroke="url(#amalCalGoldG)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+    </svg>
+  );
+}

@@ -550,6 +550,22 @@ textarea:focus-visible,
   }
 }
 
+/* [UI] PointsBadge's own loading placeholder — a plain opacity pulse
+   (not the shared .skeleton shimmer, which is styled for light-card
+   contexts, not this dark photo-header badge). */
+.points-badge-skel {
+  animation: points-badge-pulse 1.4s ease-in-out infinite;
+}
+@keyframes points-badge-pulse {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
 @keyframes splash-pulse {
   0%,
   100% {
@@ -602,6 +618,7 @@ textarea:focus-visible,
   .typing-dot,
   .nav-icon,
   .stagger-item,
+  .points-badge-skel,
   button:not(:disabled) {
     animation: none !important;
     transition: none !important;

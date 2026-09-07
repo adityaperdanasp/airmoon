@@ -52,6 +52,7 @@ const Changelog = lazy(() => import('./pages/Changelog'));
 const SejarahIslam = lazy(() => import('./pages/SejarahIslam'));
 const PuasaSunnah = lazy(() => import('./pages/PuasaSunnah'));
 const RingkasanIbadah = lazy(() => import('./pages/RingkasanIbadah'));
+const KalenderIbadah = lazy(() => import('./pages/KalenderIbadah'));
 
 function P({ children }) {
   return <ProtectedRoute>{children}</ProtectedRoute>;
@@ -127,6 +128,7 @@ export default function App() {
         <Route path="/lainnya/sejarah-islam" element={<P><SejarahIslam /></P>} />
         <Route path="/lainnya/puasa-sunnah" element={<P><PuasaSunnah /></P>} />
         <Route path="/lainnya/ringkasan-ibadah" element={<P><RingkasanIbadah /></P>} />
+        <Route path="/lainnya/kalender-ibadah" element={<P><KalenderIbadah /></P>} />
       </Routes>
     </Suspense>
     </>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { fetchTotalPoints, fetchRecentAmalanHarian } from '../lib/amalanHarian';
+import { fetchTotalPoints, fetchRecentAmalanHarian, fetchMonthlyPointsComparison } from '../lib/amalanHarian';
 import { highestPointTier, nextPointTier } from '../lib/points';
 import { useTheme } from '../context/ThemeContext';
 import { usePopAnimation } from '../lib/usePopAnimation';
@@ -21,6 +21,7 @@ export default function PointsBadge({ uid }) {
   const [expanded, setExpanded] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [recentDays, setRecentDays] = useState(null);
+  const [monthlyCompare, setMonthlyCompare] = useState(null);
   const [showMedalModal, setShowMedalModal] = useState(false);
   const [iconPopStyle, triggerIconPop] = usePopAnimation();
 
@@ -37,6 +38,13 @@ export default function PointsBadge({ uid }) {
     if (!expanded || !uid || recentDays) return;
     fetchRecentAmalanHarian(uid, 7).then(setRecentDays);
   }, [expanded, uid, recentDays]);
+
+  // Perbandingan Poin Bulan Ini vs Bulan Lalu — same lazy-on-expand
+  // loading as the 7-day history above, since most taps never open this.
+  useEffect(() => {
+    if (!expanded || !uid || monthlyCompare) return;
+    fetchMonthlyPointsComparison(uid).then(setMonthlyCompare);
+  }, [expanded, uid, monthlyCompare]);
 
   const tier = points != null ? highestPointTier(points) : null;
   const next = points != null ? nextPointTier(points) : null;
@@ -57,11 +65,25 @@ export default function PointsBadge({ uid }) {
     }
   }, [tier]);
 
-  if (points === null) return null;
+  // [UI] Was a bare `return null` while the total loaded — a real, if
+  // brief, blank gap right next to Home's settings/bell icon since this
+  // sits in the header row from first paint. A plain pulsing translucent
+  // pill matching the real badge's own dimensions/background (not the
+  // shared Skeleton.jsx component — that one's var(--card)/var(--border)
+  // shimmer is styled for light-card contexts, not this dark photo
+  // header) so nothing jumps in size once the real total resolves.
+  if (points === null) {
+    return <div className="points-badge-skel" style={{ width: 56, height: 26, borderRadius: 999, background: 'rgba(255,255,255,0.2)' }} />;
+  }
 
   return (
     <div style={{ position: 'relative' }}>
-      {showConfetti && <Confetti onComplete={() => setShowConfetti(false)} />}
+      {showConfetti && (
+        <Confetti
+          onComplete={() => setShowConfetti(false)}
+          colors={tier ? [tier.color, '#ffffff', tier.color, '#f0cd7b'] : undefined}
+        />
+      )}
       <button
         onClick={() => setExpanded((v) => !v)}
         style={{
@@ -71,6 +93,12 @@ export default function PointsBadge({ uid }) {
           padding: '6px 12px',
           borderRadius: 999,
           border: 'none',
+          // [UI] Warna aksen tier — a colored underline (inset box-shadow,
+          // not a border, so the pill's own rounded shape/size never
+          // shifts) hints the current medal tier even collapsed, not just
+          // inside the expanded popover which already used tier.color for
+          // its border/progress-bar.
+          boxShadow: tier ? `inset 0 -2px 0 ${tier.color}` : 'none',
           background: 'rgba(255,255,255,0.2)',
           color: '#fff',
           fontSize: 12,
@@ -155,6 +183,22 @@ export default function PointsBadge({ uid }) {
               </div>
             )}
           </div>
+
+          {monthlyCompare && (
+            <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: 10.5, color: 'var(--muted)' }}>Bulan ini vs bulan lalu</span>
+              <span
+                style={{
+                  fontSize: 11,
+                  fontWeight: 800,
+                  color: monthlyCompare.thisMonth >= monthlyCompare.lastMonth ? 'var(--success)' : 'var(--danger)',
+                }}
+              >
+                {monthlyCompare.thisMonth} vs {monthlyCompare.lastMonth}{' '}
+                {monthlyCompare.thisMonth >= monthlyCompare.lastMonth ? '▲' : '▼'}
+              </span>
+            </div>
+          )}
 
           {tier && (
             <button

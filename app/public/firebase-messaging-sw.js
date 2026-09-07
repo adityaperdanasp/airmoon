@@ -131,6 +131,7 @@ self.addEventListener('notificationclick', (event) => {
   else if (tag === 'target-baca') url = '/quran';
   else if (tag === 'reading-streak') url = '/quran';
   else if (tag === 'poin-login') url = '/';
+  else if (tag.startsWith('sholat-belum-')) url = '/?focus=amalan';
   event.waitUntil(clients.openWindow(url));
 });
 

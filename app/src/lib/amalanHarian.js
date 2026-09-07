@@ -36,8 +36,10 @@ function todayKey() {
 
 // Shared by fetchRecentAmalanHarian (heatmap) and fetchTotalPoints
 // (lifetime tally) so the two never drift apart on what counts as a
-// point.
-function scoreForDay(data) {
+// point. Exported too — components/AmalanCalendarView.jsx (Kalender
+// Ibadah) and fetchMonthlyPointsComparison below both need the same
+// per-day math, not a re-implementation that could quietly drift.
+export function scoreForDay(data) {
   const sholatDone = SHOLAT_KEYS.filter((k) => data.sholat?.[k]).length;
   return (
     sholatDone +
@@ -124,4 +126,53 @@ export async function fetchTotalPoints(uid) {
     total += scoreForDay(docSnap.data());
   });
   return total;
+}
+
+// Kalender Ibadah — every day of a given month, for a real calendar-grid
+// view (distinct from AmalanHeatmap's rolling 5-week strip and
+// PuasaSunnah's own calendar, which only tracks that one habit). One
+// getDoc per day in the month (same reasoning as fetchRecentAmalanHarian
+// — a date-string-keyed subcollection has no field to range-query on),
+// capped to just the days that have actually happened so far when the
+// requested month is the current one (no point fetching future dates
+// that can't have a doc yet).
+export async function fetchAmalanHarianForMonth(uid, year, month) {
+  if (!uid) return [];
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const today = new Date();
+  const isCurrentMonth = year === today.getFullYear() && month === today.getMonth();
+  const lastDay = isCurrentMonth ? today.getDate() : daysInMonth;
+
+  const dateKeys = [];
+  for (let day = 1; day <= lastDay; day++) {
+    dateKeys.push(`${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`);
+  }
+  const snaps = await Promise.all(dateKeys.map((key) => getDoc(doc(db, 'users', uid, 'amalanHarian', key))));
+  return dateKeys.map((dateKey, i) => {
+    const data = snaps[i].exists() ? snaps[i].data() : { sholat: {}, tilawah: false };
+    return { dateKey, score: scoreForDay(data), max: DAILY_POINTS_MAX };
+  });
+}
+
+// Perbandingan Poin Bulan Ini vs Bulan Lalu — one pass over the whole
+// subcollection (already fetched by fetchTotalPoints's own getDocs
+// pattern), bucketed by each doc's dateKey's own year-month prefix rather
+// than a second query, so this never needs its own round trip beyond the
+// one fetch.
+export async function fetchMonthlyPointsComparison(uid) {
+  if (!uid) return { thisMonth: 0, lastMonth: 0 };
+  const today = new Date();
+  const thisMonthPrefix = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+  const lastMonthDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+  const lastMonthPrefix = `${lastMonthDate.getFullYear()}-${String(lastMonthDate.getMonth() + 1).padStart(2, '0')}`;
+
+  const snap = await getDocs(collection(db, 'users', uid, 'amalanHarian'));
+  let thisMonth = 0;
+  let lastMonth = 0;
+  snap.forEach((docSnap) => {
+    const score = scoreForDay(docSnap.data());
+    if (docSnap.id.startsWith(thisMonthPrefix)) thisMonth += score;
+    else if (docSnap.id.startsWith(lastMonthPrefix)) lastMonth += score;
+  });
+  return { thisMonth, lastMonth };
 }

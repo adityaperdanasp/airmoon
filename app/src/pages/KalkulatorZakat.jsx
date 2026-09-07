@@ -12,6 +12,7 @@ import { PAGE_PHOTOS } from '../data/photos';
 import CountUp from '../components/CountUp';
 import { loadZakatHistory, saveZakatHistoryEntry, deleteZakatHistoryEntry } from '../lib/zakatHistory';
 import ZakatShareModal from '../components/ZakatShareModal';
+import { IconShare } from '../components/icons';
 
 function formatHistoryDate(ts) {
   return new Date(ts).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -148,6 +149,30 @@ export default function KalkulatorZakat() {
     showToast('Perhitungan disimpan ke riwayat.');
   }
 
+  // Ekspor Riwayat Zakat ke Teks — exports whatever's currently filtered
+  // by the type chips (not always all 3 types), same "export what's on
+  // screen" reasoning as NotifikasiCenter.jsx's own text export.
+  function handleExportZakatHistory() {
+    const lines = filteredZakatHistory.map((e) => {
+      const typeLabel = e.type === 'penghasilan' ? 'Zakat Penghasilan' : e.type === 'maal' ? 'Zakat Maal' : 'Zakat Fitrah';
+      const detail =
+        e.type === 'penghasilan'
+          ? `Penghasilan ${formatRupiah(e.inputs.income)} · Kebutuhan ${formatRupiah(e.inputs.needs)}`
+          : e.type === 'maal'
+            ? `Harta ${formatRupiah(e.inputs.assets)} · Emas ${formatRupiah(e.inputs.goldPrice)}/gr`
+            : `${e.inputs.jumlahJiwa} jiwa · Beras ${formatRupiah(e.inputs.ricePricePerKg)}/kg`;
+      return `[${formatHistoryDate(e.at)}] ${typeLabel}: ${formatRupiah(e.amount)}\n${detail}`;
+    });
+    const text = `Riwayat Perhitungan Zakat — airmoon\n\n${lines.join('\n\n') || 'Belum ada riwayat.'}`;
+    const blob = new Blob([text], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'riwayat-zakat-airmoon.txt';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   function currentShareData() {
     if (tab === 'penghasilan') {
       return {
@@ -219,8 +244,8 @@ export default function KalkulatorZakat() {
               <button className="btn-outline" style={{ flex: 1 }} onClick={handleSaveHistory}>
                 📌 Simpan ke Riwayat
               </button>
-              <button className="btn-outline" style={{ flex: 1 }} onClick={() => setShowShareModal(true)}>
-                Bagikan
+              <button className="btn-outline" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }} onClick={() => setShowShareModal(true)}>
+                <IconShare /> Bagikan
               </button>
             </div>
 
@@ -290,8 +315,8 @@ export default function KalkulatorZakat() {
               <button className="btn-outline" style={{ flex: 1 }} onClick={handleSaveHistory}>
                 📌 Simpan ke Riwayat
               </button>
-              <button className="btn-outline" style={{ flex: 1 }} onClick={() => setShowShareModal(true)}>
-                Bagikan
+              <button className="btn-outline" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }} onClick={() => setShowShareModal(true)}>
+                <IconShare /> Bagikan
               </button>
             </div>
 
@@ -376,8 +401,8 @@ export default function KalkulatorZakat() {
               <button className="btn-outline" style={{ flex: 1 }} onClick={handleSaveHistory}>
                 📌 Simpan ke Riwayat
               </button>
-              <button className="btn-outline" style={{ flex: 1 }} onClick={() => setShowShareModal(true)}>
-                Bagikan
+              <button className="btn-outline" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }} onClick={() => setShowShareModal(true)}>
+                <IconShare /> Bagikan
               </button>
             </div>
 
@@ -422,6 +447,11 @@ export default function KalkulatorZakat() {
                     </button>
                   ))}
                 </div>
+                {filteredZakatHistory.length > 0 && (
+                  <button onClick={handleExportZakatHistory} className="btn-outline" style={{ padding: '8px', fontSize: 11.5 }}>
+                    ⬇ Ekspor ke Teks
+                  </button>
+                )}
                 {filteredZakatHistory.length === 0 && (
                   <span style={{ fontSize: 11, color: 'var(--muted)' }}>Belum ada riwayat di kategori ini.</span>
                 )}
@@ -463,8 +493,15 @@ export default function KalkulatorZakat() {
           danger
           onCancel={() => setDeleteHistoryId(null)}
           onConfirm={() => {
+            const removed = zakatHistory.find((e) => e.id === deleteHistoryId);
             setZakatHistory(deleteZakatHistoryEntry(deleteHistoryId));
             setDeleteHistoryId(null);
+            if (removed) {
+              showToast('Riwayat dihapus', {
+                actionLabel: 'Batalkan',
+                onAction: () => setZakatHistory(saveZakatHistoryEntry(removed.type, removed.inputs, removed.amount)),
+              });
+            }
           }}
         />
       )}

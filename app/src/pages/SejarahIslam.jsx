@@ -4,6 +4,7 @@ import { ISLAMIC_HISTORY, todaysHistoryIndex } from '../data/islamicHistory';
 import { DECORATIVE_PHOTOS_LIGHT, DECORATIVE_PHOTOS_DARK } from '../data/photos';
 import TopBar from '../components/TopBar';
 import SejarahIslamShareModal from '../components/SejarahIslamShareModal';
+import { IconShare } from '../components/icons';
 
 // "Hari Ini dalam Sejarah Islam" — same day-of-year rotation pattern as
 // KutipanInspirasi.jsx, but fully local content (data/islamicHistory.js
@@ -117,8 +118,8 @@ export default function SejarahIslam() {
           <button className="btn-outline" style={{ flex: 1 }} onClick={() => setIdx((i) => (i + 1) % ISLAMIC_HISTORY.length)}>
             Berikutnya
           </button>
-          <button className="btn" style={{ flex: 1 }} onClick={() => setShowCardModal(true)}>
-            Bagikan
+          <button className="btn" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }} onClick={() => setShowCardModal(true)}>
+            <IconShare /> Bagikan
           </button>
         </div>
       </div>

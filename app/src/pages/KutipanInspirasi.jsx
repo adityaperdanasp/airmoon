@@ -8,6 +8,7 @@ import TopBar from '../components/TopBar';
 import ErrorRetry from '../components/ErrorRetry';
 import { SkeletonCard } from '../components/Skeleton';
 import QuoteCardModal from '../components/QuoteCardModal';
+import { IconShare } from '../components/icons';
 
 export default function KutipanInspirasi() {
   const { lang } = useLang();
@@ -154,8 +155,8 @@ export default function KutipanInspirasi() {
               <button className="btn-outline" style={{ flex: 1 }} onClick={() => setIdx((i) => (i + 1) % QUOTE_REFS.length)}>
                 {lang === 'en' ? 'Next' : 'Berikutnya'}
               </button>
-              <button className="btn" style={{ flex: 1 }} onClick={handleShare}>
-                {lang === 'en' ? 'Share' : 'Bagikan'}
+              <button className="btn" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }} onClick={handleShare}>
+                <IconShare /> {lang === 'en' ? 'Share' : 'Bagikan'}
               </button>
             </div>
           </>

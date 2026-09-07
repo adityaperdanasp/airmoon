@@ -155,6 +155,7 @@ export function routeForTag(tag = '') {
   if (tag === 'target-baca') return '/quran';
   if (tag === 'reading-streak') return '/quran';
   if (tag === 'poin-login') return '/';
+  if (tag.startsWith('sholat-belum-')) return '/?focus=amalan';
   return '/jadwal-sholat'; // adzan-* and any unrecognized tag
 }
 

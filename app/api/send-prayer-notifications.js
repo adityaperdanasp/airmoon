@@ -70,6 +70,16 @@ const WINDOW_MINUTES = 10;
 // when the nudge arrives.
 const STREAK_REMINDER_DELAY_MINUTES = 90;
 
+// Pengingat granular per waktu sholat (2026-09-07) — how long after EACH
+// prayer's own time to check whether that specific sholat is marked in
+// Amalan Harian yet. Deliberately short (40 min, well before the next
+// prayer for every gap except Dzuhur→Asr in some seasons) so this reads
+// as "did you just pray?", distinct from the combined evening Amalan
+// Harian reminder further below which covers the whole day's checklist
+// at once, much later.
+const SHOLAT_REMINDER_DELAY_MINUTES = 40;
+const SHOLAT_TO_AMALAN_KEY = { Fajr: 'subuh', Dhuhr: 'dzuhur', Asr: 'ashar', Maghrib: 'maghrib', Isha: 'isya' };
+
 // How long after this user's own local Isha to check whether today's
 // Amalan Harian checklist is still incomplete — deliberately later than
 // STREAK_REMINDER_DELAY_MINUTES (90) so the two reminders don't land in
@@ -306,6 +316,41 @@ export default async function handler(req, res) {
             await docSnap.ref.update({ lastNotified: { date: dateKey, prayer: 'Imsak' } });
             await pruneDeadTokens(docSnap.ref, tokens, result);
             sent.push({ uid: docSnap.id, prayer: 'Imsak', successCount: result.successCount });
+          }
+        }
+
+        // Pengingat granular per waktu sholat — only bothers reading
+        // Amalan Harian's doc when at least one prayer is actually inside
+        // its own short reminder window right now (most cron ticks, none
+        // are), so this doesn't add a Firestore read to every invocation
+        // for every user regardless of whether anything's due.
+        if (pengingatActiveNow) {
+          const duePrayers = PRAYER_ORDER.filter((key) => {
+            if (!timings[key]) return false;
+            const windowStart = minutesSinceMidnight(timings[key]) + SHOLAT_REMINDER_DELAY_MINUTES;
+            const due = nowMin >= windowStart && nowMin < windowStart + WINDOW_MINUTES;
+            const alreadyReminded = u.lastSholatReminderDate?.[key] === dateKey;
+            return due && !alreadyReminded;
+          });
+          if (duePrayers.length > 0) {
+            const amalanSnap3 = await docSnap.ref.collection('amalanHarian').doc(dateKey).get();
+            const amalanSholat = (amalanSnap3.exists ? amalanSnap3.data().sholat : null) || {};
+            for (const key of duePrayers) {
+              const amalanKey = SHOLAT_TO_AMALAN_KEY[key];
+              await docSnap.ref.update({ [`lastSholatReminderDate.${key}`]: dateKey });
+              if (amalanSholat[amalanKey]) continue; // already marked done, no nudge needed
+              const label = PRAYER_LABEL[key];
+              const result = await messaging.sendEachForMulticast({
+                tokens,
+                data: {
+                  tag: `sholat-belum-${amalanKey}`,
+                  title: `🕌 Sudah Sholat ${label}?`,
+                  body: `Jangan lupa tandai Sholat ${label} di Amalan Harian kalau udah selesai.`,
+                },
+              });
+              await pruneDeadTokens(docSnap.ref, tokens, result);
+              sent.push({ uid: docSnap.id, prayer: `SholatReminder-${key}`, successCount: result.successCount });
+            }
           }
         }
 

@@ -5,6 +5,7 @@ import { DECORATIVE_PHOTOS_LIGHT } from '../data/photos';
 import { shareFile } from '../lib/share';
 import { getKartuUcapanHistory, logKartuUcapan } from '../lib/kartuUcapanHistory';
 import { drawAirmoonBrand } from '../lib/drawAirmoonLogo';
+import { IconShare } from '../components/icons';
 
 // 10 starting color presets now (was 4) — per an explicit "makin banyak
 // pilihan template colornya" ask. The first 4 keep their original
@@ -154,6 +155,10 @@ export default function KartuUcapan() {
   const [photoIndex, setPhotoIndex] = useState(photoIndexForTemplate(TEMPLATES[0]));
   const [arabicText, setArabicText] = useState('تقبل الله منا ومنكم');
   const [arabicFont, setArabicFont] = useState('Amiri');
+  const [historyQuery, setHistoryQuery] = useState('');
+  const filteredHistory = historyQuery.trim()
+    ? history.filter((h) => (h.title || '').toLowerCase().includes(historyQuery.trim().toLowerCase()))
+    : history;
 
   function selectTemplate(tp) {
     setTplId(tp.id);
@@ -181,7 +186,7 @@ export default function KartuUcapan() {
     a.href = url;
     a.download = 'kartu-ucapan-airmoon.png';
     a.click();
-    logKartuUcapan(tplId);
+    logKartuUcapan(tplId, title);
     setHistory(getKartuUcapanHistory());
   }
 
@@ -191,7 +196,7 @@ export default function KartuUcapan() {
       const file = new File([blob], 'kartu-ucapan.png', { type: 'image/png' });
       await shareFile({ file, title: 'Kartu Ucapan airmoon', onFallback: handleDownload });
     });
-    logKartuUcapan(tplId);
+    logKartuUcapan(tplId, title);
     setHistory(getKartuUcapanHistory());
   }
 
@@ -339,7 +344,9 @@ export default function KartuUcapan() {
 
         <div style={{ display: 'flex', gap: 10 }}>
           <button className="btn-outline" onClick={handleDownload} disabled={!ready}>{t('simpan')}</button>
-          <button className="btn" onClick={handleShare} disabled={!ready}>{t('bagikan')}</button>
+          <button className="btn" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }} onClick={handleShare} disabled={!ready}>
+            <IconShare /> {t('bagikan')}
+          </button>
         </div>
 
         {history.length > 0 && (
@@ -347,25 +354,49 @@ export default function KartuUcapan() {
             <span className="section-label" style={{ color: 'var(--muted)', fontSize: 11.5, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
               Riwayat Dibuat
             </span>
+            {/* Cari di Riwayat Kartu Ucapan — only shown once there's
+                actually more than a couple entries to filter through.
+                Needs logKartuUcapan to have stored the real title used
+                (see lib/kartuUcapanHistory.js), not just a templateId,
+                or there'd be nothing meaningful to search against now
+                that title/sub are free text. */}
+            {history.length > 3 && (
+              <input
+                value={historyQuery}
+                onChange={(e) => setHistoryQuery(e.target.value)}
+                placeholder="Cari riwayat…"
+                style={{ padding: '9px 12px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--ink)', fontSize: 12.5 }}
+              />
+            )}
             <div className="hide-scrollbar" style={{ display: 'flex', gap: 8, overflowX: 'auto' }}>
-              {history.map((h) => {
+              {filteredHistory.length === 0 && (
+                <span style={{ fontSize: 11, color: 'var(--muted)' }}>Gak ketemu riwayat yang cocok.</span>
+              )}
+              {filteredHistory.map((h) => {
                 const t2 = TEMPLATES[h.templateId];
                 if (!t2) return null;
+                const label = h.title || t2.title;
                 return (
                   <button
-                    key={h.templateId}
-                    onClick={() => selectTemplate(t2)}
-                    style={{
-                      flexShrink: 0,
-                      width: 46,
-                      height: 58,
-                      borderRadius: 10,
-                      border: h.templateId === tplId ? '2px solid var(--primary)' : 'none',
-                      cursor: 'pointer',
-                      background: `linear-gradient(160deg, ${t2.colors[0]}, ${t2.colors[1]})`,
+                    key={`${h.templateId}-${h.at}`}
+                    onClick={() => {
+                      selectTemplate(t2);
+                      if (h.title) setTitle(h.title);
                     }}
-                    aria-label={`Pakai lagi template ${t2.title}`}
-                  />
+                    style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                    aria-label={`Pakai lagi "${label}"`}
+                  >
+                    <span
+                      style={{
+                        width: 46,
+                        height: 58,
+                        borderRadius: 10,
+                        border: h.templateId === tplId ? '2px solid var(--primary)' : 'none',
+                        background: `linear-gradient(160deg, ${t2.colors[0]}, ${t2.colors[1]})`,
+                      }}
+                    />
+                    <span style={{ fontSize: 9, color: 'var(--muted)', maxWidth: 52, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</span>
+                  </button>
                 );
               })}
             </div>

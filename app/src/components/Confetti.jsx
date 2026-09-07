@@ -1,15 +1,15 @@
 import { useEffect, useState } from 'react';
 
-const COLORS = ['#e8b84b', '#2fa190', '#ffffff', '#0d4d47', '#f0cd7b'];
+const DEFAULT_COLORS = ['#e8b84b', '#2fa190', '#ffffff', '#0d4d47', '#f0cd7b'];
 const COUNT = 40;
 
-function randomParticle(i) {
+function randomParticle(i, colors) {
   return {
     left: Math.random() * 100,
     delay: Math.random() * 0.3,
     duration: 1.4 + Math.random() * 0.8,
     size: 6 + Math.random() * 6,
-    color: COLORS[i % COLORS.length],
+    color: colors[i % colors.length],
     rotate: Math.random() * 360,
   };
 }
@@ -21,8 +21,12 @@ function randomParticle(i) {
 // via onComplete once every particle's animation has had time to finish.
 // Respects prefers-reduced-motion — calls onComplete immediately and
 // renders nothing there, matching this app's other animations.
-export default function Confetti({ onComplete }) {
-  const [particles] = useState(() => Array.from({ length: COUNT }, (_, i) => randomParticle(i)));
+// [UI] `colors` lets a specific celebration (e.g. PointsBadge's medal-tier
+// confetti) use its own palette instead of always this app's default
+// teal/gold mix — a Perunggu tier celebrating in the same colors as
+// Platinum didn't feel distinct at all.
+export default function Confetti({ onComplete, colors = DEFAULT_COLORS }) {
+  const [particles] = useState(() => Array.from({ length: COUNT }, (_, i) => randomParticle(i, colors)));
   const reduceMotion = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
   useEffect(() => {

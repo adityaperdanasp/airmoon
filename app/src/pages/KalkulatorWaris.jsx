@@ -6,6 +6,7 @@ import { PAGE_PHOTOS } from '../data/photos';
 import WarisShareModal from '../components/WarisShareModal';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { loadWarisScenarios, saveWarisScenario, deleteWarisScenario } from '../lib/warisScenarios';
+import { useToast } from '../context/ToastContext';
 
 function digitsOnly(v) {
   return v.replace(/\D/g, '');
@@ -58,6 +59,7 @@ const WARNING_TEXT = {
 // umum). Reuses PAGE_PHOTOS.zakat — belum ada foto khusus buat halaman
 // ini, dan temanya (fiqh muamalah/harta) cukup dekat dengan Zakat.
 export default function KalkulatorWaris() {
+  const { showToast } = useToast();
   const [hasSuami, setHasSuami] = useState(false);
   const [jumlahIstri, setJumlahIstri] = useState(0);
   const [anakLaki, setAnakLaki] = useState(0);
@@ -114,6 +116,34 @@ export default function KalkulatorWaris() {
   const compareAResult = scenarioResult(compareA);
   const compareBResult = scenarioResult(compareB);
 
+  // Ekspor semua Skenario Waris tersimpan ke satu file Teks — the
+  // WarisShareModal's own text export only ever covers the ONE result
+  // currently on screen; this dumps every saved scenario (recomputed
+  // fresh from its own saved inputs, same as scenarioResult above) into
+  // one readable .txt someone can keep or forward without re-opening
+  // each scenario one at a time.
+  function handleExportAllScenarios() {
+    const blocks = scenarios.map((s) => {
+      const r = scenarioResult(s);
+      const lines = [`— ${s.name} —`, `Total Harta: ${formatRupiah(r.totalHarta)}`];
+      if (r.results.length === 0) {
+        lines.push('Tidak ada ahli waris.');
+      } else {
+        r.results.forEach((row) => lines.push(`${row.label}: ${formatRupiah(row.amount)} (${(row.fraction * 100).toFixed(2)}%)`));
+      }
+      if (r.warnings?.length) lines.push(...r.warnings.map((w) => WARNING_TEXT[w]));
+      return lines.join('\n');
+    });
+    const text = `Skenario Waris — airmoon\n\n${blocks.join('\n\n')}`;
+    const blob = new Blob([text], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'skenario-waris-airmoon.txt';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <div className="screen">
       <div className="screen-content">
@@ -129,6 +159,14 @@ export default function KalkulatorWaris() {
               Skenario Tersimpan
             </span>
             <div style={{ display: 'flex', gap: 12 }}>
+              {scenarios.length > 0 && (
+                <button
+                  onClick={handleExportAllScenarios}
+                  style={{ background: 'none', border: 'none', color: 'var(--primary)', fontSize: 11, fontWeight: 700, cursor: 'pointer', padding: 0 }}
+                >
+                  ⬇ Ekspor Semua
+                </button>
+              )}
               {scenarios.length >= 2 && (
                 <button
                   onClick={() => setShowCompare((v) => !v)}
@@ -161,7 +199,19 @@ export default function KalkulatorWaris() {
           )}
 
           {scenarios.length === 0 ? (
-            <span style={{ fontSize: 11.5, color: 'var(--muted)' }}>Belum ada skenario tersimpan. Atur ahli waris di bawah, lalu simpan buat dibandingkan nanti.</span>
+            // [UI] Was a bare one-line muted text — same "nothing here yet"
+            // gap EmptyState.jsx already fixed elsewhere, but that
+            // component renders its own `.card` wrapper which would nest
+            // awkwardly inside this section's existing card, so this is a
+            // lighter inline version of the same icon+title+subtitle shape
+            // rather than reusing the component directly.
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '14px 10px', textAlign: 'center' }}>
+              <span style={{ fontSize: 26, lineHeight: 1 }}>👪</span>
+              <span style={{ fontSize: 12, fontWeight: 700 }}>Belum ada skenario tersimpan</span>
+              <span style={{ fontSize: 11, color: 'var(--muted)', lineHeight: 1.5, maxWidth: 260 }}>
+                Atur ahli waris di bawah, lalu simpan buat dibandingkan nanti.
+              </span>
+            </div>
           ) : (
             <div className="hide-scrollbar" style={{ display: 'flex', gap: 8, overflowX: 'auto' }}>
               {scenarios.map((s) => (
@@ -225,6 +275,30 @@ export default function KalkulatorWaris() {
                     </div>
                   ))}
                 </div>
+              )}
+              {compareA && compareB && (
+                <button
+                  onClick={() => {
+                    const block = (s, r) => {
+                      const lines = [`— ${s.name} —`, `Total Harta: ${formatRupiah(r.totalHarta)}`];
+                      if (r.results.length === 0) lines.push('Tidak ada ahli waris.');
+                      else r.results.forEach((row) => lines.push(`${row.label}: ${formatRupiah(row.amount)} (${(row.fraction * 100).toFixed(2)}%)`));
+                      return lines.join('\n');
+                    };
+                    const text = `Perbandingan Skenario Waris — airmoon\n\n${block(compareA, compareAResult)}\n\n${block(compareB, compareBResult)}`;
+                    const blob = new Blob([text], { type: 'text/plain' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'perbandingan-skenario-waris.txt';
+                    a.click();
+                    URL.revokeObjectURL(url);
+                  }}
+                  className="btn-outline"
+                  style={{ padding: '9px', fontSize: 11.5 }}
+                >
+                  ⬇ Ekspor Perbandingan ke Teks
+                </button>
               )}
             </div>
           )}
@@ -301,8 +375,15 @@ export default function KalkulatorWaris() {
           danger
           onCancel={() => setDeleteScenarioId(null)}
           onConfirm={() => {
+            const removed = scenarios.find((s) => s.id === deleteScenarioId);
             setScenarios(deleteWarisScenario(deleteScenarioId));
             setDeleteScenarioId(null);
+            if (removed) {
+              showToast('Skenario dihapus', {
+                actionLabel: 'Batalkan',
+                onAction: () => setScenarios(saveWarisScenario(removed.name, removed.inputs)),
+              });
+            }
           }}
         />
       )}

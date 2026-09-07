@@ -25,6 +25,7 @@ import {
   HistoryBookIcon,
   PuasaSunnahIcon,
   StatsIcon,
+  AmalanCalendarIcon,
 } from '../components/serviceIcons';
 
 // All hand-drawn gradient icons now (see serviceIcons.jsx) — this grid
@@ -53,6 +54,7 @@ const ITEMS = [
   { to: '/lainnya/sejarah-islam', label: 'Sejarah Islam', bg: 'var(--cream)', node: <HistoryBookIcon size={30} /> },
   { to: '/lainnya/puasa-sunnah', label: 'Puasa Sunnah', bg: 'var(--mint)', node: <PuasaSunnahIcon size={30} /> },
   { to: '/lainnya/ringkasan-ibadah', label: 'Ringkasan Ibadah', bg: 'var(--peach)', node: <StatsIcon size={30} /> },
+  { to: '/lainnya/kalender-ibadah', label: 'Kalender Ibadah', bg: 'var(--mint)', node: <AmalanCalendarIcon size={30} /> },
 ];
 
 export default function Lainnya() {

@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react';
 import { fetchRecentAmalanHarian, DAILY_POINTS_MAX } from '../lib/amalanHarian';
+import { useTheme } from '../context/ThemeContext';
+import WeeklyRecapShareModal from './WeeklyRecapShareModal';
+import { IconShare } from './icons';
 
 const DAYS = 35; // 5 full weeks — enough to see a real pattern without the row getting unreadably long
 
@@ -34,7 +37,9 @@ function cellStyle(score, max) {
 // has no dzikirPagi/dzikirPetang/loginPoint fields and shows a lower real
 // score, not a bug — that data was never captured before now.
 export default function AmalanHeatmap({ uid }) {
+  const { theme } = useTheme();
   const [days, setDays] = useState(null);
+  const [showRecap, setShowRecap] = useState(false);
 
   useEffect(() => {
     if (!uid) return;
@@ -42,6 +47,14 @@ export default function AmalanHeatmap({ uid }) {
   }, [uid]);
 
   if (!days) return null;
+
+  // Bagikan Capaian Mingguan — the last 7 entries of the same `days`
+  // array this component already fetched (a rolling 5-week strip), no
+  // separate query needed.
+  const last7 = days.slice(-7);
+  const weeklyTotal = last7.reduce((sum, d) => sum + d.score, 0);
+  const weeklyMax = last7.reduce((sum, d) => sum + d.max, 0);
+  const bestDay = last7.reduce((best, d) => (d.score > best.score ? d : best), last7[0]);
 
   // Pad the front so the grid always starts on a Sunday column, same
   // convention GitHub's own contribution graph uses.
@@ -54,7 +67,17 @@ export default function AmalanHeatmap({ uid }) {
     <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: 16, background: 'linear-gradient(155deg, var(--card) 55%, var(--mint-soft) 130%)' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <span style={{ fontSize: 12.5, fontWeight: 800 }}>📅 Konsistensi 5 Minggu Terakhir</span>
-        <span style={{ fontSize: 10, color: 'var(--muted)' }}>Poin harian (dari {max})</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 10, color: 'var(--muted)' }}>Poin harian (dari {max})</span>
+          <button
+            onClick={() => setShowRecap(true)}
+            aria-label="Bagikan capaian mingguan"
+            title="Bagikan capaian mingguan"
+            style={{ width: 24, height: 24, borderRadius: '50%', border: 'none', background: 'var(--mint-soft)', color: 'var(--primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          >
+            <IconShare />
+          </button>
+        </div>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}>
         {padded.map((d, i) =>
@@ -72,6 +95,17 @@ export default function AmalanHeatmap({ uid }) {
       <span style={{ fontSize: 9.5, color: 'var(--muted-soft)', lineHeight: 1.4 }}>
         *Sholat, Tilawah, Dzikir Pagi/Petang, & poin login harian. Hari sebelum fitur ini aktif mungkin kelihatan lebih rendah — datanya emang belum kesimpen dulu.
       </span>
+
+      {showRecap && (
+        <WeeklyRecapShareModal
+          totalScore={weeklyTotal}
+          maxScore={weeklyMax}
+          bestDayScore={bestDay.score}
+          bestDayMax={bestDay.max}
+          theme={theme}
+          onClose={() => setShowRecap(false)}
+        />
+      )}
     </div>
   );
 }

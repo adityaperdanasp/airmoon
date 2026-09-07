@@ -26,6 +26,19 @@ export const IconHome = (p) => (
   </svg>
 );
 
+// [UI] "Ikon share konsisten" — the classic 3-node share glyph, used
+// inline (hand-copied) across a dozen+ share buttons in this app before
+// this (NamaNamaAllah's per-name button, RingkasanIbadah's header
+// button, etc.). Exported once here so every full-width "Bagikan" CTA
+// that was still text-only gets the same icon rather than each staying
+// visually inconsistent.
+export const IconShare = (p) => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" {...p}>
+    <circle cx="18" cy="5" r="3" strokeWidth="1.8" /><circle cx="6" cy="12" r="3" strokeWidth="1.8" /><circle cx="18" cy="19" r="3" strokeWidth="1.8" />
+    <path d="M8.6 10.5 15.4 6.5M8.6 13.5 15.4 17.5" strokeWidth="1.8" />
+  </svg>
+);
+
 // BottomNav's "Lainnya" tab (2026-09-02) — a 2x2 grid, the standard "more"
 // glyph, matching the same stroke-icon style as the rest of this file.
 export const IconGrid = (p) => (
