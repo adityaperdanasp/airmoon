@@ -274,13 +274,13 @@ export default function Tasbih() {
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'center', gap: 14, marginTop: 10 }}>
-          <button className="btn-outline" style={{ flex: 'none', padding: '10px 20px' }} onClick={undo} disabled={count === 0}>
+          <button className="btn-outline" style={{ flex: 'none', width: 'auto', padding: '10px 20px' }} onClick={undo} disabled={count === 0}>
             −1
           </button>
-          <button className="btn-outline" style={{ flex: 'none', padding: '10px 20px', color: 'var(--danger)', borderColor: 'var(--danger)' }} onClick={() => setShowResetConfirm(true)} disabled={count === 0}>
+          <button className="btn-outline" style={{ flex: 'none', width: 'auto', padding: '10px 20px', color: 'var(--danger)', borderColor: 'var(--danger)' }} onClick={() => setShowResetConfirm(true)} disabled={count === 0}>
             Reset
           </button>
-          <button className="btn-outline" style={{ flex: 'none', padding: '10px 16px' }} onClick={() => setShowShare(true)} disabled={count === 0} aria-label="Bagikan progress">
+          <button className="btn-outline" style={{ flex: 'none', width: 'auto', padding: '10px 16px' }} onClick={() => setShowShare(true)} disabled={count === 0} aria-label="Bagikan progress">
             ↗
           </button>
         </div>

@@ -118,7 +118,7 @@ export default function SejarahIslam() {
         </div>
 
         <div style={{ display: 'flex', gap: 10 }}>
-          <button className="btn-outline" style={{ flex: 'none', padding: '0 16px' }} onClick={() => setIdx((i) => (i - 1 + ISLAMIC_HISTORY.length) % ISLAMIC_HISTORY.length)} aria-label="Sebelumnya">
+          <button className="btn-outline" style={{ flex: 'none', width: 'auto', padding: '0 16px' }} onClick={() => setIdx((i) => (i - 1 + ISLAMIC_HISTORY.length) % ISLAMIC_HISTORY.length)} aria-label="Sebelumnya">
             ←
           </button>
           <button className="btn-outline" style={{ flex: 1 }} onClick={() => setIdx((i) => (i + 1) % ISLAMIC_HISTORY.length)}>
