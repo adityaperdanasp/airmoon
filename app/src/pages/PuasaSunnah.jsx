@@ -19,6 +19,42 @@ function pad2(n) {
   return String(n).padStart(2, '0');
 }
 
+// Hari mana aja di bulan Gregorian yang lagi dilihat itu Ayyamul Bidh
+// (Hijriah 13/14/15) — reuses the exact same /api/aladhan?type=
+// hijri-calendar endpoint KalenderHijriah.jsx already calls (one row
+// per Gregorian day in the month, each carrying its own Hijri day), so
+// no new backend work is needed. Best-effort: if this fetch fails, the
+// calendar just renders without the Ayyamul Bidh markers rather than
+// blocking the whole page on a secondary enhancement.
+function useAyyamulBidhDays(viewMonth) {
+  const [bidhDays, setBidhDays] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setBidhDays(null);
+    const month = viewMonth.getMonth() + 1;
+    const year = viewMonth.getFullYear();
+    fetch(`https://airmoon.vercel.app/api/aladhan?type=hijri-calendar&month=${month}&year=${year}`)
+      .then((r) => r.json())
+      .then((json) => {
+        if (cancelled) return;
+        const days = json.data || [];
+        const marked = new Set(
+          days.filter((d) => [13, 14, 15].includes(Number(d.hijri.day))).map((d) => Number(d.gregorian.day))
+        );
+        setBidhDays(marked);
+      })
+      .catch(() => {
+        if (!cancelled) setBidhDays(new Set());
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [viewMonth]);
+
+  return bidhDays;
+}
+
 // A real month calendar grid — replacing the flat "Riwayat" date list,
 // which read fine for a handful of entries but gave no sense of pattern
 // (which weeks were consistent, whether Senin/Kamis actually landed on
@@ -26,12 +62,20 @@ function pad2(n) {
 // TODAY's cell is tappable (same "only today is editable" rule
 // AmalanHeatmap.jsx's read-only design already established) — past days
 // are just a record, not something to retroactively edit here.
+//
+// Tanda Ayyamul Bidh (2026-09-07, founder request) — "jadi orang tau"
+// which Gregorian dates each month actually fall on Hijriah 13-15,
+// rather than someone having to work it out themselves against a
+// separate Hijri calendar. A small gold ring around the day number,
+// distinct from the filled-teal "sudah dicatat" state and the
+// primary-bordered "hari ini" state.
 function PuasaCalendar({ dateSet, viewMonth, onPrevMonth, onNextMonth, today, onToggleToday }) {
   const year = viewMonth.getFullYear();
   const month = viewMonth.getMonth();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstDow = new Date(year, month, 1).getDay();
   const cells = [...Array(firstDow).fill(null), ...Array.from({ length: daysInMonth }, (_, i) => i + 1)];
+  const bidhDays = useAyyamulBidhDays(viewMonth);
 
   return (
     <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: 16 }}>
@@ -53,15 +97,18 @@ function PuasaCalendar({ dateSet, viewMonth, onPrevMonth, onNextMonth, today, on
           const key = `${year}-${pad2(month + 1)}-${pad2(day)}`;
           const isMarked = dateSet.has(key);
           const isToday = key === today;
+          const isBidh = bidhDays?.has(day);
           return (
             <button
               key={i}
               onClick={isToday ? onToggleToday : undefined}
               disabled={!isToday}
+              title={isBidh ? 'Ayyamul Bidh' : undefined}
               style={{
+                position: 'relative',
                 aspectRatio: '1',
                 borderRadius: 8,
-                border: isToday ? '1.5px solid var(--primary)' : 'none',
+                border: isToday ? '1.5px solid var(--primary)' : isBidh ? '1.5px solid var(--gold-ink)' : 'none',
                 background: isMarked ? 'var(--primary)' : 'var(--border)',
                 color: isMarked ? 'var(--on-primary)' : 'var(--muted)',
                 fontSize: 10.5,
@@ -71,9 +118,16 @@ function PuasaCalendar({ dateSet, viewMonth, onPrevMonth, onNextMonth, today, on
               }}
             >
               {day}
+              {isBidh && (
+                <span style={{ position: 'absolute', top: 1, right: 1, fontSize: 7, lineHeight: 1, opacity: isMarked ? 1 : 0.85 }}>🌕</span>
+              )}
             </button>
           );
         })}
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <span style={{ width: 14, height: 14, borderRadius: 4, border: '1.5px solid var(--gold-ink)', flexShrink: 0 }} />
+        <span style={{ fontSize: 9.5, color: 'var(--muted)' }}>Ayyamul Bidh (Hijriah 13-15)</span>
       </div>
     </div>
   );
