@@ -5,6 +5,7 @@ import { DECORATIVE_PHOTOS_LIGHT, DECORATIVE_PHOTOS_DARK } from '../data/photos'
 import TopBar from '../components/TopBar';
 import SejarahIslamShareModal from '../components/SejarahIslamShareModal';
 import { IconShare } from '../components/icons';
+import Logo from '../components/Logo';
 
 // "Hari Ini dalam Sejarah Islam" — same day-of-year rotation pattern as
 // KutipanInspirasi.jsx, but fully local content (data/islamicHistory.js
@@ -97,6 +98,11 @@ export default function SejarahIslam() {
             }}
           />
           <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, textAlign: 'center' }}>
+            {/* Same gap as KutipanInspirasi.jsx's on-screen card — the
+                shared/downloadable canvas version (lib/sejarahIslamCardCanvas.js)
+                already has the logo, but this separate HTML/CSS preview
+                never did. */}
+            <Logo size={24} showWordmark color="#fff" />
             <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--accent)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
               {entry.year}
             </span>

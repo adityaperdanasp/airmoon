@@ -9,6 +9,7 @@ import ErrorRetry from '../components/ErrorRetry';
 import { SkeletonCard } from '../components/Skeleton';
 import QuoteCardModal from '../components/QuoteCardModal';
 import { IconShare } from '../components/icons';
+import Logo from '../components/Logo';
 
 export default function KutipanInspirasi() {
   const { lang } = useLang();
@@ -132,6 +133,15 @@ export default function KutipanInspirasi() {
                 }}
               />
               <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18, textAlign: 'center' }}>
+                {/* The airmoon logo on the *shared/downloadable* canvas
+                    version of this card (lib/quoteCardCanvas.js) was
+                    fixed in an earlier batch — this on-screen HTML/CSS
+                    card is a separate rendering entirely and never got
+                    the same branding (founder-reported with a
+                    screenshot: "sama ga ada lambang airmoon"). Uses the
+                    real <Logo> component, not the canvas-drawing helper,
+                    since this card is plain markup. */}
+                <Logo size={26} showWordmark color="#fff" />
                 <span style={{ fontFamily: "'Amiri', serif", fontSize: 26, lineHeight: 1.9, color: '#fff', direction: 'rtl' }}>
                   {quote.arabic}
                 </span>
