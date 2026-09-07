@@ -4,12 +4,25 @@ import TopBar from '../components/TopBar';
 import { DECORATIVE_PHOTOS_LIGHT } from '../data/photos';
 import { shareFile } from '../lib/share';
 import { getKartuUcapanHistory, logKartuUcapan } from '../lib/kartuUcapanHistory';
+import { drawAirmoonBrand } from '../lib/drawAirmoonLogo';
 
+// 10 starting color presets now (was 4) — per an explicit "makin banyak
+// pilihan template colornya" ask. The first 4 keep their original
+// occasion-matched pairing (Idul Fitri/Ramadan/Jumat/Idul Adha default
+// text); the 6 new ones are color-only variety (no occasion text change)
+// since color choice and wording are already independently editable —
+// picking one just re-seeds a different starting gradient to tweak from.
 const TEMPLATES = [
   { id: 0, colors: ['#0d4d47', '#0a3630'], title: 'Selamat Idul Fitri', sub: 'Mohon maaf lahir & batin' },
   { id: 1, colors: ['#a9761f', '#6b4a12'], title: 'Selamat Menunaikan Ibadah Puasa', sub: 'Marhaban Ya Ramadhan' },
   { id: 2, colors: ['#3f5c68', '#23343b'], title: "Jumat Berkah", sub: 'Semoga Allah limpahkan rahmat-Nya' },
   { id: 3, colors: ['#a9622f', '#6b3d1c'], title: 'Selamat Idul Adha', sub: 'Taqabbalallahu minna wa minkum' },
+  { id: 4, colors: ['#1f6b4d', '#0f3d2b'], title: 'Selamat Idul Fitri', sub: 'Mohon maaf lahir & batin' },
+  { id: 5, colors: ['#7a1f3d', '#3d0f1e'], title: "Jumat Berkah", sub: 'Semoga Allah limpahkan rahmat-Nya' },
+  { id: 6, colors: ['#1e3a5f', '#0d1b2e'], title: 'Selamat Menunaikan Ibadah Puasa', sub: 'Marhaban Ya Ramadhan' },
+  { id: 7, colors: ['#5b3a8f', '#2e1c4a'], title: 'Selamat Idul Adha', sub: 'Taqabbalallahu minna wa minkum' },
+  { id: 8, colors: ['#b8895a', '#6b4a2f'], title: 'Selamat Idul Fitri', sub: 'Mohon maaf lahir & batin' },
+  { id: 9, colors: ['#20201f', '#0a0a09'], title: "Jumat Berkah", sub: 'Semoga Allah limpahkan rahmat-Nya' },
 ];
 
 function loadImage(src) {
@@ -46,6 +59,11 @@ async function draw(canvas, { title, sub, color1, color2, photoIndex, arabicText
   // — Scheherazade New is purpose-built for Quranic/classical Arabic,
   // giving a genuinely different calligraphic feel than Amiri.
   await document.fonts.load(`600 34px '${arabicFont}'`);
+  // Real airmoon logo (not the wordmark alone) — this card previously had
+  // no branding of any kind, despite being the most-shared card in the
+  // app around Lebaran/Ramadan; see lib/drawAirmoonLogo.js's header for
+  // why this is the real traced crescent+star, not an approximation.
+  await document.fonts.load("600 40px 'Fredoka'");
 
   const photoSrc = DECORATIVE_PHOTOS_LIGHT[((photoIndex % DECORATIVE_PHOTOS_LIGHT.length) + DECORATIVE_PHOTOS_LIGHT.length) % DECORATIVE_PHOTOS_LIGHT.length];
   try {
@@ -79,6 +97,8 @@ async function draw(canvas, { title, sub, color1, color2, photoIndex, arabicText
     ctx.bezierCurveTo(x - 70, h * 0.9, x - 70, h + 40, x, h + 40);
     ctx.stroke();
   }
+
+  drawAirmoonBrand(ctx, { centerX: w / 2, y: 64, size: 38 });
 
   ctx.fillStyle = '#e8b84b';
   ctx.font = `600 34px '${arabicFont}', serif`;
@@ -202,7 +222,7 @@ export default function KartuUcapan() {
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <span className="section-label">{t('pilih_template')}</span>
-          <div style={{ display: 'flex', gap: 10 }}>
+          <div className="hide-scrollbar" style={{ display: 'flex', gap: 10, overflowX: 'auto' }}>
             {TEMPLATES.map((tp) => (
               <button
                 key={tp.id}
@@ -210,6 +230,7 @@ export default function KartuUcapan() {
                 aria-label={`Template ${tp.title}`}
                 aria-pressed={tp.id === tplId}
                 style={{
+                  flexShrink: 0,
                   width: 56,
                   height: 70,
                   borderRadius: 12,

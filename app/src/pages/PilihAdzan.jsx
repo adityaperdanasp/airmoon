@@ -44,6 +44,21 @@ export default function PilihAdzan() {
 
   useEffect(() => () => audioRef.current?.pause(), []);
 
+  // Real reported delay ("delaynya lama banget") — the shared <audio>
+  // element had no `preload` hint at all, so the very first tap on any
+  // sound only started the fetch right then, and mobile Safari's default
+  // preload behavior is conservative (data-saving) rather than eager. A
+  // plain fetch() (not tied to the <audio> element or autoplay policy)
+  // primes the browser's HTTP cache for all 3 clips as soon as this page
+  // mounts — they're tiny (~140KB each, ~420KB total) — so by the time
+  // someone actually taps a speaker icon, playback starts from cache
+  // instead of a cold network fetch.
+  useEffect(() => {
+    SOUNDS.forEach((s) => {
+      if (s.preview) fetch(s.preview).catch(() => {});
+    });
+  }, []);
+
   function togglePreview(sound, e) {
     e.stopPropagation();
     if (!sound.preview) return;
@@ -143,6 +158,7 @@ export default function PilihAdzan() {
         </div>
         <audio
           ref={audioRef}
+          preload="auto"
           onEnded={() => setPlaying(null)}
           onError={() => {
             setPlaying(null);
