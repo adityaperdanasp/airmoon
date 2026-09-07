@@ -3,6 +3,7 @@ import { drawAyatCard, canvasToFile } from '../lib/ayatCardCanvas';
 import { useTheme } from '../context/ThemeContext';
 import { shareFile } from '../lib/share';
 import { useEscapeKey } from '../lib/useEscapeKey';
+import { downloadCardWallpaper } from '../lib/downloadWallpaper';
 import Portal from './Portal';
 
 // A shareable "Ayat Card" preview — renders the same canvas used for
@@ -16,6 +17,7 @@ export default function AyatCardModal({ ayat, onClose }) {
   const { theme } = useTheme();
   const [ready, setReady] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [wallpaperBusy, setWallpaperBusy] = useState(false);
   useEscapeKey(onClose);
 
   useEffect(() => {
@@ -48,6 +50,17 @@ export default function AyatCardModal({ ayat, onClose }) {
       a.click();
       URL.revokeObjectURL(url);
     }, 'image/png');
+  }
+
+  // Buat Lock Screen HP — a separate offscreen canvas at wallpaper
+  // dimensions, not swapping the visible preview canvas's own size.
+  async function handleDownloadWallpaper() {
+    setWallpaperBusy(true);
+    try {
+      await downloadCardWallpaper(drawAyatCard, { ...ayat, theme }, `ayat-${ayat.chapter}-${ayat.verse}-lockscreen.png`);
+    } finally {
+      setWallpaperBusy(false);
+    }
   }
 
   return (
@@ -88,6 +101,19 @@ export default function AyatCardModal({ ayat, onClose }) {
             {busy ? '...' : 'Bagikan'}
           </button>
         </div>
+
+        {/* Buat Lock Screen HP (2026-09-07, founder request) — a taller
+            wallpaper-sized version of the same card, separate from the
+            regular Unduh/Bagikan pair above since it's a secondary,
+            occasional action rather than the main flow. */}
+        <button
+          onClick={handleDownloadWallpaper}
+          disabled={!ready || wallpaperBusy}
+          className="btn-outline"
+          style={{ width: '100%', color: '#fff', borderColor: 'rgba(255,255,255,0.4)', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+        >
+          📱 {wallpaperBusy ? 'Menyiapkan...' : 'Unduh buat Lock Screen HP'}
+        </button>
 
         <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#fff', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', opacity: 0.8 }}>
           Tutup

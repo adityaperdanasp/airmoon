@@ -8,8 +8,13 @@
 import { DECORATIVE_PHOTOS_LIGHT, DECORATIVE_PHOTOS_DARK } from '../data/photos';
 import { drawAirmoonBrand } from './drawAirmoonLogo';
 
-const W = 1080;
-const H = 1350;
+const POST_W = 1080;
+const POST_H = 1350;
+// Buat Lock Screen HP (2026-09-07) — see quoteCardCanvas.js's own header
+// note for the full reasoning; same "same content math, shifted down"
+// approach reused here.
+const WALLPAPER_W = 1080;
+const WALLPAPER_H = 2340;
 
 async function ensureFontsReady() {
   // fillText silently uses a fallback font if the real one hasn't finished
@@ -35,11 +40,11 @@ function loadImage(src) {
 
 // Same object-fit: cover math the CSS property does — scale up to
 // whichever dimension needs it more, then center-crop the overflow.
-function drawImageCover(ctx, img) {
-  const scale = Math.max(W / img.width, H / img.height);
-  const w = img.width * scale;
-  const h = img.height * scale;
-  ctx.drawImage(img, (W - w) / 2, (H - h) / 2, w, h);
+function drawImageCover(ctx, img, w, h) {
+  const scale = Math.max(w / img.width, h / img.height);
+  const iw = img.width * scale;
+  const ih = img.height * scale;
+  ctx.drawImage(img, (w - iw) / 2, (h - ih) / 2, iw, ih);
 }
 
 // Greedy word-wrap: splits `text` on spaces and packs words onto lines no
@@ -62,7 +67,12 @@ function wrapLines(ctx, text, maxWidth) {
   return lines;
 }
 
-export async function drawAyatCard(canvas, { arabic, translation, chapterName, chapter, verse, theme = 'light' }) {
+export async function drawAyatCard(canvas, { arabic, translation, chapterName, chapter, verse, theme = 'light', size = 'post' }) {
+  const isWallpaper = size === 'wallpaper';
+  const W = isWallpaper ? WALLPAPER_W : POST_W;
+  const H = isWallpaper ? WALLPAPER_H : POST_H;
+  const shift = isWallpaper ? (WALLPAPER_H - POST_H) * 0.75 : 0;
+
   canvas.width = W;
   canvas.height = H;
   const ctx = canvas.getContext('2d');
@@ -82,7 +92,7 @@ export async function drawAyatCard(canvas, { arabic, translation, chapterName, c
 
   try {
     const img = await loadImage(photoSrc);
-    drawImageCover(ctx, img);
+    drawImageCover(ctx, img, W, H);
   } catch {
     // Photo failed to load (offline, etc.) — fall back to the flat
     // gradient this card used before photos were added, rather than
@@ -126,7 +136,7 @@ export async function drawAyatCard(canvas, { arabic, translation, chapterName, c
   const arabicLines = wrapLines(ctx, arabic, W - 200);
   const arabicLineHeight = 96;
   const arabicBlockH = arabicLines.length * arabicLineHeight;
-  let y = H * 0.36 - arabicBlockH / 2 + arabicLineHeight * 0.7;
+  let y = shift + POST_H * 0.36 - arabicBlockH / 2 + arabicLineHeight * 0.7;
   for (const line of arabicLines) {
     ctx.fillText(line, W / 2, y);
     y += arabicLineHeight;
@@ -147,11 +157,11 @@ export async function drawAyatCard(canvas, { arabic, translation, chapterName, c
   // block above for space regardless of how long the ayat/translation ran.
   ctx.font = '600 30px Poppins, sans-serif';
   ctx.fillStyle = '#e8b84b';
-  ctx.fillText(`QS. ${chapterName} : ${verse}`, W / 2, H - 150);
+  ctx.fillText(`QS. ${chapterName} : ${verse}`, W / 2, shift + POST_H - 150);
 
   ctx.font = '800 40px Poppins, sans-serif';
   ctx.fillStyle = '#ffffff';
-  ctx.fillText('airmoon', W / 2, H - 90);
+  ctx.fillText('airmoon', W / 2, shift + POST_H - 90);
 }
 
 export function canvasToFile(canvas, filename) {

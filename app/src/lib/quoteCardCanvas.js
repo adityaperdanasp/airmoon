@@ -10,8 +10,18 @@
 import { DECORATIVE_PHOTOS_LIGHT, DECORATIVE_PHOTOS_DARK } from '../data/photos';
 import { drawAirmoonBrand } from './drawAirmoonLogo';
 
-const W = 1080;
-const H = 1350;
+const POST_W = 1080;
+const POST_H = 1350;
+// Buat Lock Screen HP (2026-09-07, founder request) — a taller 9:19.5-ish
+// canvas sized for modern phone lock screens, not just social posts.
+// Content is laid out with the exact same pixel math as the 'post' size
+// (against the fixed POST_H reference below), then the whole text block
+// is shifted down so it clears the upper portion of the screen where a
+// phone's clock/date widget usually sits, rather than centering it or
+// naively stretching every position by height ratio (which would just
+// spread the same tight block thinly across a much taller canvas).
+const WALLPAPER_W = 1080;
+const WALLPAPER_H = 2340;
 
 async function ensureFontsReady() {
   await Promise.all([
@@ -31,11 +41,11 @@ function loadImage(src) {
   });
 }
 
-function drawImageCover(ctx, img) {
-  const scale = Math.max(W / img.width, H / img.height);
-  const w = img.width * scale;
-  const h = img.height * scale;
-  ctx.drawImage(img, (W - w) / 2, (H - h) / 2, w, h);
+function drawImageCover(ctx, img, w, h) {
+  const scale = Math.max(w / img.width, h / img.height);
+  const iw = img.width * scale;
+  const ih = img.height * scale;
+  ctx.drawImage(img, (w - iw) / 2, (h - ih) / 2, iw, ih);
 }
 
 function wrapLines(ctx, text, maxWidth) {
@@ -55,7 +65,18 @@ function wrapLines(ctx, text, maxWidth) {
   return lines;
 }
 
-export async function drawQuoteCard(canvas, { arabic, translation, source, quoteIndex, theme = 'light' }) {
+export async function drawQuoteCard(canvas, { arabic, translation, source, quoteIndex, theme = 'light', size = 'post' }) {
+  const isWallpaper = size === 'wallpaper';
+  const W = isWallpaper ? WALLPAPER_W : POST_W;
+  const H = isWallpaper ? WALLPAPER_H : POST_H;
+  // All content y-positions below are computed against this fixed
+  // reference height (same as the 'post' size always was), then `shift`
+  // pushes the whole block down for the taller wallpaper canvas — most of
+  // the extra height goes above the text (clearing the phone's clock/date
+  // zone), a smaller share stays below so the footer isn't cramped
+  // against the very bottom edge either.
+  const shift = isWallpaper ? (WALLPAPER_H - POST_H) * 0.75 : 0;
+
   canvas.width = W;
   canvas.height = H;
   const ctx = canvas.getContext('2d');
@@ -71,7 +92,7 @@ export async function drawQuoteCard(canvas, { arabic, translation, source, quote
 
   try {
     const img = await loadImage(photoSrc);
-    drawImageCover(ctx, img);
+    drawImageCover(ctx, img, W, H);
   } catch {
     const fallback = ctx.createLinearGradient(0, 0, W, H);
     fallback.addColorStop(0, '#0d4d47');
@@ -105,7 +126,7 @@ export async function drawQuoteCard(canvas, { arabic, translation, source, quote
   const arabicLines = wrapLines(ctx, arabic, W - 200);
   const arabicLineHeight = 90;
   const arabicBlockH = arabicLines.length * arabicLineHeight;
-  let y = H * 0.36 - arabicBlockH / 2 + arabicLineHeight * 0.7;
+  let y = shift + POST_H * 0.36 - arabicBlockH / 2 + arabicLineHeight * 0.7;
   for (const line of arabicLines) {
     ctx.fillText(line, W / 2, y);
     y += arabicLineHeight;
@@ -123,9 +144,9 @@ export async function drawQuoteCard(canvas, { arabic, translation, source, quote
 
   ctx.font = '600 30px Poppins, sans-serif';
   ctx.fillStyle = '#e8b84b';
-  ctx.fillText(source, W / 2, H - 150);
+  ctx.fillText(source, W / 2, shift + POST_H - 150);
 
   ctx.font = '800 40px Poppins, sans-serif';
   ctx.fillStyle = '#ffffff';
-  ctx.fillText('airmoon', W / 2, H - 90);
+  ctx.fillText('airmoon', W / 2, shift + POST_H - 90);
 }

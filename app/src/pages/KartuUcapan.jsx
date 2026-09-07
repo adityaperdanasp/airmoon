@@ -6,6 +6,7 @@ import { shareFile } from '../lib/share';
 import { getKartuUcapanHistory, logKartuUcapan } from '../lib/kartuUcapanHistory';
 import { drawAirmoonBrand } from '../lib/drawAirmoonLogo';
 import { IconShare } from '../components/icons';
+import { downloadCardWallpaper } from '../lib/downloadWallpaper';
 
 // 10 starting color presets now (was 4) — per an explicit "makin banyak
 // pilihan template colornya" ask. The first 4 keep their original
@@ -48,7 +49,19 @@ function drawImageCover(ctx, img, w, h) {
 // inputs, not a fixed set the render is locked to. Was `draw(canvas, tpl)`
 // reading straight off a TEMPLATES entry before the "custom text/foto/
 // warna" ask; kept the same drawing logic, just parameterized.
-async function draw(canvas, { title, sub, color1, color2, photoIndex, arabicText, arabicFont }) {
+async function draw(canvas, { title, sub, color1, color2, photoIndex, arabicText, arabicFont, size = 'post' }) {
+  const isWallpaper = size === 'wallpaper';
+  // Buat Lock Screen HP (2026-09-07) — same 1080×2340 target every other
+  // wallpaper-capable card uses. Unlike those (which lay content out
+  // against a fixed reference height and shift it down), this card's
+  // text was always positioned via h-relative fractions (h*0.42 etc), so
+  // switching h to 2340 already keeps the SAME relative vertical
+  // position automatically — the only real adjustment needed is scaling
+  // the (fixed-pixel) font sizes up so text doesn't look tiny against a
+  // much taller canvas.
+  canvas.width = isWallpaper ? 1080 : 800;
+  canvas.height = isWallpaper ? 2340 : 1000;
+  const fontScale = isWallpaper ? 1.35 : 1;
   const ctx = canvas.getContext('2d');
   const w = canvas.width;
   const h = canvas.height;
@@ -99,20 +112,20 @@ async function draw(canvas, { title, sub, color1, color2, photoIndex, arabicText
     ctx.stroke();
   }
 
-  drawAirmoonBrand(ctx, { centerX: w / 2, y: 64, size: 38 });
+  drawAirmoonBrand(ctx, { centerX: w / 2, y: 64 * fontScale, size: 38 * fontScale });
 
   ctx.fillStyle = '#e8b84b';
-  ctx.font = `600 34px '${arabicFont}', serif`;
+  ctx.font = `600 ${34 * fontScale}px '${arabicFont}', serif`;
   ctx.textAlign = 'center';
   ctx.fillText(arabicText || ' ', w / 2, h * 0.42);
 
   ctx.fillStyle = '#ffffff';
-  ctx.font = '800 40px Poppins, sans-serif';
-  wrapText(ctx, title || ' ', w / 2, h * 0.56, w * 0.8, 46);
+  ctx.font = `800 ${40 * fontScale}px Poppins, sans-serif`;
+  wrapText(ctx, title || ' ', w / 2, h * 0.56, w * 0.8, 46 * fontScale);
 
   ctx.fillStyle = 'rgba(255,255,255,0.8)';
-  ctx.font = '400 20px Poppins, sans-serif';
-  wrapText(ctx, sub || ' ', w / 2, h * 0.68, w * 0.8, 26);
+  ctx.font = `400 ${20 * fontScale}px Poppins, sans-serif`;
+  wrapText(ctx, sub || ' ', w / 2, h * 0.68, w * 0.8, 26 * fontScale);
 }
 
 function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
@@ -156,6 +169,7 @@ export default function KartuUcapan() {
   const [arabicText, setArabicText] = useState('تقبل الله منا ومنكم');
   const [arabicFont, setArabicFont] = useState('Amiri');
   const [historyQuery, setHistoryQuery] = useState('');
+  const [wallpaperBusy, setWallpaperBusy] = useState(false);
   const filteredHistory = historyQuery.trim()
     ? history.filter((h) => (h.title || '').toLowerCase().includes(historyQuery.trim().toLowerCase()))
     : history;
@@ -198,6 +212,20 @@ export default function KartuUcapan() {
     });
     logKartuUcapan(tplId, title);
     setHistory(getKartuUcapanHistory());
+  }
+
+  // Buat Lock Screen HP — an offscreen canvas at wallpaper size, not the
+  // visible preview canvas (which stays 800×1000 for the on-screen
+  // preview/download/share flow above).
+  async function handleDownloadWallpaper() {
+    setWallpaperBusy(true);
+    try {
+      await downloadCardWallpaper(draw, { title, sub, color1, color2, photoIndex, arabicText, arabicFont }, 'kartu-ucapan-lockscreen.png');
+      logKartuUcapan(tplId, title);
+      setHistory(getKartuUcapanHistory());
+    } finally {
+      setWallpaperBusy(false);
+    }
   }
 
   return (
@@ -348,6 +376,18 @@ export default function KartuUcapan() {
             <IconShare /> {t('bagikan')}
           </button>
         </div>
+
+        {/* Buat Lock Screen HP (2026-09-07, founder request) — a taller
+            wallpaper-sized version, separate from the regular preview/
+            download/share flow above. */}
+        <button
+          onClick={handleDownloadWallpaper}
+          disabled={!ready || wallpaperBusy}
+          className="btn-outline"
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+        >
+          📱 {wallpaperBusy ? 'Menyiapkan...' : 'Unduh buat Lock Screen HP'}
+        </button>
 
         {history.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>

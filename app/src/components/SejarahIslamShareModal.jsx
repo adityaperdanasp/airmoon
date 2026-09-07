@@ -3,6 +3,7 @@ import { drawSejarahIslamCard } from '../lib/sejarahIslamCardCanvas';
 import { canvasToFile } from '../lib/ayatCardCanvas';
 import { shareFile } from '../lib/share';
 import { useEscapeKey } from '../lib/useEscapeKey';
+import { downloadCardWallpaper } from '../lib/downloadWallpaper';
 import Portal from './Portal';
 
 // Same shell as RamadanShareModal.jsx/AyatCardModal.jsx (canvas preview +
@@ -13,6 +14,7 @@ export default function SejarahIslamShareModal({ title, year, text, photoIndex, 
   const canvasRef = useRef(null);
   const [ready, setReady] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [wallpaperBusy, setWallpaperBusy] = useState(false);
   useEscapeKey(onClose);
 
   useEffect(() => {
@@ -47,6 +49,15 @@ export default function SejarahIslamShareModal({ title, year, text, photoIndex, 
     }
   }
 
+  async function handleDownloadWallpaper() {
+    setWallpaperBusy(true);
+    try {
+      await downloadCardWallpaper(drawSejarahIslamCard, { title, year, text, photoIndex, theme }, 'sejarah-islam-lockscreen.png');
+    } finally {
+      setWallpaperBusy(false);
+    }
+  }
+
   return (
     <Portal>
       <div
@@ -71,6 +82,15 @@ export default function SejarahIslamShareModal({ title, year, text, photoIndex, 
               {busy ? '...' : 'Bagikan'}
             </button>
           </div>
+
+          <button
+            onClick={handleDownloadWallpaper}
+            disabled={!ready || wallpaperBusy}
+            className="btn-outline"
+            style={{ width: '100%', color: '#fff', borderColor: 'rgba(255,255,255,0.4)', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+          >
+            📱 {wallpaperBusy ? 'Menyiapkan...' : 'Unduh buat Lock Screen HP'}
+          </button>
 
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#fff', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', opacity: 0.8 }}>
             Tutup

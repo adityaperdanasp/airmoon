@@ -5,8 +5,12 @@
 import { DECORATIVE_PHOTOS_LIGHT, DECORATIVE_PHOTOS_DARK } from '../data/photos';
 import { drawAirmoonBrand } from './drawAirmoonLogo';
 
-const W = 1080;
-const H = 1350;
+const POST_W = 1080;
+const POST_H = 1350;
+// Buat Lock Screen HP (2026-09-07) — see lib/quoteCardCanvas.js's own
+// header note for the full reasoning.
+const WALLPAPER_W = 1080;
+const WALLPAPER_H = 2340;
 
 async function ensureFontsReady() {
   await Promise.all([
@@ -26,11 +30,11 @@ function loadImage(src) {
   });
 }
 
-function drawImageCover(ctx, img) {
-  const scale = Math.max(W / img.width, H / img.height);
-  const w = img.width * scale;
-  const h = img.height * scale;
-  ctx.drawImage(img, (W - w) / 2, (H - h) / 2, w, h);
+function drawImageCover(ctx, img, w, h) {
+  const scale = Math.max(w / img.width, h / img.height);
+  const iw = img.width * scale;
+  const ih = img.height * scale;
+  ctx.drawImage(img, (w - iw) / 2, (h - ih) / 2, iw, ih);
 }
 
 function wrapLines(ctx, text, maxWidth) {
@@ -50,7 +54,12 @@ function wrapLines(ctx, text, maxWidth) {
   return lines;
 }
 
-export async function drawSejarahIslamCard(canvas, { title, year, text, photoIndex, theme = 'light' }) {
+export async function drawSejarahIslamCard(canvas, { title, year, text, photoIndex, theme = 'light', size = 'post' }) {
+  const isWallpaper = size === 'wallpaper';
+  const W = isWallpaper ? WALLPAPER_W : POST_W;
+  const H = isWallpaper ? WALLPAPER_H : POST_H;
+  const shift = isWallpaper ? (WALLPAPER_H - POST_H) * 0.75 : 0;
+
   canvas.width = W;
   canvas.height = H;
   const ctx = canvas.getContext('2d');
@@ -65,7 +74,7 @@ export async function drawSejarahIslamCard(canvas, { title, year, text, photoInd
 
   try {
     const img = await loadImage(photoSrc);
-    drawImageCover(ctx, img);
+    drawImageCover(ctx, img, W, H);
   } catch {
     const fallback = ctx.createLinearGradient(0, 0, W, H);
     fallback.addColorStop(0, '#0d4d47');
@@ -95,12 +104,12 @@ export async function drawSejarahIslamCard(canvas, { title, year, text, photoInd
 
   ctx.font = '700 28px Poppins, sans-serif';
   ctx.fillStyle = '#e8b84b';
-  ctx.fillText(year.toUpperCase(), W / 2, H * 0.34);
+  ctx.fillText(year.toUpperCase(), W / 2, shift + POST_H * 0.34);
 
   ctx.font = '800 44px Poppins, sans-serif';
   ctx.fillStyle = '#ffffff';
   const titleLines = wrapLines(ctx, title, W - 200);
-  let y = H * 0.4;
+  let y = shift + POST_H * 0.4;
   for (const line of titleLines) {
     ctx.fillText(line, W / 2, y);
     y += 56;
@@ -117,5 +126,5 @@ export async function drawSejarahIslamCard(canvas, { title, year, text, photoInd
 
   ctx.font = '700 26px Poppins, sans-serif';
   ctx.fillStyle = 'rgba(244,240,230,0.7)';
-  ctx.fillText('Hari Ini dalam Sejarah Islam', W / 2, H - 90);
+  ctx.fillText('Hari Ini dalam Sejarah Islam', W / 2, shift + POST_H - 90);
 }
