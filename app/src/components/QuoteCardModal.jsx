@@ -89,7 +89,7 @@ export default function QuoteCardModal({ quote, quoteIndex, onClose }) {
         </div>
 
         <div style={{ display: 'flex', gap: 10, width: '100%' }}>
-          <button className="btn-outline" style={{ flex: 1, color: '#fff', borderColor: 'rgba(255,255,255,0.4)' }} onClick={handleDownload} disabled={!ready}>
+          <button className="btn-outline" style={{ flex: 1, color: '#fff', borderColor: 'rgba(255,255,255,0.4)', background: 'transparent' }} onClick={handleDownload} disabled={!ready}>
             Unduh
           </button>
           <button className="btn" style={{ flex: 1 }} onClick={handleShare} disabled={!ready || busy}>
