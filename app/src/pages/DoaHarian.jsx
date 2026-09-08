@@ -8,6 +8,7 @@ import { PAGE_PHOTOS } from '../data/photos';
 import { IconSearch } from '../components/icons';
 import StickyMiniHeader from '../components/StickyMiniHeader';
 import { loadFavoriteDoa, doaKey, toggleFavoriteDoa } from '../lib/favoriteDoa';
+import DoaCategoryPickerSheet from '../components/DoaCategoryPickerSheet';
 
 // pagi/petang are real daily habits worth a streak; kegiatan (doa per
 // situation — makan, keluar rumah, etc.) isn't a once-a-day thing, so it
@@ -36,6 +37,7 @@ export default function DoaHarian() {
   const [marking, setMarking] = useState(false);
   const [query, setQuery] = useState('');
   const [favorites, setFavorites] = useState(loadFavoriteDoa);
+  const [showPicker, setShowPicker] = useState(false);
   const isFavoriteTab = activeId === FAVORITE_ID;
   const active = isFavoriteTab
     ? { id: FAVORITE_ID, labelKey: null }
@@ -61,6 +63,12 @@ export default function DoaHarian() {
     setFavorites(toggleFavoriteDoa(doaKey(it.categoryId, it.title)));
   }
 
+  function handlePickCategory(id) {
+    setActiveId(id);
+    setQuery('');
+    setShowPicker(false);
+  }
+
   useEffect(() => watchDzikirStreak(user?.uid, setStreaks), [user?.uid]);
 
   async function handleMarkDone() {
@@ -79,54 +87,45 @@ export default function DoaHarian() {
       <div className="screen-content">
         <PageHeaderPhoto title={t('item_doa_harian')} photo={PAGE_PHOTOS.doaHarian} />
 
-        <div className="hide-scrollbar" style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 2 }}>
-          {doaCategories.map((c) => {
-            const isActive = c.id === active.id;
-            return (
-              <button
-                key={c.id}
-                onClick={() => {
-                  setActiveId(c.id);
-                  setQuery('');
-                }}
-                style={{
-                  flexShrink: 0,
-                  padding: '9px 16px',
-                  borderRadius: 999,
-                  border: 'none',
-                  fontFamily: 'inherit',
-                  fontSize: 12.5,
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  color: isActive ? 'var(--on-primary)' : 'var(--ink)',
-                  background: isActive ? 'var(--primary)' : 'var(--card)',
-                }}
-              >
-                {t(c.labelKey)}
-              </button>
-            );
-          })}
-          <button
-            onClick={() => {
-              setActiveId(FAVORITE_ID);
-              setQuery('');
-            }}
-            style={{
-              flexShrink: 0,
-              padding: '9px 16px',
-              borderRadius: 999,
-              border: 'none',
-              fontFamily: 'inherit',
-              fontSize: 12.5,
-              fontWeight: 700,
-              cursor: 'pointer',
-              color: isFavoriteTab ? 'var(--on-primary)' : 'var(--ink)',
-              background: isFavoriteTab ? 'var(--primary)' : 'var(--card)',
-            }}
-          >
-            ⭐ Favorit
-          </button>
-        </div>
+        {/* [UI] Was a horizontally-scrollable pill row — worked fine for the
+            original 3-4 categories, but scrolling sideways through 20
+            chips (19 real categories + Favorit) to find one, after the
+            "205 items across 19 categories" expansion, stopped being
+            reasonable. A single dropdown trigger opening a real list is
+            one tap away regardless of how long the list gets. */}
+        <button
+          onClick={() => setShowPicker(true)}
+          className="card"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 10,
+            padding: '13px 16px',
+            border: 'none',
+            cursor: 'pointer',
+            fontFamily: 'inherit',
+            textAlign: 'left',
+            color: 'var(--ink)',
+          }}
+        >
+          <span style={{ fontSize: 13, fontWeight: 700 }}>
+            {isFavoriteTab ? '⭐ Favorit' : t(active.labelKey)}
+          </span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" style={{ flexShrink: 0 }}>
+            <path d="m6 9 6 6 6-6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+
+        {showPicker && (
+          <DoaCategoryPickerSheet
+            categories={doaCategories.map((c) => ({ id: c.id, label: t(c.labelKey), count: c.items.length }))}
+            activeId={active.id}
+            favoriteId={FAVORITE_ID}
+            onPick={handlePickCategory}
+            onClose={() => setShowPicker(false)}
+          />
+        )}
 
         {showStreak && (
           <div
