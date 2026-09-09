@@ -9,17 +9,18 @@
 // this takes that string directly instead of chapterName+verse.
 import { DECORATIVE_PHOTOS_LIGHT, DECORATIVE_PHOTOS_DARK } from '../data/photos';
 import { drawAirmoonBrand } from './drawAirmoonLogo';
+import { wallpaperContentTop } from './wallpaperLayout';
 
 const POST_W = 1080;
 const POST_H = 1350;
 // Buat Lock Screen HP (2026-09-07, founder request) — a taller 9:19.5-ish
 // canvas sized for modern phone lock screens, not just social posts.
-// Content is laid out with the exact same pixel math as the 'post' size
-// (against the fixed POST_H reference below), then the whole text block
-// is shifted down so it clears the upper portion of the screen where a
-// phone's clock/date widget usually sits, rather than centering it or
-// naively stretching every position by height ratio (which would just
-// spread the same tight block thinly across a much taller canvas).
+// `shift` below only positions the footer now — the Arabic+translation
+// block itself is centered on the wallpaper size via
+// lib/wallpaperLayout.js's `wallpaperContentTop` (2026-09-09 follow-up:
+// the original fixed-shift approach put every card's text at the same
+// spot no matter how long the quote was, and sat lower than comfortable
+// to actually read once set as a lock screen).
 const WALLPAPER_W = 1080;
 const WALLPAPER_H = 2340;
 
@@ -119,14 +120,31 @@ export async function drawQuoteCard(canvas, { arabic, translation, source, quote
   drawAirmoonBrand(ctx, { centerX: W / 2, y: 96, size: 52 });
 
   ctx.textAlign = 'center';
-  ctx.direction = 'rtl';
 
+  // Measure both blocks up front — see lib/ayatCardCanvas.js's own version
+  // of this same centering logic and lib/wallpaperLayout.js's header note
+  // for the full reasoning.
+  ctx.direction = 'rtl';
   ctx.font = '700 60px Amiri, serif';
-  ctx.fillStyle = '#ffffff';
   const arabicLines = wrapLines(ctx, arabic, W - 200);
   const arabicLineHeight = 90;
   const arabicBlockH = arabicLines.length * arabicLineHeight;
-  let y = shift + POST_H * 0.36 - arabicBlockH / 2 + arabicLineHeight * 0.7;
+
+  ctx.direction = 'ltr';
+  ctx.font = 'italic 400 32px Poppins, sans-serif';
+  const translationLines = wrapLines(ctx, `"${translation}"`, W - 260);
+  const translationLineHeight = 46;
+  const blockGap = 50;
+
+  const contentBlockH = arabicBlockH + blockGap + translationLines.length * translationLineHeight;
+  const firstY = isWallpaper
+    ? wallpaperContentTop(WALLPAPER_H, contentBlockH) + arabicLineHeight * 0.7
+    : shift + POST_H * 0.36 - arabicBlockH / 2 + arabicLineHeight * 0.7;
+
+  ctx.direction = 'rtl';
+  ctx.font = '700 60px Amiri, serif';
+  ctx.fillStyle = '#ffffff';
+  let y = firstY;
   for (const line of arabicLines) {
     ctx.fillText(line, W / 2, y);
     y += arabicLineHeight;
@@ -135,11 +153,10 @@ export async function drawQuoteCard(canvas, { arabic, translation, source, quote
   ctx.direction = 'ltr';
   ctx.font = 'italic 400 32px Poppins, sans-serif';
   ctx.fillStyle = 'rgba(244,240,230,0.88)';
-  const translationLines = wrapLines(ctx, `"${translation}"`, W - 260);
-  let ty = y + 50;
+  let ty = y + blockGap;
   for (const line of translationLines) {
     ctx.fillText(line, W / 2, ty);
-    ty += 46;
+    ty += translationLineHeight;
   }
 
   ctx.font = '600 30px Poppins, sans-serif';

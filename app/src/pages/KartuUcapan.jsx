@@ -114,18 +114,28 @@ async function draw(canvas, { title, sub, color1, color2, photoIndex, arabicText
 
   drawAirmoonBrand(ctx, { centerX: w / 2, y: 64 * fontScale, size: 38 * fontScale });
 
+  // Buat Lock Screen HP follow-up (2026-09-09, founder feedback: text sat
+  // too low on the wallpaper size, same issue fixed for the other 3 cards
+  // via lib/wallpaperLayout.js) — these 3 lines already self-center via
+  // wrapText's own line-count math, so a length-driven remeasure wasn't
+  // needed here, just nudging the anchors themselves up for wallpaper mode
+  // (post/social size keeps its original spots, untouched).
+  const arabicY = isWallpaper ? h * 0.32 : h * 0.42;
+  const titleY = isWallpaper ? h * 0.44 : h * 0.56;
+  const subY = isWallpaper ? h * 0.54 : h * 0.68;
+
   ctx.fillStyle = '#e8b84b';
   ctx.font = `600 ${34 * fontScale}px '${arabicFont}', serif`;
   ctx.textAlign = 'center';
-  ctx.fillText(arabicText || ' ', w / 2, h * 0.42);
+  ctx.fillText(arabicText || ' ', w / 2, arabicY);
 
   ctx.fillStyle = '#ffffff';
   ctx.font = `800 ${40 * fontScale}px Poppins, sans-serif`;
-  wrapText(ctx, title || ' ', w / 2, h * 0.56, w * 0.8, 46 * fontScale);
+  wrapText(ctx, title || ' ', w / 2, titleY, w * 0.8, 46 * fontScale);
 
   ctx.fillStyle = 'rgba(255,255,255,0.8)';
   ctx.font = `400 ${20 * fontScale}px Poppins, sans-serif`;
-  wrapText(ctx, sub || ' ', w / 2, h * 0.68, w * 0.8, 26 * fontScale);
+  wrapText(ctx, sub || ' ', w / 2, subY, w * 0.8, 26 * fontScale);
 }
 
 function wrapText(ctx, text, x, y, maxWidth, lineHeight) {

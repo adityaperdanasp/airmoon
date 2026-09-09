@@ -7,12 +7,17 @@
 // font itself is loaded first — see ensureFontsReady below.
 import { DECORATIVE_PHOTOS_LIGHT, DECORATIVE_PHOTOS_DARK } from '../data/photos';
 import { drawAirmoonBrand } from './drawAirmoonLogo';
+import { wallpaperContentTop } from './wallpaperLayout';
 
 const POST_W = 1080;
 const POST_H = 1350;
-// Buat Lock Screen HP (2026-09-07) — see quoteCardCanvas.js's own header
-// note for the full reasoning; same "same content math, shifted down"
-// approach reused here.
+// Buat Lock Screen HP (2026-09-07). `shift` below only ever positions the
+// footer now — the main Arabic+translation block is centered on the
+// wallpaper size via lib/wallpaperLayout.js's `wallpaperContentTop`
+// instead (2026-09-09 follow-up, see that file's header for why: a fixed
+// shift put every card's text at the same spot regardless of how long the
+// content was, and left it lower than comfortable to read on an actual
+// lock screen).
 const WALLPAPER_W = 1080;
 const WALLPAPER_H = 2340;
 
@@ -128,15 +133,34 @@ export async function drawAyatCard(canvas, { arabic, translation, chapterName, c
   drawAirmoonBrand(ctx, { centerX: W / 2, y: 96, size: 52 });
 
   ctx.textAlign = 'center';
-  ctx.direction = 'rtl';
 
-  // Arabic block, vertically centered-ish in the upper-middle area.
+  // Measure both blocks up front — for the wallpaper size the Arabic +
+  // translation are centered together as one unit around a single anchor
+  // point, instead of only the Arabic line being centered on a fixed spot
+  // and the translation just trailing further down the longer it runs (see
+  // lib/wallpaperLayout.js's header note).
+  ctx.direction = 'rtl';
   ctx.font = '700 64px Amiri, serif';
-  ctx.fillStyle = '#ffffff';
   const arabicLines = wrapLines(ctx, arabic, W - 200);
   const arabicLineHeight = 96;
   const arabicBlockH = arabicLines.length * arabicLineHeight;
-  let y = shift + POST_H * 0.36 - arabicBlockH / 2 + arabicLineHeight * 0.7;
+
+  ctx.direction = 'ltr';
+  ctx.font = '400 34px Poppins, sans-serif';
+  const translationLines = wrapLines(ctx, `"${translation}"`, W - 260);
+  const translationLineHeight = 48;
+  const blockGap = 50;
+
+  const contentBlockH = arabicBlockH + blockGap + translationLines.length * translationLineHeight;
+  const firstY = isWallpaper
+    ? wallpaperContentTop(WALLPAPER_H, contentBlockH) + arabicLineHeight * 0.7
+    : shift + POST_H * 0.36 - arabicBlockH / 2 + arabicLineHeight * 0.7;
+
+  // Arabic block.
+  ctx.direction = 'rtl';
+  ctx.font = '700 64px Amiri, serif';
+  ctx.fillStyle = '#ffffff';
+  let y = firstY;
   for (const line of arabicLines) {
     ctx.fillText(line, W / 2, y);
     y += arabicLineHeight;
@@ -146,11 +170,10 @@ export async function drawAyatCard(canvas, { arabic, translation, chapterName, c
   ctx.direction = 'ltr';
   ctx.font = '400 34px Poppins, sans-serif';
   ctx.fillStyle = 'rgba(244,240,230,0.88)';
-  const translationLines = wrapLines(ctx, `"${translation}"`, W - 260);
-  let ty = y + 50;
+  let ty = y + blockGap;
   for (const line of translationLines) {
     ctx.fillText(line, W / 2, ty);
-    ty += 48;
+    ty += translationLineHeight;
   }
 
   // Reference + footer wordmark near the bottom, not fighting the text

@@ -4,6 +4,7 @@
 // page itself already rendering a photo-backed card visually.
 import { DECORATIVE_PHOTOS_LIGHT, DECORATIVE_PHOTOS_DARK } from '../data/photos';
 import { drawAirmoonBrand } from './drawAirmoonLogo';
+import { wallpaperContentTop } from './wallpaperLayout';
 
 const POST_W = 1080;
 const POST_H = 1350;
@@ -102,26 +103,41 @@ export async function drawSejarahIslamCard(canvas, { title, year, text, photoInd
 
   ctx.textAlign = 'center';
 
+  // Measure the title + description up front — for the wallpaper size the
+  // whole block (year through the last description line) gets centered
+  // around one anchor point rather than each piece being pinned to its own
+  // fixed fraction of the canvas (see lib/wallpaperLayout.js's header note).
+  const TITLE_GAP = POST_H * 0.06; // year baseline -> first title baseline
+  const TITLE_LINE_H = 56;
+  const TEXT_GAP = 20;
+  const TEXT_LINE_H = 46;
+
+  ctx.font = '800 44px Poppins, sans-serif';
+  const titleLines = wrapLines(ctx, title, W - 200);
+  ctx.font = '400 32px Poppins, sans-serif';
+  const textLines = wrapLines(ctx, text, W - 220);
+
+  const contentBlockH = TITLE_GAP + titleLines.length * TITLE_LINE_H + TEXT_GAP + textLines.length * TEXT_LINE_H;
+  const yearY = isWallpaper ? wallpaperContentTop(WALLPAPER_H, contentBlockH) : shift + POST_H * 0.34;
+
   ctx.font = '700 28px Poppins, sans-serif';
   ctx.fillStyle = '#e8b84b';
-  ctx.fillText(year.toUpperCase(), W / 2, shift + POST_H * 0.34);
+  ctx.fillText(year.toUpperCase(), W / 2, yearY);
 
   ctx.font = '800 44px Poppins, sans-serif';
   ctx.fillStyle = '#ffffff';
-  const titleLines = wrapLines(ctx, title, W - 200);
-  let y = shift + POST_H * 0.4;
+  let y = yearY + TITLE_GAP;
   for (const line of titleLines) {
     ctx.fillText(line, W / 2, y);
-    y += 56;
+    y += TITLE_LINE_H;
   }
 
-  y += 20;
+  y += TEXT_GAP;
   ctx.font = '400 32px Poppins, sans-serif';
   ctx.fillStyle = 'rgba(244,240,230,0.9)';
-  const textLines = wrapLines(ctx, text, W - 220);
   for (const line of textLines) {
     ctx.fillText(line, W / 2, y);
-    y += 46;
+    y += TEXT_LINE_H;
   }
 
   ctx.font = '700 26px Poppins, sans-serif';
