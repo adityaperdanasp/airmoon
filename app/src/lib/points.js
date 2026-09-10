@@ -6,13 +6,17 @@
 // lib/badges.js's own STREAK_TIERS/PUASA_TIERS.
 // `color` is each tier's characteristic border/accent color — [UI] added
 // so a medal card/badge reads as visibly distinct per tier at a glance,
-// not just via its icon+label text (Perunggu/Perak/Emas/Platinum's real
-// metal tones, not this app's own teal/gold brand palette).
+// not just via its label text (Perunggu/Perak/Emas/Platinum's real metal
+// tones, not this app's own teal/gold brand palette). The tier `id`
+// (perunggu|perak|emas|platinum) keys serviceIcons.jsx's `<MedalIcon>`
+// and medalCardCanvas.js's `drawMedalMark` — the actual medal graphic
+// replaced the platform emoji (🥉🥈🥇💎) these used to carry, which sat
+// as a glossy OS glyph in an otherwise all-custom-icon UI (2026-09-10).
 export const POINT_TIERS = [
-  { points: 50, tier: 'perunggu', icon: '🥉', label: 'Perunggu', color: '#b08d57' },
-  { points: 150, tier: 'perak', icon: '🥈', label: 'Perak', color: '#c0c5cc' },
-  { points: 300, tier: 'emas', icon: '🥇', label: 'Emas', color: '#e8b84b' },
-  { points: 500, tier: 'platinum', icon: '💎', label: 'Platinum', color: '#7dd8e0' },
+  { points: 50, tier: 'perunggu', label: 'Perunggu', color: '#b08d57' },
+  { points: 150, tier: 'perak', label: 'Perak', color: '#c0c5cc' },
+  { points: 300, tier: 'emas', label: 'Emas', color: '#e8b84b' },
+  { points: 500, tier: 'platinum', label: 'Platinum', color: '#7dd8e0' },
 ];
 
 export function highestPointTier(points) {

@@ -24,6 +24,21 @@
   --on-danger: #ffffff;
   --shadow-card: 0 24px 60px rgba(15, 32, 25, 0.12);
   --shadow-pill: 0 16px 40px rgba(13, 77, 71, 0.16);
+
+  /* Motion tokens (2026-09-10) — one easing curve + a 3-step duration
+     scale for the whole app. Animations got added ad hoc across dozens of
+     feature batches with mismatched timings (0.2s here, 0.32s there, a
+     different cubic-bezier each place), so the app moved in several
+     unrelated "styles" at once. Everything new — CSS keyframes here AND
+     inline JS `transition`/`animation` in components — should pull from
+     these. --ease is a plain ease-out-cubic (the default for almost
+     everything); --ease-bounce is the slight overshoot reserved for
+     tap/pop/celebration moments. */
+  --ease: cubic-bezier(0.33, 1, 0.68, 1);
+  --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --dur-1: 0.12s; /* micro — tap/press feedback */
+  --dur-2: 0.22s; /* base — page enter, toggles, sheet slide */
+  --dur-3: 0.35s; /* deliberate — draw-ins, bounces, celebrations */
 }
 
 /* Dark theme: warm bronze-gold on near-black, not the old neon mint.
@@ -312,7 +327,7 @@ a {
    .nav-icon specifically (not the whole .nav-item) so the label text
    underneath doesn't bounce along with it. */
 .nav-item.active .nav-icon {
-  animation: nav-icon-bounce 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: nav-icon-bounce var(--dur-3) var(--ease-bounce);
 }
 /* Stagger-in for list rows (SurahList's 114 surah, Doa's feed) — every
    row used to appear all at once the instant data loaded, no different
@@ -322,7 +337,7 @@ a {
    delay math doesn't scale cleanly to "first 8 rows, then no more
    delay" the way a capped inline value does. */
 .stagger-item {
-  animation: stagger-in 0.32s ease both;
+  animation: stagger-in var(--dur-3) var(--ease) both;
 }
 @keyframes stagger-in {
   from {
@@ -433,7 +448,7 @@ a {
    gives every page a consistent soft fade/slide-in for free — no router-
    level transition wrapper needed. */
 button:not(:disabled) {
-  transition: transform 0.12s ease;
+  transition: transform var(--dur-1) var(--ease);
 }
 
 button:not(:disabled):active {
@@ -463,7 +478,7 @@ textarea:focus-visible,
 }
 
 .screen {
-  animation: screen-enter 0.22s ease both;
+  animation: screen-enter var(--dur-2) var(--ease) both;
 }
 
 /* Opacity only, deliberately no transform: a transform on .screen — even
@@ -542,7 +557,7 @@ textarea:focus-visible,
 .checkmark-draw path {
   stroke-dasharray: 20;
   stroke-dashoffset: 20;
-  animation: checkmark-draw 0.35s ease forwards;
+  animation: checkmark-draw var(--dur-3) var(--ease) forwards;
 }
 @keyframes checkmark-draw {
   to {

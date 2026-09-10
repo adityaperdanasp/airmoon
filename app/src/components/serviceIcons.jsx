@@ -675,3 +675,45 @@ export function AmalanCalendarIcon({ size = 42 }) {
     </svg>
   );
 }
+
+// Poin & Medali tier medal — replaces the platform emoji (🥉🥈🥇💎) that
+// lib/points.js's POINT_TIERS used to carry, which sat as a glossy OS
+// glyph in the middle of an otherwise all-custom-icon UI (badge pill,
+// detail sheet, achievement card). A ribbon + medallion + star, tinted
+// per tier from that tier's own metal tone. `tier` is
+// 'perunggu' | 'perak' | 'emas' | 'platinum'.
+const MEDAL_TONES = {
+  perunggu: { light: '#e0b483', mid: '#b08d57', dark: '#7d5f34' },
+  perak: { light: '#eef1f4', mid: '#c0c5cc', dark: '#8b9099' },
+  emas: { light: '#ffe9a8', mid: '#e8b84b', dark: '#b3861f' },
+  platinum: { light: '#c8f2f6', mid: '#7dd8e0', dark: '#3f9aa4' },
+};
+
+export function MedalIcon({ tier = 'perunggu', size = 42 }) {
+  const tone = MEDAL_TONES[tier] || MEDAL_TONES.perunggu;
+  const gid = `medal-${tier}`;
+  return (
+    <svg width={size} height={size} viewBox="0 0 42 42" fill="none">
+      <defs>
+        <linearGradient id={`${gid}-disc`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor={tone.light} />
+          <stop offset="0.55" stopColor={tone.mid} />
+          <stop offset="1" stopColor={tone.dark} />
+        </linearGradient>
+      </defs>
+      {/* ribbon */}
+      <path d="M14 4 L20 18 L15 20 L9 6 Z" fill="#1c8577" />
+      <path d="M28 4 L33 6 L27 20 L22 18 Z" fill="#0a4a43" />
+      {/* medallion */}
+      <circle cx="21" cy="26" r="11.5" fill={tone.dark} opacity="0.35" />
+      <circle cx="21" cy="25.5" r="11" fill={`url(#${gid}-disc)`} stroke={tone.dark} strokeWidth="1.2" />
+      <circle cx="21" cy="25.5" r="7.6" fill="none" stroke={tone.light} strokeWidth="1" opacity="0.7" />
+      {/* star */}
+      <path
+        d="M21 19.6l1.9 3.9 4.3.6-3.1 3 .8 4.3-3.9-2-3.9 2 .8-4.3-3.1-3 4.3-.6z"
+        fill="#fff"
+        opacity="0.92"
+      />
+    </svg>
+  );
+}

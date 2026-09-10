@@ -20,7 +20,9 @@ export function usePopAnimation() {
   const style = {
     display: 'inline-flex',
     transform: popped ? 'scale(1.35)' : 'scale(1)',
-    transition: 'transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1)',
+    // Motion tokens (theme.css) — the pop/tap "bounce" curve, shared with
+    // .nav-icon's bounce and every other overshoot moment in the app.
+    transition: 'transform var(--dur-2) var(--ease-bounce)',
   };
 
   return [style, trigger];

@@ -3,6 +3,7 @@ import { fetchTotalPoints, fetchRecentAmalanHarian, fetchMonthlyPointsComparison
 import { highestPointTier, nextPointTier } from '../lib/points';
 import { useTheme } from '../context/ThemeContext';
 import { usePopAnimation } from '../lib/usePopAnimation';
+import { MedalIcon } from './serviceIcons';
 import Confetti from './Confetti';
 import MedalShareModal from './MedalShareModal';
 import PointsDetailSheet from './PointsDetailSheet';
@@ -107,7 +108,18 @@ export default function PointsBadge({ uid }) {
         }}
         aria-label={`${points} poin${tier ? ` — tier ${tier.label}` : ''}`}
       >
-        <span style={{ ...iconPopStyle, fontSize: 14 }}>{tier?.icon || '⭐'}</span>
+        <span style={iconPopStyle}>
+          {tier ? (
+            <MedalIcon tier={tier.tier} size={16} />
+          ) : (
+            // Not yet at Perunggu — a plain outline star (not an emoji), so
+            // the "no medal yet" state still matches the app's custom-icon
+            // language.
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" style={{ display: 'block' }}>
+              <path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 17l-5.2 2.6 1-5.8L3.5 9.7l5.9-.9z" stroke="rgba(255,255,255,0.85)" strokeWidth="1.6" strokeLinejoin="round" />
+            </svg>
+          )}
+        </span>
         {points}
       </button>
 
@@ -125,7 +137,7 @@ export default function PointsBadge({ uid }) {
 
       {showMedalModal && tier && (
         <MedalShareModal
-          tierIcon={tier.icon}
+          tierId={tier.tier}
           tierLabel={tier.label}
           tierColor={tier.color}
           points={points}

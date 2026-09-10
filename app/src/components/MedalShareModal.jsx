@@ -7,7 +7,7 @@ import Portal from './Portal';
 
 // Same canvas-share shell as KhatamCertificateModal.jsx — reserved for the
 // moment PointsBadge.jsx's lifetime points cross a new medal tier.
-export default function MedalShareModal({ tierIcon, tierLabel, tierColor, points, theme, onClose }) {
+export default function MedalShareModal({ tierId, tierLabel, tierColor, points, theme, onClose }) {
   const canvasRef = useRef(null);
   const [ready, setReady] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -16,13 +16,13 @@ export default function MedalShareModal({ tierIcon, tierLabel, tierColor, points
   useEffect(() => {
     let cancelled = false;
     setReady(false);
-    drawMedalCard(canvasRef.current, { tierIcon, tierLabel, tierColor, points, theme }).then(() => {
+    drawMedalCard(canvasRef.current, { tierId, tierLabel, tierColor, points, theme }).then(() => {
       if (!cancelled) setReady(true);
     });
     return () => {
       cancelled = true;
     };
-  }, [tierIcon, tierLabel, tierColor, points, theme]);
+  }, [tierId, tierLabel, tierColor, points, theme]);
 
   function handleDownload() {
     canvasRef.current.toBlob((blob) => {

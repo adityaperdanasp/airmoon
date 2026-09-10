@@ -53,6 +53,7 @@ const SejarahIslam = lazy(() => import('./pages/SejarahIslam'));
 const PuasaSunnah = lazy(() => import('./pages/PuasaSunnah'));
 const RingkasanIbadah = lazy(() => import('./pages/RingkasanIbadah'));
 const KalenderIbadah = lazy(() => import('./pages/KalenderIbadah'));
+const DesignSystem = lazy(() => import('./pages/DesignSystem'));
 
 function P({ children }) {
   return <ProtectedRoute>{children}</ProtectedRoute>;
@@ -89,6 +90,9 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<SignUp />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        {/* Internal design reference — no nav link, not login-gated, one
+            URL away for a design review. See pages/DesignSystem.jsx. */}
+        <Route path="/design-system" element={<DesignSystem />} />
 
         <Route path="/" element={<P><Home /></P>} />
         <Route path="/quran" element={<P><SurahList /></P>} />

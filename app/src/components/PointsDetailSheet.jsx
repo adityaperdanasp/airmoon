@@ -1,6 +1,7 @@
 import Portal from './Portal';
 import { useEscapeKey } from '../lib/useEscapeKey';
 import { useSwipeDismiss } from '../lib/useSwipeDismiss';
+import { MedalIcon } from './serviceIcons';
 
 const DAY_LABEL_FMT = new Intl.DateTimeFormat('id-ID', { weekday: 'short' });
 
@@ -40,12 +41,19 @@ export default function PointsDetailSheet({ points, tier, next, recentDays, mont
           <div style={{ width: 36, height: 4, borderRadius: 999, background: 'var(--border)', margin: '10px auto 14px' }} />
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <span style={{ fontSize: 15, fontWeight: 800, color: 'var(--ink)' }}>
-              {tier ? `${tier.icon} Tier ${tier.label}` : 'Belum ada tier'}
+            <span style={{ fontSize: 15, fontWeight: 800, color: 'var(--ink)', display: 'flex', alignItems: 'center', gap: 8 }}>
+              {tier ? (
+                <>
+                  <MedalIcon tier={tier.tier} size={24} />
+                  Tier {tier.label}
+                </>
+              ) : (
+                'Belum ada tier'
+              )}
             </span>
             <span style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.5 }}>
               {next
-                ? `${next.points - points} poin lagi menuju ${next.icon} ${next.label}`
+                ? `${next.points - points} poin lagi menuju ${next.label}`
                 : 'Tier tertinggi tercapai — Alhamdulillah!'}
             </span>
 

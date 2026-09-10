@@ -33,7 +33,74 @@ function drawImageCover(ctx, img) {
   ctx.drawImage(img, (W - w) / 2, (H - h) / 2, w, h);
 }
 
-export async function drawMedalCard(canvas, { tierIcon, tierLabel, tierColor = '#e8b84b', points, theme = 'light' }) {
+// Metal tones per tier — kept in sync with serviceIcons.jsx's MEDAL_TONES
+// (the DOM <MedalIcon>) so the share card's medal and the in-app badge
+// read as the same object.
+const MEDAL_TONES = {
+  perunggu: ['#e0b483', '#b08d57', '#7d5f34'],
+  perak: ['#eef1f4', '#c0c5cc', '#8b9099'],
+  emas: ['#ffe9a8', '#e8b84b', '#b3861f'],
+  platinum: ['#c8f2f6', '#7dd8e0', '#3f9aa4'],
+};
+
+// A vector medallion + star, replacing the platform emoji this card used
+// to fillText at 170px. cx/cy is the medallion centre, r its radius.
+function drawMedalMark(ctx, cx, cy, r, tierId) {
+  const [light, mid, dark] = MEDAL_TONES[tierId] || MEDAL_TONES.perunggu;
+
+  // ribbon behind the disc
+  ctx.fillStyle = '#1c8577';
+  ctx.beginPath();
+  ctx.moveTo(cx - r * 0.6, cy - r * 1.4);
+  ctx.lineTo(cx - r * 0.05, cy + r * 0.2);
+  ctx.lineTo(cx - r * 0.5, cy + r * 0.35);
+  ctx.lineTo(cx - r * 1.05, cy - r * 1.25);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = '#0a4a43';
+  ctx.beginPath();
+  ctx.moveTo(cx + r * 0.6, cy - r * 1.4);
+  ctx.lineTo(cx + r * 1.05, cy - r * 1.25);
+  ctx.lineTo(cx + r * 0.5, cy + r * 0.35);
+  ctx.lineTo(cx + r * 0.05, cy + r * 0.2);
+  ctx.closePath();
+  ctx.fill();
+
+  // disc
+  const g = ctx.createLinearGradient(cx, cy - r, cx, cy + r);
+  g.addColorStop(0, light);
+  g.addColorStop(0.55, mid);
+  g.addColorStop(1, dark);
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = dark;
+  ctx.lineWidth = r * 0.09;
+  ctx.stroke();
+  ctx.strokeStyle = light;
+  ctx.globalAlpha = 0.7;
+  ctx.lineWidth = r * 0.06;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r * 0.68, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+
+  // star
+  ctx.fillStyle = 'rgba(255,255,255,0.95)';
+  ctx.beginPath();
+  for (let i = 0; i < 10; i++) {
+    const ang = (Math.PI / 5) * i - Math.PI / 2;
+    const rad = i % 2 === 0 ? r * 0.5 : r * 0.21;
+    const px = cx + Math.cos(ang) * rad;
+    const py = cy + Math.sin(ang) * rad;
+    i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+  }
+  ctx.closePath();
+  ctx.fill();
+}
+
+export async function drawMedalCard(canvas, { tierId, tierLabel, tierColor = '#e8b84b', points, theme = 'light' }) {
   canvas.width = W;
   canvas.height = H;
   const ctx = canvas.getContext('2d');
@@ -84,9 +151,7 @@ export async function drawMedalCard(canvas, { tierIcon, tierLabel, tierColor = '
   ctx.fillStyle = tierColor;
   ctx.fillText('MEDALI BARU DIRAIH', W / 2, H * 0.3);
 
-  ctx.font = '400 170px Poppins, sans-serif';
-  ctx.fillStyle = '#ffffff';
-  ctx.fillText(tierIcon, W / 2, H * 0.46);
+  drawMedalMark(ctx, W / 2, H * 0.42, 120, tierId);
 
   ctx.font = '800 68px Poppins, sans-serif';
   ctx.fillStyle = '#ffffff';
