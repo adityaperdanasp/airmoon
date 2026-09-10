@@ -4,6 +4,7 @@
 // Platinum, lib/points.js's POINT_TIERS).
 import { DECORATIVE_PHOTOS_LIGHT, DECORATIVE_PHOTOS_DARK } from '../data/photos';
 import { drawAirmoonBrand } from './drawAirmoonLogo';
+import { drawMilestoneFrame } from './cardFrame';
 
 const W = 1080;
 const H = 1350;
@@ -132,16 +133,11 @@ export async function drawMedalCard(canvas, { tierId, tierLabel, tierColor = '#e
   ctx.fillStyle = overlay;
   ctx.fillRect(0, 0, W, H);
 
-  // Double frame in the tier's own characteristic color — [UI] so a
-  // Perunggu/Perak/Emas/Platinum card reads as visually distinct at a
-  // glance, not just via the icon+label text. Same "this is a special
-  // one" double-frame treatment as khatamCertificateCanvas.js's milestone
-  // card, just tier-colored instead of always gold.
-  ctx.strokeStyle = tierColor;
-  ctx.lineWidth = 4;
-  ctx.strokeRect(40, 40, W - 80, H - 80);
-  ctx.lineWidth = 2;
-  ctx.strokeRect(56, 56, W - 112, H - 112);
+  // Milestone double frame in the tier's own metal colour — [UI] so a
+  // Perunggu/Perak/Emas/Platinum card reads as visibly distinct at a
+  // glance (see lib/cardFrame.js's rule — this is the "special occasion"
+  // weight, same as the Khatam certificate).
+  drawMilestoneFrame(ctx, W, H, tierColor);
 
   drawAirmoonBrand(ctx, { centerX: W / 2, y: 110, size: 52 });
 

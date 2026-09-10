@@ -7,6 +7,7 @@
 // percentage.
 import { DECORATIVE_PHOTOS_LIGHT, DECORATIVE_PHOTOS_DARK } from '../data/photos';
 import { drawAirmoonBrand } from './drawAirmoonLogo';
+import { drawMilestoneFrame } from './cardFrame';
 
 const W = 1080;
 const H = 1350;
@@ -68,13 +69,9 @@ export async function drawKhatamCertificate(canvas, { theme = 'light' }) {
   ctx.fillStyle = overlay;
   ctx.fillRect(0, 0, W, H);
 
-  // A double gold frame — a step up from the single thin border the other
-  // share cards use, matching the "this is a special one" occasion.
-  ctx.strokeStyle = 'rgba(232,184,75,0.75)';
-  ctx.lineWidth = 4;
-  ctx.strokeRect(40, 40, W - 80, H - 80);
-  ctx.lineWidth = 2;
-  ctx.strokeRect(56, 56, W - 112, H - 112);
+  // Milestone double frame — a step up from the single hairline the
+  // everyday cards use (see lib/cardFrame.js's rule).
+  drawMilestoneFrame(ctx, W, H, 'rgba(232,184,75,0.75)');
 
   drawAirmoonBrand(ctx, { centerX: W / 2, y: 110, size: 52 });
 

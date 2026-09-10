@@ -7,6 +7,8 @@
 // font itself is loaded first — see ensureFontsReady below.
 import { DECORATIVE_PHOTOS_LIGHT, DECORATIVE_PHOTOS_DARK } from '../data/photos';
 import { drawAirmoonBrand } from './drawAirmoonLogo';
+import { drawStandardFrame } from './cardFrame';
+import { overlayStops } from './cardOverlays';
 import { wallpaperContentTop } from './wallpaperLayout';
 
 const POST_W = 1080;
@@ -72,7 +74,7 @@ function wrapLines(ctx, text, maxWidth) {
   return lines;
 }
 
-export async function drawAyatCard(canvas, { arabic, translation, chapterName, chapter, verse, theme = 'light', size = 'post' }) {
+export async function drawAyatCard(canvas, { arabic, translation, chapterName, chapter, verse, theme = 'light', size = 'post', overlayId = 'auto' }) {
   const isWallpaper = size === 'wallpaper';
   const W = isWallpaper ? WALLPAPER_W : POST_W;
   const H = isWallpaper ? WALLPAPER_H : POST_H;
@@ -114,21 +116,15 @@ export async function drawAyatCard(canvas, { arabic, translation, chapterName, c
   // card both use, so this reads as "this app's card" rather than a bare
   // stock photo with text pasted on top, and keeps the text legible
   // regardless of how bright the underlying photo is.
+  const [ov0, ov1] = overlayStops(overlayId, theme);
   const overlay = ctx.createLinearGradient(0, 0, W, H);
-  if (theme === 'dark') {
-    overlay.addColorStop(0, 'rgba(11,12,10,0.55)');
-    overlay.addColorStop(1, 'rgba(11,12,10,0.9)');
-  } else {
-    overlay.addColorStop(0, 'rgba(13,77,71,0.6)');
-    overlay.addColorStop(1, 'rgba(10,54,48,0.88)');
-  }
+  overlay.addColorStop(0, ov0);
+  overlay.addColorStop(1, ov1);
   ctx.fillStyle = overlay;
   ctx.fillRect(0, 0, W, H);
 
   // Thin gold frame, matching the app's teal/gold palette.
-  ctx.strokeStyle = 'rgba(232,184,75,0.55)';
-  ctx.lineWidth = 3;
-  ctx.strokeRect(36, 36, W - 72, H - 72);
+  drawStandardFrame(ctx, W, H);
 
   drawAirmoonBrand(ctx, { centerX: W / 2, y: 96, size: 52 });
 

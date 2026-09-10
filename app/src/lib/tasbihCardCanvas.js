@@ -3,6 +3,7 @@
 // a dzikir tally: phrase + count + laps completed.
 import { DECORATIVE_PHOTOS_LIGHT, DECORATIVE_PHOTOS_DARK } from '../data/photos';
 import { drawAirmoonBrand } from './drawAirmoonLogo';
+import { drawStandardFrame } from './cardFrame';
 
 const W = 1080;
 const H = 1350;
@@ -65,9 +66,7 @@ export async function drawTasbihCard(canvas, { phraseLabel, phraseArab, count, l
   ctx.fillStyle = overlay;
   ctx.fillRect(0, 0, W, H);
 
-  ctx.strokeStyle = 'rgba(232,184,75,0.55)';
-  ctx.lineWidth = 3;
-  ctx.strokeRect(36, 36, W - 72, H - 72);
+  drawStandardFrame(ctx, W, H);
 
   drawAirmoonBrand(ctx, { centerX: W / 2, y: 96, size: 52 });
 

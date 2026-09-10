@@ -120,9 +120,12 @@ export default function AchievementShareModal({ onClose }) {
             </div>
           )}
         </div>
+        {/* Matches ShareModalShell's button conventions — this modal keeps
+            its own body only because it loads 3 Firestore stats before it
+            can draw; the Unduh/Bagikan pair is deliberately identical. */}
         <div style={{ display: 'flex', gap: 10 }}>
-          <button className="btn-outline" onClick={handleDownload} disabled={!ready} style={{ background: '#fff' }}>Simpan</button>
-          <button className="btn" onClick={handleShare} disabled={!ready}>Bagikan</button>
+          <button className="btn-outline" onClick={handleDownload} disabled={!ready} style={{ flex: 1, color: '#fff', borderColor: 'rgba(255,255,255,0.4)', background: 'transparent' }}>Unduh</button>
+          <button className="btn" onClick={handleShare} disabled={!ready} style={{ flex: 1 }}>Bagikan</button>
         </div>
         <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: 14, cursor: 'pointer', padding: 8 }}>
           Tutup

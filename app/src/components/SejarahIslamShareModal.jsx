@@ -1,102 +1,18 @@
-import { useEffect, useRef, useState } from 'react';
 import { drawSejarahIslamCard } from '../lib/sejarahIslamCardCanvas';
-import { canvasToFile } from '../lib/ayatCardCanvas';
-import { shareFile } from '../lib/share';
-import { useEscapeKey } from '../lib/useEscapeKey';
-import { downloadCardWallpaper } from '../lib/downloadWallpaper';
-import Portal from './Portal';
+import ShareModalShell from './ShareModalShell';
 
-// Same shell as RamadanShareModal.jsx/AyatCardModal.jsx (canvas preview +
-// Unduh/Bagikan) — Sejarah Islam previously only had a text-only
-// "Bagikan" (navigator.share with a plain string), despite the page
-// itself already rendering a photo-backed card visually.
+// Sejarah Islam share card — has the "Lock Screen HP" wallpaper option
+// (one of the 4 cards scoped for it, 2026-09-07). theme comes in as a prop.
 export default function SejarahIslamShareModal({ title, year, text, photoIndex, theme, onClose }) {
-  const canvasRef = useRef(null);
-  const [ready, setReady] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [wallpaperBusy, setWallpaperBusy] = useState(false);
-  useEscapeKey(onClose);
-
-  useEffect(() => {
-    let cancelled = false;
-    setReady(false);
-    drawSejarahIslamCard(canvasRef.current, { title, year, text, photoIndex, theme }).then(() => {
-      if (!cancelled) setReady(true);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [title, year, text, photoIndex, theme]);
-
-  function handleDownload() {
-    canvasRef.current.toBlob((blob) => {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'sejarah-islam.png';
-      a.click();
-      URL.revokeObjectURL(url);
-    }, 'image/png');
-  }
-
-  async function handleShare() {
-    setBusy(true);
-    try {
-      const file = await canvasToFile(canvasRef.current, 'sejarah-islam.png');
-      await shareFile({ file, title: 'Sejarah Islam - airmoon', onFallback: handleDownload });
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function handleDownloadWallpaper() {
-    setWallpaperBusy(true);
-    try {
-      await downloadCardWallpaper(drawSejarahIslamCard, { title, year, text, photoIndex, theme }, 'sejarah-islam-lockscreen.png');
-    } finally {
-      setWallpaperBusy(false);
-    }
-  }
-
   return (
-    <Portal>
-      <div
-        onClick={onClose}
-        style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 50, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: 20 }}
-      >
-        <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, width: '100%', maxWidth: 340 }}>
-          <div style={{ position: 'relative', width: '100%', borderRadius: 18, overflow: 'hidden', boxShadow: '0 20px 40px rgba(0,0,0,0.4)' }}>
-            <canvas ref={canvasRef} style={{ width: '100%', display: 'block', aspectRatio: '1080 / 1350' }} />
-            {!ready && (
-              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(10,54,48,0.9)' }}>
-                <div className="spinner" style={{ borderTopColor: '#fff' }} />
-              </div>
-            )}
-          </div>
-
-          <div style={{ display: 'flex', gap: 10, width: '100%' }}>
-            <button className="btn-outline" style={{ flex: 1, color: '#fff', borderColor: 'rgba(255,255,255,0.4)', background: 'transparent' }} onClick={handleDownload} disabled={!ready}>
-              Unduh
-            </button>
-            <button className="btn" style={{ flex: 1 }} onClick={handleShare} disabled={!ready || busy}>
-              {busy ? '...' : 'Bagikan'}
-            </button>
-          </div>
-
-          <button
-            onClick={handleDownloadWallpaper}
-            disabled={!ready || wallpaperBusy}
-            className="btn-outline"
-            style={{ width: '100%', color: '#fff', borderColor: 'rgba(255,255,255,0.4)', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
-          >
-            📱 {wallpaperBusy ? 'Menyiapkan...' : 'Unduh buat Lock Screen HP'}
-          </button>
-
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#fff', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', opacity: 0.8 }}>
-            Tutup
-          </button>
-        </div>
-      </div>
-    </Portal>
+    <ShareModalShell
+      draw={drawSejarahIslamCard}
+      drawArgs={{ title, year, text, photoIndex, theme }}
+      filename="sejarah-islam.png"
+      wallpaperFilename="sejarah-islam-lockscreen.png"
+      shareTitle="Sejarah Islam - airmoon"
+      wallpaper
+      onClose={onClose}
+    />
   );
 }
