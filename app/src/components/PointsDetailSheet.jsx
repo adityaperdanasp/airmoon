@@ -33,7 +33,7 @@ export default function PointsDetailSheet({ points, tier, next, recentDays, mont
             borderRadius: '20px 20px 0 0',
             padding: '0 20px 20px',
             transform: `translateY(${dragY}px)`,
-            transition: dragging ? 'none' : 'transform 0.2s ease',
+            transition: dragging ? 'none' : 'transform var(--dur-2) var(--ease)',
             maxHeight: '80vh',
             overflowY: 'auto',
           }}
@@ -66,7 +66,7 @@ export default function PointsDetailSheet({ points, tier, next, recentDays, mont
                     ? `${Math.min(100, ((points - (tier?.points || 0)) / (next.points - (tier?.points || 0))) * 100)}%`
                     : '100%',
                   background: tier?.color || 'var(--primary)',
-                  transition: 'width 0.3s ease',
+                  transition: 'width var(--dur-3) var(--ease)',
                 }}
               />
             </div>

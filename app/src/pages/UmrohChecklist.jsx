@@ -134,7 +134,7 @@ export default function UmrohChecklist() {
                   height: '100%',
                   width: `${totalItems ? (doneCount / totalItems) * 100 : 0}%`,
                   background: 'var(--primary)',
-                  transition: 'width 0.2s ease',
+                  transition: 'width var(--dur-2) var(--ease)',
                 }}
               />
             </div>

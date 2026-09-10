@@ -48,7 +48,7 @@ function NisabGauge({ assets, nisab, reachesNisab }) {
           strokeLinecap="round"
           strokeDasharray={circumference}
           strokeDashoffset={offset}
-          style={{ transition: 'stroke-dashoffset 0.3s ease, stroke 0.3s ease' }}
+          style={{ transition: 'stroke-dashoffset var(--dur-3) var(--ease), stroke var(--dur-3) var(--ease)' }}
         />
       </svg>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
@@ -268,7 +268,7 @@ export default function KalkulatorZakat() {
                   onClick={() => user && setZakatPenghasilanReminder(user.uid, !penghasilanReminderOn)}
                   style={{ width: 42, height: 24, borderRadius: 999, background: penghasilanReminderOn ? 'var(--primary)' : 'var(--border)', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 3, flexShrink: 0 }}
                 >
-                  <div style={{ width: 18, height: 18, borderRadius: '50%', background: '#fff', transform: penghasilanReminderOn ? 'translateX(18px)' : 'translateX(0)', transition: 'transform 0.15s ease' }} />
+                  <div style={{ width: 18, height: 18, borderRadius: '50%', background: '#fff', transform: penghasilanReminderOn ? 'translateX(18px)' : 'translateX(0)', transition: 'transform var(--dur-1) var(--ease)' }} />
                 </div>
               </div>
             )}
@@ -424,7 +424,7 @@ export default function KalkulatorZakat() {
               <span className="section-label" style={{ color: 'var(--muted)', fontSize: 11.5, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
                 Riwayat Perhitungan ({zakatHistory.length})
               </span>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" style={{ transform: showHistory ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s ease' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" style={{ transform: showHistory ? 'rotate(180deg)' : 'none', transition: 'transform var(--dur-1) var(--ease)' }}>
                 <path d="m6 9 6 6 6-6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </button>

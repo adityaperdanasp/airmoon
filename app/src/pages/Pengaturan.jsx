@@ -108,7 +108,7 @@ function NotifPrefsCard({ user }) {
                 onClick={() => uid && setNotifPref(uid, cat.key, !enabled)}
                 style={{ width: 42, height: 24, borderRadius: 999, background: enabled ? 'var(--primary)' : 'var(--border)', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 3, flexShrink: 0 }}
               >
-                <div style={{ width: 18, height: 18, borderRadius: '50%', background: '#fff', transform: enabled ? 'translateX(18px)' : 'translateX(0)', transition: 'transform 0.15s ease' }} />
+                <div style={{ width: 18, height: 18, borderRadius: '50%', background: '#fff', transform: enabled ? 'translateX(18px)' : 'translateX(0)', transition: 'transform var(--dur-1) var(--ease)' }} />
               </div>
             </div>
           );
@@ -125,7 +125,7 @@ function NotifPrefsCard({ user }) {
             onClick={() => updateQuietHours({ enabled: !quietHours.enabled })}
             style={{ width: 42, height: 24, borderRadius: 999, background: quietHours.enabled ? 'var(--primary)' : 'var(--border)', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 3, flexShrink: 0 }}
           >
-            <div style={{ width: 18, height: 18, borderRadius: '50%', background: '#fff', transform: quietHours.enabled ? 'translateX(18px)' : 'translateX(0)', transition: 'transform 0.15s ease' }} />
+            <div style={{ width: 18, height: 18, borderRadius: '50%', background: '#fff', transform: quietHours.enabled ? 'translateX(18px)' : 'translateX(0)', transition: 'transform var(--dur-1) var(--ease)' }} />
           </div>
         </div>
         {quietHours.enabled && (

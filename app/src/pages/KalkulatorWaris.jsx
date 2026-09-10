@@ -43,7 +43,7 @@ function ToggleRow({ label, value, onChange }) {
         onClick={() => onChange(!value)}
         style={{ width: 46, height: 26, borderRadius: 999, background: value ? 'var(--primary)' : 'var(--border)', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 3 }}
       >
-        <div style={{ width: 20, height: 20, borderRadius: '50%', background: '#fff', transform: value ? 'translateX(20px)' : 'translateX(0)', transition: 'transform 0.15s ease' }} />
+        <div style={{ width: 20, height: 20, borderRadius: '50%', background: '#fff', transform: value ? 'translateX(20px)' : 'translateX(0)', transition: 'transform var(--dur-1) var(--ease)' }} />
       </div>
     </div>
   );
@@ -73,6 +73,7 @@ export default function KalkulatorWaris() {
   const [scenarioName, setScenarioName] = useState('');
   const [showSaveScenario, setShowSaveScenario] = useState(false);
   const [deleteScenarioId, setDeleteScenarioId] = useState(null);
+  const [showScenarios, setShowScenarios] = useState(false);
   const [showCompare, setShowCompare] = useState(false);
   const [compareAId, setCompareAId] = useState(null);
   const [compareBId, setCompareBId] = useState(null);
@@ -153,6 +154,86 @@ export default function KalkulatorWaris() {
           Mengcover kombinasi ahli waris paling umum (suami/istri, anak, ayah/ibu). Kasus lebih kompleks (kakek/nenek, saudara kandung, cucu, wasiat, hutang jenazah) tidak tercakup — konsultasikan ke ahli faraidh/ulama untuk kasus itu.
         </div>
 
+
+        <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 14, padding: 16 }}>
+          <span className="section-label" style={{ color: 'var(--muted)', fontSize: 11.5, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+            Total Harta Warisan
+          </span>
+          <input
+            inputMode="numeric"
+            value={Number(harta).toLocaleString('id-ID')}
+            onChange={(e) => setHarta(digitsOnly(e.target.value))}
+            style={{ padding: '12px 14px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--ink)', fontSize: 15, fontWeight: 700 }}
+          />
+        </div>
+
+        <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: 16 }}>
+          <span className="section-label" style={{ color: 'var(--muted)', fontSize: 11.5, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+            Ahli Waris
+          </span>
+          <ToggleRow label="Suami" value={hasSuami} onChange={setHasSuami} />
+          <Stepper label="Istri" value={jumlahIstri} onChange={setJumlahIstri} max={4} />
+          <Stepper label="Anak Laki-laki" value={anakLaki} onChange={setAnakLaki} />
+          <Stepper label="Anak Perempuan" value={anakPerempuan} onChange={setAnakPerempuan} />
+          <ToggleRow label="Ayah" value={hasAyah} onChange={setHasAyah} />
+          <ToggleRow label="Ibu" value={hasIbu} onChange={setHasIbu} />
+        </div>
+
+        {noHeirs && (
+          <p className="state-msg">Pilih setidaknya satu ahli waris buat lihat pembagiannya.</p>
+        )}
+
+        {!noHeirs && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span className="section-label" style={{ color: 'var(--muted)', fontSize: 11.5, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                Pembagian
+              </span>
+              <button
+                onClick={() => setShowShare(true)}
+                style={{ background: 'none', border: 'none', color: 'var(--primary)', fontSize: 11, fontWeight: 700, cursor: 'pointer', padding: 0 }}
+              >
+                ↗ Bagikan
+              </button>
+            </div>
+            {warnings.map((w) => (
+              <div key={w} style={{ padding: '10px 14px', borderRadius: 12, background: 'var(--cream)', fontSize: 11, color: 'var(--gold-ink-dark)', lineHeight: 1.5 }}>
+                {WARNING_TEXT[w]}
+              </div>
+            ))}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {results.map((r, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', borderRadius: 14, background: 'var(--card)' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <span style={{ fontSize: 13, fontWeight: 700 }}>{r.label}</span>
+                    <span style={{ fontSize: 10.5, color: 'var(--muted)' }}>{(r.fraction * 100).toFixed(2)}% bagian</span>
+                  </div>
+                  <span style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--primary)' }}>{formatRupiah(r.amount)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* [UI 2026-09-10] Skenario & Perbandingan moved below the
+            calculator + result (was above the form) and tucked into a
+            collapsible — it's a power-user feature; a first-time user
+            should reach "atur ahli waris -> lihat pembagian" without
+            scrolling past an empty scenario manager first. */}
+        <button
+          onClick={() => setShowScenarios((v) => !v)}
+          className="card"
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '13px 16px', border: 'none', cursor: 'pointer', fontFamily: 'inherit', color: 'var(--ink)' }}
+        >
+          <span style={{ fontSize: 12, fontWeight: 800, letterSpacing: '0.03em', textTransform: 'uppercase', color: 'var(--muted)' }}>
+            Skenario &amp; Perbandingan{scenarios.length > 0 ? ` (${scenarios.length})` : ''}
+          </span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" style={{ transform: showScenarios ? 'rotate(180deg)' : 'none', transition: 'transform var(--dur-1) var(--ease)' }}>
+            <path d="m6 9 6 6 6-6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+
+        {showScenarios && (
         <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span className="section-label" style={{ color: 'var(--muted)', fontSize: 11.5, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
@@ -303,65 +384,6 @@ export default function KalkulatorWaris() {
             </div>
           )}
         </div>
-
-        <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 14, padding: 16 }}>
-          <span className="section-label" style={{ color: 'var(--muted)', fontSize: 11.5, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-            Total Harta Warisan
-          </span>
-          <input
-            inputMode="numeric"
-            value={Number(harta).toLocaleString('id-ID')}
-            onChange={(e) => setHarta(digitsOnly(e.target.value))}
-            style={{ padding: '12px 14px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--ink)', fontSize: 15, fontWeight: 700 }}
-          />
-        </div>
-
-        <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: 16 }}>
-          <span className="section-label" style={{ color: 'var(--muted)', fontSize: 11.5, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-            Ahli Waris
-          </span>
-          <ToggleRow label="Suami" value={hasSuami} onChange={setHasSuami} />
-          <Stepper label="Istri" value={jumlahIstri} onChange={setJumlahIstri} max={4} />
-          <Stepper label="Anak Laki-laki" value={anakLaki} onChange={setAnakLaki} />
-          <Stepper label="Anak Perempuan" value={anakPerempuan} onChange={setAnakPerempuan} />
-          <ToggleRow label="Ayah" value={hasAyah} onChange={setHasAyah} />
-          <ToggleRow label="Ibu" value={hasIbu} onChange={setHasIbu} />
-        </div>
-
-        {noHeirs && (
-          <p className="state-msg">Pilih setidaknya satu ahli waris buat lihat pembagiannya.</p>
-        )}
-
-        {!noHeirs && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span className="section-label" style={{ color: 'var(--muted)', fontSize: 11.5, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-                Pembagian
-              </span>
-              <button
-                onClick={() => setShowShare(true)}
-                style={{ background: 'none', border: 'none', color: 'var(--primary)', fontSize: 11, fontWeight: 700, cursor: 'pointer', padding: 0 }}
-              >
-                ↗ Bagikan
-              </button>
-            </div>
-            {warnings.map((w) => (
-              <div key={w} style={{ padding: '10px 14px', borderRadius: 12, background: 'var(--cream)', fontSize: 11, color: 'var(--gold-ink-dark)', lineHeight: 1.5 }}>
-                {WARNING_TEXT[w]}
-              </div>
-            ))}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {results.map((r, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', borderRadius: 14, background: 'var(--card)' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    <span style={{ fontSize: 13, fontWeight: 700 }}>{r.label}</span>
-                    <span style={{ fontSize: 10.5, color: 'var(--muted)' }}>{(r.fraction * 100).toFixed(2)}% bagian</span>
-                  </div>
-                  <span style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--primary)' }}>{formatRupiah(r.amount)}</span>
-                </div>
-              ))}
-            </div>
-          </div>
         )}
       </div>
 

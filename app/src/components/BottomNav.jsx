@@ -88,7 +88,7 @@ export default function BottomNav() {
               width: `calc(${100 / ITEMS.length}% - 8px)`,
               borderRadius: 999,
               background: 'var(--mint)',
-              transition: 'left 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+              transition: 'left var(--dur-2) var(--ease)',
             }}
           />
         )}

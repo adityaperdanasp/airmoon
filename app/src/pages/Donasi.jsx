@@ -114,7 +114,7 @@ function SedekahGoalCard({ user, myContributions }) {
         </button>
       </div>
       <div style={{ height: 7, borderRadius: 999, background: 'var(--border)', overflow: 'hidden' }}>
-        <div style={{ height: '100%', width: `${pct}%`, background: 'var(--primary)', transition: 'width 0.25s ease' }} />
+        <div style={{ height: '100%', width: `${pct}%`, background: 'var(--primary)', transition: 'width var(--dur-2) var(--ease)' }} />
       </div>
       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--muted)' }}>
         <span><strong style={{ color: 'var(--ink)' }}>{formatRupiah(monthTotal)}</strong> dari {formatRupiah(goal)}</span>

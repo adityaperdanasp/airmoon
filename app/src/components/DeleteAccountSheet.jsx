@@ -48,7 +48,7 @@ export default function DeleteAccountSheet({ onClose, onDeleted }) {
         <div
           onClick={(e) => e.stopPropagation()}
           {...handlers}
-          style={{ width: '100%', maxWidth: 480, margin: '0 auto', background: 'var(--card)', borderRadius: '20px 20px 0 0', padding: '0 20px 20px', transform: `translateY(${dragY}px)`, transition: dragging ? 'none' : 'transform 0.2s ease' }}
+          style={{ width: '100%', maxWidth: 480, margin: '0 auto', background: 'var(--card)', borderRadius: '20px 20px 0 0', padding: '0 20px 20px', transform: `translateY(${dragY}px)`, transition: dragging ? 'none' : 'transform var(--dur-2) var(--ease)' }}
         >
           <div style={{ width: 36, height: 4, borderRadius: 999, background: 'var(--border)', margin: '10px auto 16px' }} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 16 }}>

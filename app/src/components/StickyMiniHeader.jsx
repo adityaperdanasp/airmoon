@@ -43,7 +43,7 @@ export default function StickyMiniHeader({ title, subtitle, visible: forceVisibl
         pointerEvents: show ? 'auto' : 'none',
         opacity: show ? 1 : 0,
         transform: show ? 'translateY(0)' : 'translateY(-100%)',
-        transition: 'opacity 0.2s ease, transform 0.2s ease',
+        transition: 'opacity var(--dur-2) var(--ease), transform var(--dur-2) var(--ease)',
       }}
     >
       <div

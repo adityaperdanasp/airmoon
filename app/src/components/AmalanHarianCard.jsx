@@ -152,7 +152,7 @@ export default function AmalanHarianCard({ uid }) {
             height: '100%',
             width: `${(totalDone / totalItems) * 100}%`,
             background: 'var(--primary)',
-            transition: 'width 0.25s ease',
+            transition: 'width var(--dur-2) var(--ease)',
           }}
         />
       </div>

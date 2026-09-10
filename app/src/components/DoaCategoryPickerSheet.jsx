@@ -32,7 +32,7 @@ export default function DoaCategoryPickerSheet({ categories, activeId, favoriteI
             display: 'flex',
             flexDirection: 'column',
             transform: `translateY(${dragY}px)`,
-            transition: dragging ? 'none' : 'transform 0.2s ease',
+            transition: dragging ? 'none' : 'transform var(--dur-2) var(--ease)',
           }}
         >
           <div style={{ width: 36, height: 4, borderRadius: 999, background: 'var(--border)', margin: '10px auto 12px', flexShrink: 0 }} />

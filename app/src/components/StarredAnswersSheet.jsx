@@ -13,7 +13,7 @@ export default function StarredAnswersSheet({ entries, onRemove, onClose }) {
       <div
         className="card"
         {...handlers}
-        style={{ width: '100%', maxHeight: '75vh', borderBottomLeftRadius: 0, borderBottomRightRadius: 0, display: 'flex', flexDirection: 'column', gap: 12, padding: '10px 18px calc(18px + env(safe-area-inset-bottom))', transform: `translateY(${dragY}px)`, transition: dragging ? 'none' : 'transform 0.2s ease' }}
+        style={{ width: '100%', maxHeight: '75vh', borderBottomLeftRadius: 0, borderBottomRightRadius: 0, display: 'flex', flexDirection: 'column', gap: 12, padding: '10px 18px calc(18px + env(safe-area-inset-bottom))', transform: `translateY(${dragY}px)`, transition: dragging ? 'none' : 'transform var(--dur-2) var(--ease)' }}
         onClick={(e) => e.stopPropagation()}
       >
         <SheetDragHandle />

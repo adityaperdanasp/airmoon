@@ -29,7 +29,7 @@ export default function RatingPromptModal({ onSubmit, onLater, onNever }) {
       <div
         className="card"
         {...handlers}
-        style={{ width: '100%', borderBottomLeftRadius: 0, borderBottomRightRadius: 0, display: 'flex', flexDirection: 'column', gap: 14, padding: '10px 20px calc(20px + env(safe-area-inset-bottom))', transform: `translateY(${dragY}px)`, transition: dragging ? 'none' : 'transform 0.2s ease' }}
+        style={{ width: '100%', borderBottomLeftRadius: 0, borderBottomRightRadius: 0, display: 'flex', flexDirection: 'column', gap: 14, padding: '10px 20px calc(20px + env(safe-area-inset-bottom))', transform: `translateY(${dragY}px)`, transition: dragging ? 'none' : 'transform var(--dur-2) var(--ease)' }}
         onClick={(e) => e.stopPropagation()}
       >
         <SheetDragHandle />

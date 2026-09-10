@@ -51,7 +51,7 @@ export default function ScrollToTopButton() {
         opacity: visible ? 1 : 0,
         transform: visible ? 'translateY(0) scale(1)' : 'translateY(8px) scale(0.85)',
         pointerEvents: visible ? 'auto' : 'none',
-        transition: 'opacity 0.2s ease, transform 0.2s ease',
+        transition: 'opacity var(--dur-2) var(--ease), transform var(--dur-2) var(--ease)',
       }}
     >
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">

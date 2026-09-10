@@ -80,7 +80,7 @@ export default function UmrohTabungan() {
               </div>
 
               <div style={{ height: 8, borderRadius: 999, background: 'var(--border)', overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: `${progressPercent}%`, background: 'var(--primary)', transition: 'width 0.3s ease' }} />
+                <div style={{ height: '100%', width: `${progressPercent}%`, background: 'var(--primary)', transition: 'width var(--dur-3) var(--ease)' }} />
               </div>
 
               <span style={{ fontSize: 11, color: 'var(--muted)', textAlign: 'center' }}>

@@ -91,7 +91,7 @@ export default function UmrohManasik() {
       <div className="screen-content">
         <TopBar title="Panduan Manasik" subtitle={`${doneCount}/${STAGES.length} tahap ditandai`} />
         <div style={{ height: 6, borderRadius: 999, background: 'var(--border)', overflow: 'hidden' }}>
-          <div style={{ height: '100%', width: `${(doneCount / STAGES.length) * 100}%`, background: 'var(--primary)', transition: 'width 0.25s ease' }} />
+          <div style={{ height: '100%', width: `${(doneCount / STAGES.length) * 100}%`, background: 'var(--primary)', transition: 'width var(--dur-2) var(--ease)' }} />
         </div>
         <p className="muted" style={{ margin: 0, fontSize: 12, lineHeight: 1.6 }}>
           Ringkasan tata cara umrah, ditulis ulang berdasarkan panduan di{' '}

@@ -45,7 +45,7 @@ export default function NotificationPrimer({ onConfirm, onCancel }) {
           gap: 14,
           textAlign: 'center',
           transform: `translateY(${dragY}px)`,
-          transition: dragging ? 'none' : 'transform 0.2s ease',
+          transition: dragging ? 'none' : 'transform var(--dur-2) var(--ease)',
         }}
       >
         <SheetDragHandle />

@@ -84,7 +84,7 @@ export default function KhatamProgressCard({ uid }) {
       {pageCount > 0 && (
         <>
           <div style={{ height: 6, borderRadius: 999, background: 'var(--border)', overflow: 'hidden' }}>
-            <div style={{ height: '100%', width: `${pct}%`, background: 'var(--gold-ink)', transition: 'width 0.25s ease' }} />
+            <div style={{ height: '100%', width: `${pct}%`, background: 'var(--gold-ink)', transition: 'width var(--dur-2) var(--ease)' }} />
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--muted)' }}>
             <span>{pageCount}/{TOTAL_MUSHAF_PAGES} halaman ({pct}%)</span>
@@ -151,7 +151,7 @@ export default function KhatamProgressCard({ uid }) {
                   height: '100%',
                   width: `${Math.min(100, Math.round((readingGoal.pagesToday.length / readingGoal.pagesPerDay) * 100))}%`,
                   background: readingGoal.pagesToday.length >= readingGoal.pagesPerDay ? 'var(--success)' : 'var(--gold-ink)',
-                  transition: 'width 0.25s ease',
+                  transition: 'width var(--dur-2) var(--ease)',
                 }}
               />
             </div>

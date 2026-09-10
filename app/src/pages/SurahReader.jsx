@@ -441,7 +441,7 @@ export default function SurahReader() {
             >
               <span style={{ fontSize: 11.5, fontWeight: 700 }}>▶️ Auto-lanjut Surah Berikutnya</span>
               <div style={{ width: 38, height: 22, borderRadius: 999, background: autoNextSurah ? 'var(--primary)' : 'var(--border)', display: 'flex', alignItems: 'center', padding: 3, flexShrink: 0 }}>
-                <div style={{ width: 16, height: 16, borderRadius: '50%', background: '#fff', transform: autoNextSurah ? 'translateX(16px)' : 'translateX(0)', transition: 'transform 0.15s ease' }} />
+                <div style={{ width: 16, height: 16, borderRadius: '50%', background: '#fff', transform: autoNextSurah ? 'translateX(16px)' : 'translateX(0)', transition: 'transform var(--dur-1) var(--ease)' }} />
               </div>
             </div>
           </div>
@@ -536,7 +536,7 @@ export default function SurahReader() {
                   padding: isJumpTarget || isPlaying ? '12px 10px 18px' : undefined,
                   margin: isJumpTarget || isPlaying ? '0 -10px' : undefined,
                   boxShadow: isJumpTarget ? '0 0 0 2px var(--primary)' : 'none',
-                  transition: 'background 0.3s ease, box-shadow 0.3s ease',
+                  transition: 'background var(--dur-3) var(--ease), box-shadow var(--dur-3) var(--ease)',
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
@@ -574,7 +574,7 @@ export default function SurahReader() {
                               key={i}
                               style={{
                                 color: activeWord === i + 1 ? 'var(--primary)' : 'inherit',
-                                transition: 'color 0.15s ease',
+                                transition: 'color var(--dur-1) var(--ease)',
                               }}
                             >
                               {word}
@@ -620,7 +620,7 @@ export default function SurahReader() {
                       display: 'inline-flex',
                       color: favoriteKeys.has(`${surah.nomor}:${a.nomorAyat}`) ? 'var(--accent)' : 'var(--muted-soft)',
                       transform: poppedFavorite === `${surah.nomor}:${a.nomorAyat}` ? 'scale(1.35)' : 'scale(1)',
-                      transition: 'transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                      transition: 'transform var(--dur-1) var(--ease-bounce)',
                     }}
                     aria-label="Simpan ke favorit"
                   >

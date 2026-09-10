@@ -20,7 +20,7 @@ export default function AddToHomeScreenSheet({ onClose }) {
         <div
           onClick={(e) => e.stopPropagation()}
           {...handlers}
-          style={{ width: '100%', maxWidth: 480, margin: '0 auto', background: 'var(--card)', borderRadius: '20px 20px 0 0', padding: '0 20px 24px', transform: `translateY(${dragY}px)`, transition: dragging ? 'none' : 'transform 0.2s ease' }}
+          style={{ width: '100%', maxWidth: 480, margin: '0 auto', background: 'var(--card)', borderRadius: '20px 20px 0 0', padding: '0 20px 24px', transform: `translateY(${dragY}px)`, transition: dragging ? 'none' : 'transform var(--dur-2) var(--ease)' }}
         >
           <div style={{ width: 36, height: 4, borderRadius: 999, background: 'var(--border)', margin: '10px auto 16px' }} />
           <span style={{ fontSize: 15, fontWeight: 800, display: 'block', marginBottom: 4 }}>Pasang airmoon di Layar Utama</span>

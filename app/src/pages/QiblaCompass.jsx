@@ -127,7 +127,7 @@ export default function QiblaCompass() {
                     alignItems: 'center',
                     justifyContent: 'center',
                     transform: `rotate(${hasHeading ? -heading : 0}deg)`,
-                    transition: 'transform 0.15s linear',
+                    transition: 'transform var(--dur-1) linear',
                   }}
                 >
                   <svg width="280" height="280" viewBox="0 0 280 280">
@@ -173,7 +173,7 @@ export default function QiblaCompass() {
                     alignItems: 'center',
                     justifyContent: 'center',
                     transform: `rotate(${needleRotation}deg)`,
-                    transition: 'transform 0.15s linear',
+                    transition: 'transform var(--dur-1) linear',
                   }}
                 >
                   <svg width="240" height="240" viewBox="0 0 240 240">

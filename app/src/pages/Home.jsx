@@ -463,7 +463,7 @@ export default function Home() {
             style={{
               borderRadius: 20,
               boxShadow: highlightAmalan ? '0 0 0 2px var(--primary)' : 'none',
-              transition: 'box-shadow 0.3s ease',
+              transition: 'box-shadow var(--dur-3) var(--ease)',
             }}
           >
             <AmalanHarianCard uid={user.uid} />

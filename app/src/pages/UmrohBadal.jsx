@@ -56,7 +56,7 @@ export default function UmrohBadal() {
       <div className="screen-content">
         <TopBar title="Badal Umrah" subtitle={`${doneCount}/${SECTIONS.length} bagian ditandai`} />
         <div style={{ height: 6, borderRadius: 999, background: 'var(--border)', overflow: 'hidden' }}>
-          <div style={{ height: '100%', width: `${(doneCount / SECTIONS.length) * 100}%`, background: 'var(--primary)', transition: 'width 0.25s ease' }} />
+          <div style={{ height: '100%', width: `${(doneCount / SECTIONS.length) * 100}%`, background: 'var(--primary)', transition: 'width var(--dur-2) var(--ease)' }} />
         </div>
         <p className="muted" style={{ margin: 0, fontSize: 12, lineHeight: 1.6 }}>
           Dirangkum dari{' '}

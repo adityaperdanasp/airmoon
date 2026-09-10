@@ -29,7 +29,7 @@ export default function TafsirSheet({ title, loading, text, onClose }) {
             background: 'var(--card)',
             borderRadius: '20px 20px 0 0',
             transform: `translateY(${dragY}px)`,
-            transition: dragging ? 'none' : 'transform 0.2s ease',
+            transition: dragging ? 'none' : 'transform var(--dur-2) var(--ease)',
           }}
         >
           <div style={{ width: 36, height: 4, borderRadius: 999, background: 'var(--border)', margin: '10px auto 4px', flexShrink: 0 }} />
