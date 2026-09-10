@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
-import Logo from './Logo';
-import { QuranBookIcon, MosqueIcon, PrayerClockIcon, TasbihIcon } from './serviceIcons';
+import { ArtWelcome, ArtQuran, ArtAdzan, ArtDonation, ArtMore } from './onboardingArt';
 
 // A short guided intro shown once ever, on a brand-new account's first
 // Home visit (see Home.jsx's call site + lib/onboarding.js's seen-flag).
@@ -13,27 +12,27 @@ import { QuranBookIcon, MosqueIcon, PrayerClockIcon, TasbihIcon } from './servic
 // same ground (what's here, why it's different) far more robustly.
 const SLIDES = [
   {
-    icon: <Logo size={64} showWordmark={false} />,
+    art: <ArtWelcome />,
     title: 'Assalamu\'alaikum, selamat datang di airmoon 🌙',
     body: 'Aplikasi Muslim harian kamu — baca Qur\'an, jadwal sholat, dzikir, sampai donasi listrik masjid, semua dalam satu tempat.',
   },
   {
-    icon: <QuranBookIcon size={56} />,
+    art: <ArtQuran />,
     title: 'Baca Qur\'an, Mode Ayat atau Mushaf',
     body: 'Pilih Mode Ayat buat baca santai dengan terjemahan, atau Mode Mushaf Madinah buat tampilan asli mushaf cetak — lengkap dengan tajwid warna dan bookmark otomatis.',
   },
   {
-    icon: <PrayerClockIcon size={56} />,
+    art: <ArtAdzan />,
     title: 'Jadwal Sholat & Notifikasi Adzan',
     body: 'Waktu sholat sesuai lokasimu, plus notifikasi adzan yang beneran bunyi — bukan cuma pengingat diam.',
   },
   {
-    icon: <MosqueIcon size={56} />,
+    art: <ArtDonation />,
     title: 'Donasi Langsung ke Listrik Masjid',
     body: 'Beda dari yang lain — sedekahmu di sini beneran disalurkan ke tagihan listrik PLN masjid, bukan lewat rekening panitia.',
   },
   {
-    icon: <TasbihIcon size={56} />,
+    art: <ArtMore />,
     title: 'Masih banyak lagi di tab "Lainnya"',
     body: 'Tasbih digital, kalkulator zakat & waris, Asmaul Husna, dzikir pagi/petang, dan lebih dari selusin fitur lain nunggu buat dijelajahi.',
   },
@@ -56,8 +55,8 @@ export default function OnboardingTour({ onFinish }) {
       </div>
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 20, padding: '0 32px', textAlign: 'center' }}>
-        <div style={{ width: 96, height: 96, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--mint-soft)' }}>
-          {slide.icon}
+        <div style={{ width: 168, height: 168, borderRadius: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--mint-soft)' }}>
+          {slide.art}
         </div>
         <h1 style={{ margin: 0, fontSize: 19, fontWeight: 800, lineHeight: 1.35 }}>{slide.title}</h1>
         <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.65, color: 'var(--muted)', maxWidth: 320 }}>{slide.body}</p>
@@ -67,7 +66,7 @@ export default function OnboardingTour({ onFinish }) {
         {SLIDES.map((_, i) => (
           <div
             key={i}
-            style={{ width: i === step ? 20 : 6, height: 6, borderRadius: 999, background: i === step ? 'var(--primary)' : 'var(--border)', transition: 'width 0.2s ease' }}
+            style={{ width: i === step ? 20 : 6, height: 6, borderRadius: 999, background: i === step ? 'var(--primary)' : 'var(--border)', transition: 'width var(--dur-2) var(--ease)' }}
           />
         ))}
       </div>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Monochrome status-bar icon: the airmoon crescent + star, white on
+     transparent (the OS tints notification small icons itself, so the
+     colour here is only ever a silhouette). Same path data as
+     app/src/components/Logo.jsx — keep in sync if the mark changes.
+     24dp canvas, mark inset a little for the status-bar safe area. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <group android:translateX="1.6" android:translateY="1.6" android:scaleX="0.86" android:scaleY="0.86">
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M14.72296282518494,4.185868350271921 A8.5,8.5 0 1,0 19.81413164972808,9.27703717481506 A6.0,6.0 0 1,1 14.72296282518494,4.185868350271921 Z" />
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M14.22,8.34 14.69,9.29 15.74,9.45 14.98,10.19 15.16,11.23 14.22,10.74 13.28,11.23 13.46,10.19 12.7,9.45 13.75,9.29Z" />
+    </group>
+</vector>

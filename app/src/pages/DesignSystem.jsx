@@ -192,6 +192,16 @@ export default function DesignSystem() {
             ))}
           </div>
         </Block>
+
+        <Block title="Nada bahasa">
+          <div className="card" style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 8, fontSize: 11.5, color: 'var(--muted)', lineHeight: 1.6 }}>
+            <div><strong style={{ color: 'var(--ink)' }}>Sapaan:</strong> selalu "kamu", tidak pernah "Anda".</div>
+            <div><strong style={{ color: 'var(--ink)' }}>Tombol/aksi:</strong> Title Case, kata kerja — "Tandai Selesai", "Bagikan", "Coba Lagi".</div>
+            <div><strong style={{ color: 'var(--ink)' }}>Teks bantuan / caption:</strong> kalimat biasa, boleh santai — "Tap ikon ☆ buat menyimpannya di sini."</div>
+            <div><strong style={{ color: 'var(--ink)' }}>Tutup sheet/modal:</strong> selalu "Tutup".</div>
+            <div><strong style={{ color: 'var(--ink)' }}>Error:</strong> jelaskan apa yang salah + cara lanjut, tanpa minta maaf berlebihan.</div>
+          </div>
+        </Block>
       </div>
     </div>
   );

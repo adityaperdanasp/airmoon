@@ -515,6 +515,22 @@ textarea:focus-visible,
   animation: splash-pulse 1.6s ease-in-out infinite;
 }
 
+/* First-paint branded splash (App.jsx's RouteFallback) — fades itself in
+   quickly; the incoming page then fades in on its own via .screen's
+   enter animation once its chunk lands, so the hand-off reads as a soft
+   cross-dissolve rather than a hard cut. */
+.boot-splash {
+  animation: boot-splash-in 0.3s var(--ease) both;
+}
+@keyframes boot-splash-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 /* AskMe.jsx's "Ust. Rewin is replying" indicator — three dots inside a
    chat-bubble shape (matching the assistant's own message bubbles)
    instead of a bare spinner, the near-universal "typing…" convention
@@ -630,6 +646,7 @@ textarea:focus-visible,
   .skeleton,
   .screen,
   .splash-pulse,
+  .boot-splash,
   .typing-dot,
   .nav-icon,
   .stagger-item,

@@ -85,7 +85,11 @@ messaging.onBackgroundMessage((payload) => {
   self.registration.showNotification(title || 'airmoon', {
     body: body || '',
     icon: '/icons/icon-192.png',
-    badge: '/icons/icon-192.png',
+    // `badge` is the tiny status-bar glyph (Android Chrome tints it) — it
+    // must be a monochrome silhouette, not the full-colour app icon,
+    // which the OS renders as a white blob. Airmoon crescent, white on
+    // transparent (public/icons/badge-mono.png).
+    badge: '/icons/badge-mono.png',
     tag: payload.data?.tag || 'airmoon-prayer',
     // Each prayer reuses the same tag every day (adzan-Isha, adzan-Subuh, …)
     // so today's notification replaces yesterday's leftover instead of

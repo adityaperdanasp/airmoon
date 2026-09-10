@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useLang } from '../context/LangContext';
 import TopBar from '../components/TopBar';
 import { getRecentLainnya, markLainnyaVisited } from '../lib/recentLainnya';
-import { hasUnseenNotifications } from '../lib/notificationLog';
+import { getUnseenNotificationCount } from '../lib/notificationLog';
 import { hasUnseenChangelog } from '../lib/changelogSeen';
 import {
   QiblaCompassIcon,
@@ -94,7 +94,7 @@ const SECTIONS = [
 
 const ALL_ITEMS = SECTIONS.flatMap((s) => s.items);
 
-function Tile({ it, label, badge }) {
+function Tile({ it, label, badge, count }) {
   return (
     <Link
       to={it.to}
@@ -112,11 +112,37 @@ function Tile({ it, label, badge }) {
         color: 'inherit',
       }}
     >
-      <div style={{ position: 'relative', width: 48, height: 48, borderRadius: 16, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: it.bg }}>
-        {it.node}
-        {badge && (
-          <div className="unseen-dot" style={{ position: 'absolute', top: 4, right: 4, width: 9, height: 9, borderRadius: '50%', background: 'var(--danger)', border: '1.5px solid var(--card)' }} />
-        )}
+      <div style={{ position: 'relative', width: 48, height: 48, borderRadius: 16, overflow: 'visible', display: 'flex', alignItems: 'center', justifyContent: 'center', background: it.bg }}>
+        <div style={{ width: 48, height: 48, borderRadius: 16, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{it.node}</div>
+        {/* A numeric count when there's a real number to show (unseen
+            notifications), a plain pulsing dot otherwise (changelog has no
+            count) — matching how a messaging app badges its icon. */}
+        {count > 0 ? (
+          <div
+            className="unseen-dot"
+            style={{
+              position: 'absolute',
+              top: -5,
+              right: -5,
+              minWidth: 17,
+              height: 17,
+              padding: '0 4px',
+              borderRadius: 999,
+              background: 'var(--danger)',
+              color: '#fff',
+              fontSize: 10,
+              fontWeight: 800,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              border: '1.5px solid var(--card)',
+            }}
+          >
+            {count > 9 ? '9+' : count}
+          </div>
+        ) : badge ? (
+          <div className="unseen-dot" style={{ position: 'absolute', top: -3, right: -3, width: 9, height: 9, borderRadius: '50%', background: 'var(--danger)', border: '1.5px solid var(--card)' }} />
+        ) : null}
       </div>
       <span style={{ fontSize: 11.5, fontWeight: 700, textAlign: 'center' }}>{label}</span>
     </Link>
@@ -126,18 +152,19 @@ function Tile({ it, label, badge }) {
 export default function Lainnya() {
   const { t } = useLang();
   const [recent, setRecent] = useState([]);
-  const [hasUnseenNotif, setHasUnseenNotif] = useState(false);
+  const [unseenNotifCount, setUnseenNotifCount] = useState(0);
   const [hasUnseenNews, setHasUnseenNews] = useState(false);
 
   useEffect(() => setRecent(getRecentLainnya()), []);
   useEffect(() => {
-    hasUnseenNotifications().then(setHasUnseenNotif);
+    getUnseenNotificationCount().then(setUnseenNotifCount);
     setHasUnseenNews(hasUnseenChangelog());
   }, []);
 
   const recentItems = recent.map((to) => ALL_ITEMS.find((it) => it.to === to)).filter(Boolean);
   const labelFor = (it) => (it.key ? t(it.key) : it.label);
-  const badgeFor = (it) => (it.to === '/notifikasi' && hasUnseenNotif) || (it.to === '/yang-baru' && hasUnseenNews);
+  const badgeFor = (it) => it.to === '/yang-baru' && hasUnseenNews;
+  const countFor = (it) => (it.to === '/notifikasi' ? unseenNotifCount : 0);
 
   return (
     <div className="screen">
@@ -185,7 +212,7 @@ export default function Lainnya() {
             </span>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               {section.items.map((it) => (
-                <Tile key={it.to} it={it} label={labelFor(it)} badge={badgeFor(it)} />
+                <Tile key={it.to} it={it} label={labelFor(it)} badge={badgeFor(it)} count={countFor(it)} />
               ))}
             </div>
           </div>

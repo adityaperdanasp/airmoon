@@ -253,7 +253,7 @@ function DaftarkanMasjidCard({ user }) {
       }}
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        <span style={{ fontSize: 13.5, fontWeight: 700 }}>Daftarkan Masjid Anda</span>
+        <span style={{ fontSize: 13.5, fontWeight: 700 }}>Daftarkan Masjid Kamu</span>
         <span style={{ fontSize: 11, color: 'var(--muted)' }}>Butuh bantuan listrik untuk masjid/musholamu? Ajukan di sini.</span>
       </div>
       <span style={{ fontSize: 18, color: 'var(--gold-ink)' }}>→</span>

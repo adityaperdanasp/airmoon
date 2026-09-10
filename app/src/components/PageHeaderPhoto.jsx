@@ -43,6 +43,22 @@ function usePhotoParallax() {
 // Back button + title are overlaid directly on the photo instead of
 // using the shared TopBar, so this fully replaces it (don't render both
 // on the same page).
+
+// data/photos.js's PAGE_PHOTOS are all daylight shots — in dark theme
+// they used to just sit under a heavier overlay (see the gradient note
+// below), which dims but never actually makes a bright-sky photo read as
+// "night". Until there's a real dark page-photography set, swap in one of
+// the genuinely-dark assets we do have (the Home dusk set + the dark
+// login hero), picked deterministically off the light path so each page
+// keeps a stable dark banner rather than changing under someone.
+const DARK_BANNERS = ['/photos/home-dark-1.jpg', '/photos/home-dark-2.jpg', '/photos/login-dark.jpg'];
+function resolvePhoto(photo, theme) {
+  if (theme !== 'dark' || !photo || photo.includes('-dark')) return photo;
+  let h = 0;
+  for (let i = 0; i < photo.length; i++) h = (h * 31 + photo.charCodeAt(i)) >>> 0;
+  return DARK_BANNERS[h % DARK_BANNERS.length];
+}
+
 export default function PageHeaderPhoto({ title, photo, subtitle, showBack = true, right }) {
   const navigate = useNavigate();
   const { theme } = useTheme();
@@ -50,7 +66,7 @@ export default function PageHeaderPhoto({ title, photo, subtitle, showBack = tru
   return (
     <div ref={elRef} style={{ position: 'relative', height: 130, borderRadius: 22, overflow: 'hidden' }}>
       <img
-        src={photo}
+        src={resolvePhoto(photo, theme)}
         alt=""
         style={{
           position: 'absolute',

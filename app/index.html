@@ -30,6 +30,22 @@
       href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Fredoka:wght@500;600;700&family=Amiri:wght@400;700&family=Scheherazade+New:wght@400;700&display=swap"
       rel="stylesheet"
     />
+    <!-- Paint the brand wash immediately, before any JS runs, so the very
+         first frame is the airmoon teal rather than a white flash that
+         then cuts to App.jsx's boot splash. React swaps #root's content
+         once it mounts; this style only ever shows for the pre-hydration
+         moment. -->
+    <style>
+      /* Covers the whole viewport while #root is still empty (React not
+         mounted yet) — `inset: 0` + fixed means it hides the default
+         white page behind it too, so no html/body background override is
+         needed. Stops applying the instant React renders anything. */
+      #root:empty {
+        position: fixed;
+        inset: 0;
+        background: linear-gradient(160deg, #0d4d47 0%, #0a3630 100%);
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>

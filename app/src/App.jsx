@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import ProtectedRoute from './components/ProtectedRoute';
 import Logo from './components/Logo';
@@ -59,16 +59,46 @@ function P({ children }) {
   return <ProtectedRoute>{children}</ProtectedRoute>;
 }
 
-// Matches the plain center-spinner loading state every page already uses
-// for its own data fetches (see e.g. SurahReader.jsx) — so the brief gap
-// while a route's chunk downloads looks like the same familiar "loading"
-// moment, not a distinct new loading UI.
-// The brand's own mark instead of a bare spinner — this is what shows
-// during the very first paint (before any route's own chunk, let alone
-// its data, has loaded), so it's the actual first thing a visitor sees of
-// the app. A gentle pulse (`animation` on the wrapper, not the mark's own
-// SVG) says "loading" without needing a spinner glyph competing with it.
+// Two different loading treatments:
+//  • First paint of the app (before any route chunk or its data) gets a
+//    real branded splash — a full-bleed teal wash with the crescent +
+//    wordmark, fading out as the first page fades in. This is the actual
+//    first thing a visitor sees; a bare pulsing glyph on white sold the
+//    app short.
+//  • Every subsequent route-chunk swap gets the light version (just the
+//    pulsing mark on the page background) — a full teal screen flashing
+//    on every in-app navigation would be exhausting.
+let bootSplashShown = false;
+
 function RouteFallback() {
+  const firstBoot = !bootSplashShown;
+  useEffect(() => {
+    bootSplashShown = true;
+  }, []);
+
+  if (firstBoot) {
+    return (
+      <div
+        className="boot-splash"
+        style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 100,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 14,
+          background: 'linear-gradient(160deg, #0d4d47 0%, #0a3630 100%)',
+        }}
+      >
+        <div className="splash-pulse">
+          <Logo size={54} showWordmark color="#ffffff" />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="screen">
       <div className="screen-content center" style={{ minHeight: '100vh' }}>

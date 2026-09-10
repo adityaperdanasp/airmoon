@@ -69,7 +69,7 @@ class FcmService : FirebaseMessagingService() {
         )
 
         val notification = NotificationCompat.Builder(this, channelId)
-            .setSmallIcon(android.R.drawable.ic_dialog_info) // TODO: swap for a proper monochrome status-bar icon
+            .setSmallIcon(R.drawable.ic_notification) // airmoon crescent, monochrome (res/drawable/ic_notification.xml)
             .setContentTitle(title)
             .setContentText(body)
             .setAutoCancel(true)
