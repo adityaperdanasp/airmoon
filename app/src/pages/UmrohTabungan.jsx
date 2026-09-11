@@ -7,6 +7,10 @@ import { watchUmrohGoal, setUmrohGoal, clearUmrohGoal, restoreUmrohGoal, watchUm
 import ConfirmDialog from '../components/ConfirmDialog';
 
 const dateFmt = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+// Setoran rows need the time too — several deposits logged the same day
+// (e.g. catching up on a few months at once) used to render as identical
+// date strings with no way to tell them apart or confirm ordering.
+const depositDateFmt = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
 // [UI 2026-09-11] Every other currency input in the app (Kalkulator
 // Zakat, Kalkulator Waris, Donasi's custom amount) formats with
@@ -125,7 +129,7 @@ export default function UmrohTabungan() {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
                       <span style={{ fontSize: 13, fontWeight: 700 }}>+{formatRupiah(d.amount)}</span>
                       <span style={{ fontSize: 11, color: 'var(--muted)' }}>
-                        {d.createdAt ? dateFmt.format(d.createdAt.toDate()) : 'Baru saja'}{d.note ? ` · ${d.note}` : ''}
+                        {d.createdAt ? depositDateFmt.format(d.createdAt.toDate()) : 'Baru saja'}{d.note ? ` · ${d.note}` : ''}
                       </span>
                     </div>
                     <button

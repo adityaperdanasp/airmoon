@@ -17,8 +17,10 @@ import { useSwipeReveal } from '../lib/useSwipeReveal';
 import ProgressRing from '../components/ProgressRing';
 import SegButton from '../components/SegButton';
 
+// Includes the time, not just the date — two calculations saved minutes
+// apart on the same day used to be indistinguishable in the list.
 function formatHistoryDate(ts) {
-  return new Date(ts).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+  return new Date(ts).toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
 function digitsOnly(v) {

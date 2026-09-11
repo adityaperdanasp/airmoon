@@ -12,6 +12,11 @@ function digitsOnly(v) {
   return v.replace(/\D/g, '');
 }
 
+// Scenario names alone can't tell apart two saves made minutes apart the
+// same day — shown as a tooltip on the chip itself, and as a real visible
+// line in the side-by-side compare view where there's actually room.
+const scenarioSavedAtFmt = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
 function Stepper({ label, value, onChange, max = 20 }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
@@ -297,7 +302,11 @@ export default function KalkulatorWaris() {
             <div className="hide-scrollbar" style={{ display: 'flex', gap: 8, overflowX: 'auto' }}>
               {scenarios.map((s) => (
                 <div key={s.id} style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6, padding: '8px 6px 8px 12px', borderRadius: 999, background: 'var(--mint-soft)' }}>
-                  <button onClick={() => applyScenario(s)} style={{ background: 'none', border: 'none', color: 'var(--ink)', fontSize: 12, fontWeight: 700, cursor: 'pointer', padding: 0, whiteSpace: 'nowrap' }}>
+                  <button
+                    onClick={() => applyScenario(s)}
+                    title={s.savedAt ? `Disimpan ${scenarioSavedAtFmt.format(new Date(s.savedAt))}` : undefined}
+                    style={{ background: 'none', border: 'none', color: 'var(--ink)', fontSize: 12, fontWeight: 700, cursor: 'pointer', padding: 0, whiteSpace: 'nowrap' }}
+                  >
                     {s.name}
                   </button>
                   <button
@@ -342,6 +351,9 @@ export default function KalkulatorWaris() {
                   {[{ s: compareA, r: compareAResult }, { s: compareB, r: compareBResult }].map(({ s, r }, colIdx) => (
                     <div key={colIdx} style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: 10, borderRadius: 12, background: 'var(--mint-soft)' }}>
                       <span style={{ fontSize: 11.5, fontWeight: 800, color: 'var(--ink)' }}>{s.name}</span>
+                      {s.savedAt && (
+                        <span style={{ fontSize: 9, color: 'var(--muted-soft)' }}>{scenarioSavedAtFmt.format(new Date(s.savedAt))}</span>
+                      )}
                       <span style={{ fontSize: 9.5, color: 'var(--muted)' }}>{formatRupiah(r.totalHarta)}</span>
                       {r.results.length === 0 ? (
                         <span style={{ fontSize: 10, color: 'var(--muted)' }}>Tidak ada ahli waris.</span>

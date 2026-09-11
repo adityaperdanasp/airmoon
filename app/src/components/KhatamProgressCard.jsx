@@ -8,6 +8,7 @@ import ConfirmDialog from './ConfirmDialog';
 import KhatamCertificateModal from './KhatamCertificateModal';
 import Confetti from './Confetti';
 import Sparkline from './Sparkline';
+import ProgressRing from './ProgressRing';
 
 const CELEBRATED_KEY = 'airmoon-khatam-celebrated';
 const GOAL_OPTIONS = [1, 2, 3, 5];
@@ -93,15 +94,15 @@ export default function KhatamProgressCard({ uid }) {
       </div>
 
       {pageCount > 0 && (
-        <>
-          <div style={{ height: 6, borderRadius: 999, background: 'var(--border)', overflow: 'hidden' }}>
-            <div style={{ height: '100%', width: `${pct}%`, background: 'var(--gold-ink)', transition: 'width var(--dur-2) var(--ease)' }} />
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--muted)' }}>
-            <span>{pageCount}/{TOTAL_MUSHAF_PAGES} halaman ({pct}%)</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <ProgressRing size={58} strokeWidth={6} percent={pct / 100} color="var(--gold-ink)">
+            <span style={{ fontSize: 12.5, fontWeight: 800 }}>{pct}%</span>
+          </ProgressRing>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: 11, color: 'var(--muted)' }}>
+            <span>{pageCount}/{TOTAL_MUSHAF_PAGES} halaman</span>
             <span>{juzCount}/{TOTAL_JUZ} juz disentuh</span>
           </div>
-        </>
+        </div>
       )}
 
       {totalMinutes > 0 && (
