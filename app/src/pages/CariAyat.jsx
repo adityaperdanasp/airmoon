@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import TopBar from '../components/TopBar';
-import { IconSearch } from '../components/icons';
+import SearchField from '../components/SearchField';
 import { searchQuran } from '../lib/quranSearchApi';
 import { getSearchHistory, addSearchTerm, clearSearchHistory } from '../lib/searchHistory';
 import ErrorRetry from '../components/ErrorRetry';
@@ -44,12 +44,19 @@ export default function CariAyat() {
       <div className="screen-content">
         <TopBar title="Cari Ayat" subtitle="Cari isi ayat pakai kata kunci" />
 
-        <form onSubmit={runSearch} className="input-row" style={{ borderRadius: 999 }}>
-          <IconSearch style={{ color: 'var(--muted)' }} />
-          <input
-            placeholder="Contoh: sabar, rezeki, syukur…"
+        <form onSubmit={runSearch}>
+          <SearchField
             value={q}
-            onChange={(e) => setQ(e.target.value)}
+            onChange={(v) => {
+              setQ(v);
+              // Clearing the box goes back to the pre-search/history view,
+              // not a stale result list sitting under an empty query.
+              if (!v) {
+                setResults(null);
+                setError('');
+              }
+            }}
+            placeholder="Contoh: sabar, rezeki, syukur…"
             autoFocus
           />
         </form>

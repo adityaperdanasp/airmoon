@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { IconSearch } from '../components/icons';
+import SearchField from '../components/SearchField';
 import { searchAll } from '../lib/globalSearch';
 import { useAuth } from '../context/AuthContext';
 import { Skeleton } from '../components/Skeleton';
@@ -46,12 +46,14 @@ export default function CariGlobal() {
       <div className="screen-content">
         <PageHeaderPhoto title="Cari" photo={PAGE_PHOTOS.cariGlobal} subtitle="Cari di seluruh konten airmoon" />
 
-        <form onSubmit={runSearch} className="input-row" style={{ borderRadius: 999 }}>
-          <IconSearch style={{ color: 'var(--muted)' }} />
-          <input
-            placeholder="Ayat, Asmaul Husna, doa harian…"
+        <form onSubmit={runSearch}>
+          <SearchField
             value={q}
-            onChange={(e) => setQ(e.target.value)}
+            onChange={(v) => {
+              setQ(v);
+              if (!v) setResults(null);
+            }}
+            placeholder="Ayat, Asmaul Husna, doa harian…"
             autoFocus
           />
         </form>

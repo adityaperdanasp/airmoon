@@ -3,10 +3,18 @@ import TopBar from '../components/TopBar';
 import { formatRupiah } from '../lib/zakat';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { watchUmrohGoal, setUmrohGoal, clearUmrohGoal, watchUmrohDeposits, addUmrohDeposit, removeUmrohDeposit } from '../lib/umrohTabungan';
+import { watchUmrohGoal, setUmrohGoal, clearUmrohGoal, restoreUmrohGoal, watchUmrohDeposits, addUmrohDeposit, removeUmrohDeposit, restoreUmrohDeposit } from '../lib/umrohTabungan';
 import ConfirmDialog from '../components/ConfirmDialog';
 
 const dateFmt = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+
+// [UI 2026-09-11] Every other currency input in the app (Kalkulator
+// Zakat, Kalkulator Waris, Donasi's custom amount) formats with
+// thousand separators while typing (`30.000.000`, not `30000000`) — this
+// page's target + deposit-amount fields never got that treatment.
+function digitsOnly(v) {
+  return v.replace(/\D/g, '');
+}
 
 export default function UmrohTabungan() {
   const { user } = useAuth();
@@ -79,7 +87,9 @@ export default function UmrohTabungan() {
                 </div>
               </div>
 
-              <div style={{ height: 8, borderRadius: 999, background: 'var(--border)', overflow: 'hidden' }}>
+              {/* [UI 2026-09-11] Was height: 8 — every other progress bar in the
+                  app (DonationCard, Donasi.jsx's Sedekah Goal) uses 7. */}
+              <div style={{ height: 7, borderRadius: 999, background: 'var(--border)', overflow: 'hidden' }}>
                 <div style={{ height: '100%', width: `${progressPercent}%`, background: 'var(--primary)', transition: 'width var(--dur-3) var(--ease)' }} />
               </div>
 
@@ -94,9 +104,9 @@ export default function UmrohTabungan() {
                 <span style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--muted)' }}>Rp</span>
                 <input
                   inputMode="numeric"
-                  placeholder="500000"
-                  value={depositAmount}
-                  onChange={(e) => setDepositAmount(e.target.value)}
+                  placeholder="500.000"
+                  value={depositAmount ? Number(depositAmount).toLocaleString('id-ID') : ''}
+                  onChange={(e) => setDepositAmount(digitsOnly(e.target.value))}
                 />
               </div>
               <div className="input-row">
@@ -141,7 +151,7 @@ export default function UmrohTabungan() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               <span style={{ fontSize: 12, fontWeight: 700 }}>Target biaya umroh (Rp)</span>
               <div className="input-row">
-                <input type="number" inputMode="numeric" value={target} onChange={(e) => setTarget(e.target.value)} placeholder="30000000" />
+                <input inputMode="numeric" value={target ? Number(target).toLocaleString('id-ID') : ''} onChange={(e) => setTarget(digitsOnly(e.target.value))} placeholder="30.000.000" />
               </div>
             </div>
 
@@ -187,8 +197,13 @@ export default function UmrohTabungan() {
           danger
           onCancel={() => setShowResetConfirm(false)}
           onConfirm={async () => {
+            const removed = goal;
             if (user) await clearUmrohGoal(user.uid);
-            showToast('Target tabungan direset', { type: 'danger' });
+            showToast('Target tabungan direset', {
+              type: 'danger',
+              actionLabel: 'Batalkan',
+              onAction: () => user && removed && restoreUmrohGoal(user.uid, removed),
+            });
             setShowResetConfirm(false);
           }}
         />
@@ -202,8 +217,13 @@ export default function UmrohTabungan() {
           danger
           onCancel={() => setPendingDeleteDeposit(null)}
           onConfirm={async () => {
-            if (user) await removeUmrohDeposit(user.uid, pendingDeleteDeposit.id);
-            showToast('Setoran dihapus', { type: 'danger' });
+            const removed = pendingDeleteDeposit;
+            if (user) await removeUmrohDeposit(user.uid, removed.id);
+            showToast('Setoran dihapus', {
+              type: 'danger',
+              actionLabel: 'Batalkan',
+              onAction: () => user && restoreUmrohDeposit(user.uid, removed),
+            });
             setPendingDeleteDeposit(null);
           }}
         />

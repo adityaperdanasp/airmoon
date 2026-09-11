@@ -29,6 +29,14 @@ export async function clearUmrohGoal(uid) {
   await setDoc(doc(db, 'users', uid), { umrohTabungan: null }, { merge: true });
 }
 
+// [UI 2026-09-11] Undo for clearUmrohGoal — writes back the exact
+// {target, months, startDate} that was just cleared, not a fresh
+// setUmrohGoal() call (which would restart startDate at today).
+export async function restoreUmrohGoal(uid, goal) {
+  if (!goal) return;
+  await setDoc(doc(db, 'users', uid), { umrohTabungan: goal }, { merge: true });
+}
+
 export function watchUmrohDeposits(uid, callback) {
   if (!uid) {
     callback([]);
@@ -44,4 +52,14 @@ export async function addUmrohDeposit(uid, amount, note) {
 
 export async function removeUmrohDeposit(uid, depositId) {
   await deleteDoc(doc(db, 'users', uid, 'umrohDeposits', depositId));
+}
+
+// [UI 2026-09-11] Undo for removeUmrohDeposit — writes the exact deposit
+// back under its original id (setDoc, not addDoc, so it isn't given a
+// new one) and keeps its real createdAt instead of serverTimestamp(),
+// so it lands back in its correct spot in the createdAt-desc history
+// instead of jumping to the top as if just made now.
+export async function restoreUmrohDeposit(uid, deposit) {
+  const { id, ...data } = deposit;
+  await setDoc(doc(db, 'users', uid, 'umrohDeposits', id), data);
 }

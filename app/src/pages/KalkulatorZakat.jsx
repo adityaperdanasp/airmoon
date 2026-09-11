@@ -3,7 +3,7 @@ import { calcZakatPenghasilan, calcZakatMaal, calcZakatFitrah, formatRupiah, NIS
 import { useLang } from '../context/LangContext';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { watchZakatHaul, startZakatHaul, clearZakatHaul, daysUntilHaulDue } from '../lib/zakatHaul';
+import { watchZakatHaul, startZakatHaul, clearZakatHaul, restoreZakatHaul, daysUntilHaulDue } from '../lib/zakatHaul';
 import { watchZakatPenghasilanReminder, setZakatPenghasilanReminder } from '../lib/zakatPenghasilanReminder';
 import PageHeaderPhoto from '../components/PageHeaderPhoto';
 import ConfirmDialog from '../components/ConfirmDialog';
@@ -14,6 +14,7 @@ import { loadZakatHistory, saveZakatHistoryEntry, deleteZakatHistoryEntry } from
 import ZakatShareModal from '../components/ZakatShareModal';
 import { IconShare } from '../components/icons';
 import { useSwipeReveal } from '../lib/useSwipeReveal';
+import ProgressRing from '../components/ProgressRing';
 
 function formatHistoryDate(ts) {
   return new Date(ts).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -30,28 +31,9 @@ function digitsOnly(v) {
 // and subtracting them in your head doesn't.
 function NisabGauge({ assets, nisab, reachesNisab }) {
   const pct = nisab > 0 ? Math.min(1, assets / nisab) : 0;
-  const size = 108;
-  const stroke = 10;
-  const r = (size - stroke) / 2;
-  const circumference = 2 * Math.PI * r;
-  const offset = circumference * (1 - pct);
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '14px 16px', borderRadius: 16, background: 'var(--card)' }}>
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ flexShrink: 0, transform: 'rotate(-90deg)' }}>
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--border)" strokeWidth={stroke} />
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={r}
-          fill="none"
-          stroke={reachesNisab ? 'var(--success)' : 'var(--gold-ink)'}
-          strokeWidth={stroke}
-          strokeLinecap="round"
-          strokeDasharray={circumference}
-          strokeDashoffset={offset}
-          style={{ transition: 'stroke-dashoffset var(--dur-3) var(--ease), stroke var(--dur-3) var(--ease)' }}
-        />
-      </svg>
+      <ProgressRing size={108} strokeWidth={10} percent={pct} color={reachesNisab ? 'var(--success)' : 'var(--gold-ink)'} />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
         <span style={{ fontSize: 20, fontWeight: 800, color: reachesNisab ? 'var(--success)' : 'var(--ink)' }}>
           {Math.round(pct * 100)}%
@@ -567,8 +549,13 @@ export default function KalkulatorZakat() {
           danger
           onCancel={() => setShowHaulResetConfirm(false)}
           onConfirm={() => {
+            const removed = haul;
             if (user) clearZakatHaul(user.uid);
-            showToast('Hitungan haul direset', { type: 'danger' });
+            showToast('Hitungan haul direset', {
+              type: 'danger',
+              actionLabel: 'Batalkan',
+              onAction: () => user && removed && restoreZakatHaul(user.uid, removed),
+            });
             setShowHaulResetConfirm(false);
           }}
         />

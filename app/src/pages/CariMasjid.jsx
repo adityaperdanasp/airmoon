@@ -4,7 +4,7 @@ import { fetchNearbyMosques, haversineKm } from '../lib/mosqueApi';
 import { useLang } from '../context/LangContext';
 import PageHeaderPhoto from '../components/PageHeaderPhoto';
 import { PAGE_PHOTOS } from '../data/photos';
-import { IconSearch } from '../components/icons';
+import SearchField from '../components/SearchField';
 import { getSearchHistory, addSearchTerm, clearSearchHistory } from '../lib/searchHistory';
 import ErrorRetry from '../components/ErrorRetry';
 import { Skeleton } from '../components/Skeleton';
@@ -137,16 +137,13 @@ export default function CariMasjid() {
       <PullToRefresh onRefresh={refresh}>
         <PageHeaderPhoto title="Cari Masjid" photo={PAGE_PHOTOS.cariMasjid} />
 
-        <div className="input-row" style={{ borderRadius: 999 }}>
-          <IconSearch style={{ color: 'var(--muted)' }} />
-          <input
-            placeholder={t('cari_masjid_placeholder')}
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onBlur={commitSearchTerm}
-            onKeyDown={(e) => e.key === 'Enter' && commitSearchTerm()}
-          />
-        </div>
+        <SearchField
+          value={query}
+          onChange={setQuery}
+          placeholder={t('cari_masjid_placeholder')}
+          onBlur={commitSearchTerm}
+          onKeyDown={(e) => e.key === 'Enter' && commitSearchTerm()}
+        />
 
         {!query && history.length > 0 && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>

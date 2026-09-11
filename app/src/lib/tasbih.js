@@ -44,6 +44,15 @@ export function removeCustomPhrase(id) {
   localStorage.setItem(CUSTOM_KEY, JSON.stringify(next));
 }
 
+// [UI 2026-09-11] Undo for removeCustomPhrase — re-inserts the exact
+// phrase object (same id) rather than calling addCustomPhrase() again,
+// which would mint a fresh `custom-{Date.now()}` id and orphan the
+// count Tasbih.jsx separately restores under the original id.
+export function restoreCustomPhrase(phrase) {
+  const next = [...loadCustomPhrases(), phrase];
+  localStorage.setItem(CUSTOM_KEY, JSON.stringify(next));
+}
+
 export function loadCounts() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);

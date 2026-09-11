@@ -40,6 +40,17 @@ export async function clearZakatHaul(uid) {
   await setDoc(ref, { zakatHaul: null }, { merge: true });
 }
 
+// [UI 2026-09-11] Undo for clearZakatHaul — KalkulatorZakat.jsx's reset
+// confirm now offers a "Batalkan" toast, same undo-toast pattern Ayat
+// Favorit/Skenario Waris/Riwayat Zakat already have. Writes back the
+// exact haul object that was just cleared, not a fresh startZakatHaul()
+// call (which would restart the countdown from today instead of putting
+// the original start date back).
+export async function restoreZakatHaul(uid, haul) {
+  if (!haul) return;
+  await setDoc(doc(db, 'users', uid), { zakatHaul: haul }, { merge: true });
+}
+
 // Days remaining until the haul completes — negative once it's overdue.
 export function daysUntilHaulDue(startDate) {
   const start = new Date(`${startDate}T00:00:00`);

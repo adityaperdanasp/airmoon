@@ -6,7 +6,8 @@ import { useToast } from '../context/ToastContext';
 import { useEscapeKey } from '../lib/useEscapeKey';
 import { useSwipeDismiss } from '../lib/useSwipeDismiss';
 import Portal from '../components/Portal';
-import { DZIKIR_PHRASES, TARGETS, loadCounts, saveCounts, loadCustomPhrases, addCustomPhrase, removeCustomPhrase } from '../lib/tasbih';
+import { DZIKIR_PHRASES, TARGETS, loadCounts, saveCounts, loadCustomPhrases, addCustomPhrase, removeCustomPhrase, restoreCustomPhrase } from '../lib/tasbih';
+import ProgressRing from '../components/ProgressRing';
 
 function AddPhraseSheet({ onClose, onAdd }) {
   const [label, setLabel] = useState('');
@@ -67,9 +68,6 @@ function getLastTarget() {
   const saved = Number(localStorage.getItem('airmoon-tasbih-target'));
   return TARGETS.includes(saved) ? saved : 33;
 }
-
-const RING_R = 92;
-const RING_CIRC = 2 * Math.PI * RING_R;
 
 export default function Tasbih() {
   const { showToast } = useToast();
@@ -134,6 +132,8 @@ export default function Tasbih() {
   }
 
   function handleRemovePhrase() {
+    const removedPhrase = allPhrases.find((p) => p.id === phraseId);
+    const removedCount = counts[phraseId];
     removeCustomPhrase(phraseId);
     setCustomPhrases(loadCustomPhrases());
     setCounts((prev) => {
@@ -143,7 +143,23 @@ export default function Tasbih() {
     });
     setPhraseId(DZIKIR_PHRASES[0].id);
     setShowRemoveConfirm(false);
-    showToast('Dzikir dihapus', { type: 'danger' });
+    showToast('Dzikir dihapus', {
+      type: 'danger',
+      actionLabel: 'Batalkan',
+      onAction: () => {
+        if (!removedPhrase) return;
+        restoreCustomPhrase(removedPhrase);
+        setCustomPhrases(loadCustomPhrases());
+        if (removedCount) {
+          setCounts((prev) => {
+            const next = { ...prev, [removedPhrase.id]: removedCount };
+            saveCounts(next);
+            return next;
+          });
+        }
+        setPhraseId(removedPhrase.id);
+      },
+    });
   }
 
   return (
@@ -216,21 +232,13 @@ export default function Tasbih() {
             transition: 'transform var(--dur-1) var(--ease)',
           }}
         >
-          <svg width="210" height="210" style={{ position: 'absolute', inset: 0, transform: 'rotate(-90deg)' }}>
-            <circle cx="105" cy="105" r={RING_R} fill="none" stroke="var(--border)" strokeWidth="10" />
-            <circle
-              cx="105"
-              cy="105"
-              r={RING_R}
-              fill="none"
-              stroke="var(--primary)"
-              strokeWidth="10"
-              strokeLinecap="round"
-              strokeDasharray={RING_CIRC}
-              strokeDashoffset={RING_CIRC * (1 - progress)}
-              style={{ transition: 'stroke-dashoffset var(--dur-1) var(--ease)' }}
-            />
-          </svg>
+          {/* size 194 (not the button's own 210) reproduces the original
+              r=92 ring exactly — ProgressRing derives radius from
+              size/strokeWidth, and this ring always had a bit more
+              clearance from the button's edge than the plain formula
+              would give. Centers fine either way (button flex-centers
+              its children). */}
+          <ProgressRing size={194} strokeWidth={10} percent={progress} color="var(--primary)" transitionDuration="var(--dur-1)" />
           <div
             style={{
               width: 168,
