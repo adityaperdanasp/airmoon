@@ -52,6 +52,17 @@ function formatTranscript(messages) {
   return `${lines.join('\n\n')}\n\n— via airmoon (Tanya Ust. Rewin)`;
 }
 
+// [UI 2026-09-11] Starred answers are a separate, longer-lived collection
+// from the transcript (they survive clearing the chat or the 40-message
+// cap ageing an entry out — see lib/starredAnswers.js) but had no export
+// path of their own, only a view-and-remove list — the transcript export
+// button above doesn't help once something has actually scrolled out of
+// the visible chat. Same "Q: .../A: ..." shape as a starred entry itself.
+function formatStarredAnswers(entries) {
+  const blocks = entries.map((e) => (e.question ? `Q: ${e.question}\n${e.answer}` : e.answer));
+  return `${blocks.join('\n\n')}\n\n— via airmoon (Tanya Ust. Rewin)`;
+}
+
 export default function AskMe() {
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -176,6 +187,11 @@ export default function AskMe() {
   async function handleShareTranscript() {
     const result = await shareText({ text: formatTranscript(messages), title: 'Obrolan dengan Ust. Rewin' });
     if (result === 'copied') showToast('Obrolan disalin ke clipboard.');
+  }
+
+  async function handleShareStarred() {
+    const result = await shareText({ text: formatStarredAnswers(starred), title: 'Jawaban Tersimpan — Ust. Rewin' });
+    if (result === 'copied') showToast('Jawaban tersimpan disalin ke clipboard.');
   }
 
   return (
@@ -378,6 +394,7 @@ export default function AskMe() {
         <StarredAnswersSheet
           entries={starred}
           onRemove={(id) => setStarred(unstarAnswer(id))}
+          onShareAll={handleShareStarred}
           onClose={() => setShowStarred(false)}
         />
       )}

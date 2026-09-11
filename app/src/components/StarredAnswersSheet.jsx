@@ -5,7 +5,7 @@ import SheetDragHandle from './SheetDragHandle';
 
 // Lists every Q&A pair starred from AskMe.jsx — see lib/starredAnswers.js
 // for why these are snapshots, not live message references.
-export default function StarredAnswersSheet({ entries, onRemove, onClose }) {
+export default function StarredAnswersSheet({ entries, onRemove, onShareAll, onClose }) {
   useEscapeKey(onClose);
   const { dragY, dragging, handlers } = useSwipeDismiss(onClose);
   return createPortal(
@@ -24,8 +24,17 @@ export default function StarredAnswersSheet({ entries, onRemove, onClose }) {
           </button>
         </div>
 
-        {entries.length === 0 && (
+        {entries.length === 0 ? (
           <p className="state-msg">Belum ada jawaban tersimpan. Tap ikon ☆ di bawah jawaban Ust. Rewin buat menyimpannya.</p>
+        ) : (
+          /* [UI 2026-09-11] This list was a dead end before — you could
+             view or remove a starred answer, but never get the whole
+             collection out. Separate from AskMe's own "Bagikan obrolan"
+             (that shares the live chat transcript; a starred entry can
+             outlive that chat entirely, so it needs its own export). */
+          <button onClick={onShareAll} className="btn-outline" style={{ padding: '8px', fontSize: 11.5 }}>
+            ⬇ Bagikan Semua
+          </button>
         )}
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, overflowY: 'auto' }}>
