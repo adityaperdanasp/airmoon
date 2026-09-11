@@ -100,6 +100,7 @@ export default function Home() {
   const [showSedekahHistory, setShowSedekahHistory] = useState(false);
   const [doas, setDoas] = useState(null);
   const [avatarColor, setAvatarColor] = useState(null);
+  const [avatarPhoto, setAvatarPhoto] = useState(null);
   const [lastReadAyat, setLastReadAyat] = useState(null);
   const [lastReadMushaf, setLastReadMushaf] = useState(null);
   const [searchParams] = useSearchParams();
@@ -133,7 +134,10 @@ export default function Home() {
   }, [user]);
 
   useEffect(() => watchActiveDonations(setDonations), []);
-  useEffect(() => watchUserProfile(user?.uid, (p) => setAvatarColor(p?.avatarColor || null)), [user?.uid]);
+  useEffect(() => watchUserProfile(user?.uid, (p) => {
+    setAvatarColor(p?.avatarColor || null);
+    setAvatarPhoto(p?.avatarPhoto || null);
+  }), [user?.uid]);
   useEffect(() => watchDoas(setDoas), []);
 
   // Same lastReadAyat/lastRead fallback SurahList.jsx uses — see that
@@ -255,22 +259,26 @@ export default function Home() {
                   background: 'rgba(255,255,255,0.3)',
                 }}
               >
-                <div
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontWeight: 800,
-                    fontSize: 16,
-                    color: '#fff',
-                    background: avatarColor || 'var(--primary)',
-                  }}
-                >
-                  {(user?.displayName || 'A')[0].toUpperCase()}
-                </div>
+                {avatarPhoto ? (
+                  <img src={avatarPhoto} alt="" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover', display: 'block' }} />
+                ) : (
+                  <div
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontWeight: 800,
+                      fontSize: 16,
+                      color: '#fff',
+                      background: avatarColor || 'var(--primary)',
+                    }}
+                  >
+                    {(user?.displayName || 'A')[0].toUpperCase()}
+                  </div>
+                )}
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
                 <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.75)' }}>{t('greeting')}</span>

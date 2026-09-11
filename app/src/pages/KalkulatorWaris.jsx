@@ -347,7 +347,15 @@ export default function KalkulatorWaris() {
               </div>
 
               {compareA && compareB && (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                // [UI 2026-09-11] Switching either dropdown swapped this grid's
+                // content with a hard cut — no loading skeleton needed here
+                // (scenarioResult() is a pure sync calculation on already-loaded
+                // localStorage scenarios, nothing to actually wait on), but a
+                // remount-keyed fade makes the swap read as a deliberate
+                // transition instead of a flicker. Same .onboarding-slide class
+                // OnboardingTour already uses for the same "fresh element per
+                // selection" fade-in shape.
+                <div key={`${compareAId}-${compareBId}`} className="onboarding-slide" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                   {[{ s: compareA, r: compareAResult }, { s: compareB, r: compareBResult }].map(({ s, r }, colIdx) => (
                     <div key={colIdx} style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: 10, borderRadius: 12, background: 'var(--mint-soft)' }}>
                       <span style={{ fontSize: 11.5, fontWeight: 800, color: 'var(--ink)' }}>{s.name}</span>

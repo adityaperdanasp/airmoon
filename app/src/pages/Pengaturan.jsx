@@ -6,7 +6,8 @@ import { useToast } from '../context/ToastContext';
 import { useNavigate, Link } from 'react-router-dom';
 import TopBar from '../components/TopBar';
 import { isNativeApp, sendTestNotification } from '../lib/notifications';
-import { AVATAR_COLORS, watchUserProfile, setAvatarColor } from '../lib/profile';
+import { AVATAR_COLORS, watchUserProfile, setAvatarColor, setAvatarPhoto, clearAvatarPhoto } from '../lib/profile';
+import { resizeImageToDataUrl } from '../lib/avatarPhoto';
 import InstallAppCard from '../components/InstallAppCard';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { exportAndDownloadUserData, importUserDataFromFile } from '../lib/exportData';
@@ -179,13 +180,10 @@ function AzanSoundPicker() {
   );
 }
 
-// Name + avatar color, both writing to the same users/{uid} doc (the
-// color) and Firebase Auth + users/{uid} (the name, via AuthContext's
-// updateDisplayName — see that file for why a plain updateProfile() call
-// alone wouldn't re-render anything). No photo upload here on purpose —
-// this project has no Firebase Storage bucket set up anywhere (see
-// lib/profile.js's own note); a color picker is a real customization
-// option without needing new upload infrastructure.
+// Name + avatar, both writing to the same users/{uid} doc (avatarColor/
+// avatarPhoto) and Firebase Auth + users/{uid} (the name, via
+// AuthContext's updateDisplayName — see that file for why a plain
+// updateProfile() call alone wouldn't re-render anything).
 function ProfileCard() {
   const { user, updateDisplayName } = useAuth();
   const { showToast } = useToast();
@@ -194,9 +192,14 @@ function ProfileCard() {
   const [nameSaved, setNameSaved] = useState(false);
   const [nameError, setNameError] = useState('');
   const [avatarColor, setAvatarColorState] = useState(null);
+  const [avatarPhoto, setAvatarPhotoState] = useState(null);
+  const [photoBusy, setPhotoBusy] = useState(false);
 
   useEffect(() => setName(user?.displayName || ''), [user?.displayName]);
-  useEffect(() => watchUserProfile(user?.uid, (p) => setAvatarColorState(p?.avatarColor || null)), [user?.uid]);
+  useEffect(() => watchUserProfile(user?.uid, (p) => {
+    setAvatarColorState(p?.avatarColor || null);
+    setAvatarPhotoState(p?.avatarPhoto || null);
+  }), [user?.uid]);
 
   const currentColor = avatarColor || 'var(--primary)';
   const nameChanged = name.trim() !== '' && name.trim() !== (user?.displayName || '');
@@ -215,31 +218,96 @@ function ProfileCard() {
     }
   }
 
+  // [UI 2026-09-11] Was color-only ("no photo upload here on purpose",
+  // per lib/profile.js's old note) — this project genuinely has no
+  // Firebase Storage bucket/upload endpoint anywhere. Resizing to a small
+  // square JPEG (lib/avatarPhoto.js) and storing it as a data URL
+  // directly on the same users/{uid} doc sidesteps needing one, at the
+  // cost of a real cap on how big the photo can be — fine for an avatar
+  // that only ever renders at a few dozen px.
+  async function handlePickPhoto(e) {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file || !user) return;
+    setPhotoBusy(true);
+    try {
+      const dataUrl = await resizeImageToDataUrl(file);
+      await setAvatarPhoto(user.uid, dataUrl);
+      showToast('Foto profil disimpan');
+    } catch {
+      showToast('Gagal memproses foto. Coba foto lain.', { type: 'danger' });
+    } finally {
+      setPhotoBusy(false);
+    }
+  }
+
+  async function handleRemovePhoto() {
+    if (!user) return;
+    setPhotoBusy(true);
+    try {
+      await clearAvatarPhoto(user.uid);
+      showToast('Foto profil dihapus', { type: 'danger' });
+    } finally {
+      setPhotoBusy(false);
+    }
+  }
+
   return (
     <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: 16 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <div
-          style={{
-            width: 44,
-            height: 44,
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontWeight: 800,
-            fontSize: 17,
-            color: '#fff',
-            background: currentColor,
-            flexShrink: 0,
-          }}
-        >
-          {(user?.displayName || 'A')[0].toUpperCase()}
+        <div style={{ position: 'relative', flexShrink: 0 }}>
+          {avatarPhoto ? (
+            <img
+              src={avatarPhoto}
+              alt=""
+              style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', display: 'block' }}
+            />
+          ) : (
+            <div
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: 800,
+                fontSize: 17,
+                color: '#fff',
+                background: currentColor,
+              }}
+            >
+              {(user?.displayName || 'A')[0].toUpperCase()}
+            </div>
+          )}
+          {photoBusy && (
+            <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div className="spinner" style={{ width: 16, height: 16, borderTopColor: '#fff' }} />
+            </div>
+          )}
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 1, flex: 1, minWidth: 0 }}>
           <span style={{ fontSize: 13, fontWeight: 700 }}>Profil</span>
-          <span style={{ fontSize: 11, color: 'var(--muted)' }}>Nama & warna avatar kamu</span>
+          <span style={{ fontSize: 11, color: 'var(--muted)' }}>Nama & foto profil kamu</span>
         </div>
+        <label
+          className="btn-outline"
+          style={{ width: 'auto', padding: '7px 12px', fontSize: 11, cursor: photoBusy ? 'default' : 'pointer', flexShrink: 0 }}
+        >
+          {avatarPhoto ? 'Ganti' : 'Pasang Foto'}
+          <input type="file" accept="image/*" onChange={handlePickPhoto} disabled={photoBusy} style={{ display: 'none' }} />
+        </label>
       </div>
+
+      {avatarPhoto && (
+        <button
+          onClick={handleRemovePhoto}
+          disabled={photoBusy}
+          style={{ alignSelf: 'flex-start', background: 'none', border: 'none', color: 'var(--danger)', fontSize: 11.5, textDecoration: 'underline', cursor: 'pointer', padding: 0 }}
+        >
+          Hapus Foto
+        </button>
+      )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
         <span style={{ fontSize: 12, fontWeight: 700 }}>Nama Tampilan</span>
@@ -257,6 +325,9 @@ function ProfileCard() {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
         <span style={{ fontSize: 12, fontWeight: 700 }}>Warna Avatar</span>
+        {avatarPhoto && (
+          <span style={{ fontSize: 10.5, color: 'var(--muted)' }}>Dipakai lagi kalau foto profil kamu dihapus.</span>
+        )}
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           {AVATAR_COLORS.map((c) => {
             const isActive = avatarColor === c.hex;
