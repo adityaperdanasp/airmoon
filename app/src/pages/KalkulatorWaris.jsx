@@ -327,6 +327,7 @@ export default function KalkulatorWaris() {
                 <select
                   value={compareAId || ''}
                   onChange={(e) => setCompareAId(e.target.value || null)}
+                  aria-label="Pilih Skenario A"
                   style={{ flex: 1, padding: '9px 10px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--ink)', fontSize: 12 }}
                 >
                   <option value="">Pilih Skenario A</option>
@@ -337,6 +338,7 @@ export default function KalkulatorWaris() {
                 <select
                   value={compareBId || ''}
                   onChange={(e) => setCompareBId(e.target.value || null)}
+                  aria-label="Pilih Skenario B"
                   style={{ flex: 1, padding: '9px 10px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--ink)', fontSize: 12 }}
                 >
                   <option value="">Pilih Skenario B</option>

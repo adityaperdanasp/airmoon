@@ -376,6 +376,7 @@ export default function Donasi() {
                       <select
                         value={campaignFilter}
                         onChange={(e) => setCampaignFilter(e.target.value)}
+                        aria-label="Filter berdasarkan campaign"
                         style={{ flex: 1, minWidth: 0, padding: '8px 10px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--ink)', fontSize: 11.5 }}
                       >
                         <option value="semua">Semua Campaign</option>
@@ -388,6 +389,7 @@ export default function Donasi() {
                       <select
                         value={monthFilter}
                         onChange={(e) => setMonthFilter(e.target.value)}
+                        aria-label="Filter berdasarkan bulan"
                         style={{ flex: 1, minWidth: 0, padding: '8px 10px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--ink)', fontSize: 11.5 }}
                       >
                         <option value="semua">Semua Bulan</option>

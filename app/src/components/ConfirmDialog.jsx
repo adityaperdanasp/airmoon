@@ -12,8 +12,6 @@ import SheetDragHandle from './SheetDragHandle';
 // AyatCardModal/NotificationPrimer are already used in this codebase).
 // Portalled to document.body — see Portal.jsx's own comment for why.
 export default function ConfirmDialog({ title, message, confirmLabel = 'Ya, Lanjutkan', cancelLabel = 'Batal', danger = false, onConfirm, onCancel }) {
-  useEscapeKey(onCancel);
-  const { dragY, dragging, handlers } = useSwipeDismiss(onCancel);
   // [UI 2026-09-11] Several onConfirm handlers (delete account, delete a
   // Firestore-backed deposit/entry) actually await a network write before
   // the caller closes this dialog — until now the confirm button gave no
@@ -22,6 +20,19 @@ export default function ConfirmDialog({ title, message, confirmLabel = 'Ya, Lanj
   // handler; a plain synchronous onConfirm (most callers) resolves this
   // in the same tick and never visibly spins.
   const [confirming, setConfirming] = useState(false);
+  // [UI 2026-09-12] The busy state above only ever disabled the two
+  // buttons — Escape, a backdrop tap, and swipe-to-dismiss all still
+  // called onCancel unconditionally, so a mid-write dialog could still be
+  // dismissed through any of those three other paths. The write itself
+  // still completes in the background either way (nothing gets corrupted),
+  // but "can't back out mid-action" was the whole point of showing a busy
+  // state in the first place. `guardedCancel` is what every dismiss path
+  // below now goes through instead of the raw `onCancel` prop.
+  function guardedCancel() {
+    if (!confirming) onCancel();
+  }
+  useEscapeKey(guardedCancel);
+  const { dragY, dragging, handlers } = useSwipeDismiss(guardedCancel);
 
   async function handleConfirm() {
     if (confirming) return;
@@ -38,7 +49,7 @@ export default function ConfirmDialog({ title, message, confirmLabel = 'Ya, Lanj
   return (
     <Portal>
     <div
-      onClick={onCancel}
+      onClick={guardedCancel}
       style={{
         position: 'fixed',
         inset: 0,
@@ -88,7 +99,7 @@ export default function ConfirmDialog({ title, message, confirmLabel = 'Ya, Lanj
         <h2 style={{ margin: 0, fontSize: 16, fontWeight: 800 }}>{title}</h2>
         {message && <p style={{ margin: 0, fontSize: 12.5, lineHeight: 1.6, color: 'var(--muted)' }}>{message}</p>}
         <div style={{ display: 'flex', gap: 10, width: '100%', marginTop: 6 }}>
-          <button className="btn-outline" style={{ flex: 1 }} onClick={onCancel} disabled={confirming}>
+          <button className="btn-outline" style={{ flex: 1 }} onClick={guardedCancel} disabled={confirming}>
             {cancelLabel}
           </button>
           <button

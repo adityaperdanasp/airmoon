@@ -138,6 +138,7 @@ export default function KhatamProgressCard({ uid }) {
                   setReadingGoalTarget(uid, n);
                   setShowGoalPicker(false);
                 }}
+                aria-pressed={readingGoal.pagesPerDay === n}
                 style={{
                   flex: 1,
                   padding: '8px 0',

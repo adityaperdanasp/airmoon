@@ -18,6 +18,28 @@ import { DEFAULT_QUIET_HOURS, watchQuietHours, setQuietHours } from '../lib/quie
 import AchievementShareModal from '../components/AchievementShareModal';
 import { ACCENT_OPTIONS, loadAccentColor, setAccentColor } from '../lib/accentColor';
 import SegButton from '../components/SegButton';
+import ToggleSwitch from '../components/ToggleSwitch';
+
+// [UI 2026-09-12] Both file pickers on this page (avatar photo, data
+// import) hid their real <input type="file"> with `display: none` — that
+// doesn't just hide it visually, it removes the element from the tab
+// order entirely, so a keyboard-only user could never reach either file
+// picker no matter how they navigated the page (clicking the wrapping
+// <label> only forwards a *mouse* click, not keyboard activation of an
+// unfocused element). This keeps the input focusable/keyboard-activatable
+// while still visually invisible — the standard "sr-only" clip technique,
+// not `display: none`.
+const VISUALLY_HIDDEN_INPUT = {
+  position: 'absolute',
+  width: 1,
+  height: 1,
+  padding: 0,
+  margin: -1,
+  overflow: 'hidden',
+  clip: 'rect(0,0,0,0)',
+  whiteSpace: 'nowrap',
+  border: 0,
+};
 
 // Only rendered inside android-native/'s WebView shell (isNativeApp()) —
 // a regular browser/PWA has no way to attach a custom sound to a
@@ -81,12 +103,7 @@ function NotifPrefsCard({ user }) {
                 <span style={{ fontSize: 12.5, fontWeight: 700 }}>{cat.label}</span>
                 <span style={{ fontSize: 10.5, color: 'var(--muted)' }}>{cat.desc}</span>
               </div>
-              <div
-                onClick={() => uid && setNotifPref(uid, cat.key, !enabled)}
-                style={{ width: 42, height: 24, borderRadius: 999, background: enabled ? 'var(--primary)' : 'var(--border)', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 3, flexShrink: 0 }}
-              >
-                <div style={{ width: 18, height: 18, borderRadius: '50%', background: '#fff', transform: enabled ? 'translateX(18px)' : 'translateX(0)', transition: 'transform var(--dur-1) var(--ease)' }} />
-              </div>
+              <ToggleSwitch checked={enabled} onChange={(v) => uid && setNotifPref(uid, cat.key, v)} />
             </div>
           );
         })}
@@ -98,12 +115,7 @@ function NotifPrefsCard({ user }) {
             <span style={{ fontSize: 12.5, fontWeight: 700 }}>🌙 Jam Tenang</span>
             <span style={{ fontSize: 10.5, color: 'var(--muted)' }}>Bisukan Pengingat/Komunitas/Donasi/Konten di jam ini — Adzan tetap bunyi</span>
           </div>
-          <div
-            onClick={() => updateQuietHours({ enabled: !quietHours.enabled })}
-            style={{ width: 42, height: 24, borderRadius: 999, background: quietHours.enabled ? 'var(--primary)' : 'var(--border)', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 3, flexShrink: 0 }}
-          >
-            <div style={{ width: 18, height: 18, borderRadius: '50%', background: '#fff', transform: quietHours.enabled ? 'translateX(18px)' : 'translateX(0)', transition: 'transform var(--dur-1) var(--ease)' }} />
-          </div>
+          <ToggleSwitch checked={quietHours.enabled} onChange={(v) => updateQuietHours({ enabled: v })} />
         </div>
         {quietHours.enabled && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -295,7 +307,7 @@ function ProfileCard() {
           style={{ width: 'auto', padding: '7px 12px', fontSize: 11, cursor: photoBusy ? 'default' : 'pointer', flexShrink: 0 }}
         >
           {avatarPhoto ? 'Ganti' : 'Pasang Foto'}
-          <input type="file" accept="image/*" onChange={handlePickPhoto} disabled={photoBusy} style={{ display: 'none' }} />
+          <input type="file" accept="image/*" onChange={handlePickPhoto} disabled={photoBusy} style={VISUALLY_HIDDEN_INPUT} />
         </label>
       </div>
 
@@ -334,7 +346,8 @@ function ProfileCard() {
             return (
               <button
                 key={c.id}
-                aria-label={c.id}
+                aria-label={`Warna avatar ${c.label}`}
+                aria-pressed={isActive}
                 onClick={() => {
                   setAvatarColorState(c.hex);
                   setAvatarColor(user.uid, c.hex)
@@ -523,6 +536,7 @@ export default function Pengaturan() {
                       setAccentId(opt.id);
                     }}
                     aria-label={opt.label}
+                    aria-pressed={accentId === opt.id}
                     title={opt.label}
                     style={{
                       width: 34,
@@ -627,7 +641,7 @@ export default function Pengaturan() {
               fontFamily: 'inherit',
             }}
           >
-            <input type="file" accept="application/json" onChange={handlePickImportFile} disabled={importing} style={{ display: 'none' }} />
+            <input type="file" accept="application/json" onChange={handlePickImportFile} disabled={importing} style={VISUALLY_HIDDEN_INPUT} />
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <div style={{ width: 36, height: 36, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: 'var(--cream)' }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gold-ink)">

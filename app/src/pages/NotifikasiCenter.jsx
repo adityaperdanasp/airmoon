@@ -140,6 +140,7 @@ export default function NotifikasiCenter() {
           <div className="hide-scrollbar" style={{ display: 'flex', gap: 8, overflowX: 'auto' }}>
             <button
               onClick={() => setFilter(FILTER_ALL)}
+              aria-pressed={filter === FILTER_ALL}
               style={{ flexShrink: 0, padding: '7px 14px', borderRadius: 999, border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', color: filter === FILTER_ALL ? 'var(--on-primary)' : 'var(--ink)', background: filter === FILTER_ALL ? 'var(--primary)' : 'var(--card)' }}
             >
               Semua
@@ -154,6 +155,7 @@ export default function NotifikasiCenter() {
                 <button
                   key={c.key}
                   onClick={() => setFilter(c.key)}
+                  aria-pressed={filter === c.key}
                   style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 5, padding: '7px 14px', borderRadius: 999, border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', color: filter === c.key ? 'var(--on-primary)' : 'var(--ink)', background: filter === c.key ? 'var(--primary)' : 'var(--card)' }}
                 >
                   <span>{c.icon}</span>

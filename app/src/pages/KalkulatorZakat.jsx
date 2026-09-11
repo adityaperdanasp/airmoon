@@ -16,6 +16,7 @@ import { IconShare } from '../components/icons';
 import { useSwipeReveal } from '../lib/useSwipeReveal';
 import ProgressRing from '../components/ProgressRing';
 import SegButton from '../components/SegButton';
+import ToggleSwitch from '../components/ToggleSwitch';
 
 // Includes the time, not just the date — two calculations saved minutes
 // apart on the same day used to be indistinguishable in the list.
@@ -281,12 +282,7 @@ export default function KalkulatorZakat() {
                   <span style={{ fontSize: 12.5, fontWeight: 700 }}>🔔 Pengingat Bulanan</span>
                   <span style={{ fontSize: 10.5, color: 'var(--muted)' }}>Diingatkan tiap bulan buat hitung & bayar zakat penghasilan</span>
                 </div>
-                <div
-                  onClick={() => user && setZakatPenghasilanReminder(user.uid, !penghasilanReminderOn)}
-                  style={{ width: 42, height: 24, borderRadius: 999, background: penghasilanReminderOn ? 'var(--primary)' : 'var(--border)', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 3, flexShrink: 0 }}
-                >
-                  <div style={{ width: 18, height: 18, borderRadius: '50%', background: '#fff', transform: penghasilanReminderOn ? 'translateX(18px)' : 'translateX(0)', transition: 'transform var(--dur-1) var(--ease)' }} />
-                </div>
+                <ToggleSwitch checked={penghasilanReminderOn} onChange={(v) => user && setZakatPenghasilanReminder(user.uid, v)} />
               </div>
             )}
 
@@ -458,6 +454,7 @@ export default function KalkulatorZakat() {
                     <button
                       key={f.key}
                       onClick={() => setHistoryFilter(f.key)}
+                      aria-pressed={historyFilter === f.key}
                       style={{ padding: '6px 12px', borderRadius: 999, border: 'none', fontSize: 11, fontWeight: 700, cursor: 'pointer', color: historyFilter === f.key ? 'var(--on-primary)' : 'var(--ink)', background: historyFilter === f.key ? 'var(--primary)' : 'var(--mint-soft)' }}
                     >
                       {f.label}
