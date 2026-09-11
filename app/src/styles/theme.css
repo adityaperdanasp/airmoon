@@ -452,6 +452,28 @@ a {
   border-radius: 6px;
 }
 
+/* FadeImage.jsx's fade-in-on-load — carried as a class (not the
+   component's own inline style) specifically so it's reachable from the
+   shared prefers-reduced-motion rule below. */
+.fade-image {
+  transition: opacity var(--dur-3) var(--ease);
+}
+
+/* OnboardingTour.jsx — each slide is a fresh element (keyed by `step`),
+   so a plain fade-in on mount is enough to make swiping/tapping between
+   slides feel like a deliberate transition rather than a hard cut. */
+.onboarding-slide {
+  animation: onboarding-slide-in var(--dur-2) var(--ease) both;
+}
+@keyframes onboarding-slide-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 /* Tap feedback + page-enter transition (2026-09-02) — buttons previously
    gave no visual acknowledgement of a tap besides whatever color change
    their own inline styles happened to define (many of the icon-only
@@ -658,6 +680,8 @@ textarea:focus-visible,
   }
   .skeleton,
   .share-preview-skel,
+  .fade-image,
+  .onboarding-slide,
   .screen,
   .splash-pulse,
   .boot-splash,

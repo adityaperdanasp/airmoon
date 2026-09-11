@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { ArtWelcome, ArtQuran, ArtAdzan, ArtDonation, ArtMore } from './onboardingArt';
+
+const SWIPE_THRESHOLD = 50; // px horizontal travel before a touch counts as "swipe to the next/prev slide"
 
 // A short guided intro shown once ever, on a brand-new account's first
 // Home visit (see Home.jsx's call site + lib/onboarding.js's seen-flag).
@@ -42,9 +44,29 @@ export default function OnboardingTour({ onFinish }) {
   const [step, setStep] = useState(0);
   const slide = SLIDES[step];
   const isLast = step === SLIDES.length - 1;
+  const touchX = useRef(null);
+
+  // [UI 2026-09-11] This reads as a slideshow but could only ever be
+  // tapped through via the Lanjut button — a real, missing gesture for
+  // something presented as slides. Plain left/right swipe, no axis-lock
+  // needed (this modal has no vertical scroll to conflict with).
+  function onTouchStart(e) {
+    touchX.current = e.touches[0].clientX;
+  }
+  function onTouchEnd(e) {
+    if (touchX.current == null) return;
+    const dx = e.changedTouches[0].clientX - touchX.current;
+    touchX.current = null;
+    if (dx <= -SWIPE_THRESHOLD && !isLast) setStep((s) => s + 1);
+    else if (dx >= SWIPE_THRESHOLD && step > 0) setStep((s) => s - 1);
+  }
 
   return createPortal(
-    <div style={{ position: 'fixed', inset: 0, background: 'var(--bg)', zIndex: 70, display: 'flex', flexDirection: 'column' }}>
+    <div
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
+      style={{ position: 'fixed', inset: 0, background: 'var(--bg)', zIndex: 70, display: 'flex', flexDirection: 'column' }}
+    >
       <div style={{ display: 'flex', justifyContent: 'flex-end', padding: 'calc(14px + env(safe-area-inset-top)) 20px 0' }}>
         <button
           onClick={onFinish}
@@ -54,7 +76,7 @@ export default function OnboardingTour({ onFinish }) {
         </button>
       </div>
 
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 20, padding: '0 32px', textAlign: 'center' }}>
+      <div key={step} className="onboarding-slide" style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 20, padding: '0 32px', textAlign: 'center' }}>
         <div style={{ width: 168, height: 168, borderRadius: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--mint-soft)' }}>
           {slide.art}
         </div>
@@ -64,9 +86,12 @@ export default function OnboardingTour({ onFinish }) {
 
       <div style={{ display: 'flex', justifyContent: 'center', gap: 6, paddingBottom: 20 }}>
         {SLIDES.map((_, i) => (
-          <div
+          <button
             key={i}
-            style={{ width: i === step ? 20 : 6, height: 6, borderRadius: 999, background: i === step ? 'var(--primary)' : 'var(--border)', transition: 'width var(--dur-2) var(--ease)' }}
+            onClick={() => setStep(i)}
+            aria-label={`Slide ${i + 1} dari ${SLIDES.length}`}
+            aria-current={i === step}
+            style={{ width: i === step ? 20 : 6, height: 6, padding: 0, border: 'none', borderRadius: 999, background: i === step ? 'var(--primary)' : 'var(--border)', transition: 'width var(--dur-2) var(--ease)', cursor: 'pointer' }}
           />
         ))}
       </div>

@@ -16,31 +16,7 @@ import { NOTIF_CATEGORIES, watchNotifPrefs, setNotifPref } from '../lib/notifPre
 import { DEFAULT_QUIET_HOURS, watchQuietHours, setQuietHours } from '../lib/quietHours';
 import AchievementShareModal from '../components/AchievementShareModal';
 import { ACCENT_OPTIONS, loadAccentColor, setAccentColor } from '../lib/accentColor';
-
-function SegButton({ active, onClick, children }) {
-  return (
-    <div
-      onClick={onClick}
-      style={{
-        flex: 1,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 6,
-        textAlign: 'center',
-        padding: '9px 0',
-        borderRadius: 999,
-        fontSize: 12.5,
-        fontWeight: 700,
-        cursor: 'pointer',
-        color: active ? 'var(--on-primary)' : 'var(--muted)',
-        background: active ? 'var(--primary)' : 'transparent',
-      }}
-    >
-      {children}
-    </div>
-  );
-}
+import SegButton from '../components/SegButton';
 
 // Only rendered inside android-native/'s WebView shell (isNativeApp()) —
 // a regular browser/PWA has no way to attach a custom sound to a

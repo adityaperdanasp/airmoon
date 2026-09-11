@@ -15,6 +15,7 @@ import ZakatShareModal from '../components/ZakatShareModal';
 import { IconShare } from '../components/icons';
 import { useSwipeReveal } from '../lib/useSwipeReveal';
 import ProgressRing from '../components/ProgressRing';
+import SegButton from '../components/SegButton';
 
 function formatHistoryDate(ts) {
   return new Date(ts).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -98,27 +99,6 @@ function ZakatHistoryRow({ e, label, detail, onDelete }) {
         </button>
       </div>
     </div>
-  );
-}
-
-function TabBtn({ active, onClick, children }) {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        flex: 1,
-        padding: '9px 0',
-        borderRadius: 999,
-        border: 'none',
-        fontSize: 12.5,
-        fontWeight: 700,
-        cursor: 'pointer',
-        color: active ? 'var(--on-primary)' : 'var(--ink)',
-        background: active ? 'var(--primary)' : 'transparent',
-      }}
-    >
-      {children}
-    </button>
   );
 }
 
@@ -236,15 +216,15 @@ export default function KalkulatorZakat() {
         <PageHeaderPhoto title={t('item_kalkulator_zakat')} photo={PAGE_PHOTOS.zakat} />
 
         <div style={{ display: 'flex', padding: 3, borderRadius: 999, background: 'var(--mint-soft)' }}>
-          <TabBtn active={tab === 'penghasilan'} onClick={() => setTab('penghasilan')}>
+          <SegButton active={tab === 'penghasilan'} onClick={() => setTab('penghasilan')}>
             {t('zakat_tab_penghasilan')}
-          </TabBtn>
-          <TabBtn active={tab === 'maal'} onClick={() => setTab('maal')}>
+          </SegButton>
+          <SegButton active={tab === 'maal'} onClick={() => setTab('maal')}>
             {t('zakat_tab_maal')}
-          </TabBtn>
-          <TabBtn active={tab === 'fitrah'} onClick={() => setTab('fitrah')}>
+          </SegButton>
+          <SegButton active={tab === 'fitrah'} onClick={() => setTab('fitrah')}>
             {t('zakat_tab_fitrah')}
-          </TabBtn>
+          </SegButton>
         </div>
 
         {tab === 'penghasilan' ? (
