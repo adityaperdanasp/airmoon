@@ -7,6 +7,13 @@ import { getKartuUcapanHistory, logKartuUcapan } from '../lib/kartuUcapanHistory
 import { drawAirmoonBrand } from '../lib/drawAirmoonLogo';
 import { IconShare } from '../components/icons';
 import { downloadCardWallpaper } from '../lib/downloadWallpaper';
+import SearchField from '../components/SearchField';
+
+// [UI 2026-09-12] The history swatch is too small (46px wide) for a
+// visible timestamp line the way Kalkulator Waris's saved scenarios got
+// one — a tooltip costs nothing, same "at least make it available on
+// hover/long-press" fallback used there for the chip itself.
+const historySavedAtFmt = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
 // 10 starting color presets now (was 4) — per an explicit "makin banyak
 // pilihan template colornya" ask. The first 4 keep their original
@@ -471,12 +478,7 @@ export default function KartuUcapan() {
                 or there'd be nothing meaningful to search against now
                 that title/sub are free text. */}
             {history.length > 3 && (
-              <input
-                value={historyQuery}
-                onChange={(e) => setHistoryQuery(e.target.value)}
-                placeholder="Cari riwayat…"
-                style={{ padding: '9px 12px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--ink)', fontSize: 12.5 }}
-              />
+              <SearchField value={historyQuery} onChange={setHistoryQuery} placeholder="Cari riwayat…" />
             )}
             <div className="hide-scrollbar" style={{ display: 'flex', gap: 8, overflowX: 'auto' }}>
               {filteredHistory.length === 0 && (
@@ -495,6 +497,7 @@ export default function KartuUcapan() {
                     }}
                     style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
                     aria-label={`Pakai lagi "${label}"`}
+                    title={h.at ? `Dibuat ${historySavedAtFmt.format(new Date(h.at))}` : undefined}
                   >
                     <span
                       style={{

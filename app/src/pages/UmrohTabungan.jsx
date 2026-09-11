@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import TopBar from '../components/TopBar';
+import PageHeaderPhoto from '../components/PageHeaderPhoto';
+import { PAGE_PHOTOS } from '../data/photos';
 import { formatRupiah } from '../lib/zakat';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -154,7 +155,7 @@ export default function UmrohTabungan() {
   return (
     <div className="screen">
       <div className="screen-content">
-        <TopBar title="Tabungan Umroh" />
+        <PageHeaderPhoto title="Tabungan Umroh" subtitle={goal ? `${progressPercent}% terkumpul` : undefined} photo={PAGE_PHOTOS.umroh} />
 
         {goal ? (
           <>

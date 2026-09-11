@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import TopBar from '../components/TopBar';
+import PageHeaderPhoto from '../components/PageHeaderPhoto';
+import { PAGE_PHOTOS } from '../data/photos';
 
 const STORAGE_KEY = 'airmoon-umroh-checklist';
 const CUSTOM_KEY = 'airmoon-umroh-checklist-custom';
@@ -123,7 +124,7 @@ export default function UmrohChecklist() {
   return (
     <div className="screen">
       <div className="screen-content">
-        <TopBar title="Checklist Persiapan" />
+        <PageHeaderPhoto title="Checklist Persiapan" subtitle={`${doneCount}/${totalItems} item ditandai`} photo={PAGE_PHOTOS.umroh} />
 
         <div className="card" style={{ padding: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{ flex: 1 }}>

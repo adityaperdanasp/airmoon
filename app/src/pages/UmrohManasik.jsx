@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import TopBar from '../components/TopBar';
+import PageHeaderPhoto from '../components/PageHeaderPhoto';
+import { PAGE_PHOTOS } from '../data/photos';
 import { loadReadProgress, toggleReadProgress } from '../lib/readProgress';
 
 const PAGE_KEY = 'manasik';
@@ -89,7 +90,7 @@ export default function UmrohManasik() {
   return (
     <div className="screen">
       <div className="screen-content">
-        <TopBar title="Panduan Manasik" subtitle={`${doneCount}/${STAGES.length} tahap ditandai`} />
+        <PageHeaderPhoto title="Panduan Manasik" subtitle={`${doneCount}/${STAGES.length} tahap ditandai`} photo={PAGE_PHOTOS.umroh} />
         <div style={{ height: 6, borderRadius: 999, background: 'var(--border)', overflow: 'hidden' }}>
           <div style={{ height: '100%', width: `${(doneCount / STAGES.length) * 100}%`, background: 'var(--primary)', transition: 'width var(--dur-2) var(--ease)' }} />
         </div>
