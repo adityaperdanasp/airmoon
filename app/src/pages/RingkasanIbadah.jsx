@@ -9,11 +9,13 @@ import { watchReadingStats } from '../lib/readingTime';
 import { watchReadingStreak } from '../lib/readingStreak';
 import { highestTier } from '../lib/badges';
 import { formatRupiah } from '../lib/zakat';
+import { fetchRecentAmalanHarian } from '../lib/amalanHarian';
 import PageHeaderPhoto from '../components/PageHeaderPhoto';
 import { PAGE_PHOTOS } from '../data/photos';
 import CountUp from '../components/CountUp';
 import EmptyState from '../components/EmptyState';
 import { SkeletonCard } from '../components/Skeleton';
+import Sparkline from '../components/Sparkline';
 import RingkasanIbadahShareModal from '../components/RingkasanIbadahShareModal';
 
 function StatCard({ icon, label, value, sub }) {
@@ -43,6 +45,13 @@ export default function RingkasanIbadah() {
   const [puasaDates, setPuasaDates] = useState(null);
   const [readingStats, setReadingStats] = useState({ totalMinutes: 0 });
   const [readingStreak, setReadingStreak] = useState({ current: 0, best: 0 });
+  // [UI 2026-09-11] "Tren 7 Hari" — every stat here was a bare number with
+  // no sense of direction (climbing or slipping lately). Reuses the same
+  // daily amalanHarian score PointsBadge's own 7-day chart already fetches
+  // (see components/PointsDetailSheet.jsx), just rendered as a compact
+  // sparkline instead of a full bar-per-day breakdown — this dashboard
+  // already has 5+ stat tiles, no room for another full chart.
+  const [recentDays, setRecentDays] = useState(null);
   // Every stat card used to flash "0" for a moment before its own
   // Firestore listener delivered its first snapshot — a real, if brief,
   // gap since none of these default states (empty arrays, zeroed
@@ -62,6 +71,10 @@ export default function RingkasanIbadah() {
   useEffect(() => watchPuasaSunnahLog(user?.uid, (v) => { setPuasaDates(v); markLoaded('puasa'); }), [user?.uid]);
   useEffect(() => watchReadingStats(user?.uid, (v) => { setReadingStats(v); markLoaded('readingStats'); }), [user?.uid]);
   useEffect(() => watchReadingStreak(user?.uid, (v) => { setReadingStreak(v); markLoaded('readingStreak'); }), [user?.uid]);
+  useEffect(() => {
+    if (!user?.uid) return;
+    fetchRecentAmalanHarian(user.uid, 7).then(setRecentDays);
+  }, [user?.uid]);
 
   if (!user) {
     return (
@@ -152,6 +165,16 @@ export default function RingkasanIbadah() {
           <StatCard icon="🌙" label="Puasa Sunnah" value={puasaDates === null ? '…' : <CountUp value={puasaDates.length} formatter={(v) => `${v}x`} />} sub="Senin/Kamis & Ayyamul Bidh" />
           <StatCard icon="📚" label="Streak Baca Qur'an" value={<CountUp value={readingStreak.current} formatter={(v) => `${v} hari`} />} sub={readingStreak.best > readingStreak.current ? `Rekor ${readingStreak.best} hari` : 'Buka Qur\'an tiap hari buat jaga streak'} />
         </div>
+
+        {recentDays && (
+          <div className="card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14, padding: 16 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <span style={{ fontSize: 13, fontWeight: 800 }}>📈 Tren 7 Hari</span>
+              <span style={{ fontSize: 10.5, color: 'var(--muted)' }}>Poin Amalan Harian, per hari</span>
+            </div>
+            <Sparkline values={recentDays.map((d) => d.score)} max={recentDays[0]?.max} />
+          </div>
+        )}
 
         <div className="card" style={{ display: 'flex', alignItems: 'center', gap: 14, padding: 16 }}>
           <span style={{ fontSize: 28, lineHeight: 1 }}>⏱️</span>

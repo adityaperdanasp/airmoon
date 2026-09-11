@@ -9,6 +9,126 @@ import { useToast } from '../context/ToastContext';
 import PageHeaderPhoto from '../components/PageHeaderPhoto';
 import { PAGE_PHOTOS } from '../data/photos';
 import PullToRefresh from '../components/PullToRefresh';
+import { useSwipeReveal } from '../lib/useSwipeReveal';
+
+// [UI 2026-09-11] Swipe-left-to-reveal-delete — this list only ever had a
+// small trash icon to tap, missing the near-universal mobile list
+// gesture. Own component (not inlined in the .map() below) since
+// useSwipeReveal's drag state is per-row. The existing trash icon stays
+// too — swipe is additive, not a replacement, and both funnel into the
+// exact same onRemove (the existing confirm + undo-toast flow further
+// down this file, not duplicated here).
+function FavoriteAyatRow({ f, onMove, onRemove }) {
+  const { dragX, revealed, close, revealWidth, handlers } = useSwipeReveal();
+  const guardNav = (e) => {
+    if (revealed) {
+      e.preventDefault();
+      close();
+    }
+  };
+
+  return (
+    <div style={{ position: 'relative', overflow: 'hidden', borderRadius: 20 }}>
+      <button
+        onClick={() => {
+          close();
+          onRemove(f);
+        }}
+        aria-label={`Hapus ${f.chapterName} ayat ${f.verse} dari favorit`}
+        style={{
+          position: 'absolute',
+          right: 0,
+          top: 0,
+          bottom: 0,
+          width: revealWidth,
+          background: 'var(--danger)',
+          color: 'var(--on-danger)',
+          border: 'none',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 3,
+          fontSize: 10,
+          fontWeight: 700,
+          cursor: 'pointer',
+        }}
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="M6 7h12M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m2 0-.8 12.1a2 2 0 0 1-2 1.9H9.8a2 2 0 0 1-2-1.9L7 7" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+        Hapus
+      </button>
+
+      <div
+        {...handlers}
+        className="card"
+        style={{
+          position: 'relative',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 8,
+          padding: 14,
+          background: 'var(--card)',
+          transform: `translateX(${dragX}px)`,
+          transition: dragX === 0 || dragX === -revealWidth ? 'transform var(--dur-2) var(--ease)' : 'none',
+          touchAction: 'pan-y',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+            <Link
+              to={`/quran/${f.chapter}?ayat=${f.verse}`}
+              onClick={guardNav}
+              style={{
+                fontSize: 10.5,
+                fontWeight: 700,
+                padding: '3px 9px',
+                borderRadius: 999,
+                color: 'var(--primary)',
+                background: 'var(--mint)',
+                textDecoration: 'none',
+                flexShrink: 0,
+              }}
+            >
+              {f.chapterName} : {f.verse}
+            </Link>
+            {f.collection && (
+              <span style={{ fontSize: 10, color: 'var(--muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                📁 {f.collection}
+              </span>
+            )}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+            <button
+              onClick={() => onMove(f)}
+              style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'var(--muted-soft)' }}
+              aria-label="Pindahkan ke koleksi"
+              title="Pindahkan ke koleksi"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h4l1.5 2h9.5A1.5 1.5 0 0 1 21 9.5v9A1.5 1.5 0 0 1 19.5 20h-15A1.5 1.5 0 0 1 3 18.5v-11Z" strokeWidth="1.6" strokeLinejoin="round" />
+              </svg>
+            </button>
+            <button
+              onClick={() => onRemove(f)}
+              style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'var(--muted-soft)' }}
+              aria-label="Hapus dari favorit"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M6 7h12M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m2 0-.8 12.1a2 2 0 0 1-2 1.9H9.8a2 2 0 0 1-2-1.9L7 7" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+          </div>
+        </div>
+        <Link to={`/quran/${f.chapter}?ayat=${f.verse}`} onClick={guardNav} style={{ textDecoration: 'none', color: 'inherit', display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ fontFamily: "'Amiri', serif", fontSize: 19, lineHeight: 1.8, direction: 'rtl', textAlign: 'right' }}>{f.arabic}</div>
+          <p style={{ margin: 0, fontSize: 12, lineHeight: 1.55, color: 'var(--muted)' }}>{f.translation}</p>
+        </Link>
+      </div>
+    </div>
+  );
+}
 
 export default function AyatFavorit() {
   const { user } = useAuth();
@@ -159,59 +279,7 @@ export default function AyatFavorit() {
         {favorites && favorites.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {filtered.map((f) => (
-              <div key={f.id} className="card" style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: 14 }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
-                    <Link
-                      to={`/quran/${f.chapter}?ayat=${f.verse}`}
-                      style={{
-                        fontSize: 10.5,
-                        fontWeight: 700,
-                        padding: '3px 9px',
-                        borderRadius: 999,
-                        color: 'var(--primary)',
-                        background: 'var(--mint)',
-                        textDecoration: 'none',
-                        flexShrink: 0,
-                      }}
-                    >
-                      {f.chapterName} : {f.verse}
-                    </Link>
-                    {f.collection && (
-                      <span style={{ fontSize: 10, color: 'var(--muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        📁 {f.collection}
-                      </span>
-                    )}
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
-                    <button
-                      onClick={() => setPickerFor(f)}
-                      style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'var(--muted-soft)' }}
-                      aria-label="Pindahkan ke koleksi"
-                      title="Pindahkan ke koleksi"
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                        <path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h4l1.5 2h9.5A1.5 1.5 0 0 1 21 9.5v9A1.5 1.5 0 0 1 19.5 20h-15A1.5 1.5 0 0 1 3 18.5v-11Z" strokeWidth="1.6" strokeLinejoin="round" />
-                      </svg>
-                    </button>
-                    <button
-                      onClick={() => setPendingRemove(f)}
-                      style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'var(--muted-soft)' }}
-                      aria-label="Hapus dari favorit"
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                        <path d="M6 7h12M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m2 0-.8 12.1a2 2 0 0 1-2 1.9H9.8a2 2 0 0 1-2-1.9L7 7" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-                <Link to={`/quran/${f.chapter}?ayat=${f.verse}`} style={{ textDecoration: 'none', color: 'inherit', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <div style={{ fontFamily: "'Amiri', serif", fontSize: 19, lineHeight: 1.8, direction: 'rtl', textAlign: 'right' }}>
-                    {f.arabic}
-                  </div>
-                  <p style={{ margin: 0, fontSize: 12, lineHeight: 1.55, color: 'var(--muted)' }}>{f.translation}</p>
-                </Link>
-              </div>
+              <FavoriteAyatRow key={f.id} f={f} onMove={setPickerFor} onRemove={setPendingRemove} />
             ))}
 
             {filtered.length === 0 && (

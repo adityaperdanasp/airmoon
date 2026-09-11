@@ -9,6 +9,7 @@ import { IconSearch } from '../components/icons';
 import StickyMiniHeader from '../components/StickyMiniHeader';
 import { loadFavoriteDoa, doaKey, toggleFavoriteDoa } from '../lib/favoriteDoa';
 import DoaCategoryPickerSheet from '../components/DoaCategoryPickerSheet';
+import { useProgressiveList } from '../lib/useProgressiveList';
 
 // pagi/petang are real daily habits worth a streak; kegiatan (doa per
 // situation — makan, keluar rumah, etc.) isn't a once-a-day thing, so it
@@ -58,6 +59,12 @@ export default function DoaHarian() {
   const filteredItems = q
     ? baseItems.filter((d) => d.title.toLowerCase().includes(q) || d.translation.toLowerCase().includes(q))
     : baseItems;
+
+  // [UI 2026-09-11] Some categories run long (Doa Karena Sebab has 32
+  // items, Favorit can hold up to all 205) and each row here is heavier
+  // than a plain list row (Arabic + latin + translation, 3 separate
+  // text blocks) — see lib/useProgressiveList.js.
+  const { visibleItems: visibleDoaItems, hasMore: hasMoreDoaItems, sentinelRef: doaSentinelRef } = useProgressiveList(filteredItems);
 
   function handleToggleFavorite(it) {
     setFavorites(toggleFavoriteDoa(doaKey(it.categoryId, it.title)));
@@ -183,7 +190,7 @@ export default function DoaHarian() {
         )}
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {filteredItems.map((d, i) => {
+          {visibleDoaItems.map((d, i) => {
             const isFav = favorites.includes(doaKey(d.categoryId, d.title));
             return (
             <div key={`${d.categoryId}-${d.title}-${i}`} className="card" style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: 16 }}>
@@ -222,6 +229,7 @@ export default function DoaHarian() {
             </div>
             );
           })}
+          {hasMoreDoaItems && <div ref={doaSentinelRef} style={{ height: 1 }} />}
         </div>
       </div>
     </div>

@@ -15,6 +15,7 @@ import { SkeletonSurahRow } from '../components/Skeleton';
 import ErrorRetry from '../components/ErrorRetry';
 import PullToRefresh from '../components/PullToRefresh';
 import ScrollToTopButton from '../components/ScrollToTopButton';
+import { useProgressiveList } from '../lib/useProgressiveList';
 
 export default function SurahList() {
   const { user } = useAuth();
@@ -66,6 +67,13 @@ export default function SurahList() {
       (s) => s.namaLatin.toLowerCase().includes(q) || s.arti.toLowerCase().includes(q)
     );
   }, [surahs, query]);
+
+  // [UI 2026-09-11] All 114 surah used to mount at once regardless of how
+  // many actually fit on screen. Renders the first chunk, then grows as
+  // the sentinel at the bottom scrolls into view — see
+  // lib/useProgressiveList.js's header for why this isn't real
+  // windowing (no scroll-position math, already-shown rows stay mounted).
+  const { visibleItems: visibleSurahs, hasMore, sentinelRef } = useProgressiveList(filtered || []);
 
   return (
     <div className="screen">
@@ -244,7 +252,7 @@ export default function SurahList() {
 
         {filtered && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {filtered.map((s, i) => (
+            {visibleSurahs.map((s, i) => (
               <div key={s.nomor} className="stagger-item" style={{ display: 'flex', alignItems: 'center', gap: 2, animationDelay: `${Math.min(i, 10) * 30}ms` }}>
                 <Link
                   to={`/quran/${s.nomor}`}
@@ -272,6 +280,7 @@ export default function SurahList() {
                 </button>
               </div>
             ))}
+            {hasMore && <div ref={sentinelRef} style={{ height: 1 }} />}
           </div>
         )}
       </PullToRefresh>

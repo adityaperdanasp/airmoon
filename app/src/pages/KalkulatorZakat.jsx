@@ -13,6 +13,7 @@ import CountUp from '../components/CountUp';
 import { loadZakatHistory, saveZakatHistoryEntry, deleteZakatHistoryEntry } from '../lib/zakatHistory';
 import ZakatShareModal from '../components/ZakatShareModal';
 import { IconShare } from '../components/icons';
+import { useSwipeReveal } from '../lib/useSwipeReveal';
 
 function formatHistoryDate(ts) {
   return new Date(ts).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -61,6 +62,58 @@ function NisabGauge({ assets, nisab, reachesNisab }) {
         <span style={{ fontSize: 10, color: 'var(--muted)', lineHeight: 1.4 }}>
           {reachesNisab ? 'Harta wajib dizakati' : `Butuh ${formatRupiah(Math.max(0, nisab - assets))} lagi`}
         </span>
+      </div>
+    </div>
+  );
+}
+
+// [UI 2026-09-11] Swipe-left-to-reveal-delete, same lib/useSwipeReveal.js
+// hook AyatFavorit.jsx's rows use — the existing "×" button stays too,
+// both funnel into the same setDeleteHistoryId (the row's own caller).
+function ZakatHistoryRow({ e, label, detail, onDelete }) {
+  const { dragX, close, revealWidth, handlers } = useSwipeReveal();
+  return (
+    <div style={{ position: 'relative', overflow: 'hidden', borderRadius: 14 }}>
+      <button
+        onClick={() => {
+          close();
+          onDelete(e.id);
+        }}
+        aria-label="Hapus dari riwayat"
+        style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: revealWidth, background: 'var(--danger)', color: 'var(--on-danger)', border: 'none', fontSize: 10, fontWeight: 700, cursor: 'pointer' }}
+      >
+        Hapus
+      </button>
+      <div
+        {...handlers}
+        style={{
+          position: 'relative',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 10,
+          padding: '12px 14px',
+          borderRadius: 14,
+          background: 'var(--card)',
+          transform: `translateX(${dragX}px)`,
+          transition: dragX === 0 || dragX === -revealWidth ? 'transform var(--dur-2) var(--ease)' : 'none',
+          touchAction: 'pan-y',
+        }}
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+          <span style={{ fontSize: 11.5, fontWeight: 700 }}>
+            {label} &middot; {formatHistoryDate(e.at)}
+          </span>
+          <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--primary)' }}>{formatRupiah(e.amount)}</span>
+          <span style={{ fontSize: 10, color: 'var(--muted)' }}>{detail}</span>
+        </div>
+        <button
+          onClick={() => onDelete(e.id)}
+          aria-label="Hapus dari riwayat"
+          style={{ width: 26, height: 26, borderRadius: '50%', border: 'none', background: 'rgba(0,0,0,0.06)', color: 'var(--muted)', fontSize: 14, cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        >
+          ×
+        </button>
       </div>
     </div>
   );
@@ -456,28 +509,19 @@ export default function KalkulatorZakat() {
                   <span style={{ fontSize: 11, color: 'var(--muted)' }}>Belum ada riwayat di kategori ini.</span>
                 )}
                 {filteredZakatHistory.map((e) => (
-                  <div key={e.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '12px 14px', borderRadius: 14, background: 'var(--card)' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
-                      <span style={{ fontSize: 11.5, fontWeight: 700 }}>
-                        {e.type === 'penghasilan' ? 'Zakat Penghasilan' : e.type === 'maal' ? 'Zakat Maal' : 'Zakat Fitrah'} &middot; {formatHistoryDate(e.at)}
-                      </span>
-                      <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--primary)' }}>{formatRupiah(e.amount)}</span>
-                      <span style={{ fontSize: 10, color: 'var(--muted)' }}>
-                        {e.type === 'penghasilan'
-                          ? `Penghasilan ${formatRupiah(e.inputs.income)} · Kebutuhan ${formatRupiah(e.inputs.needs)}`
-                          : e.type === 'maal'
-                            ? `Harta ${formatRupiah(e.inputs.assets)} · Emas ${formatRupiah(e.inputs.goldPrice)}/gr`
-                            : `${e.inputs.jumlahJiwa} jiwa · Beras ${formatRupiah(e.inputs.ricePricePerKg)}/kg`}
-                      </span>
-                    </div>
-                    <button
-                      onClick={() => setDeleteHistoryId(e.id)}
-                      aria-label="Hapus dari riwayat"
-                      style={{ width: 26, height: 26, borderRadius: '50%', border: 'none', background: 'rgba(0,0,0,0.06)', color: 'var(--muted)', fontSize: 14, cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                    >
-                      ×
-                    </button>
-                  </div>
+                  <ZakatHistoryRow
+                    key={e.id}
+                    e={e}
+                    onDelete={setDeleteHistoryId}
+                    label={e.type === 'penghasilan' ? 'Zakat Penghasilan' : e.type === 'maal' ? 'Zakat Maal' : 'Zakat Fitrah'}
+                    detail={
+                      e.type === 'penghasilan'
+                        ? `Penghasilan ${formatRupiah(e.inputs.income)} · Kebutuhan ${formatRupiah(e.inputs.needs)}`
+                        : e.type === 'maal'
+                          ? `Harta ${formatRupiah(e.inputs.assets)} · Emas ${formatRupiah(e.inputs.goldPrice)}/gr`
+                          : `${e.inputs.jumlahJiwa} jiwa · Beras ${formatRupiah(e.inputs.ricePricePerKg)}/kg`
+                    }
+                  />
                 ))}
               </div>
             )}

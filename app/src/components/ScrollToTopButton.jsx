@@ -31,10 +31,16 @@ export default function ScrollToTopButton() {
       aria-label="Kembali ke atas"
       style={{
         position: 'fixed',
-        // Sits just above BottomNav's floating pill (which itself sits
-        // above env(safe-area-inset-bottom)) on nav-bearing pages, and
-        // still clears the safe area on pages without one.
-        bottom: 'calc(84px + env(safe-area-inset-bottom))',
+        // Sits above BottomNav's floating pill (which itself sits above
+        // env(safe-area-inset-bottom)) on nav-bearing pages, and still
+        // clears the safe area on pages without one. [UI 2026-09-11]
+        // Measured out the actual stacking: BottomNav's pill (.bottomnav,
+        // theme.css) is `bottom: 22px` + ~12px vertical padding + a
+        // ~22px icon + label — its own top edge lands around 80-84px up.
+        // The previous 84px value left only a razor-thin (~3px) gap here;
+        // bumped to 96px for real breathing room instead of the two
+        // nearly touching.
+        bottom: 'calc(96px + env(safe-area-inset-bottom))',
         right: 20,
         zIndex: 18,
         width: 42,
