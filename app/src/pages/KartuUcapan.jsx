@@ -49,7 +49,7 @@ function drawImageCover(ctx, img, w, h) {
 // inputs, not a fixed set the render is locked to. Was `draw(canvas, tpl)`
 // reading straight off a TEMPLATES entry before the "custom text/foto/
 // warna" ask; kept the same drawing logic, just parameterized.
-async function draw(canvas, { title, sub, color1, color2, photoIndex, arabicText, arabicFont, size = 'post' }) {
+async function draw(canvas, { title, sub, color1, color2, photoIndex, arabicText, arabicFont, titleArabic, size = 'post' }) {
   const isWallpaper = size === 'wallpaper';
   // Buat Lock Screen HP (2026-09-07) — same 1080×2340 target every other
   // wallpaper-capable card uses. Unlike those (which lay content out
@@ -78,6 +78,13 @@ async function draw(canvas, { title, sub, color1, color2, photoIndex, arabicText
   // app around Lebaran/Ramadan; see lib/drawAirmoonLogo.js's header for
   // why this is the real traced crescent+star, not an approximation.
   await document.fonts.load("600 40px 'Fredoka'");
+  // Widget Kaligrafi Nama's Arabic font, reused for the title/sub itself
+  // when "Judul dalam Arab" is on — the title/sub were Latin-only before,
+  // despite this being the most-shared card around Lebaran/Ramadan, when
+  // a title like "عيدكم مبارك" reads more naturally than its transliteration.
+  if (titleArabic) {
+    await Promise.all([document.fonts.load(`800 40px '${arabicFont}'`), document.fonts.load(`400 20px '${arabicFont}'`)]);
+  }
 
   const photoSrc = DECORATIVE_PHOTOS_LIGHT[((photoIndex % DECORATIVE_PHOTOS_LIGHT.length) + DECORATIVE_PHOTOS_LIGHT.length) % DECORATIVE_PHOTOS_LIGHT.length];
   try {
@@ -129,12 +136,14 @@ async function draw(canvas, { title, sub, color1, color2, photoIndex, arabicText
   ctx.textAlign = 'center';
   ctx.fillText(arabicText || ' ', w / 2, arabicY);
 
+  const titleFontFamily = titleArabic ? `'${arabicFont}', serif` : 'Poppins, sans-serif';
+
   ctx.fillStyle = '#ffffff';
-  ctx.font = `800 ${40 * fontScale}px Poppins, sans-serif`;
+  ctx.font = `800 ${40 * fontScale}px ${titleFontFamily}`;
   wrapText(ctx, title || ' ', w / 2, titleY, w * 0.8, 46 * fontScale);
 
   ctx.fillStyle = 'rgba(255,255,255,0.8)';
-  ctx.font = `400 ${20 * fontScale}px Poppins, sans-serif`;
+  ctx.font = `400 ${20 * fontScale}px ${titleFontFamily}`;
   wrapText(ctx, sub || ' ', w / 2, subY, w * 0.8, 26 * fontScale);
 }
 
@@ -178,6 +187,15 @@ export default function KartuUcapan() {
   const [photoIndex, setPhotoIndex] = useState(photoIndexForTemplate(TEMPLATES[0]));
   const [arabicText, setArabicText] = useState('تقبل الله منا ومنكم');
   const [arabicFont, setArabicFont] = useState('Amiri');
+  // Judul & subjudul dalam Arab (2026-09-11) — title/sub were Latin-only
+  // even though the calligraphy line already had a full Arabic-font
+  // picker; someone wanting the greeting itself in Arabic ("عيدكم مبارك")
+  // had no way to do that except squeezing it into the calligraphy field.
+  // Deliberately no auto-translate of the seeded Latin template text when
+  // this flips on — same "don't machine-translate religious/cultural
+  // text" caution this app already applies elsewhere (see CLAUDE.md's
+  // i18n note); the user retypes their own Arabic.
+  const [titleArabic, setTitleArabic] = useState(false);
   const [historyQuery, setHistoryQuery] = useState('');
   const [wallpaperBusy, setWallpaperBusy] = useState(false);
   const filteredHistory = historyQuery.trim()
@@ -196,13 +214,13 @@ export default function KartuUcapan() {
   useEffect(() => {
     let cancelled = false;
     setReady(false);
-    draw(canvasRef.current, { title, sub, color1, color2, photoIndex, arabicText, arabicFont }).then(() => {
+    draw(canvasRef.current, { title, sub, color1, color2, photoIndex, arabicText, arabicFont, titleArabic }).then(() => {
       if (!cancelled) setReady(true);
     });
     return () => {
       cancelled = true;
     };
-  }, [title, sub, color1, color2, photoIndex, arabicText, arabicFont]);
+  }, [title, sub, color1, color2, photoIndex, arabicText, arabicFont, titleArabic]);
 
   function handleDownload() {
     const url = canvasRef.current.toDataURL('image/png');
@@ -230,7 +248,7 @@ export default function KartuUcapan() {
   async function handleDownloadWallpaper() {
     setWallpaperBusy(true);
     try {
-      await downloadCardWallpaper(draw, { title, sub, color1, color2, photoIndex, arabicText, arabicFont }, 'kartu-ucapan-lockscreen.png');
+      await downloadCardWallpaper(draw, { title, sub, color1, color2, photoIndex, arabicText, arabicFont, titleArabic }, 'kartu-ucapan-lockscreen.png');
       logKartuUcapan(tplId, title);
       setHistory(getKartuUcapanHistory());
     } finally {
@@ -287,20 +305,57 @@ export default function KartuUcapan() {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <span className="section-label">Teks Ucapan</span>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span className="section-label">Teks Ucapan</span>
+            <button
+              onClick={() => setTitleArabic((v) => !v)}
+              aria-pressed={titleArabic}
+              style={{
+                padding: '5px 11px',
+                borderRadius: 999,
+                border: 'none',
+                fontSize: 10.5,
+                fontWeight: 700,
+                cursor: 'pointer',
+                color: titleArabic ? 'var(--on-primary)' : 'var(--muted)',
+                background: titleArabic ? 'var(--primary)' : 'var(--mint-soft)',
+              }}
+            >
+              أ Judul dalam Arab
+            </button>
+          </div>
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Judul, misal 'Selamat Idul Fitri'"
+            placeholder={titleArabic ? 'مثال: عيدكم مبارك' : "Judul, misal 'Selamat Idul Fitri'"}
             maxLength={60}
-            style={{ padding: '11px 13px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--ink)', fontSize: 13.5, fontWeight: 700 }}
+            dir={titleArabic ? 'rtl' : 'ltr'}
+            style={{
+              padding: '11px 13px',
+              borderRadius: 12,
+              border: '1px solid var(--border)',
+              background: 'var(--card)',
+              color: 'var(--ink)',
+              fontSize: titleArabic ? 16 : 13.5,
+              fontWeight: 700,
+              fontFamily: titleArabic ? `'${arabicFont}', serif` : 'inherit',
+            }}
           />
           <input
             value={sub}
             onChange={(e) => setSub(e.target.value)}
-            placeholder="Sub-judul, misal 'Mohon maaf lahir & batin'"
+            placeholder={titleArabic ? 'مثال: كل عام وأنتم بخير' : "Sub-judul, misal 'Mohon maaf lahir & batin'"}
             maxLength={80}
-            style={{ padding: '11px 13px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--ink)', fontSize: 12.5 }}
+            dir={titleArabic ? 'rtl' : 'ltr'}
+            style={{
+              padding: '11px 13px',
+              borderRadius: 12,
+              border: '1px solid var(--border)',
+              background: 'var(--card)',
+              color: 'var(--ink)',
+              fontSize: titleArabic ? 14.5 : 12.5,
+              fontFamily: titleArabic ? `'${arabicFont}', serif` : 'inherit',
+            }}
           />
         </div>
 

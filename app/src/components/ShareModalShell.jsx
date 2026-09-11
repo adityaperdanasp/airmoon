@@ -91,8 +91,15 @@ export default function ShareModalShell({
           <div style={{ position: 'relative', width: '100%', borderRadius: 18, overflow: 'hidden', boxShadow: '0 20px 40px rgba(0,0,0,0.4)' }}>
             <canvas ref={canvasRef} style={{ width: '100%', display: 'block', aspectRatio }} />
             {!ready && (
-              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(10,54,48,0.9)' }}>
-                <div className="spinner" style={{ borderTopColor: '#fff' }} />
+              <div style={{ position: 'absolute', inset: 0, background: 'rgba(10,54,48,0.9)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, padding: 32 }}>
+                {/* A shimmering placeholder shaped like the card's own
+                    logo+title+body layout, not a bare spinner — reads as
+                    "the card is arriving", same convention Skeleton.jsx
+                    uses elsewhere in the app. */}
+                <div className="share-preview-skel" style={{ width: 44, height: 44, borderRadius: '50%' }} />
+                <div className="share-preview-skel" style={{ width: '65%', height: 16 }} />
+                <div className="share-preview-skel" style={{ width: '85%', height: 12 }} />
+                <div className="share-preview-skel" style={{ width: '75%', height: 12 }} />
               </div>
             )}
           </div>

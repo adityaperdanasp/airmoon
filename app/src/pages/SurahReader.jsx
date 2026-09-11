@@ -9,6 +9,7 @@ import { hasWordSync, fetchChapterTiming } from '../lib/quranTimingApi';
 import { fetchWordGloss } from '../lib/wordGlossApi';
 import { watchFavoriteAyat, addFavoriteAyat, removeFavoriteAyat } from '../lib/favoriteAyat';
 import { useNightMode, NIGHT_STYLE_VARS, useArabicFontSize, MIN_ARABIC_SIZE, MAX_ARABIC_SIZE, useArabicFont, ARABIC_FONTS, useAutoNextSurah } from '../lib/readingPrefs';
+import { useFontReady } from '../lib/useFontReady';
 import { fetchSurahTafsir } from '../lib/tafsirApi';
 import { markSurahOpened } from '../lib/readingHistory';
 import { markReadingDone } from '../lib/readingStreak';
@@ -45,6 +46,11 @@ export default function SurahReader() {
   const [night, setNight] = useNightMode();
   const [arabicSize, setArabicSize] = useArabicFontSize();
   const [arabicFont, setArabicFont] = useArabicFont();
+  // Gate the ayat render on the chosen Arabic font actually being usable
+  // — without this, the very first paint shows the fallback serif and
+  // then visibly reflows a beat later once Amiri/Scheherazade New swaps
+  // in (Google Fonts' `display=swap`). See lib/useFontReady.js.
+  const arabicFontReady = useFontReady(`400 24px '${arabicFont}'`);
   const [autoNextSurah, setAutoNextSurah] = useAutoNextSurah();
   // Cari di Dalam Surah (2026-09-05) — CariAyat.jsx already searches the
   // whole Qur'an via a network call; this is a plain local filter over
@@ -312,7 +318,7 @@ export default function SurahReader() {
     );
   }
 
-  if (!surah) {
+  if (!surah || !arabicFontReady) {
     return (
       <div className="screen">
         <div className="screen-content">

@@ -439,6 +439,19 @@ a {
   }
 }
 
+/* [UI 2026-09-11] ShareModalShell's canvas-preview placeholder — every
+   share modal used to show a flat dark rect + a bare spinner while its
+   canvas card was being drawn. A shimmering placeholder (reusing the
+   same skeleton-shimmer sweep as .skeleton, just light-on-dark since this
+   always sits on the modal's dark backdrop regardless of app theme)
+   reads as "content is arriving" rather than "please wait". */
+.share-preview-skel {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.07) 25%, rgba(255, 255, 255, 0.18) 50%, rgba(255, 255, 255, 0.07) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+  border-radius: 6px;
+}
+
 /* Tap feedback + page-enter transition (2026-09-02) — buttons previously
    gave no visual acknowledgement of a tap besides whatever color change
    their own inline styles happened to define (many of the icon-only
@@ -644,6 +657,7 @@ textarea:focus-visible,
     display: none;
   }
   .skeleton,
+  .share-preview-skel,
   .screen,
   .splash-pulse,
   .boot-splash,

@@ -11,12 +11,16 @@ import QuoteCardModal from '../components/QuoteCardModal';
 import { IconShare } from '../components/icons';
 import Logo from '../components/Logo';
 import FadeImage from '../components/FadeImage';
+import { useFontReady } from '../lib/useFontReady';
 
 export default function KutipanInspirasi() {
   const { lang } = useLang();
   const { theme } = useTheme();
   const [idx, setIdx] = useState(todaysQuoteIndex());
   const [quote, setQuote] = useState(null);
+  // See lib/useFontReady.js — avoids the fallback-serif-then-swap jump
+  // on this page's own large (26px) Arabic line.
+  const arabicFontReady = useFontReady("400 26px 'Amiri'");
   const [error, setError] = useState('');
   const [retryTick, setRetryTick] = useState(0);
   // "Berikutnya" already let someone reach every quote by tapping through
@@ -93,9 +97,9 @@ export default function KutipanInspirasi() {
 
         {error && <ErrorRetry message={error} onRetry={() => setRetryTick((n) => n + 1)} />}
 
-        {!quote && !error && <SkeletonCard height={300} radius={24} />}
+        {(!quote || !arabicFontReady) && !error && <SkeletonCard height={300} radius={24} />}
 
-        {quote && (
+        {quote && arabicFontReady && (
           <>
             <div
               style={{

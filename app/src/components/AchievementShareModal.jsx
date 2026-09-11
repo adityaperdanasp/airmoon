@@ -115,8 +115,11 @@ export default function AchievementShareModal({ onClose }) {
         <div style={{ position: 'relative', borderRadius: 22, overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.4)' }}>
           <canvas ref={canvasRef} width={1080} height={1350} style={{ width: '100%', display: 'block', aspectRatio: '4 / 5' }} />
           {!ready && (
-            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a3630' }}>
-              <div className="spinner" style={{ borderTopColor: '#fff' }} />
+            <div style={{ position: 'absolute', inset: 0, background: '#0a3630', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, padding: 32 }}>
+              <div className="share-preview-skel" style={{ width: 44, height: 44, borderRadius: '50%' }} />
+              <div className="share-preview-skel" style={{ width: '65%', height: 16 }} />
+              <div className="share-preview-skel" style={{ width: '85%', height: 12 }} />
+              <div className="share-preview-skel" style={{ width: '75%', height: 12 }} />
             </div>
           )}
         </div>
