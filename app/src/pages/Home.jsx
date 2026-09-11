@@ -440,7 +440,20 @@ export default function Home() {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <span className="section-label">🕌 {t('donasi_kamu')}</span>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span className="section-label">🕌 {t('donasi_kamu')}</span>
+            {/* [UI 2026-09-11] Was every active campaign stacked in full —
+                fine at 1-2, but this section has no cap and Home is
+                already long; same "peek + Lihat Semua" pattern the
+                Layanan section above already uses, once there's enough
+                to actually need it. */}
+            {donations && donations.length > 2 && (
+              <Link to="/donasi" style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 11, fontWeight: 700, color: 'var(--primary)', textDecoration: 'none' }}>
+                {t('lihat_semua')}
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--primary)"><path d="m9 6 6 6-6 6" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              </Link>
+            )}
+          </div>
           {donations === null && <SkeletonCard height={140} />}
           {donations && donations.length === 0 && (
             <EmptyState
@@ -451,7 +464,7 @@ export default function Home() {
           )}
           {donations && donations.length > 0 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {donations.map((donation) => (
+              {donations.slice(0, 2).map((donation) => (
                 <DonationCard key={donation.id} donation={donation} />
               ))}
             </div>

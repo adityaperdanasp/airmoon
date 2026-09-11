@@ -3,6 +3,7 @@ import { fetchRecentAmalanHarian, DAILY_POINTS_MAX } from '../lib/amalanHarian';
 import { useTheme } from '../context/ThemeContext';
 import WeeklyRecapShareModal from './WeeklyRecapShareModal';
 import { IconShare } from './icons';
+import { SkeletonCard } from './Skeleton';
 
 const DAYS = 35; // 5 full weeks — enough to see a real pattern without the row getting unreadably long
 
@@ -46,7 +47,12 @@ export default function AmalanHeatmap({ uid }) {
     fetchRecentAmalanHarian(uid, DAYS).then(setDays);
   }, [uid]);
 
-  if (!days) return null;
+  // [UI 2026-09-11] Was a bare `return null` — Home rendered nothing at
+  // all here while this card's own fetch was in flight, then popped the
+  // whole thing in at once, a small layout jump on top of nothing to
+  // look at in the meantime. A shaped placeholder matches every other
+  // card on Home by now.
+  if (!days) return <SkeletonCard height={132} radius={20} />;
 
   // Bagikan Capaian Mingguan — the last 7 entries of the same `days`
   // array this component already fetched (a rolling 5-week strip), no

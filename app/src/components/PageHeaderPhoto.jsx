@@ -60,6 +60,23 @@ function resolvePhoto(photo, theme) {
   return DARK_BANNERS[h % DARK_BANNERS.length];
 }
 
+// [UI 2026-09-11] This 130px-tall banner crops each photo to a very
+// short, very wide slice — plain `object-position: center` (the
+// previous default) puts that slice at the photo's exact vertical
+// midpoint, which for a dome/minaret shot taken from below is often
+// mostly empty sky, not the actual building. Checked each PAGE_PHOTOS
+// image directly (not guessed) and only 2 needed a real override:
+// page-kiblat.jpg's dome+minaret sit in the lower ~85% of the frame
+// (center crop shows mostly sky), page-cari-masjid.jpg's ornate teal-
+// tiled band sits in the upper half with a plain wall filling the
+// bottom (center crop lands right on that wall). Every other page photo
+// already reads fine at plain center.
+const OBJECT_POSITION = {
+  '/photos/page-kiblat.jpg': 'center 80%',
+  '/photos/page-cari-masjid.jpg': 'center 25%',
+  '/photos/page-zakat.jpg': 'center 78%', // the Green Dome itself sits in the lower third; center crop mostly shows minaret shaft + sky
+};
+
 export default function PageHeaderPhoto({ title, photo, subtitle, showBack = true, right }) {
   const navigate = useNavigate();
   const { theme } = useTheme();
@@ -75,6 +92,7 @@ export default function PageHeaderPhoto({ title, photo, subtitle, showBack = tru
           width: `calc(100% + ${MAX_SHIFT * 2}px)`,
           height: `calc(100% + ${MAX_SHIFT * 2}px)`,
           objectFit: 'cover',
+          objectPosition: OBJECT_POSITION[photo] || 'center',
           transform: `translateY(${shift}px)`,
         }}
       />
