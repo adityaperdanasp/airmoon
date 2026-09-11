@@ -227,6 +227,7 @@ export default function KalkulatorWaris() {
             scrolling past an empty scenario manager first. */}
         <button
           onClick={() => setShowScenarios((v) => !v)}
+          aria-expanded={showScenarios}
           className="card"
           style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '13px 16px', border: 'none', cursor: 'pointer', fontFamily: 'inherit', color: 'var(--ink)' }}
         >

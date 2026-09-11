@@ -246,8 +246,9 @@ function ProfileCard() {
       const dataUrl = await resizeImageToDataUrl(file);
       await setAvatarPhoto(user.uid, dataUrl);
       showToast('Foto profil disimpan');
-    } catch {
-      showToast('Gagal memproses foto. Coba foto lain.', { type: 'danger' });
+    } catch (err) {
+      const msg = err?.code === 'FILE_TOO_LARGE' ? 'Ukuran foto terlalu besar (maks 15MB). Coba foto lain.' : 'Gagal memproses foto. Coba foto lain.';
+      showToast(msg, { type: 'danger' });
     } finally {
       setPhotoBusy(false);
     }

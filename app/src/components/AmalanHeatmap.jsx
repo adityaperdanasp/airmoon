@@ -7,6 +7,11 @@ import { SkeletonCard } from './Skeleton';
 
 const DAYS = 35; // 5 full weeks — enough to see a real pattern without the row getting unreadably long
 
+// [UI 2026-09-12] Each cell's tooltip showed the raw dateKey ("2026-09-06:
+// 5/9") — a plain ISO string, not the readable Indonesian date format
+// every other date-ish thing in this app uses.
+const cellDateFmt = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short' });
+
 // A real per-score gradient (2026-09-04, after a founder question — the
 // original 3-bucket version made e.g. 1 and 2, or 3 and 4, render as the
 // literal same shade with no way to tell them apart at a glance). Reuses
@@ -90,7 +95,7 @@ export default function AmalanHeatmap({ uid }) {
           d ? (
             <div
               key={d.dateKey}
-              title={`${d.dateKey}: ${d.score}/${d.max}`}
+              title={`${cellDateFmt.format(new Date(`${d.dateKey}T00:00:00`))}: ${d.score}/${d.max}`}
               style={{ aspectRatio: '1', borderRadius: 4, ...cellStyle(d.score, d.max) }}
             />
           ) : (

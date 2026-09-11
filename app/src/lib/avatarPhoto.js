@@ -6,8 +6,19 @@
 // clips to square anyway) rather than squashing a wide/tall photo.
 const MAX_DIMENSION = 240; // an avatar only ever renders at a few dozen px on screen
 const MAX_BYTES = 120_000; // generous headroom under Firestore's 1MB doc cap, shared with every other users/{uid} field
+// [UI 2026-09-12] A modern phone camera's own JPEG/HEIC originals
+// routinely run 8-20MB — decoding one of those just to throw it away
+// down to a 240x240 square isn't slow exactly (the browser handles that
+// fine), but there was no upper bound at all and no explanation if it
+// ever did take a moment; a plain source-file-size check up front gives
+// a clear, immediate reason instead of the busy spinner just sitting
+// there with no context.
+const MAX_SOURCE_BYTES = 15 * 1024 * 1024;
 
 export function resizeImageToDataUrl(file) {
+  if (file.size > MAX_SOURCE_BYTES) {
+    return Promise.reject(Object.assign(new Error('Ukuran foto terlalu besar.'), { code: 'FILE_TOO_LARGE' }));
+  }
   return new Promise((resolve, reject) => {
     const img = new Image();
     const url = URL.createObjectURL(file);

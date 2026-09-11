@@ -9,6 +9,7 @@ import KhatamCertificateModal from './KhatamCertificateModal';
 import Confetti from './Confetti';
 import Sparkline from './Sparkline';
 import ProgressRing from './ProgressRing';
+import { SkeletonCard } from './Skeleton';
 
 const CELEBRATED_KEY = 'airmoon-khatam-celebrated';
 const GOAL_OPTIONS = [1, 2, 3, 5];
@@ -22,6 +23,19 @@ const GOAL_OPTIONS = [1, 2, 3, 5];
 // opened in Mode Mushaf.
 export default function KhatamProgressCard({ uid }) {
   const [progress, setProgress] = useState({ pages: [], juz: [] });
+  // [UI 2026-09-12] Same gap AmalanHeatmap.jsx had (fixed 2 batches ago):
+  // `progress`/`readingStats`'s own initial state already looks
+  // identical to "confirmed empty, nothing to show" (both default to
+  // zero), so there was no way to tell "still waiting on the first
+  // Firestore snapshot" apart from "this account genuinely has no
+  // reading history" — a returning user with real history saw nothing
+  // at all until the watch resolved, then the whole card popped in.
+  // Tracked for just these two sources since they're the ones the
+  // top-level "is there anything to show" check below actually reads;
+  // readingGoal/readingStreak only gate their own already-conditional
+  // sub-sections further down, not whether the card renders at all.
+  const [khatamLoaded, setKhatamLoaded] = useState(false);
+  const [statsLoaded, setStatsLoaded] = useState(false);
   const [readingStats, setReadingStats] = useState({ totalMinutes: 0 });
   const [readingGoal, setReadingGoalState] = useState({ pagesPerDay: 0, pagesToday: [] });
   const [readingStreak, setReadingStreak] = useState({ current: 0, best: 0 });
@@ -35,8 +49,8 @@ export default function KhatamProgressCard({ uid }) {
   // card is already dense enough.
   const [recentDays, setRecentDays] = useState(null);
 
-  useEffect(() => watchKhatamProgress(uid, setProgress), [uid]);
-  useEffect(() => watchReadingStats(uid, setReadingStats), [uid]);
+  useEffect(() => watchKhatamProgress(uid, (p) => { setProgress(p); setKhatamLoaded(true); }), [uid]);
+  useEffect(() => watchReadingStats(uid, (s) => { setReadingStats(s); setStatsLoaded(true); }), [uid]);
   useEffect(() => watchReadingGoal(uid, setReadingGoalState), [uid]);
   useEffect(() => watchReadingStreak(uid, setReadingStreak), [uid]);
   useEffect(() => {
@@ -60,6 +74,7 @@ export default function KhatamProgressCard({ uid }) {
     setShowConfetti(true);
   }, [isKhatam]);
 
+  if (!khatamLoaded || !statsLoaded) return <SkeletonCard height={100} radius={20} />;
   if (pageCount === 0 && totalMinutes === 0) return null; // nothing to show before any reading has happened at all
 
   const pct = pageCount > 0 ? Math.min(100, Math.round((pageCount / TOTAL_MUSHAF_PAGES) * 100)) : 0;

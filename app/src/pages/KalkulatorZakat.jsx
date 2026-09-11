@@ -432,6 +432,7 @@ export default function KalkulatorZakat() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             <button
               onClick={() => setShowHistory((v) => !v)}
+              aria-expanded={showHistory}
               style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
             >
               <span className="section-label" style={{ color: 'var(--muted)', fontSize: 11.5, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
