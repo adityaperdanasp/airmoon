@@ -33,6 +33,13 @@ export default function UmrohTabungan() {
   const [startingSaving, setStartingSaving] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [pendingDeleteDeposit, setPendingDeleteDeposit] = useState(null);
+  // [UI 2026-09-11] watchUmrohDeposits has no query limit at all — someone
+  // saving toward a goal for months could rack up dozens of rows, all
+  // rendered at once. Same cap+"Lihat Semua" idea Home's own Donasi Kamu
+  // list already uses, but as an in-place expand rather than a link to a
+  // separate page — there's no standalone deposits page to link to.
+  const DEPOSIT_PREVIEW_COUNT = 5;
+  const [showAllDeposits, setShowAllDeposits] = useState(false);
 
   useEffect(() => watchUmrohGoal(user?.uid, setGoal), [user?.uid]);
   useEffect(() => watchUmrohDeposits(user?.uid, setDeposits), [user?.uid]);
@@ -123,8 +130,18 @@ export default function UmrohTabungan() {
 
             {deposits.length > 0 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <span className="section-label">Riwayat Setoran</span>
-                {deposits.map((d) => (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span className="section-label">Riwayat Setoran</span>
+                  {deposits.length > DEPOSIT_PREVIEW_COUNT && (
+                    <button
+                      onClick={() => setShowAllDeposits((v) => !v)}
+                      style={{ background: 'none', border: 'none', color: 'var(--primary)', fontSize: 11, fontWeight: 700, cursor: 'pointer', padding: 0 }}
+                    >
+                      {showAllDeposits ? 'Ringkas' : `Lihat Semua (${deposits.length})`}
+                    </button>
+                  )}
+                </div>
+                {(showAllDeposits ? deposits : deposits.slice(0, DEPOSIT_PREVIEW_COUNT)).map((d) => (
                   <div key={d.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', borderRadius: 14, background: 'var(--card)' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
                       <span style={{ fontSize: 13, fontWeight: 700 }}>+{formatRupiah(d.amount)}</span>
