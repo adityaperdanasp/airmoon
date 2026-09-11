@@ -99,6 +99,27 @@ export async function clearNotificationLog() {
   }
 }
 
+// [UI 2026-09-12] "Hapus Semua" used to give zero feedback and no way
+// back — every other destructive action in the app has a toast + undo by
+// now. `put` (not `add`) with each entry's own original `id` re-inserts
+// the exact snapshot taken right before clearing, rather than minting
+// fresh autoIncrement ids that would change each entry's identity.
+export async function restoreNotificationLog(entries) {
+  if (!entries?.length) return;
+  try {
+    const db = await openDb();
+    const tx = db.transaction(STORE, 'readwrite');
+    const store = tx.objectStore(STORE);
+    entries.forEach((entry) => store.put(entry));
+    await new Promise((resolve, reject) => {
+      tx.oncomplete = resolve;
+      tx.onerror = reject;
+    });
+  } catch {
+    // Best-effort — if this fails the log just stays cleared.
+  }
+}
+
 // "Is there something new since I last opened this page" — same
 // single-timestamp idea as lib/unseenBadges.js, just compared against the
 // log's own newest entry instead of a Firestore query, since this log is

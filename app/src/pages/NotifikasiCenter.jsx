@@ -4,12 +4,13 @@ import EmptyState from '../components/EmptyState';
 import ConfirmDialog from '../components/ConfirmDialog';
 import PageHeaderPhoto from '../components/PageHeaderPhoto';
 import { PAGE_PHOTOS } from '../data/photos';
-import { getNotificationLog, clearNotificationLog, routeForTag, markNotificationsSeen, categoryForTag } from '../lib/notificationLog';
+import { getNotificationLog, clearNotificationLog, restoreNotificationLog, routeForTag, markNotificationsSeen, categoryForTag } from '../lib/notificationLog';
 import { NOTIF_CATEGORIES } from '../lib/notifPrefs';
 import PullToRefresh from '../components/PullToRefresh';
 import ScrollToTopButton from '../components/ScrollToTopButton';
 import SearchField from '../components/SearchField';
 import { SkeletonCard } from '../components/Skeleton';
+import { useToast } from '../context/ToastContext';
 
 const dateFmt = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 
@@ -34,6 +35,7 @@ function categoryFor(tag) {
 // NotificationForegroundListener's foreground handler write into.
 export default function NotifikasiCenter() {
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [log, setLog] = useState(null);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [filter, setFilter] = useState(FILTER_ALL);
@@ -57,9 +59,15 @@ export default function NotifikasiCenter() {
   }
 
   async function handleClear() {
+    const removed = log || [];
     await clearNotificationLog();
     setLog([]);
     setShowClearConfirm(false);
+    showToast('Semua notifikasi dihapus', {
+      type: 'danger',
+      actionLabel: 'Batalkan',
+      onAction: () => restoreNotificationLog(removed).then(refresh),
+    });
   }
 
   // Ekspor Riwayat Notifikasi ke Teks — a plain human-readable .txt, same

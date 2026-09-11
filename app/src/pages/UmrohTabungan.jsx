@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { watchUmrohGoal, setUmrohGoal, clearUmrohGoal, restoreUmrohGoal, watchUmrohDeposits, addUmrohDeposit, removeUmrohDeposit, restoreUmrohDeposit } from '../lib/umrohTabungan';
 import ConfirmDialog from '../components/ConfirmDialog';
+import { useSwipeReveal } from '../lib/useSwipeReveal';
 
 const dateFmt = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
 // Setoran rows need the time too — several deposits logged the same day
@@ -18,6 +19,78 @@ const depositDateFmt = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month:
 // page's target + deposit-amount fields never got that treatment.
 function digitsOnly(v) {
   return v.replace(/\D/g, '');
+}
+
+// [UI 2026-09-12] Same swipe-left-to-reveal-delete AyatFavorit's cards and
+// Kalkulator Zakat's riwayat rows already have — this was the one
+// per-row-delete list in the app still on tap-icon-only. Swipe is
+// additive: the tap-to-delete icon stays, both funnel into the same
+// onRemove.
+function DepositRow({ d, onRemove }) {
+  const { dragX, revealed, close, revealWidth, handlers } = useSwipeReveal();
+  return (
+    <div style={{ position: 'relative', overflow: 'hidden', borderRadius: 14 }}>
+      <button
+        onClick={() => {
+          close();
+          onRemove(d);
+        }}
+        aria-label="Hapus setoran"
+        style={{
+          position: 'absolute',
+          right: 0,
+          top: 0,
+          bottom: 0,
+          width: revealWidth,
+          background: 'var(--danger)',
+          color: 'var(--on-danger)',
+          border: 'none',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 3,
+          fontSize: 10,
+          fontWeight: 700,
+          cursor: 'pointer',
+        }}
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="M6 7h12M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m2 0-.8 12.1a2 2 0 0 1-2 1.9H9.8a2 2 0 0 1-2-1.9L7 7" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+        Hapus
+      </button>
+
+      <div
+        {...handlers}
+        style={{
+          position: 'relative',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '12px 14px',
+          background: 'var(--card)',
+          transform: `translateX(${dragX}px)`,
+          transition: dragX === 0 || dragX === -revealWidth ? 'transform var(--dur-2) var(--ease)' : 'none',
+          touchAction: 'pan-y',
+        }}
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+          <span style={{ fontSize: 13, fontWeight: 700 }}>+{formatRupiah(d.amount)}</span>
+          <span style={{ fontSize: 11, color: 'var(--muted)' }}>
+            {d.createdAt ? depositDateFmt.format(d.createdAt.toDate()) : 'Baru saja'}{d.note ? ` · ${d.note}` : ''}
+          </span>
+        </div>
+        <button
+          onClick={() => onRemove(d)}
+          aria-label="Hapus setoran"
+          style={{ background: 'none', border: 'none', padding: 4, cursor: 'pointer', color: 'var(--muted-soft)', flexShrink: 0 }}
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 7h12M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m2 0-.8 12.1a2 2 0 0 1-2 1.9H9.8a2 2 0 0 1-2-1.9L7 7" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
+        </button>
+      </div>
+    </div>
+  );
 }
 
 export default function UmrohTabungan() {
@@ -142,21 +215,7 @@ export default function UmrohTabungan() {
                   )}
                 </div>
                 {(showAllDeposits ? deposits : deposits.slice(0, DEPOSIT_PREVIEW_COUNT)).map((d) => (
-                  <div key={d.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', borderRadius: 14, background: 'var(--card)' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
-                      <span style={{ fontSize: 13, fontWeight: 700 }}>+{formatRupiah(d.amount)}</span>
-                      <span style={{ fontSize: 11, color: 'var(--muted)' }}>
-                        {d.createdAt ? depositDateFmt.format(d.createdAt.toDate()) : 'Baru saja'}{d.note ? ` · ${d.note}` : ''}
-                      </span>
-                    </div>
-                    <button
-                      onClick={() => setPendingDeleteDeposit(d)}
-                      aria-label="Hapus setoran"
-                      style={{ background: 'none', border: 'none', padding: 4, cursor: 'pointer', color: 'var(--muted-soft)', flexShrink: 0 }}
-                    >
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 7h12M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m2 0-.8 12.1a2 2 0 0 1-2 1.9H9.8a2 2 0 0 1-2-1.9L7 7" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                    </button>
-                  </div>
+                  <DepositRow key={d.id} d={d} onRemove={setPendingDeleteDeposit} />
                 ))}
               </div>
             )}

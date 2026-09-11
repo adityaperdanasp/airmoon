@@ -83,11 +83,16 @@ function GeometricPattern({ id }) {
 // for consistency (same reasoning as the Lainnya grid's icon pass) instead
 // of the mismatched Flaticon-style assets that were also considered and
 // declined for the same style-clash reasons.
+// [UI 2026-09-12] Each tile now also prefetches its own route chunk on
+// hover/touch, same pattern BottomNav's 5 tabs and Lainnya's 20 tiles
+// already use — this row is the literal first thing someone taps after
+// opening the app, and was the one major tap-target left with no head
+// start at all.
 const SVC = [
-  { to: '/quran', node: <QuranBookIcon size={46} />, key: 'nav_quran', bg: 'linear-gradient(160deg, #fdf3df, #fbe4b0)' },
-  { to: '/jadwal-sholat', node: <PrayerClockIcon size={46} />, label: 'Sholat', bg: 'linear-gradient(160deg, #e2f1ec, #bfe2d4)' },
-  { to: '/lainnya/kiblat', node: <QiblaCompassIcon size={46} />, key: 'item_kiblat', bg: 'linear-gradient(160deg, #fbe6da, #f3c9ab)' },
-  { to: '/lainnya/cari-masjid', node: <MosqueIcon size={46} />, label: 'Cari Masjid', bg: 'linear-gradient(160deg, #e3e9ee, #c3d1dc)' },
+  { to: '/quran', node: <QuranBookIcon size={46} />, key: 'nav_quran', bg: 'linear-gradient(160deg, #fdf3df, #fbe4b0)', prefetch: () => import('./SurahList') },
+  { to: '/jadwal-sholat', node: <PrayerClockIcon size={46} />, label: 'Sholat', bg: 'linear-gradient(160deg, #e2f1ec, #bfe2d4)', prefetch: () => import('./JadwalSholat') },
+  { to: '/lainnya/kiblat', node: <QiblaCompassIcon size={46} />, key: 'item_kiblat', bg: 'linear-gradient(160deg, #fbe6da, #f3c9ab)', prefetch: () => import('./QiblaCompass') },
+  { to: '/lainnya/cari-masjid', node: <MosqueIcon size={46} />, label: 'Cari Masjid', bg: 'linear-gradient(160deg, #e3e9ee, #c3d1dc)', prefetch: () => import('./CariMasjid') },
 ];
 
 export default function Home() {
@@ -404,6 +409,8 @@ export default function Home() {
             {lastReadAyat && (
               <Link
                 to={`/quran/${lastReadAyat.nomor}`}
+                onMouseEnter={() => import('./SurahReader')}
+                onTouchStart={() => import('./SurahReader')}
                 style={{ display: 'flex', alignItems: 'center', gap: 10, borderRadius: 18, padding: '12px 13px', background: 'var(--cream)', textDecoration: 'none', color: 'inherit', minWidth: 0 }}
               >
                 <div style={{ width: 30, height: 30, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: 'rgba(255,255,255,0.55)' }}>
@@ -418,6 +425,8 @@ export default function Home() {
             {lastReadMushaf && (
               <Link
                 to={`/quran/mushaf/${lastReadMushaf.page}?ayat=${lastReadMushaf.verseKey}`}
+                onMouseEnter={() => import('./MushafReader')}
+                onTouchStart={() => import('./MushafReader')}
                 style={{ display: 'flex', alignItems: 'center', gap: 10, borderRadius: 18, padding: '12px 13px', background: 'var(--mint)', textDecoration: 'none', color: 'inherit', minWidth: 0 }}
               >
                 <div style={{ width: 30, height: 30, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: 'rgba(255,255,255,0.55)' }}>
@@ -442,7 +451,7 @@ export default function Home() {
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 8 }}>
             {SVC.map((s) => (
-              <Link key={s.to} to={s.to} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, textDecoration: 'none', color: 'inherit' }}>
+              <Link key={s.to} to={s.to} onMouseEnter={s.prefetch} onTouchStart={s.prefetch} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, textDecoration: 'none', color: 'inherit' }}>
                 <div
                   style={{
                     width: 68,
