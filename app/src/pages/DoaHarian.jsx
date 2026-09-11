@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { watchDzikirStreak, markDzikirDone, isDoneToday } from '../lib/dzikirStreak';
 import PageHeaderPhoto from '../components/PageHeaderPhoto';
 import { PAGE_PHOTOS } from '../data/photos';
-import { IconSearch } from '../components/icons';
+import SearchField from '../components/SearchField';
 import StickyMiniHeader from '../components/StickyMiniHeader';
 import { loadFavoriteDoa, doaKey, toggleFavoriteDoa } from '../lib/favoriteDoa';
 import DoaCategoryPickerSheet from '../components/DoaCategoryPickerSheet';
@@ -177,10 +177,7 @@ export default function DoaHarian() {
         )}
 
         {baseItems.length > 6 && (
-          <div className="input-row" style={{ borderRadius: 999 }}>
-            <IconSearch style={{ color: 'var(--muted)' }} />
-            <input placeholder="Cari judul dzikir…" value={query} onChange={(e) => setQuery(e.target.value)} />
-          </div>
+          <SearchField value={query} onChange={setQuery} placeholder="Cari judul dzikir…" />
         )}
 
         {q && filteredItems.length === 0 && <p className="state-msg">Gak ketemu dzikir yang cocok dengan "{query}".</p>}

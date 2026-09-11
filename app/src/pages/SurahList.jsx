@@ -11,6 +11,7 @@ import BottomNav from '../components/BottomNav';
 import PageHeaderPhoto from '../components/PageHeaderPhoto';
 import { PAGE_PHOTOS } from '../data/photos';
 import { IconMenu, IconSearch } from '../components/icons';
+import SearchField from '../components/SearchField';
 import { SkeletonSurahRow } from '../components/Skeleton';
 import ErrorRetry from '../components/ErrorRetry';
 import PullToRefresh from '../components/PullToRefresh';
@@ -91,10 +92,7 @@ export default function SurahList() {
           }
         />
 
-        <div className="input-row" style={{ borderRadius: 999 }}>
-          <IconSearch style={{ color: 'var(--muted)' }} />
-          <input placeholder="Cari surat…" value={query} onChange={(e) => setQuery(e.target.value)} />
-        </div>
+        <SearchField value={query} onChange={setQuery} placeholder="Cari surat…" />
 
         <Link
           to="/quran/mushaf/1"

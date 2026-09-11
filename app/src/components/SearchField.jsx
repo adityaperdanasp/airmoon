@@ -5,9 +5,9 @@ import { IconSearch } from './icons';
 // no clear (×) button once you'd actually typed something — you had to
 // select-all + delete by hand. One shared field, with that button built
 // in this time.
-export default function SearchField({ value, onChange, placeholder, autoFocus, onBlur, onKeyDown, inputRef }) {
+export default function SearchField({ value, onChange, placeholder, autoFocus, onBlur, onKeyDown, inputRef, style }) {
   return (
-    <div className="input-row" style={{ borderRadius: 999 }}>
+    <div className="input-row" style={{ borderRadius: 999, ...style }}>
       <IconSearch style={{ color: 'var(--muted)', flexShrink: 0 }} />
       <input
         ref={inputRef}

@@ -8,7 +8,7 @@ import { getNotificationLog, clearNotificationLog, routeForTag, markNotification
 import { NOTIF_CATEGORIES } from '../lib/notifPrefs';
 import PullToRefresh from '../components/PullToRefresh';
 import ScrollToTopButton from '../components/ScrollToTopButton';
-import { IconSearch } from '../components/icons';
+import SearchField from '../components/SearchField';
 import { SkeletonCard } from '../components/Skeleton';
 
 const dateFmt = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
@@ -133,10 +133,7 @@ export default function NotifikasiCenter() {
         )}
 
         {log && log.length > 3 && (
-          <div className="input-row" style={{ borderRadius: 999 }}>
-            <IconSearch style={{ color: 'var(--muted)' }} />
-            <input placeholder="Cari notifikasi…" value={query} onChange={(e) => setQuery(e.target.value)} />
-          </div>
+          <SearchField value={query} onChange={setQuery} placeholder="Cari notifikasi…" />
         )}
 
         {log && log.length > 0 && presentCategories.length > 1 && (

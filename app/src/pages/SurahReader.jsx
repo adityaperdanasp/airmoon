@@ -23,6 +23,7 @@ import ErrorRetry from '../components/ErrorRetry';
 import { Skeleton, SkeletonCard } from '../components/Skeleton';
 import Portal from '../components/Portal';
 import { IconSearch } from '../components/icons';
+import SearchField from '../components/SearchField';
 
 function getReciterId() {
   return localStorage.getItem('airmoon-qari') || '05';
@@ -455,15 +456,13 @@ export default function SurahReader() {
 
         {showInSurahSearch && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '10px 14px', borderRadius: 14, background: 'var(--mint-soft)' }}>
-            <div className="input-row" style={{ borderRadius: 999, background: 'var(--card)' }}>
-              <IconSearch style={{ color: 'var(--muted)' }} />
-              <input
-                autoFocus
-                value={inSurahQuery}
-                onChange={(e) => setInSurahQuery(e.target.value)}
-                placeholder={`Cari kata di ${surah.namaLatin}…`}
-              />
-            </div>
+            <SearchField
+              autoFocus
+              value={inSurahQuery}
+              onChange={setInSurahQuery}
+              placeholder={`Cari kata di ${surah.namaLatin}…`}
+              style={{ background: 'var(--card)' }}
+            />
             {inSurahQuery.trim() && inSurahMatches.length === 0 && (
               <span style={{ fontSize: 11.5, color: 'var(--muted)', textAlign: 'center', padding: '4px 0' }}>
                 Gak ketemu ayat yang cocok di surah ini.
