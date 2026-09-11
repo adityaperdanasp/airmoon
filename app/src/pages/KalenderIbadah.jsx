@@ -5,6 +5,7 @@ import { watchPuasaSunnahLog } from '../lib/puasaSunnahLog';
 import PageHeaderPhoto from '../components/PageHeaderPhoto';
 import { PAGE_PHOTOS } from '../data/photos';
 import EmptyState from '../components/EmptyState';
+import { Skeleton } from '../components/Skeleton';
 
 const MONTH_FMT = new Intl.DateTimeFormat('id-ID', { month: 'long', year: 'numeric' });
 const WEEKDAY_LABELS = ['M', 'S', 'S', 'R', 'K', 'J', 'S'];
@@ -90,8 +91,10 @@ export default function KalenderIbadah() {
           </div>
 
           {days === null ? (
-            <div className="center" style={{ minHeight: 180 }}>
-              <div className="spinner" />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 5 }}>
+              {Array.from({ length: 35 }).map((_, i) => (
+                <Skeleton key={i} radius={10} style={{ aspectRatio: '1', height: 'auto' }} />
+              ))}
             </div>
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 5 }}>

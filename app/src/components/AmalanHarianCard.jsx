@@ -131,15 +131,20 @@ export default function AmalanHarianCard({ uid }) {
         </div>
       </div>
 
+      {/* [UI 2026-09-11] Was color: var(--gold-ink) — computed contrast
+          against this cream background is only 3.5:1 (fails WCAG AA for
+          text this size/weight). Every other cream-background text in
+          the app already uses --gold-ink-dark (7.1:1) instead; this was
+          the one spot that hadn't. */}
       {(pagiTier || petangTier) && (
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
           {pagiTier && (
-            <span style={{ fontSize: 10.5, fontWeight: 700, padding: '4px 9px', borderRadius: 999, background: 'var(--cream)', color: 'var(--gold-ink)' }}>
+            <span style={{ fontSize: 10.5, fontWeight: 700, padding: '4px 9px', borderRadius: 999, background: 'var(--cream)', color: 'var(--gold-ink-dark)' }}>
               {pagiTier.icon} Dzikir Pagi {pagiTier.label}
             </span>
           )}
           {petangTier && (
-            <span style={{ fontSize: 10.5, fontWeight: 700, padding: '4px 9px', borderRadius: 999, background: 'var(--cream)', color: 'var(--gold-ink)' }}>
+            <span style={{ fontSize: 10.5, fontWeight: 700, padding: '4px 9px', borderRadius: 999, background: 'var(--cream)', color: 'var(--gold-ink-dark)' }}>
               {petangTier.icon} Dzikir Petang {petangTier.label}
             </span>
           )}

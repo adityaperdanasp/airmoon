@@ -30,6 +30,12 @@ function ToastIcon({ type }) {
 // inconsistent: some had inline text that appeared/disappeared next to
 // the button, most had nothing at all. One provider, one stack, so every
 // page gets the same look instead of reinventing its own "saved!" text.
+// [UI 2026-09-11] Rapid-fire actions (deleting several rows in a row,
+// each with its own toast) used to stack every toast on screen at once
+// with no limit — dropping the oldest once a 3rd arrives keeps the
+// stack readable instead of growing a wall of pills.
+const MAX_VISIBLE_TOASTS = 3;
+
 export function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([]);
 
@@ -42,7 +48,7 @@ export function ToastProvider({ children }) {
   const showToast = useCallback((message, { type = 'default', icon, duration, actionLabel, onAction } = {}) => {
     const id = `${Date.now()}-${Math.random()}`;
     const resolvedDuration = duration ?? (actionLabel ? 5000 : 2400);
-    setToasts((prev) => [...prev, { id, message, type, icon, actionLabel, onAction }]);
+    setToasts((prev) => [...prev, { id, message, type, icon, actionLabel, onAction }].slice(-MAX_VISIBLE_TOASTS));
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
     }, resolvedDuration);

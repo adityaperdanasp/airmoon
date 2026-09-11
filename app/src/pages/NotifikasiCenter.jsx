@@ -9,6 +9,7 @@ import { NOTIF_CATEGORIES } from '../lib/notifPrefs';
 import PullToRefresh from '../components/PullToRefresh';
 import ScrollToTopButton from '../components/ScrollToTopButton';
 import { IconSearch } from '../components/icons';
+import { SkeletonCard } from '../components/Skeleton';
 
 const dateFmt = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 
@@ -116,8 +117,10 @@ export default function NotifikasiCenter() {
         />
 
         {log === null && (
-          <div className="center" style={{ minHeight: '30vh' }}>
-            <div className="spinner" />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {Array.from({ length: 5 }).map((_, i) => (
+              <SkeletonCard key={i} height={68} radius={16} />
+            ))}
           </div>
         )}
 

@@ -9,6 +9,7 @@ import { PAGE_PHOTOS } from '../data/photos';
 import Confetti from '../components/Confetti';
 import { hapticTick, hapticSuccess } from '../lib/haptics';
 import PuasaSunnahShareModal from '../components/PuasaSunnahShareModal';
+import { Skeleton } from '../components/Skeleton';
 
 const MONTH_FMT = new Intl.DateTimeFormat('id-ID', { month: 'long', year: 'numeric' });
 const DAY_FMT = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -302,8 +303,13 @@ export default function PuasaSunnah() {
         </div>
 
         {dates === null && (
-          <div className="center" style={{ minHeight: 100 }}>
-            <div className="spinner" />
+          <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: 16 }}>
+            <Skeleton width={120} height={16} style={{ alignSelf: 'center' }} />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}>
+              {Array.from({ length: 35 }).map((_, i) => (
+                <Skeleton key={i} radius={8} style={{ aspectRatio: '1', height: 'auto' }} />
+              ))}
+            </div>
           </div>
         )}
 

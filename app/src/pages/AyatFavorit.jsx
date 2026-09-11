@@ -10,6 +10,7 @@ import PageHeaderPhoto from '../components/PageHeaderPhoto';
 import { PAGE_PHOTOS } from '../data/photos';
 import PullToRefresh from '../components/PullToRefresh';
 import { useSwipeReveal } from '../lib/useSwipeReveal';
+import { SkeletonCard } from '../components/Skeleton';
 
 // [UI 2026-09-11] Swipe-left-to-reveal-delete — this list only ever had a
 // small trash icon to tap, missing the near-universal mobile list
@@ -212,8 +213,10 @@ export default function AyatFavorit() {
         )}
 
         {favorites === null && (
-          <div className="center" style={{ minHeight: '30vh' }}>
-            <div className="spinner" />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {Array.from({ length: 3 }).map((_, i) => (
+              <SkeletonCard key={i} height={128} radius={20} />
+            ))}
           </div>
         )}
 

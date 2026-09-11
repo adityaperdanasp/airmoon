@@ -693,4 +693,19 @@ textarea:focus-visible,
     animation: none !important;
     transition: none !important;
   }
+
+  /* [UI 2026-09-11] Everything above is an explicit class allow-list —
+     but most of this app's actual motion (toggle-switch knobs, swipe-
+     to-delete rows, ProgressRing's arc, chevrons) is a plain inline
+     `transition` on a bare div/svg with no class at all, so none of it
+     was reachable here; someone with this OS preference set was still
+     getting all of those animated. A stylesheet `!important` rule
+     beats a plain (non-important) inline style for the same property
+     regardless of specificity — that's what makes this one rule able
+     to reach inline styles project-wide instead of hunting down every
+     file that writes `transition: '...'` inline. Elements still change
+     state instantly, just without the animated glide. */
+  [style*='transition'] {
+    transition: none !important;
+  }
 }
