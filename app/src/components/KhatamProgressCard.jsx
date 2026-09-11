@@ -3,9 +3,11 @@ import { watchKhatamProgress, resetKhatamProgress, TOTAL_MUSHAF_PAGES, TOTAL_JUZ
 import { watchReadingStats } from '../lib/readingTime';
 import { watchReadingGoal, setReadingGoalTarget } from '../lib/readingGoal';
 import { watchReadingStreak } from '../lib/readingStreak';
+import { fetchRecentAmalanHarian } from '../lib/amalanHarian';
 import ConfirmDialog from './ConfirmDialog';
 import KhatamCertificateModal from './KhatamCertificateModal';
 import Confetti from './Confetti';
+import Sparkline from './Sparkline';
 
 const CELEBRATED_KEY = 'airmoon-khatam-celebrated';
 const GOAL_OPTIONS = [1, 2, 3, 5];
@@ -26,11 +28,20 @@ export default function KhatamProgressCard({ uid }) {
   const [showCertificate, setShowCertificate] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [showGoalPicker, setShowGoalPicker] = useState(false);
+  // [UI 2026-09-11] Same "Tren 7 Hari" idea RingkasanIbadah.jsx's own
+  // sparkline uses, reusing the exact same daily amalanHarian score —
+  // shown next to the streak line below instead of a new sub-card, this
+  // card is already dense enough.
+  const [recentDays, setRecentDays] = useState(null);
 
   useEffect(() => watchKhatamProgress(uid, setProgress), [uid]);
   useEffect(() => watchReadingStats(uid, setReadingStats), [uid]);
   useEffect(() => watchReadingGoal(uid, setReadingGoalState), [uid]);
   useEffect(() => watchReadingStreak(uid, setReadingStreak), [uid]);
+  useEffect(() => {
+    if (!uid) return;
+    fetchRecentAmalanHarian(uid, 7).then(setRecentDays);
+  }, [uid]);
 
   const pageCount = progress.pages.length;
   const totalMinutes = readingStats.totalMinutes || 0;
@@ -100,8 +111,9 @@ export default function KhatamProgressCard({ uid }) {
       )}
 
       {readingStreak.current > 0 && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--muted)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, fontSize: 11, color: 'var(--muted)' }}>
           <span>🔥 Streak baca: <strong style={{ color: 'var(--ink)' }}>{readingStreak.current} hari</strong> berturut-turut{readingStreak.best > readingStreak.current ? ` (rekor ${readingStreak.best} hari)` : ''}</span>
+          {recentDays && <Sparkline values={recentDays.map((d) => d.score)} max={recentDays[0]?.max} width={56} height={20} />}
         </div>
       )}
 

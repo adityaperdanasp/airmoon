@@ -144,16 +144,24 @@ export default function NotifikasiCenter() {
             >
               Semua
             </button>
-            {presentCategories.map((c) => (
-              <button
-                key={c.key}
-                onClick={() => setFilter(c.key)}
-                style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 5, padding: '7px 14px', borderRadius: 999, border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', color: filter === c.key ? 'var(--on-primary)' : 'var(--ink)', background: filter === c.key ? 'var(--primary)' : 'var(--card)' }}
-              >
-                <span>{c.icon}</span>
-                {c.label}
-              </button>
-            ))}
+            {presentCategories.map((c) => {
+              // [UI 2026-09-11] Same numeric-count treatment the
+              // Notifikasi tile on Lainnya already got — chips only had
+              // an icon + label before, no sense of which category
+              // actually has the most to look at.
+              const count = log.filter((n) => categoryForTag(n.tag) === c.key).length;
+              return (
+                <button
+                  key={c.key}
+                  onClick={() => setFilter(c.key)}
+                  style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 5, padding: '7px 14px', borderRadius: 999, border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', color: filter === c.key ? 'var(--on-primary)' : 'var(--ink)', background: filter === c.key ? 'var(--primary)' : 'var(--card)' }}
+                >
+                  <span>{c.icon}</span>
+                  {c.label}
+                  <span style={{ fontSize: 10.5, fontWeight: 700, opacity: 0.75 }}>{count}</span>
+                </button>
+              );
+            })}
           </div>
         )}
 

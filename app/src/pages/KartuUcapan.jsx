@@ -307,14 +307,19 @@ export default function KartuUcapan() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span className="section-label">Teks Ucapan</span>
+            {/* [UI 2026-09-11] Was padding: '5px 11px', fontSize: 10.5 — a
+                visibly smaller, lighter chip than the Arabic-font picker
+                right below it, despite both belonging to the same "Arab"
+                control group. Sized to match that row's own chip
+                convention (padding '8px 0'-equivalent, fontSize 12). */}
             <button
               onClick={() => setTitleArabic((v) => !v)}
               aria-pressed={titleArabic}
               style={{
-                padding: '5px 11px',
+                padding: '8px 12px',
                 borderRadius: 999,
                 border: 'none',
-                fontSize: 10.5,
+                fontSize: 12,
                 fontWeight: 700,
                 cursor: 'pointer',
                 color: titleArabic ? 'var(--on-primary)' : 'var(--muted)',

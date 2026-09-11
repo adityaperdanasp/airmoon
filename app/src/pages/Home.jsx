@@ -112,7 +112,17 @@ export default function Home() {
   const [showRatingPrompt, setShowRatingPrompt] = useState(false);
   useEffect(() => {
     if (showOnboarding || !user) return;
-    if (shouldShowRatingPrompt()) setShowRatingPrompt(true);
+    if (!shouldShowRatingPrompt()) return;
+    // [UI 2026-09-11] This effect re-runs the instant showOnboarding
+    // flips to false (onFinish below) — for someone who's actually past
+    // the usual 7-day gate but is seeing the tour again anyway (e.g.
+    // after "Reset Semua Data Lokal", which also clears the onboarding-
+    // seen flag), that meant the rating prompt could pop up the very
+    // instant the tour closed. A short pause gives Home itself a moment
+    // on screen first, instead of one full-screen prompt chaining
+    // straight into another.
+    const timer = setTimeout(() => setShowRatingPrompt(true), 1200);
+    return () => clearTimeout(timer);
   }, [showOnboarding, user]);
 
   // Poin & Medali's daily login point — markLoginPoint() itself checks
@@ -223,7 +233,16 @@ export default function Home() {
             }}
           />
           <div className="topbar" style={{ position: 'relative', zIndex: 1 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
+            {/* [UI 2026-09-11] minWidth: 0 + the name span's own overflow
+                rule below — without this, a long fallback (user.email
+                when displayName isn't set, e.g. "suherman.aditya@
+                gmail.com") could refuse to shrink at all (a flex item's
+                default min-width is its own content width), pushing
+                PointsBadge + the icon button on the right off-balance or
+                clipped on a narrow ~375px phone. flexShrink: 0 on that
+                right-hand group below guarantees the reverse never
+                happens either — those never get squeezed to fit. */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 11, minWidth: 0 }}>
               <div
                 style={{
                   width: 46,
@@ -253,12 +272,12 @@ export default function Home() {
                   {(user?.displayName || 'A')[0].toUpperCase()}
                 </div>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
                 <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.75)' }}>{t('greeting')}</span>
-                <span style={{ fontSize: 15.5, fontWeight: 700, color: '#fff' }}>{user?.displayName || user?.email}</span>
+                <span style={{ fontSize: 15.5, fontWeight: 700, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.displayName || user?.email}</span>
               </div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
               {user && <PointsBadge uid={user.uid} />}
               <Link
                 to="/pengaturan"
