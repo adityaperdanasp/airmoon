@@ -3,6 +3,28 @@ import Portal from '../components/Portal';
 
 const ToastContext = createContext(null);
 
+// [UI 2026-09-11] Every toast used to be the exact same pill regardless of
+// what it was actually confirming ("favorit ditambahkan" read identically
+// to "hitungan direset") — a small leading icon per `type` gives it a
+// shape to recognize at a glance, not just text. `success` (the default —
+// most toasts are affirmations of something that just happened) gets a
+// checkmark, `danger` gets a trash mark; a call can still omit an icon
+// entirely by passing `icon: null`.
+function ToastIcon({ type }) {
+  if (type === 'danger') {
+    return (
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" style={{ flexShrink: 0 }}>
+        <path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    );
+  }
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" style={{ flexShrink: 0 }}>
+      <path d="M20 6 9 17l-5-5" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 // A single shared toast stack — feedback for quick actions (favorit
 // dihapus, hitungan direset, warna avatar disimpan) used to be
 // inconsistent: some had inline text that appeared/disappeared next to
@@ -17,10 +39,10 @@ export function ToastProvider({ children }) {
   // this easy to reverse. Longer default duration when an action is
   // present (5s vs 2.4s) — reading a label and deciding whether to tap it
   // takes longer than just reading a plain confirmation message.
-  const showToast = useCallback((message, { type = 'default', duration, actionLabel, onAction } = {}) => {
+  const showToast = useCallback((message, { type = 'default', icon, duration, actionLabel, onAction } = {}) => {
     const id = `${Date.now()}-${Math.random()}`;
     const resolvedDuration = duration ?? (actionLabel ? 5000 : 2400);
-    setToasts((prev) => [...prev, { id, message, type, actionLabel, onAction }]);
+    setToasts((prev) => [...prev, { id, message, type, icon, actionLabel, onAction }]);
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
     }, resolvedDuration);
@@ -64,6 +86,7 @@ export function ToastProvider({ children }) {
               maxWidth: '100%',
             }}
           >
+            {t.icon !== null && <ToastIcon type={t.type} />}
             <span>{t.message}</span>
             {t.actionLabel && (
               <button

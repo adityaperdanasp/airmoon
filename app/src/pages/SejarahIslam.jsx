@@ -6,6 +6,7 @@ import TopBar from '../components/TopBar';
 import SejarahIslamShareModal from '../components/SejarahIslamShareModal';
 import { IconShare } from '../components/icons';
 import Logo from '../components/Logo';
+import FadeImage from '../components/FadeImage';
 
 // "Hari Ini dalam Sejarah Islam" — same day-of-year rotation pattern as
 // KutipanInspirasi.jsx, but fully local content (data/islamicHistory.js
@@ -82,7 +83,8 @@ export default function SejarahIslam() {
             minHeight: 280,
           }}
         >
-          <img
+          <FadeImage
+            key={photoPool[idx % photoPool.length]}
             src={photoPool[idx % photoPool.length]}
             alt=""
             style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}

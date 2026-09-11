@@ -143,7 +143,7 @@ export default function Tasbih() {
     });
     setPhraseId(DZIKIR_PHRASES[0].id);
     setShowRemoveConfirm(false);
-    showToast('Dzikir dihapus');
+    showToast('Dzikir dihapus', { type: 'danger' });
   }
 
   return (
@@ -319,7 +319,7 @@ export default function Tasbih() {
           onCancel={() => setShowResetConfirm(false)}
           onConfirm={() => {
             reset();
-            showToast('Hitungan direset');
+            showToast('Hitungan direset', { type: 'danger' });
             setShowResetConfirm(false);
           }}
         />

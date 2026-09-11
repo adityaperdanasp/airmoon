@@ -32,6 +32,7 @@ import { shouldShowRatingPrompt, markRatingPromptShown, dismissRatingPromptForev
 import { submitFeedback } from '../lib/feedback';
 import PointsBadge from '../components/PointsBadge';
 import { markLoginPoint } from '../lib/amalanHarian';
+import FadeImage from '../components/FadeImage';
 
 const dateFmt = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
@@ -206,7 +207,7 @@ export default function Home() {
             gap: 16,
           }}
         >
-          <img
+          <FadeImage
             src={headerPhoto}
             alt=""
             style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 40%' }}

@@ -6,6 +6,8 @@ import { useTheme } from '../context/ThemeContext';
 import { IconMoon, GoogleLogo, FacebookLogo } from '../components/icons';
 import Logo from '../components/Logo';
 import { AUTH_PHOTO_LIGHT, AUTH_PHOTO_DARK } from '../data/photos';
+import PasswordField from '../components/PasswordField';
+import FadeImage from '../components/FadeImage';
 
 function mapAuthError(code) {
   const m = {
@@ -82,7 +84,7 @@ export default function Login() {
           photo per theme (not the same one dimmed) per an explicit ask;
           see data/photos.js. */}
       <div style={{ position: 'relative', height: 300, overflow: 'hidden', flexShrink: 0 }}>
-        <img
+        <FadeImage
           src={heroPhoto}
           alt=""
           style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 25%' }}
@@ -181,15 +183,7 @@ export default function Login() {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
             <span style={{ fontSize: 12, fontWeight: 700 }}>{t('password')}</span>
-            <div className="input-row">
-              <input
-                type="password"
-                required
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
+            <PasswordField value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" />
           </div>
 
           {error && <span style={{ fontSize: 12, color: 'var(--danger)' }}>{error}</span>}

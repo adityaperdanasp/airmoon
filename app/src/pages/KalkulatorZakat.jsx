@@ -498,6 +498,7 @@ export default function KalkulatorZakat() {
             setDeleteHistoryId(null);
             if (removed) {
               showToast('Riwayat dihapus', {
+                        type: 'danger',
                 actionLabel: 'Batalkan',
                 onAction: () => setZakatHistory(saveZakatHistoryEntry(removed.type, removed.inputs, removed.amount)),
               });
@@ -523,7 +524,7 @@ export default function KalkulatorZakat() {
           onCancel={() => setShowHaulResetConfirm(false)}
           onConfirm={() => {
             if (user) clearZakatHaul(user.uid);
-            showToast('Hitungan haul direset');
+            showToast('Hitungan haul direset', { type: 'danger' });
             setShowHaulResetConfirm(false);
           }}
         />

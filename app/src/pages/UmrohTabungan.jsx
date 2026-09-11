@@ -188,7 +188,7 @@ export default function UmrohTabungan() {
           onCancel={() => setShowResetConfirm(false)}
           onConfirm={async () => {
             if (user) await clearUmrohGoal(user.uid);
-            showToast('Target tabungan direset');
+            showToast('Target tabungan direset', { type: 'danger' });
             setShowResetConfirm(false);
           }}
         />
@@ -203,7 +203,7 @@ export default function UmrohTabungan() {
           onCancel={() => setPendingDeleteDeposit(null)}
           onConfirm={async () => {
             if (user) await removeUmrohDeposit(user.uid, pendingDeleteDeposit.id);
-            showToast('Setoran dihapus');
+            showToast('Setoran dihapus', { type: 'danger' });
             setPendingDeleteDeposit(null);
           }}
         />

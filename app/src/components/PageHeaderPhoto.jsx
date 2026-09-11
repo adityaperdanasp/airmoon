@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { IconBack } from './icons';
 import { useTheme } from '../context/ThemeContext';
+import FadeImage from './FadeImage';
 
 // Gentle parallax: the photo itself scrolls slightly slower than the page
 // (translateY at a fraction of window.scrollY, clamped to a small max so
@@ -65,7 +66,7 @@ export default function PageHeaderPhoto({ title, photo, subtitle, showBack = tru
   const { elRef, shift } = usePhotoParallax();
   return (
     <div ref={elRef} style={{ position: 'relative', height: 130, borderRadius: 22, overflow: 'hidden' }}>
-      <img
+      <FadeImage
         src={resolvePhoto(photo, theme)}
         alt=""
         style={{

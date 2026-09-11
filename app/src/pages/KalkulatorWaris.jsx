@@ -402,6 +402,7 @@ export default function KalkulatorWaris() {
             setDeleteScenarioId(null);
             if (removed) {
               showToast('Skenario dihapus', {
+                type: 'danger',
                 actionLabel: 'Batalkan',
                 onAction: () => setScenarios(saveWarisScenario(removed.name, removed.inputs)),
               });

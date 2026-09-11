@@ -717,3 +717,106 @@ export function MedalIcon({ tier = 'perunggu', size = 42 }) {
     </svg>
   );
 }
+
+// The 4 Umroh Needs sub-pages all shared the one UmrohIcon (the travel
+// bag, which stays as the hub tile's own icon) — no visual way to tell
+// Manasik/Badal/Checklist/Tabungan apart in Umroh.jsx's list besides the
+// text. One distinct mark each, same gradient-tile convention as the
+// rest of this file.
+
+// Panduan Manasik — footprints tracing the ritual steps.
+export function ManasikIcon({ size = 42 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 42 42" fill="none">
+      <defs>
+        <linearGradient id="manasikG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#2fa190" />
+          <stop offset="1" stopColor="#0a4a43" />
+        </linearGradient>
+        <linearGradient id="manasikGoldG" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor="#fff2cf" />
+          <stop offset="0.55" stopColor="#f0c04d" />
+          <stop offset="1" stopColor="#c98f22" />
+        </linearGradient>
+      </defs>
+      <ellipse cx="14" cy="30" rx="4.4" ry="6.4" transform="rotate(-18 14 30)" fill="url(#manasikG)" />
+      <ellipse cx="26" cy="20" rx="4.4" ry="6.4" transform="rotate(18 26 20)" fill="url(#manasikG)" />
+      <ellipse cx="17" cy="12" rx="3.6" ry="5.2" transform="rotate(-14 17 12)" fill="url(#manasikGoldG)" />
+    </svg>
+  );
+}
+
+// Badal Umrah — one figure standing in for another, linked by an arrow.
+export function BadalUmrahIcon({ size = 42 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 42 42" fill="none">
+      <defs>
+        <linearGradient id="badalAG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#2fa190" />
+          <stop offset="1" stopColor="#0a4a43" />
+        </linearGradient>
+        <linearGradient id="badalBG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#f0c04d" />
+          <stop offset="1" stopColor="#c98f22" />
+        </linearGradient>
+      </defs>
+      <circle cx="12" cy="12" r="4.2" fill="url(#badalBG)" />
+      <path d="M5 32 a7 9 0 0 1 14 0 Z" fill="url(#badalBG)" />
+      <circle cx="29" cy="14" r="4.6" fill="url(#badalAG)" />
+      <path d="M21 34 a8 9.6 0 0 1 16 0 Z" fill="url(#badalAG)" />
+      <path d="M17 21 l8 -3" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
+      <path d="M25 18 l3 -1.4 -0.6 2.6Z" fill="#fff" />
+    </svg>
+  );
+}
+
+// Checklist Persiapan — a clipboard with checked rows.
+export function ChecklistIcon({ size = 42 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 42 42" fill="none">
+      <defs>
+        <linearGradient id="checkBoardG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#fdf8ec" />
+          <stop offset="1" stopColor="#f0e3bf" />
+        </linearGradient>
+        <linearGradient id="checkGoldG" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor="#fff2cf" />
+          <stop offset="0.55" stopColor="#f0c04d" />
+          <stop offset="1" stopColor="#c98f22" />
+        </linearGradient>
+      </defs>
+      <rect x="9" y="8" width="24" height="29" rx="4" fill="url(#checkBoardG)" />
+      <rect x="16" y="5" width="10" height="6" rx="2" fill="url(#checkGoldG)" />
+      <g stroke="#0a4a43" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M13.5 18.5 15.5 20.5 19 16.5" />
+        <path d="M13.5 27.5 15.5 29.5 19 25.5" />
+      </g>
+      <line x1="22.5" y1="19" x2="29" y2="19" stroke="#7a6a3f" strokeWidth="2" strokeLinecap="round" />
+      <line x1="22.5" y1="28" x2="29" y2="28" stroke="#7a6a3f" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+// Tabungan Umroh — a savings jar with a coin dropping in.
+export function SavingsJarIcon({ size = 42 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 42 42" fill="none">
+      <defs>
+        <linearGradient id="jarG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="rgba(255,255,255,0.35)" />
+          <stop offset="1" stopColor="rgba(255,255,255,0.08)" />
+        </linearGradient>
+        <radialGradient id="jarCoinG" cx="0.35" cy="0.3" r="0.85">
+          <stop offset="0" stopColor="#fff2cf" />
+          <stop offset="0.55" stopColor="#f0c04d" />
+          <stop offset="1" stopColor="#c98f22" />
+        </radialGradient>
+      </defs>
+      <path d="M11 15 h20 l-2 20 a3 3 0 0 1 -3 3 h-10 a3 3 0 0 1 -3 -3 Z" fill="#2fa190" />
+      <path d="M11 15 h20 l-2 20 a3 3 0 0 1 -3 3 h-10 a3 3 0 0 1 -3 -3 Z" fill="url(#jarG)" />
+      <rect x="14" y="10" width="14" height="6" rx="2" fill="#0a4a43" />
+      <circle cx="27" cy="7" r="4.4" fill="url(#jarCoinG)" />
+      <path d="M25.3 7 h3.4 M27 5.3 v3.4" stroke="#a9701a" strokeWidth="1" strokeLinecap="round" />
+    </svg>
+  );
+}

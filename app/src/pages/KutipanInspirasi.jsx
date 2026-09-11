@@ -10,6 +10,7 @@ import { SkeletonCard } from '../components/Skeleton';
 import QuoteCardModal from '../components/QuoteCardModal';
 import { IconShare } from '../components/icons';
 import Logo from '../components/Logo';
+import FadeImage from '../components/FadeImage';
 
 export default function KutipanInspirasi() {
   const { lang } = useLang();
@@ -117,7 +118,8 @@ export default function KutipanInspirasi() {
                   Home.jsx's own header photo already uses for both
                   themes, so this reads as "this app's card", not a stock
                   photo with text pasted on top. */}
-              <img
+              <FadeImage
+                key={photoPool[idx % photoPool.length]}
                 src={photoPool[idx % photoPool.length]}
                 alt=""
                 style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}

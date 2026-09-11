@@ -106,7 +106,7 @@ function SedekahGoalCard({ user, myContributions }) {
         <button
           onClick={() => {
             clearSedekahGoal(user.uid);
-            showToast('Target dihapus');
+            showToast('Target dihapus', { type: 'danger' });
           }}
           style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: 10.5, textDecoration: 'underline', cursor: 'pointer', padding: 0 }}
         >
@@ -152,7 +152,7 @@ function MonthlyPledgeCard({ user }) {
     setSaving(true);
     try {
       await cancelMonthlyPledge(user.uid);
-      showToast('Pengingat donasi bulanan dimatikan');
+      showToast('Pengingat donasi bulanan dimatikan', { type: 'danger' });
     } finally {
       setSaving(false);
     }
