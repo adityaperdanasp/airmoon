@@ -206,7 +206,41 @@ export default function ModeRamadan() {
                 </div>
                 <Toggle checked={!!tracker.tarawih[today]} onChange={(v) => tracker.setDay('tarawih', today, v)} />
               </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 16px', borderRadius: 16, background: 'var(--card)' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  <span style={{ fontSize: 13, fontWeight: 700 }}>{t('ramadan_tadarus_hari_ini')}</span>
+                  <span style={{ fontSize: 11, color: 'var(--muted)' }}>{t('ramadan_tadarus_tercatat')} {tracker.tadarusCount}/{monthDays}</span>
+                </div>
+                <Toggle checked={!!tracker.tadarus[today]} onChange={(v) => tracker.setDay('tadarus', today, v)} />
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 16px', borderRadius: 16, background: 'var(--card)' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  <span style={{ fontSize: 13, fontWeight: 700 }}>{t('ramadan_sedekah_hari_ini')}</span>
+                  <span style={{ fontSize: 11, color: 'var(--muted)' }}>{t('ramadan_sedekah_tercatat')} {tracker.sedekahCount}/{monthDays}</span>
+                </div>
+                <Toggle checked={!!tracker.sedekah[today]} onChange={(v) => tracker.setDay('sedekah', today, v)} />
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 16px', borderRadius: 16, background: 'var(--card)' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  <span style={{ fontSize: 13, fontWeight: 700 }}>{t('ramadan_itikaf_hari_ini')}</span>
+                  <span style={{ fontSize: 11, color: 'var(--muted)' }}>{t('ramadan_itikaf_tercatat')} {tracker.itikafCount}/{monthDays}</span>
+                </div>
+                <Toggle checked={!!tracker.itikaf[today]} onChange={(v) => tracker.setDay('itikaf', today, v)} />
+              </div>
             </div>
+
+            {tracker.puasaCount === monthDays && monthDays > 0 && (
+              <div className="card" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 16, background: 'var(--mint)' }}>
+                <span style={{ fontSize: 22 }}>🏅</span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  <span style={{ fontSize: 13, fontWeight: 800 }}>Puasa Ramadan Lengkap!</span>
+                  <span style={{ fontSize: 10.5, color: 'var(--muted)' }}>{monthDays} hari puasa tercatat penuh — barakallahu fiik.</span>
+                </div>
+              </div>
+            )}
 
             <button className="btn-outline" onClick={() => setShowShare(true)}>
               ↗ Bagikan Progress
