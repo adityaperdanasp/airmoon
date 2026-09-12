@@ -13,6 +13,7 @@ import { SkeletonCard } from '../components/Skeleton';
 import LocationSearch from '../components/LocationSearch';
 import { PRAYER_METHODS } from '../lib/prayerMethod';
 import { buildPrayerTimesIcs, downloadIcs } from '../lib/icsExport';
+import { checkTraveledFromOverride } from '../lib/travelDetection';
 
 // Background push (works with the app closed) — Firestore's notifEnabled
 // flag is the source of truth, kept live via onSnapshot so a toggle flipped
@@ -63,6 +64,26 @@ export default function JadwalSholat() {
   const adzanSound = localStorage.getItem('airmoon-adzan-sound') || 'Adzan Makkah';
   const [showPrimer, setShowPrimer] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [travelNudge, setTravelNudge] = useState(null); // { km } or null
+
+  // Deteksi Mode Traveling (2026-09-12) — a pinned manual location
+  // (override) stops updating with a live GPS fix by design, so nothing
+  // else would ever notice it's now far from where the phone actually is.
+  // One-shot check per page visit, not a live watch — cheap and enough to
+  // catch "pinned Jakarta before a trip, now actually in Surabaya."
+  useEffect(() => {
+    if (!override) {
+      setTravelNudge(null);
+      return;
+    }
+    let cancelled = false;
+    checkTraveledFromOverride(override).then((result) => {
+      if (!cancelled && result.traveled) setTravelNudge({ km: result.km });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [override]);
 
   // Prime before the browser's own permission prompt, but only the very
   // first time — once `Notification.permission` is anything other than
@@ -124,6 +145,27 @@ export default function JadwalSholat() {
             }}
             onClose={() => setSearchOpen(false)}
           />
+        )}
+
+        {travelNudge && (
+          <div className="card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '12px 14px', background: 'var(--cream)' }}>
+            <span style={{ fontSize: 12, fontWeight: 700 }}>✈️ Sepertinya kamu lagi jauh (~{travelNudge.km} km) dari lokasi manual yang dipasang — pakai lokasi sekarang aja?</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+              <button
+                onClick={() => { setOverride(null); setTravelNudge(null); }}
+                style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+              >
+                Pakai GPS
+              </button>
+              <button
+                onClick={() => setTravelNudge(null)}
+                aria-label="Tutup"
+                style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: 16, cursor: 'pointer', padding: 0, lineHeight: 1 }}
+              >
+                ×
+              </button>
+            </div>
+          </div>
         )}
 
         {!methodOpen ? (
