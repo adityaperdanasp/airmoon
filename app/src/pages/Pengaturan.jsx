@@ -23,6 +23,7 @@ import { watchEmailOptIn, setEmailOptIn } from '../lib/emailPrefs';
 import SupporterCard from '../components/SupporterCard';
 import { INTEREST_OPTIONS, watchInterestTag, setInterestTag } from '../lib/interestTag';
 import { watchReferralLeaderboard } from '../lib/leaderboard';
+import { highestReferralTier } from '../lib/badges';
 
 // [UI 2026-09-12] Both file pickers on this page (avatar photo, data
 // import) hid their real <input type="file"> with `display: none` — that
@@ -669,8 +670,15 @@ export default function Pengaturan() {
                   <path d="m8.3 10.7 7.4-4.2M8.3 13.3l7.4 4.2" strokeWidth="1.6" strokeLinecap="round" />
                 </svg>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 1, minWidth: 0 }}>
-                <span style={{ fontSize: 13, fontWeight: 700 }}>Ajak Teman Pakai airmoon</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: 13, fontWeight: 700 }}>Ajak Teman Pakai airmoon</span>
+                  {highestReferralTier(referralActivatedCount) && (
+                    <span style={{ fontSize: 9.5, fontWeight: 700, padding: '2px 7px', borderRadius: 999, color: 'var(--primary)', background: 'var(--mint)' }}>
+                      {highestReferralTier(referralActivatedCount).icon} {highestReferralTier(referralActivatedCount).label}
+                    </span>
+                  )}
+                </div>
                 <span style={{ fontSize: 10.5, color: 'var(--muted)' }}>
                   Dapetin warna aksen Rose Gold tiap ada yang daftar
                   {referralCount > 0 ? ` · ${referralCount} orang udah gabung` : ''}

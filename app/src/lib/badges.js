@@ -39,3 +39,41 @@ export function highestPuasaTier(count) {
   }
   return earned;
 }
+
+// Referral Aktif (2026-09-12) — gated on `referralActivatedCount`
+// (users/{uid}, credited by check-campaign-deadlines.js only once a
+// referred signup actually sticks around, see CLAUDE.md), not the raw
+// `referralCount` — a badge for signups who never opened the app again
+// would reward the wrong thing.
+export const REFERRAL_TIERS = [
+  { count: 1, icon: '🌱', label: '1 Referral Aktif' },
+  { count: 5, icon: '🔥', label: '5 Referral Aktif' },
+  { count: 15, icon: '🏅', label: '15 Referral Aktif' },
+  { count: 50, icon: '💎', label: '50 Referral Aktif' },
+];
+
+export function highestReferralTier(count) {
+  let earned = null;
+  for (const tier of REFERRAL_TIERS) {
+    if (count >= tier.count) earned = tier;
+  }
+  return earned;
+}
+
+// Grup Ibadah (2026-09-12) — gated on `timesReported` (groups/{id}/
+// memberStats/{uid}, lib/groups.js), a lifetime count of how many times
+// this member has opened/reported into a Grup Ibadah circle.
+export const GRUP_IBADAH_TIERS = [
+  { count: 5, icon: '🌱', label: '5x Lapor Progres' },
+  { count: 20, icon: '🔥', label: '20x Lapor Progres' },
+  { count: 50, icon: '🏅', label: '50x Lapor Progres' },
+  { count: 100, icon: '💎', label: '100x Lapor Progres' },
+];
+
+export function highestGrupIbadahTier(count) {
+  let earned = null;
+  for (const tier of GRUP_IBADAH_TIERS) {
+    if (count >= tier.count) earned = tier;
+  }
+  return earned;
+}

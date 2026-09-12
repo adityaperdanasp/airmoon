@@ -8,6 +8,7 @@ import {
   createGroup, joinGroupByCode, watchMyGroups, watchGroup,
   reportMyGroupStats, watchGroupMemberStats, setGroupChallenge, clearGroupChallenge,
 } from '../lib/groups';
+import { highestGrupIbadahTier } from '../lib/badges';
 
 // Grup Ibadah (2026-09-12) — small circles (family/pengajian) sharing
 // dzikir/reading-streak numbers, meant especially for Ramadan-style
@@ -141,7 +142,14 @@ function GroupDetail({ groupId, onBack }) {
             </span>
             {sorted.map((m) => (
               <div key={m.uid} className="card" style={{ padding: 14, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
-                <span style={{ fontSize: 13, fontWeight: 700 }}>{m.displayName}{m.uid === user?.uid ? ' (kamu)' : ''}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: 13, fontWeight: 700 }}>{m.displayName}{m.uid === user?.uid ? ' (kamu)' : ''}</span>
+                  {highestGrupIbadahTier(m.timesReported) && (
+                    <span style={{ fontSize: 9.5, fontWeight: 700, padding: '2px 7px', borderRadius: 999, color: 'var(--primary)', background: 'var(--mint)' }}>
+                      {highestGrupIbadahTier(m.timesReported).icon} {highestGrupIbadahTier(m.timesReported).label}
+                    </span>
+                  )}
+                </div>
                 <div style={{ display: 'flex', gap: 10, fontSize: 10.5, color: 'var(--muted)' }}>
                   {m.readingStreak > 0 && <span>📖 {m.readingStreak}h</span>}
                   {m.dzikirPagiStreak > 0 && <span>🌅 {m.dzikirPagiStreak}h</span>}

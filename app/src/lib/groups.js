@@ -1,6 +1,6 @@
 import {
   collection, doc, addDoc, getDoc, getDocs, setDoc, updateDoc,
-  query, where, onSnapshot, arrayUnion, serverTimestamp,
+  query, where, onSnapshot, arrayUnion, serverTimestamp, increment,
 } from 'firebase/firestore';
 import { db } from './firebase';
 
@@ -69,14 +69,19 @@ export function watchGroup(groupId, callback) {
 // streak fields already sitting on their own users/{uid} doc rather than
 // a real-time cross-user subscription that firestore.rules' owner-only
 // `users/{uid}` rule doesn't allow anyway.
+// `timesReported` (2026-09-12, lib/badges.js's GRUP_IBADAH_TIERS) — a
+// lifetime counter of how many times this member has opened/reported
+// into this group, `merge: true` + `increment(1)` so it survives every
+// other field being overwritten on each report.
 export async function reportMyGroupStats(groupId, user, userData) {
   await setDoc(doc(db, 'groups', groupId, 'memberStats', user.uid), {
     displayName: user.displayName || user.email || 'Sahabat airmoon',
     dzikirPagiStreak: userData?.dzikirStreak?.pagi?.current || 0,
     dzikirPetangStreak: userData?.dzikirStreak?.petang?.current || 0,
     readingStreak: userData?.readingStreak?.current || 0,
+    timesReported: increment(1),
     updatedAt: serverTimestamp(),
-  });
+  }, { merge: true });
 }
 
 export function watchGroupMemberStats(groupId, callback) {
