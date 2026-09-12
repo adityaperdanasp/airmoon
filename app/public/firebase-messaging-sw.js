@@ -81,10 +81,19 @@ messaging.onBackgroundMessage((payload) => {
   // auto-displaying the push itself — see send-prayer-notifications.js's
   // comment for why.
   const { title, body } = payload.data || {};
-  logNotificationToDb({ title, body, tag: payload.data?.tag });
+  const tag = payload.data?.tag || '';
+  logNotificationToDb({ title, body, tag });
   self.registration.showNotification(title || 'airmoon', {
     body: body || '',
     icon: '/icons/icon-192.png',
+    // Shortcut Kiblat (2026-09-12) — a prayer-time push is the exact
+    // moment someone might want to double-check their qibla direction,
+    // one tap away instead of tapping through to Jadwal Sholat first.
+    // Only Chrome/Android/desktop render notification `actions` at all
+    // (iOS Safari and the native app's own FcmService.kt-built
+    // notifications silently ignore this field) — the default full-tap
+    // behavior below still opens Jadwal Sholat everywhere as a fallback.
+    ...(tag.startsWith('adzan-') ? { actions: [{ action: 'kiblat', title: '🧭 Kiblat' }] } : {}),
     // `badge` is the tiny status-bar glyph (Android Chrome tints it) — it
     // must be a monochrome silhouette, not the full-colour app icon,
     // which the OS renders as a white blob. Airmoon crescent, white on
@@ -116,6 +125,10 @@ messaging.onBackgroundMessage((payload) => {
 // checks) for where each tag is actually set.
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
+  if (event.action === 'kiblat') {
+    event.waitUntil(clients.openWindow('/lainnya/kiblat'));
+    return;
+  }
   const tag = event.notification.tag || '';
   let url = '/jadwal-sholat'; // adzan-* and any unrecognized tag
   if (tag.startsWith('doa-')) url = '/doa';
