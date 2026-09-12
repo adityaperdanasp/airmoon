@@ -7,8 +7,10 @@ const dateFmt = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short
 
 // The founder's own accounts — interim path while waiting on Midtrans
 // Production approval (see api/report-manual-payment.js). Meant to be
-// shown publicly to donors, not a secret.
-const MANUAL_ACCOUNTS = {
+// shown publicly to donors, not a secret. Exported so Pengaturan.jsx's
+// "Sahabat airmoon" supporter card (2026-09-12) can reuse the same real
+// account numbers rather than risking a second, driftable copy.
+export const MANUAL_ACCOUNTS = {
   gopay: { label: 'GoPay', value: '08129347661' },
   mandiri: { label: 'Mandiri', value: '60014629962' },
 };

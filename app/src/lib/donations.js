@@ -92,6 +92,34 @@ export async function reportManualPayment(donation, amount, method, user) {
   return data;
 }
 
+// Sahabat airmoon — a supporter tier (2026-09-12), reusing the exact same
+// manual-transfer + Telegram-confirm pipeline above rather than building a
+// second payment path: no donationId this time (there's no campaign being
+// credited, just a status flag on the payer's own profile), everything
+// else identical. api/report-manual-payment.js/api/confirm-manual-
+// payment.js both branch on `type === 'supporter'` to skip the
+// donation-crediting steps and set `isSupporter` instead. Deliberately a
+// one-time purchase, not a subscription — see lib/donations.js's own
+// monthlyPledge note on why real recurring billing needs Midtrans's
+// separate Subscription API, which isn't wired up.
+export async function reportSupporterPayment(amount, method, user) {
+  const res = await fetch('https://airmoon.vercel.app/api/report-manual-payment', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      type: 'supporter',
+      amount,
+      method,
+      uid: user?.uid || null,
+      name: user?.displayName || undefined,
+      email: user?.email || undefined,
+    }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Gagal melapor transfer.');
+  return data;
+}
+
 // Live-updating list of a user's own contributions, newest first.
 export function watchMyContributions(uid, callback) {
   const q = query(collection(db, 'users', uid, 'contributions'), orderBy('createdAt', 'desc'));

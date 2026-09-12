@@ -267,14 +267,27 @@ export default function KalkulatorZakat() {
               </button>
             </div>
 
-            {/* Was a dead button — no onClick at all, so tapping it did
-                nothing. No real zakat-payment flow exists in this app
+            {/* [UI 2026-09-12] Used to be a toast-only dead end ("belum
+                tersedia") — no real zakat-payment flow exists in this app
                 (Donasi's infra is specifically PLN-direct mosque
-                electricity, a different flow) — honest info instead of a
-                fake "processing" state or a silently broken tap. */}
-            <button className="btn" onClick={() => showToast('Pembayaran zakat online belum tersedia di airmoon — salurkan langsung ke amil/BAZNAS atau masjid terdekat ya.', { duration: 4500 })}>
-              {t('bayar_zakat_btn')}
-            </button>
+                electricity, a different flow), and there's no formal
+                partnership with BAZNAS or any amil lembaga either. This
+                just closes the loop honestly: a plain external link to
+                BAZNAS's own official public site (Indonesia's national
+                zakat body), same "public resource, not a claimed
+                partnership" stance as Makkah Live's YouTube embed. */}
+            <a
+              href="https://baznas.go.id"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn"
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}
+            >
+              {t('bayar_zakat_btn')} ↗
+            </a>
+            <span style={{ fontSize: 10, color: 'var(--muted-soft)', textAlign: 'center' }}>
+              Membuka situs resmi BAZNAS — airmoon belum punya integrasi pembayaran zakat langsung.
+            </span>
 
             {user && (
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '12px 14px', borderRadius: 14, background: 'var(--card)' }}>

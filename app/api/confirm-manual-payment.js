@@ -9,6 +9,10 @@
 //
 // Returns a plain HTML page (not JSON) since a human opens this directly
 // in a browser from Telegram, not a fetch() call.
+//
+// Also confirms "Sahabat airmoon" supporter purchases (2026-09-12,
+// report.type === 'supporter') — sets isSupporter on the payer's profile
+// instead of crediting a donation's `collected` field.
 
 import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
@@ -54,13 +58,28 @@ export default async function handler(req, res) {
       return res.status(200).send(page('Sudah dikonfirmasi', `Laporan ini sudah dikonfirmasi sebelumnya. Rp ${report.amount.toLocaleString('id-ID')} untuk "${report.donationTitle}".`));
     }
 
-    await db.collection('donations').doc(report.donationId).set(
-      { collected: FieldValue.increment(report.amount) },
-      { merge: true }
-    );
+    const isSupporter = report.type === 'supporter';
+
+    if (isSupporter) {
+      // No `collected` to credit and no campaign to check "funded" against
+      // — this just flips a status flag on the payer's own profile.
+      // `supporterSince` only set the first time, so a repeat "Dukung
+      // lagi" purchase later doesn't reset how long they've been one.
+      const userRef = db.collection('users').doc(report.uid);
+      const userSnap = await userRef.get();
+      const update = { isSupporter: true };
+      if (!userSnap.data()?.supporterSince) update.supporterSince = FieldValue.serverTimestamp();
+      await userRef.set(update, { merge: true });
+    } else {
+      await db.collection('donations').doc(report.donationId).set(
+        { collected: FieldValue.increment(report.amount) },
+        { merge: true }
+      );
+    }
+
     if (report.uid) {
       await db.collection('users').doc(report.uid).collection('contributions').add({
-        donationId: report.donationId,
+        donationId: report.donationId || null,
         donationTitle: report.donationTitle,
         amount: report.amount,
         manualPaymentId: id,
@@ -82,14 +101,18 @@ export default async function handler(req, res) {
       // block the confirmation itself, which already succeeded above.
       console.error('appendLedgerRow failed:', err);
     }
-    try {
-      await notifyDonorsIfFunded(db, report.donationId);
-    } catch (err) {
-      console.error('notifyDonorsIfFunded failed:', err);
+    if (!isSupporter) {
+      try {
+        await notifyDonorsIfFunded(db, report.donationId);
+      } catch (err) {
+        console.error('notifyDonorsIfFunded failed:', err);
+      }
     }
 
     return res.status(200).send(
-      page('Dikonfirmasi ✅', `Rp ${report.amount.toLocaleString('id-ID')} untuk "${report.donationTitle}" sudah ditambahkan ke angka terkumpul.`)
+      isSupporter
+        ? page('Terima kasih ✅', `Kamu resmi jadi Sahabat airmoon. Rp ${report.amount.toLocaleString('id-ID')} sudah dikonfirmasi — jazakallahu khairan!`)
+        : page('Dikonfirmasi ✅', `Rp ${report.amount.toLocaleString('id-ID')} untuk "${report.donationTitle}" sudah ditambahkan ke angka terkumpul.`)
     );
   } catch (err) {
     console.error('confirm-manual-payment error:', err);

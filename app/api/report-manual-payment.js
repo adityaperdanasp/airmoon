@@ -8,6 +8,12 @@
 // comment). It just creates a pending record and pings the founder on
 // Telegram with a confirm link (api/confirm-manual-payment.js) they tap
 // after actually checking their own bank/GoPay app.
+//
+// Also backs the "Sahabat airmoon" supporter tier (2026-09-12,
+// `type: 'supporter'`) — same manual-transfer/Telegram-confirm shape,
+// just no `donationId` (there's no campaign being credited, only a
+// status flag on the payer's own profile once confirm-manual-payment.js
+// processes it).
 
 import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
@@ -48,9 +54,10 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { donationId, amount, method, uid, name, email } = req.body || {};
+  const { donationId, amount, method, uid, name, email, type } = req.body || {};
+  const isSupporter = type === 'supporter';
   const amountNum = Number(amount);
-  if (!donationId || !Number.isFinite(amountNum) || amountNum <= 0 || !['gopay', 'mandiri'].includes(method)) {
+  if ((!isSupporter && !donationId) || !Number.isFinite(amountNum) || amountNum <= 0 || !['gopay', 'mandiri'].includes(method)) {
     return res.status(400).json({ error: 'donationId, amount (angka positif), dan method (gopay/mandiri) wajib diisi.' });
   }
   if (!uid) {
@@ -61,16 +68,20 @@ export default async function handler(req, res) {
     initAdmin();
     const db = getFirestore();
 
-    const donationSnap = await db.collection('donations').doc(donationId).get();
-    if (!donationSnap.exists) {
-      return res.status(404).json({ error: 'Campaign tidak ditemukan.' });
+    let donationTitle = 'Dukungan Sahabat airmoon';
+    if (!isSupporter) {
+      const donationSnap = await db.collection('donations').doc(donationId).get();
+      if (!donationSnap.exists) {
+        return res.status(404).json({ error: 'Campaign tidak ditemukan.' });
+      }
+      donationTitle = donationSnap.data().title;
     }
-    const donation = donationSnap.data();
 
     const confirmSecret = randomBytes(16).toString('hex');
     const ref = await db.collection('manualPayments').add({
-      donationId,
-      donationTitle: donation.title,
+      type: isSupporter ? 'supporter' : 'donation',
+      donationId: donationId || null,
+      donationTitle,
       amount: amountNum,
       method,
       uid,
@@ -83,7 +94,7 @@ export default async function handler(req, res) {
 
     const confirmUrl = `https://airmoon.vercel.app/api/confirm-manual-payment?id=${ref.id}&secret=${confirmSecret}`;
     await sendTelegramMessage(
-      `🔔 Ada laporan transfer manual\n\nCampaign: ${donation.title}\nJumlah: Rp ${amountNum.toLocaleString('id-ID')}\nVia: ${method === 'gopay' ? 'GoPay' : 'Mandiri'}\nDari: ${name || email || uid}\n\nCek dulu rekening/GoPay lo — kalau uangnya beneran udah masuk, baru tap link ini buat konfirmasi:\n${confirmUrl}`
+      `🔔 Ada laporan transfer manual\n\n${isSupporter ? 'Jenis: Sahabat airmoon (supporter)' : `Campaign: ${donationTitle}`}\nJumlah: Rp ${amountNum.toLocaleString('id-ID')}\nVia: ${method === 'gopay' ? 'GoPay' : 'Mandiri'}\nDari: ${name || email || uid}\n\nCek dulu rekening/GoPay lo — kalau uangnya beneran udah masuk, baru tap link ini buat konfirmasi:\n${confirmUrl}`
     );
 
     return res.status(200).json({ ok: true, id: ref.id });
