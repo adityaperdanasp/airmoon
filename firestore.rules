@@ -47,6 +47,14 @@ service cloud.firestore {
         allow read, write: if request.auth != null && request.auth.uid == uid;
       }
 
+      // Checklist Sunnah Jumat (2026-09-12) — one doc per Friday date,
+      // holding a map of which sunnah items (mandi/wangi/kuku/Al-Kahfi)
+      // are done that day. Same owner-only, no-field-validation shape as
+      // every other personal tracker under users/{uid}.
+      match /jumatChecklist/{dateKey} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+      }
+
       // In-app rating/feedback prompt — one doc per submission. Paired
       // with lib/ratingPrompt.js's timing logic (no Play Store/App Store
       // listing exists to link to yet, so this is the real feedback
@@ -449,6 +457,50 @@ service cloud.firestore {
         && request.resource.data.uid == request.auth.uid
         && request.resource.data.helpful is bool;
       allow read, update, delete: if false;
+    }
+
+    // Tanya Jawab Sesama Pengguna (2026-09-12) — a peer Q&A board,
+    // distinct from AskMe's AI-only chat, no money/fraud stakes. Same
+    // public-read/narrow-create/single-field-update shape `doas`/
+    // `featureRequests` already established, except `update` now has TWO
+    // independent single-field branches (`upvoteCount` for upvoting the
+    // question, `answerCount` for anyone posting an answer to it — a
+    // different action from upvoting, so it needs its own branch rather
+    // than folding into the same hasOnly list). Neither branch validates
+    // the new value is a real ±1 delta from the old one — same known,
+    // accepted limitation `doas.aminCount`/`featureRequests.upvoteCount`
+    // already carry.
+    match /communityQuestions/{id} {
+      allow read: if true;
+      allow create: if request.auth != null
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.title.size() <= 150
+        && request.resource.data.body is string
+        && request.resource.data.body.size() <= 1000
+        && request.resource.data.upvoteCount == 0
+        && request.resource.data.answerCount == 0;
+      allow update: if request.auth != null && (
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['upvoteCount'])
+        || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['answerCount'])
+      );
+      allow delete: if request.auth != null && request.auth.uid == resource.data.uid;
+
+      match /upvotes/{uid} {
+        allow read: if true;
+        allow write: if request.auth != null && request.auth.uid == uid;
+      }
+
+      match /answers/{answerId} {
+        allow read: if true;
+        allow create: if request.auth != null
+          && request.resource.data.uid == request.auth.uid
+          && request.resource.data.text is string
+          && request.resource.data.text.size() > 0
+          && request.resource.data.text.size() <= 1000;
+        allow update, delete: if request.auth != null && request.auth.uid == resource.data.uid;
+      }
     }
 
     // Minat Jadi Relawan (2026-09-12) — same lead-gen shape as

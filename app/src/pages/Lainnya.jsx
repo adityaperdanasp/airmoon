@@ -29,6 +29,8 @@ import {
   LightbulbIcon,
   HelpIcon,
   GroupIcon,
+  ChecklistIcon,
+  MosqueIcon,
 } from '../components/serviceIcons';
 
 // All hand-drawn gradient icons (see serviceIcons.jsx) — this grid used
@@ -55,6 +57,7 @@ const SECTIONS = [
       { to: '/lainnya/tasbih', key: 'item_tasbih', bg: 'var(--peach)', node: <TasbihCounterIcon size={30} />, prefetch: () => import('./Tasbih') },
       { to: '/lainnya/ayat-favorit', key: 'item_ayat_favorit', bg: 'var(--cream)', node: <FavoriteAyatIcon size={30} />, prefetch: () => import('./AyatFavorit') },
       { to: '/lainnya/puasa-sunnah', label: 'Puasa Sunnah', bg: 'var(--blue-gray)', node: <PuasaSunnahIcon size={30} />, prefetch: () => import('./PuasaSunnah') },
+      { to: '/lainnya/jumat-checklist', label: 'Checklist Sunnah Jumat', bg: 'var(--cream)', node: <ChecklistIcon size={30} />, prefetch: () => import('./JumatChecklist') },
       { to: '/lainnya/mode-ramadan', key: 'item_ramadan', bg: 'var(--mint)', node: <LanternIcon size={30} />, prefetch: () => import('./ModeRamadan') },
     ],
   },
@@ -65,6 +68,7 @@ const SECTIONS = [
       { to: '/lainnya/kalender-ibadah', label: 'Kalender Ibadah', bg: 'var(--cream)', node: <AmalanCalendarIcon size={30} />, prefetch: () => import('./KalenderIbadah') },
       { to: '/lainnya/grup-ibadah', label: 'Grup Ibadah', bg: 'var(--blue-gray)', node: <GroupIcon size={30} />, prefetch: () => import('./GrupIbadah') },
       { to: '/lainnya/doa-bersama', label: 'Doa Bersama', bg: 'var(--cream)', node: <CuppedHandsIcon size={30} />, prefetch: () => import('./DoaBersama') },
+      { to: '/lainnya/tantangan-teman', label: 'Tantangan Teman', bg: 'var(--peach)', node: <GroupIcon size={30} />, prefetch: () => import('./TantanganTeman') },
     ],
   },
   {
@@ -73,6 +77,7 @@ const SECTIONS = [
       { to: '/lainnya/asmaul-husna', key: 'item_asmaul_husna', bg: 'var(--mint)', node: <TasbihIcon size={30} />, prefetch: () => import('./NamaNamaAllah') },
       { to: '/lainnya/sejarah-islam', label: 'Sejarah Islam', bg: 'var(--peach)', node: <HistoryBookIcon size={30} />, prefetch: () => import('./SejarahIslam') },
       { to: '/lainnya/kutipan-inspirasi', key: 'item_kutipan_inspirasi', bg: 'var(--cream)', node: <ScrollIcon size={30} />, prefetch: () => import('./KutipanInspirasi') },
+      { to: '/lainnya/panduan-sholat', label: 'Panduan Sholat Pemula', bg: 'var(--mint)', node: <MosqueIcon size={30} />, prefetch: () => import('./PanduanSholat') },
     ],
   },
   {
@@ -100,6 +105,7 @@ const SECTIONS = [
       { to: '/notifikasi', label: 'Notifikasi', bg: 'var(--cream)', node: <NotificationBellIcon size={30} />, prefetch: () => import('./NotifikasiCenter') },
       { to: '/yang-baru', label: 'Yang Baru', bg: 'var(--peach)', node: <WhatsNewIcon size={30} />, prefetch: () => import('./Changelog') },
       { to: '/lainnya/usulan-fitur', label: 'Usulkan Fitur', bg: 'var(--mint)', node: <LightbulbIcon size={30} />, prefetch: () => import('./UsulanFitur') },
+      { to: '/lainnya/forum', label: 'Tanya Jawab Sesama Pengguna', bg: 'var(--cream)', node: <GroupIcon size={30} />, prefetch: () => import('./ForumKomunitas') },
       { to: '/lainnya/bantuan', label: 'Bantuan', bg: 'var(--blue-gray)', node: <HelpIcon size={30} />, prefetch: () => import('./Bantuan') },
       { to: '/lainnya/relawan', label: 'Jadi Relawan', bg: 'var(--peach)', node: <CuppedHandsIcon size={30} />, prefetch: () => import('./Relawan') },
     ],
