@@ -8,16 +8,20 @@
 // monthly Zakat Penghasilan reminder, (10) crediting a referrer's
 // referralCount once their referral's signup has landed (2026-09-12 —
 // see lib/referral.js), and (11) a combined digest of new
-// campaignRequests/umrohLeads/supportRequests submissions (2026-09-12) —
-// everything but (1) and (11) is a real FCM push to the user themselves,
-// (11) is a Telegram alert to the founder. All eleven live in one
-// function/one cron entry deliberately — the Hobby plan caps a deployment
-// at 12 Serverless Functions total, and this repo was already at that
-// cap, so a separate daily-cron function for any one of these alone would
-// have pushed a `vercel --prod` deploy over the limit (hit for real,
-// 2026-09-02: "No more than 12 Serverless Functions can be added...").
-// None of the eleven is time-sensitive enough to need its own schedule,
-// so merging them costs nothing.
+// campaignRequests/umrohLeads/supportRequests submissions, (12) a weekly
+// (Sunday) personal recap push combining streaks + this-week's sedekah,
+// (13) 3 more Islamic-calendar moments (Maulid Nabi, 1 Muharram, Hari
+// Arafah) that previously got no reminder at all, and (14) a daily
+// referral-leaderboard snapshot (all 2026-09-12) — everything but (1),
+// (11), and (14) is a real FCM push to the user themselves, (11) is a
+// Telegram alert to the founder, (14) writes a small public Firestore
+// doc. All fourteen live in one function/one cron entry deliberately —
+// the Hobby plan caps a deployment at 12 Serverless Functions total, and
+// this repo was already at that cap, so a separate daily-cron function
+// for any one of these alone would have pushed a `vercel --prod` deploy
+// over the limit (hit for real, 2026-09-02: "No more than 12 Serverless
+// Functions can be added..."). None of the fourteen is time-sensitive
+// enough to need its own schedule, so merging them costs nothing.
 //
 // Triggered once a day by Vercel's own native Cron Jobs (see the `crons`
 // entry in vercel.json) rather than the external cron-job.org pinger
@@ -599,6 +603,147 @@ async function checkNewLeadFormsDigest(db) {
   return { campaignRequests: campaignSnap.size, umrohLeads: umrohSnap.size, supportRequests: supportSnap.size };
 }
 
+// Rekap mingguan (2026-09-12) — a positive-reinforcement push, same
+// spirit as the existing monthly sedekah recap but weekly and broader
+// (streaks + sedekah in one message). Fires only on Sunday
+// (Asia/Jakarta) — idempotent per calendar date is enough since that
+// only happens once a week anyway. Reuses the exact same
+// collectionGroup('contributions') date-range pattern
+// checkMonthlySedekahRecap already established (same index, just a
+// 7-day window instead of a full month) rather than trying to sum
+// amalanHarian's per-day scores across all users, which has no indexed
+// timestamp field to range-query on. Skips anyone with genuinely nothing
+// to report this week — a blank "kamu belum ngapa-ngapain" recap would
+// read as a nag, not a recap.
+async function checkWeeklyRecapPush(db) {
+  const { dateKey, weekday } = todayInJakarta();
+  if (weekday !== 'Sun') return { skipped: 'not-sunday' };
+
+  const weekStart = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const contribSnap = await db.collectionGroup('contributions').where('createdAt', '>=', weekStart).get();
+  const sedekahTotals = new Map();
+  for (const doc of contribSnap.docs) {
+    const uid = doc.ref.parent.parent.id;
+    sedekahTotals.set(uid, (sedekahTotals.get(uid) || 0) + (doc.data().amount || 0));
+  }
+
+  const messaging = getMessaging();
+  const snap = await db.collection('users').where('notifEnabled', '==', true).get();
+  const notified = [];
+  const errors = [];
+
+  for (const docSnap of snap.docs) {
+    try {
+      const u = docSnap.data();
+      const tokens = u.fcmTokens || [];
+      if (!tokens.length || u.lastWeeklyRecapDate === dateKey || u.notifPrefs?.konten === false) continue;
+
+      const dzikirPagi = u.dzikirStreak?.pagi?.current || 0;
+      const dzikirPetang = u.dzikirStreak?.petang?.current || 0;
+      const reading = u.readingStreak?.current || 0;
+      const sedekah = sedekahTotals.get(docSnap.id) || 0;
+      if (!dzikirPagi && !dzikirPetang && !reading && !sedekah) continue;
+
+      const parts = [];
+      if (reading > 0) parts.push(`streak baca ${reading} hari`);
+      if (dzikirPagi > 0 || dzikirPetang > 0) parts.push(`streak dzikir ${Math.max(dzikirPagi, dzikirPetang)} hari`);
+      if (sedekah > 0) parts.push(`sedekah Rp ${sedekah.toLocaleString('id-ID')}`);
+      const body = `Minggu ini: ${parts.join(', ')}. Alhamdulillah, terus lanjutkan!`;
+
+      const result = await messaging.sendEachForMulticast({
+        tokens,
+        data: { tag: 'rekap-mingguan', title: '✨ Rekap Mingguan Kamu', body },
+      });
+
+      await docSnap.ref.update({ lastWeeklyRecapDate: dateKey });
+
+      const deadTokens = result.responses.map((r, i) => (!r.success ? tokens[i] : null)).filter(Boolean);
+      if (deadTokens.length) {
+        await docSnap.ref.update({ fcmTokens: FieldValue.arrayRemove(...deadTokens) });
+      }
+
+      notified.push({ uid: docSnap.id, successCount: result.successCount });
+    } catch (err) {
+      errors.push({ uid: docSnap.id, error: err.message });
+    }
+  }
+
+  return { notified, errors };
+}
+
+// Kalender kampanye musiman (2026-09-12) — Ramadan already gets its own
+// dedicated Imsak/Zakat-Fitrah treatment; this covers 3 more Islamic-
+// calendar moments the app previously said nothing about at all: Maulid
+// Nabi (12 Rabiul Awal), 1 Muharram (Islamic New Year), and Hari Arafah
+// (9 Dzulhijjah, the day before Idul Adha). Same fetchTodayHijri +
+// per-Hijri-year idempotency shape as checkZakatFitrahReminder above.
+async function checkSeasonalReminders(db) {
+  const { dateKey } = todayInJakarta();
+  let hijri;
+  try {
+    hijri = await fetchTodayHijri(dateKey);
+  } catch (err) {
+    return { skipped: 'aladhan-unreachable', error: err.message };
+  }
+
+  const month = Number(hijri.month.number);
+  const day = Number(hijri.day);
+  const hijriYear = hijri.year;
+
+  let occasion = null;
+  if (month === 3 && day === 12) {
+    occasion = { key: 'maulid-nabi', title: '🌙 Maulid Nabi Muhammad ﷺ', body: 'Hari ini 12 Rabiul Awal — perbanyak sholawat & kenang perjalanan hidup Rasulullah ﷺ.' };
+  } else if (month === 1 && day === 1) {
+    occasion = { key: 'tahun-baru-hijriah', title: '🌙 Selamat Tahun Baru Hijriah', body: `Memasuki 1 Muharram ${hijriYear} H — momen baik buat muhasabah & niat baru.` };
+  } else if (month === 12 && day === 9) {
+    occasion = { key: 'idul-adha', title: '🕋 Hari Arafah', body: 'Besok Idul Adha — hari ini puasa Arafah sangat dianjurkan buat yang tidak berhaji.' };
+  }
+  if (!occasion) return { skipped: 'not-in-window' };
+
+  const fieldKey = `lastSeasonalReminder_${occasion.key}`;
+  const messaging = getMessaging();
+  const snap = await db.collection('users').where('notifEnabled', '==', true).get();
+  const notified = [];
+  const errors = [];
+
+  for (const docSnap of snap.docs) {
+    try {
+      const u = docSnap.data();
+      const tokens = u.fcmTokens || [];
+      if (!tokens.length || u[fieldKey] === hijriYear || u.notifPrefs?.pengingat === false) continue;
+
+      const result = await messaging.sendEachForMulticast({
+        tokens,
+        data: { tag: occasion.key, title: occasion.title, body: occasion.body },
+      });
+
+      await docSnap.ref.update({ [fieldKey]: hijriYear });
+
+      const deadTokens = result.responses.map((r, i) => (!r.success ? tokens[i] : null)).filter(Boolean);
+      if (deadTokens.length) {
+        await docSnap.ref.update({ fcmTokens: FieldValue.arrayRemove(...deadTokens) });
+      }
+
+      notified.push({ uid: docSnap.id, successCount: result.successCount });
+    } catch (err) {
+      errors.push({ uid: docSnap.id, error: err.message });
+    }
+  }
+
+  return { occasion: occasion.key, notified, errors };
+}
+
+// Referral leaderboard snapshot (2026-09-12) — see lib/leaderboard.js for
+// why this is a small public snapshot doc rather than a live client
+// query over `users` (owner-read-only, and would over-expose referral
+// counts even if it weren't). Only names + counts, no uid/email.
+async function checkReferralLeaderboard(db) {
+  const snap = await db.collection('users').where('referralCount', '>', 0).orderBy('referralCount', 'desc').limit(10).get();
+  const top = snap.docs.map((d) => ({ name: d.data().displayName || 'Sahabat airmoon', count: d.data().referralCount }));
+  await db.collection('leaderboards').doc('referral').set({ top, updatedAt: FieldValue.serverTimestamp() });
+  return { count: top.length };
+}
+
 function initAdmin() {
   if (getApps().length) return;
   const b64 = process.env.FIREBASE_SERVICE_ACCOUNT_B64;
@@ -661,6 +806,9 @@ export default async function handler(req, res) {
     const zakatPenghasilanResult = await checkZakatPenghasilanReminder(db);
     const referralResult = await checkReferralRewards(db);
     const leadFormsDigestResult = await checkNewLeadFormsDigest(db);
+    const weeklyRecapResult = await checkWeeklyRecapPush(db);
+    const seasonalResult = await checkSeasonalReminders(db);
+    const referralLeaderboardResult = await checkReferralLeaderboard(db);
 
     return res.status(200).json({
       checked: snap.size,
@@ -675,6 +823,9 @@ export default async function handler(req, res) {
       zakatPenghasilan: zakatPenghasilanResult,
       referralRewards: referralResult,
       leadFormsDigest: leadFormsDigestResult,
+      weeklyRecap: weeklyRecapResult,
+      seasonalReminder: seasonalResult,
+      referralLeaderboard: referralLeaderboardResult,
     });
   } catch (err) {
     console.error('check-campaign-deadlines error:', err);

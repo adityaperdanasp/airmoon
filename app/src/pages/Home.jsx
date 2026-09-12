@@ -33,6 +33,9 @@ import { submitFeedback } from '../lib/feedback';
 import PointsBadge from '../components/PointsBadge';
 import { markLoginPoint } from '../lib/amalanHarian';
 import FadeImage from '../components/FadeImage';
+import NPSPromptModal from '../components/NPSPromptModal';
+import { shouldShowNpsPrompt, markNpsPromptShown, dismissNpsPromptForever, submitNpsResponse } from '../lib/npsPrompt';
+import { isNpsPromptEnabled } from '../lib/remoteConfig';
 
 const dateFmt = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
@@ -95,6 +98,22 @@ const SVC = [
   { to: '/lainnya/cari-masjid', node: <MosqueIcon size={46} />, label: 'Cari Masjid', bg: 'linear-gradient(160deg, #e3e9ee, #c3d1dc)', prefetch: () => import('./CariMasjid') },
 ];
 
+// [PM 2026-09-12] Reorders SVC so the tile matching the user's own
+// onboarding interest (lib/interestTag.js) leads — a modest, low-risk
+// slice of "personalize Home" rather than restructuring every section on
+// the page into a dynamically-ordered list, which would be a much bigger
+// change for a first pass. 'donasi' has no matching tile in this specific
+// grid, so it's a no-op there; 'semua'/no tag keeps the original order.
+function reorderSvcByInterest(interestTag) {
+  if (interestTag === 'quran') return SVC;
+  if (interestTag === 'sholat') {
+    const idx = SVC.findIndex((s) => s.to === '/jadwal-sholat');
+    if (idx <= 0) return SVC;
+    return [SVC[idx], ...SVC.slice(0, idx), ...SVC.slice(idx + 1)];
+  }
+  return SVC;
+}
+
 export default function Home() {
   const { user } = useAuth();
   const { t, lang } = useLang();
@@ -106,6 +125,7 @@ export default function Home() {
   const [doas, setDoas] = useState(null);
   const [avatarColor, setAvatarColor] = useState(null);
   const [avatarPhoto, setAvatarPhoto] = useState(null);
+  const [interestTag, setInterestTagState] = useState(null);
   const [lastReadAyat, setLastReadAyat] = useState(null);
   const [lastReadMushaf, setLastReadMushaf] = useState(null);
   const [searchParams] = useSearchParams();
@@ -131,6 +151,23 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, [showOnboarding, user]);
 
+  // Survei NPS super ringan (2026-09-12) — same timing shape as the
+  // rating prompt above, deliberately never shown the same visit as it
+  // (checked via shouldShowRatingPrompt() itself, not just showRatingPrompt
+  // state, since the rating prompt's own 1200ms delay means its state
+  // hasn't flipped true yet at the moment this effect runs) — two
+  // full-screen prompts fighting for one visit would be worse than either
+  // alone. Gated behind Remote Config so this can be turned off live
+  // without a redeploy if it turns out to be more annoying than useful.
+  const [showNpsPrompt, setShowNpsPrompt] = useState(false);
+  useEffect(() => {
+    if (showOnboarding || !user) return;
+    if (shouldShowRatingPrompt()) return;
+    if (!isNpsPromptEnabled() || !shouldShowNpsPrompt()) return;
+    const timer = setTimeout(() => setShowNpsPrompt(true), 1200);
+    return () => clearTimeout(timer);
+  }, [showOnboarding, user]);
+
   // Poin & Medali's daily login point — markLoginPoint() itself checks
   // whether today's point is already recorded before writing, so this
   // firing on every Home mount (not just once ever) is fine.
@@ -142,8 +179,11 @@ export default function Home() {
   useEffect(() => watchUserProfile(user?.uid, (p) => {
     setAvatarColor(p?.avatarColor || null);
     setAvatarPhoto(p?.avatarPhoto || null);
+    setInterestTagState(p?.interestTag || null);
   }), [user?.uid]);
   useEffect(() => watchDoas(setDoas), []);
+
+  const svcOrdered = reorderSvcByInterest(interestTag);
 
   // Same lastReadAyat/lastRead fallback SurahList.jsx uses — see that
   // file's own comment for why the older field name still has to be
@@ -450,7 +490,7 @@ export default function Home() {
             </Link>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 8 }}>
-            {SVC.map((s) => (
+            {svcOrdered.map((s) => (
               <Link key={s.to} to={s.to} onMouseEnter={s.prefetch} onTouchStart={s.prefetch} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, textDecoration: 'none', color: 'inherit' }}>
                 <div
                   style={{
@@ -584,6 +624,23 @@ export default function Home() {
           onNever={() => {
             dismissRatingPromptForever();
             setShowRatingPrompt(false);
+          }}
+        />
+      )}
+
+      {showNpsPrompt && (
+        <NPSPromptModal
+          onSubmit={(score) => {
+            markNpsPromptShown();
+            if (user) submitNpsResponse(user.uid, score);
+          }}
+          onLater={() => {
+            markNpsPromptShown();
+            setShowNpsPrompt(false);
+          }}
+          onNever={() => {
+            dismissNpsPromptForever();
+            setShowNpsPrompt(false);
           }}
         />
       )}

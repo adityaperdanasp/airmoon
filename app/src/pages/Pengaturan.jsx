@@ -21,6 +21,8 @@ import SegButton from '../components/SegButton';
 import ToggleSwitch from '../components/ToggleSwitch';
 import { watchEmailOptIn, setEmailOptIn } from '../lib/emailPrefs';
 import SupporterCard from '../components/SupporterCard';
+import { INTEREST_OPTIONS, watchInterestTag, setInterestTag } from '../lib/interestTag';
+import { watchReferralLeaderboard } from '../lib/leaderboard';
 
 // [UI 2026-09-12] Both file pickers on this page (avatar photo, data
 // import) hid their real <input type="file"> with `display: none` — that
@@ -425,13 +427,17 @@ export default function Pengaturan() {
   const [referralRewardReceived, setReferralRewardReceived] = useState(false);
   const [isSupporter, setIsSupporter] = useState(false);
   const [emailOptIn, setEmailOptInState] = useState(true);
+  const [interestTag, setInterestTagState] = useState(null);
+  const [referralLeaderboard, setReferralLeaderboard] = useState([]);
 
   useEffect(() => watchUserProfile(user?.uid, (p) => {
     setReferralCount(p?.referralCount || 0);
     setReferralRewardReceived(p?.referralRewardReceived || false);
     setIsSupporter(p?.isSupporter || false);
+    setInterestTagState(p?.interestTag || null);
   }), [user?.uid]);
   useEffect(() => watchEmailOptIn(user?.uid, setEmailOptInState), [user?.uid]);
+  useEffect(() => watchReferralLeaderboard(setReferralLeaderboard), []);
 
   // Rose Gold accent (lib/accentColor.js) unlocks 3 ways: you've referred
   // someone, you were referred, or you're a Sahabat airmoon supporter.
@@ -488,6 +494,40 @@ export default function Pengaturan() {
             {t('pengaturan_akun')}
           </span>
           <ProfileCard />
+
+          {user && (
+            <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: 16 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <span style={{ fontSize: 13, fontWeight: 700 }}>Minat Utama</span>
+                <span style={{ fontSize: 11, color: 'var(--muted)' }}>Dipakai buat urutan tampilan Home — bisa diganti kapan aja</span>
+              </div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {INTEREST_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.key}
+                    onClick={() => { setInterestTagState(opt.key); setInterestTag(user.uid, opt.key); }}
+                    aria-pressed={interestTag === opt.key}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      padding: '8px 12px',
+                      borderRadius: 999,
+                      border: interestTag === opt.key ? 'none' : '1px solid var(--border)',
+                      background: interestTag === opt.key ? 'var(--primary)' : 'transparent',
+                      color: interestTag === opt.key ? 'var(--on-primary)' : 'var(--muted)',
+                      fontSize: 12,
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <span>{opt.icon}</span>
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {user && (
             <button
@@ -634,6 +674,18 @@ export default function Pengaturan() {
             </div>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" style={{ flexShrink: 0 }}><path d="m9 6 6 6-6 6" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
           </button>
+
+          {referralLeaderboard.length > 0 && (
+            <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: 16 }}>
+              <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--muted)' }}>🏆 Top Pengajak Minggu Ini</span>
+              {referralLeaderboard.slice(0, 5).map((row, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                  <span style={{ fontSize: 12.5, fontWeight: 700 }}>{i + 1}. {row.name}</span>
+                  <span style={{ fontSize: 11.5, color: 'var(--muted)' }}>{row.count} orang</span>
+                </div>
+              ))}
+            </div>
+          )}
 
           {user && <SupporterCard user={user} isSupporter={isSupporter} />}
 

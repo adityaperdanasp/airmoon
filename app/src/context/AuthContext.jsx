@@ -26,6 +26,14 @@ async function ensureUserDoc(user) {
       walletBalance: 0,
       points: 0,
       createdAt: serverTimestamp(),
+      // [PM 2026-09-12] Jam Tenang (lib/quietHours.js) defaulted to off
+      // for everyone — a bad first-night experience (a pengingat push at
+      // 2am from an unfamiliar app) is a real, avoidable reason to
+      // uninstall on day one. Only written here, at doc-creation time, so
+      // no existing user's own explicit choice (including an existing
+      // user who deliberately left it off) is ever touched — this only
+      // ever affects a brand-new account.
+      quietHours: { enabled: true, start: '22:00', end: '05:00' },
     });
   }
 }

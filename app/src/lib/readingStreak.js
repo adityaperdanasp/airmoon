@@ -9,6 +9,7 @@
 // signal, same spirit as the dzikir streaks.
 import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
 import { db } from './firebase';
+import { daysBetween, tryConsumeStreakFreeze } from './streakFreeze';
 
 function dateKey(d) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -43,11 +44,19 @@ export async function markReadingDone(uid) {
   if (!uid) return;
   const ref = doc(db, 'users', uid);
   const snap = await getDoc(ref);
-  const s = (snap.exists() && snap.data().readingStreak) || { lastDate: null, current: 0, best: 0 };
+  const userData = snap.exists() ? snap.data() : {};
+  const s = userData.readingStreak || { lastDate: null, current: 0, best: 0 };
   const today = todayKey();
   if (s.lastDate === today) return;
 
-  const current = s.lastDate === yesterdayKey() ? s.current + 1 : 1;
+  let current;
+  if (s.lastDate === yesterdayKey()) {
+    current = s.current + 1;
+  } else if (s.lastDate && daysBetween(s.lastDate, today) === 2 && (await tryConsumeStreakFreeze(uid, userData))) {
+    current = s.current + 1;
+  } else {
+    current = 1;
+  }
   const best = Math.max(s.best || 0, current);
   await setDoc(ref, { readingStreak: { lastDate: today, current, best } }, { merge: true });
 }

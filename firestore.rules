@@ -211,6 +211,111 @@ service cloud.firestore {
       }
     }
 
+    // Grup Ibadah (2026-09-12) — small circles (family/pengajian) sharing
+    // dzikir/reading-streak numbers. `groupInvites/{code}` is a tiny
+    // public-read pointer (code → groupId) so someone can join a group
+    // whose id they don't already know without needing list/query access
+    // to the (member-only-readable) groups collection itself — the
+    // group's own `update` rule below doesn't require prior read access,
+    // it just validates the write itself, so joining works even though
+    // reading the group before joining doesn't.
+    match /groupInvites/{code} {
+      allow read: if true;
+      allow create: if request.auth != null && request.resource.data.groupId is string;
+      allow update, delete: if false;
+    }
+    match /groups/{groupId} {
+      allow read: if request.auth != null && request.auth.uid in resource.data.memberUids;
+      allow create: if request.auth != null
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.memberUids.size() == 1
+        && request.resource.data.memberUids.hasOnly([request.auth.uid])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 60;
+      // Joining: the only client-writable transition is "append exactly
+      // my own uid to memberUids, touch nothing else" — validated without
+      // requiring the joiner to have read access to the doc first (see
+      // groupInvites above).
+      allow update: if request.auth != null
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['memberUids'])
+        && request.resource.data.memberUids.size() == resource.data.memberUids.size() + 1
+        && request.resource.data.memberUids.hasAll(resource.data.memberUids)
+        && (request.auth.uid in request.resource.data.memberUids);
+      allow delete: if false;
+
+      // Each member self-reports their own current streak numbers here
+      // (no live cross-user query needed) — readable by any group member,
+      // writable only by the member it belongs to.
+      match /memberStats/{uid} {
+        allow read: if request.auth != null && request.auth.uid in get(/databases/$(database)/documents/groups/$(groupId)).data.memberUids;
+        allow write: if request.auth != null && request.auth.uid == uid;
+      }
+    }
+
+    // Onboarding funnel telemetry (2026-09-12) — a single shared counter
+    // doc, no per-user documents at all (there's nothing to read back
+    // per-user, this is aggregate-only and the founder reads it via the
+    // Firestore console). `hasOnly` against this exact, hand-maintained
+    // key list is what keeps an authenticated client from writing
+    // anything else into this doc — keep it in sync with
+    // lib/onboardingFunnel.js's own STEP_KEYS if that ever changes.
+    match /analytics/onboardingFunnel {
+      allow read: if false;
+      allow create: if request.auth != null
+        && request.resource.data.keys().hasOnly(['step_0_view', 'step_1_view', 'step_2_view', 'step_3_view', 'step_4_view', 'step_5_view', 'completed', 'skipped']);
+      allow update: if request.auth != null
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['step_0_view', 'step_1_view', 'step_2_view', 'step_3_view', 'step_4_view', 'step_5_view', 'completed', 'skipped']);
+      allow delete: if false;
+    }
+
+    // Referral leaderboard (2026-09-12) — a small public snapshot
+    // (top-10 {name, count}, no uid/email) computed once a day by
+    // check-campaign-deadlines.js via the Admin SDK. Deliberately not a
+    // live client query over `users` (that collection's own rule is
+    // owner-read-only, and even if it weren't, exposing every user's
+    // referralCount via an open query would leak more than a curated
+    // top-10 snapshot needs to).
+    match /leaderboards/referral {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Yang Baru reactions (2026-09-12) — 👍/👎 per changelog version, same
+    // public-read/count-doc-plus-existence-subcollection shape `doas`'
+    // aminCount already established, done twice (independent, not
+    // mutually exclusive — simpler than a single toggle that has to track
+    // which way someone last voted).
+    match /changelogReactions/{version} {
+      allow read: if true;
+      allow create: if request.auth != null && request.resource.data.keys().hasOnly(['helpfulCount', 'notHelpfulCount']);
+      allow update: if request.auth != null && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['helpfulCount', 'notHelpfulCount']);
+      allow delete: if false;
+
+      match /helpfulVotes/{uid} {
+        allow read: if true;
+        allow write: if request.auth != null && request.auth.uid == uid;
+      }
+      match /notHelpfulVotes/{uid} {
+        allow read: if true;
+        allow write: if request.auth != null && request.auth.uid == uid;
+      }
+    }
+
+    // Survei NPS super ringan (2026-09-12) — one doc per response, no
+    // read-back needed by the client (the founder reads these via the
+    // Firestore console), same "create-only, no client read" shape as
+    // the feedback subcollection under users/{uid} but standalone since
+    // an NPS score isn't tied to a specific ibadah feature.
+    match /npsResponses/{id} {
+      allow create: if request.auth != null
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.score is int
+        && request.resource.data.score >= 0
+        && request.resource.data.score <= 10;
+      allow read, update, delete: if false;
+    }
+
     // Everything else stays locked until it has a real data model.
     match /{document=**} {
       allow read, write: if false;

@@ -177,6 +177,8 @@ export function routeForTag(tag = '') {
   if (tag === 'reading-streak') return '/quran';
   if (tag === 'poin-login') return '/';
   if (tag.startsWith('sholat-belum-')) return '/?focus=amalan';
+  if (tag === 'rekap-mingguan') return '/lainnya/ringkasan-ibadah';
+  if (tag === 'maulid-nabi' || tag === 'tahun-baru-hijriah' || tag === 'idul-adha') return '/lainnya/kalender-hijriah';
   return '/jadwal-sholat'; // adzan-* and any unrecognized tag
 }
 
@@ -191,8 +193,8 @@ export function categoryForTag(tag = '') {
   if (tag.startsWith('doa-')) return 'komunitas';
   if (tag.startsWith('campaign-funded-')) return 'donasi';
   if (tag === 'pledge-reminder' || tag === 'sedekah-recap') return 'donasi';
-  if (tag === 'kutipan-harian') return 'konten';
+  if (tag === 'kutipan-harian' || tag === 'rekap-mingguan') return 'konten';
   if (tag === 'imsak' || tag.startsWith('adzan-')) return 'adzan';
   if (tag === 'test-notification') return 'lainnya';
-  return 'pengingat'; // zakat-haul, jumat-al-kahf, dzikir-streak, amalan-belum-selesai, puasa-sunnah, zakat-fitrah, zakat-penghasilan, target-baca
+  return 'pengingat'; // zakat-haul, jumat-al-kahf, dzikir-streak, amalan-belum-selesai, puasa-sunnah, zakat-fitrah, zakat-penghasilan, target-baca, maulid-nabi, tahun-baru-hijriah, idul-adha
 }

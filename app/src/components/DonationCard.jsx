@@ -1,7 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { createMidtransTransaction, loadSnapScript, reportManualPayment } from '../lib/donations';
 import { formatRupiah } from '../lib/zakat';
 import { useAuth } from '../context/AuthContext';
+import { watchUserProfile } from '../lib/profile';
+import { isSupporterCrossSellEnabled } from '../lib/remoteConfig';
 
 const dateFmt = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
@@ -132,6 +135,17 @@ export default function DonationCard({ donation, amounts = [10000, 25000, 50000]
   const { user } = useAuth();
   const [paying, setPaying] = useState(false);
   const [status, setStatus] = useState(null); // { kind: 'info'|'success'|'error', text }
+  const [isSupporter, setIsSupporter] = useState(false);
+  // [PM 2026-09-12] A one-time cross-sell moment right after a real
+  // payment succeeds — someone who just donated has both intent and
+  // trust in this exact moment, unlike a cold prompt shown out of
+  // context elsewhere. Only for non-supporters, and only via the real
+  // Midtrans onSuccess callback: the manual-transfer path is confirmed
+  // later by the founder tapping a Telegram link, outside this client
+  // session entirely, so there's no equivalent live moment to hook there.
+  const [showSupporterCrossSell, setShowSupporterCrossSell] = useState(false);
+
+  useEffect(() => watchUserProfile(user?.uid, (p) => setIsSupporter(p?.isSupporter || false)), [user?.uid]);
 
   const pct = Math.min(100, Math.round((donation.collected / donation.target) * 100));
 
@@ -146,7 +160,10 @@ export default function DonationCard({ donation, amounts = [10000, 25000, 50000]
       await loadSnapScript();
       const { token } = await createMidtransTransaction(donation, amount, user);
       window.snap.pay(token, {
-        onSuccess: () => setStatus({ kind: 'success', text: 'Pembayaran berhasil! Terima kasih — angka terkumpul akan update sebentar lagi.' }),
+        onSuccess: () => {
+          setStatus({ kind: 'success', text: 'Pembayaran berhasil! Terima kasih — angka terkumpul akan update sebentar lagi.' });
+          if (!isSupporter && isSupporterCrossSellEnabled()) setShowSupporterCrossSell(true);
+        },
         onPending: () => setStatus({ kind: 'info', text: 'Pembayaran diproses (misal nunggu transfer VA). Angka terkumpul update begitu lunas.' }),
         onError: () => setStatus({ kind: 'error', text: 'Pembayaran gagal. Coba lagi ya.' }),
         onClose: () => setStatus((s) => s || { kind: 'error', text: 'Dibatalkan sebelum bayar.' }),
@@ -218,6 +235,22 @@ export default function DonationCard({ donation, amounts = [10000, 25000, 50000]
           }}
         >
           {status.text}
+        </div>
+      )}
+
+      {showSupporterCrossSell && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '10px 12px', borderRadius: 12, background: 'linear-gradient(135deg, #a8657a, #6e3d4c)' }}>
+          <span style={{ fontSize: 11.5, color: '#fff', fontWeight: 700 }}>🌹 Sekalian jadi Sahabat airmoon?</span>
+          <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+            <Link to="/pengaturan" style={{ fontSize: 11, fontWeight: 700, color: '#fff', textDecoration: 'underline' }}>Lihat</Link>
+            <button
+              onClick={() => setShowSupporterCrossSell(false)}
+              aria-label="Tutup"
+              style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.8)', fontSize: 14, cursor: 'pointer', padding: 0, lineHeight: 1 }}
+            >
+              ×
+            </button>
+          </div>
         </div>
       )}
 

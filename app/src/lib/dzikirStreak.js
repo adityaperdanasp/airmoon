@@ -8,6 +8,7 @@
 
 import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
 import { db } from './firebase';
+import { daysBetween, tryConsumeStreakFreeze } from './streakFreeze';
 
 function dateKey(d) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -45,12 +46,22 @@ const AMALAN_FIELD = { pagi: 'dzikirPagi', petang: 'dzikirPetang' };
 export async function markDzikirDone(uid, categoryId) {
   const ref = doc(db, 'users', uid);
   const snap = await getDoc(ref);
-  const streaks = (snap.exists() && snap.data().dzikirStreak) || {};
+  const userData = snap.exists() ? snap.data() : {};
+  const streaks = userData.dzikirStreak || {};
   const s = streaks[categoryId] || { lastDate: null, current: 0, best: 0 };
   const today = todayKey();
   if (s.lastDate === today) return;
 
-  const current = s.lastDate === yesterdayKey() ? s.current + 1 : 1;
+  let current;
+  if (s.lastDate === yesterdayKey()) {
+    current = s.current + 1;
+  } else if (s.lastDate && daysBetween(s.lastDate, today) === 2 && (await tryConsumeStreakFreeze(uid, userData))) {
+    // Missed exactly one day, and this month's freeze hasn't been used
+    // yet — the gap is covered, streak continues instead of resetting.
+    current = s.current + 1;
+  } else {
+    current = 1;
+  }
   const best = Math.max(s.best || 0, current);
   await setDoc(ref, { dzikirStreak: { ...streaks, [categoryId]: { lastDate: today, current, best } } }, { merge: true });
 
