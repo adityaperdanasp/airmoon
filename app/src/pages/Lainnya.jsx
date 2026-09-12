@@ -64,6 +64,7 @@ const SECTIONS = [
       { to: '/lainnya/ringkasan-ibadah', label: 'Ringkasan Ibadah', bg: 'var(--peach)', node: <StatsIcon size={30} />, prefetch: () => import('./RingkasanIbadah') },
       { to: '/lainnya/kalender-ibadah', label: 'Kalender Ibadah', bg: 'var(--cream)', node: <AmalanCalendarIcon size={30} />, prefetch: () => import('./KalenderIbadah') },
       { to: '/lainnya/grup-ibadah', label: 'Grup Ibadah', bg: 'var(--blue-gray)', node: <GroupIcon size={30} />, prefetch: () => import('./GrupIbadah') },
+      { to: '/lainnya/doa-bersama', label: 'Doa Bersama', bg: 'var(--cream)', node: <CuppedHandsIcon size={30} />, prefetch: () => import('./DoaBersama') },
     ],
   },
   {
@@ -78,6 +79,7 @@ const SECTIONS = [
     title: 'Alat Hitung',
     items: [
       { to: '/lainnya/kalkulator-zakat', key: 'item_kalkulator_zakat', bg: 'var(--peach)', node: <CalculatorIcon size={30} />, prefetch: () => import('./KalkulatorZakat') },
+      { to: '/lainnya/zakat-korporat', key: 'item_zakat_korporat', bg: 'var(--mint)', node: <CalculatorIcon size={30} />, prefetch: () => import('./ZakatKorporat') },
       { to: '/lainnya/kalkulator-waris', label: 'Kalkulator Waris', bg: 'var(--blue-gray)', node: <InheritanceScaleIcon size={30} />, prefetch: () => import('./KalkulatorWaris') },
       { to: '/lainnya/kalender-hijriah', key: 'item_kalender_hijriah', bg: 'var(--cream)', node: <HijriCalendarIcon size={30} />, prefetch: () => import('./KalenderHijriah') },
     ],
@@ -99,6 +101,7 @@ const SECTIONS = [
       { to: '/yang-baru', label: 'Yang Baru', bg: 'var(--peach)', node: <WhatsNewIcon size={30} />, prefetch: () => import('./Changelog') },
       { to: '/lainnya/usulan-fitur', label: 'Usulkan Fitur', bg: 'var(--mint)', node: <LightbulbIcon size={30} />, prefetch: () => import('./UsulanFitur') },
       { to: '/lainnya/bantuan', label: 'Bantuan', bg: 'var(--blue-gray)', node: <HelpIcon size={30} />, prefetch: () => import('./Bantuan') },
+      { to: '/lainnya/relawan', label: 'Jadi Relawan', bg: 'var(--peach)', node: <CuppedHandsIcon size={30} />, prefetch: () => import('./Relawan') },
     ],
   },
 ];

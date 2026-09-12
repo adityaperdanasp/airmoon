@@ -59,6 +59,9 @@ const Bantuan = lazy(() => import('./pages/Bantuan'));
 const AjukanMasjid = lazy(() => import('./pages/AjukanMasjid'));
 const GrupIbadah = lazy(() => import('./pages/GrupIbadah'));
 const DampakAirmoon = lazy(() => import('./pages/DampakAirmoon'));
+const ZakatKorporat = lazy(() => import('./pages/ZakatKorporat'));
+const Relawan = lazy(() => import('./pages/Relawan'));
+const DoaBersama = lazy(() => import('./pages/DoaBersama'));
 
 function P({ children }) {
   return <ProtectedRoute>{children}</ProtectedRoute>;
@@ -173,6 +176,9 @@ export default function App() {
         <Route path="/lainnya/bantuan" element={<P><Bantuan /></P>} />
         <Route path="/lainnya/ajukan-masjid" element={<P><AjukanMasjid /></P>} />
         <Route path="/lainnya/grup-ibadah" element={<P><GrupIbadah /></P>} />
+        <Route path="/lainnya/zakat-korporat" element={<P><ZakatKorporat /></P>} />
+        <Route path="/lainnya/relawan" element={<P><Relawan /></P>} />
+        <Route path="/lainnya/doa-bersama" element={<P><DoaBersama /></P>} />
       </Routes>
     </Suspense>
     </>

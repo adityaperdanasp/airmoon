@@ -23,6 +23,7 @@ export async function submitCampaignRequest(uid, data) {
     waContact: data.waContact || '',
     targetAmount: Number(data.targetAmount) || 0,
     deskripsi: data.deskripsi || '',
+    referralMasjidCredited: false, // see check-campaign-deadlines.js's checkMasjidAdminReferrals
     createdAt: serverTimestamp(),
   });
 }
@@ -59,6 +60,36 @@ export async function submitSupportRequest(uid, data) {
     subject: data.subject || '',
     message: data.message,
     contact: data.contact || '',
+    createdAt: serverTimestamp(),
+  });
+}
+
+// Pendaftaran Relawan — see pages/Relawan.jsx. Same write-and-forget
+// shape as the other lead forms: no volunteer-coordination system exists
+// yet, so this just captures who's interested and how to reach them for
+// the founder to follow up on manually.
+export async function submitVolunteerLead(uid, data) {
+  await addDoc(collection(db, 'volunteerLeads'), {
+    uid,
+    name: data.name || '',
+    phone: data.phone,
+    city: data.city || '',
+    interest: data.interest || '',
+    createdAt: serverTimestamp(),
+  });
+}
+
+// Konsultasi Zakat Korporat — see pages/ZakatKorporat.jsx. B2B lead-gen:
+// the estimate on that page is self-service, but real corporate zakat
+// needs an actual conversation, so this just captures interest for the
+// founder to follow up on directly (no automated consultant flow exists).
+export async function submitCorporateZakatLead(uid, data) {
+  await addDoc(collection(db, 'corporateZakatLeads'), {
+    uid,
+    companyName: data.companyName,
+    contact: data.contact,
+    estimatedZakat: Number(data.estimatedZakat) || 0,
+    notes: data.notes || '',
     createdAt: serverTimestamp(),
   });
 }

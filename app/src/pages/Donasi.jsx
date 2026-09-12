@@ -316,6 +316,7 @@ export default function Donasi() {
   const [receiptFor, setReceiptFor] = useState(null); // the contribution being shared as a receipt image, or null
   const [campaignFilter, setCampaignFilter] = useState('semua');
   const [monthFilter, setMonthFilter] = useState('semua');
+  const [lokasiFilter, setLokasiFilter] = useState('semua');
 
   useEffect(() => watchActiveDonations(setDonations), []);
 
@@ -350,6 +351,36 @@ export default function Donasi() {
     }
     return true;
   });
+
+  // Ekspor Laporan Donasi Tahunan (2026-09-12) — plain client-side CSV
+  // from data Donasi.jsx already has live via watchMyContributions, no
+  // new backend endpoint needed. Grouped by year since that's the unit
+  // people actually need this for (pencatatan zakat pribadi/pajak).
+  const contributionYears = [...new Set(myContributions.filter((c) => c.createdAt).map((c) => c.createdAt.toDate().getFullYear()))].sort().reverse();
+
+  function exportAnnualReport(year) {
+    const rows = myContributions
+      .filter((c) => c.createdAt && c.createdAt.toDate().getFullYear() === year)
+      .sort((a, b) => a.createdAt.toDate() - b.createdAt.toDate());
+    const header = 'Tanggal,Campaign,Jumlah (Rp)';
+    const lines = rows.map((c) => {
+      const d = c.createdAt.toDate();
+      const tanggal = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+      const campaign = (c.donationTitle || '-').replace(/"/g, "'");
+      return `${tanggal},"${campaign}",${c.amount}`;
+    });
+    const total = rows.reduce((sum, c) => sum + c.amount, 0);
+    const csv = [header, ...lines, `,Total,${total}`].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `laporan-donasi-airmoon-${year}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
 
   // Both donations and myContributions are already `onSnapshot`-live —
   // nothing to actually re-fetch, so this just resolves after a short
@@ -396,13 +427,34 @@ export default function Donasi() {
           <EmptyState icon="🕌" title="Belum ada campaign aktif" subtitle="Campaign donasi listrik masjid baru bakal muncul di sini begitu ada yang disetujui." />
         )}
 
-        {donations && donations.length > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {donations.map((donation) => (
-              <DonationCard key={donation.id} donation={donation} />
-            ))}
-          </div>
-        )}
+        {donations && donations.length > 0 && (() => {
+          const lokasiOptions = [...new Set(donations.map((d) => d.lokasi).filter(Boolean))];
+          const visibleDonations = lokasiFilter === 'semua' ? donations : donations.filter((d) => d.lokasi === lokasiFilter);
+          return (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {lokasiOptions.length > 1 && (
+                <select
+                  value={lokasiFilter}
+                  onChange={(e) => setLokasiFilter(e.target.value)}
+                  aria-label="Filter berdasarkan lokasi"
+                  style={{ padding: '8px 10px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--ink)', fontSize: 11.5 }}
+                >
+                  <option value="semua">Semua Lokasi</option>
+                  {lokasiOptions.map((lok) => (
+                    <option key={lok} value={lok}>{lok}</option>
+                  ))}
+                </select>
+              )}
+              {visibleDonations.length === 0 ? (
+                <p className="state-msg">Gak ada campaign aktif di lokasi ini.</p>
+              ) : (
+                visibleDonations.map((donation) => (
+                  <DonationCard key={donation.id} donation={donation} />
+                ))
+              )}
+            </div>
+          );
+        })()}
 
         {user && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -414,6 +466,21 @@ export default function Donasi() {
                 </span>
               )}
             </div>
+
+            {contributionYears.length > 0 && (
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {contributionYears.map((year) => (
+                  <button
+                    key={year}
+                    onClick={() => exportAnnualReport(year)}
+                    className="btn-outline"
+                    style={{ width: 'auto', padding: '6px 12px', fontSize: 11.5 }}
+                  >
+                    ⬇ Ekspor Laporan {year}
+                  </button>
+                ))}
+              </div>
+            )}
 
             {myContributions.length === 0 ? (
               <EmptyState icon="💝" title="Belum ada riwayat sedekah" subtitle="Yuk mulai sedekah hari ini, sekecil apapun — pilih salah satu campaign di atas." />
