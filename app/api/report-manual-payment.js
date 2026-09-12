@@ -54,7 +54,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { donationId, amount, method, uid, name, email, type } = req.body || {};
+  const { donationId, amount, method, uid, name, email, type, giftRecipientEmail } = req.body || {};
   const isSupporter = type === 'supporter';
   const amountNum = Number(amount);
   if ((!isSupporter && !donationId) || !Number.isFinite(amountNum) || amountNum <= 0 || !['gopay', 'mandiri'].includes(method)) {
@@ -87,14 +87,16 @@ export default async function handler(req, res) {
       uid,
       name: name || null,
       email: email || null,
+      giftRecipientEmail: isSupporter && giftRecipientEmail ? String(giftRecipientEmail).trim().toLowerCase() : null,
       status: 'pending',
       confirmSecret,
       createdAt: FieldValue.serverTimestamp(),
     });
 
     const confirmUrl = `https://airmoon.vercel.app/api/confirm-manual-payment?id=${ref.id}&secret=${confirmSecret}`;
+    const giftLine = isSupporter && giftRecipientEmail ? `\n🎁 Hadiah buat: ${giftRecipientEmail}` : '';
     await sendTelegramMessage(
-      `🔔 Ada laporan transfer manual\n\n${isSupporter ? 'Jenis: Sahabat airmoon (supporter)' : `Campaign: ${donationTitle}`}\nJumlah: Rp ${amountNum.toLocaleString('id-ID')}\nVia: ${method === 'gopay' ? 'GoPay' : 'Mandiri'}\nDari: ${name || email || uid}\n\nCek dulu rekening/GoPay lo — kalau uangnya beneran udah masuk, baru tap link ini buat konfirmasi:\n${confirmUrl}`
+      `🔔 Ada laporan transfer manual\n\n${isSupporter ? 'Jenis: Sahabat airmoon (supporter)' : `Campaign: ${donationTitle}`}\nJumlah: Rp ${amountNum.toLocaleString('id-ID')}\nVia: ${method === 'gopay' ? 'GoPay' : 'Mandiri'}\nDari: ${name || email || uid}${giftLine}\n\nCek dulu rekening/GoPay lo — kalau uangnya beneran udah masuk, baru tap link ini buat konfirmasi:\n${confirmUrl}`
     );
 
     return res.status(200).json({ ok: true, id: ref.id });

@@ -102,7 +102,11 @@ export async function reportManualPayment(donation, amount, method, user) {
 // one-time purchase, not a subscription — see lib/donations.js's own
 // monthlyPledge note on why real recurring billing needs Midtrans's
 // separate Subscription API, which isn't wired up.
-export async function reportSupporterPayment(amount, method, user) {
+// `giftRecipientEmail` (2026-09-12) — when set, confirm-manual-payment.js
+// resolves that email to a uid and grants Sahabat airmoon to THEM instead
+// of the person paying. Optional so the exact same function still covers
+// the plain "for myself" purchase.
+export async function reportSupporterPayment(amount, method, user, giftRecipientEmail) {
   const res = await fetch('https://airmoon.vercel.app/api/report-manual-payment', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -113,6 +117,7 @@ export async function reportSupporterPayment(amount, method, user) {
       uid: user?.uid || null,
       name: user?.displayName || undefined,
       email: user?.email || undefined,
+      giftRecipientEmail: giftRecipientEmail || undefined,
     }),
   });
   const data = await res.json();

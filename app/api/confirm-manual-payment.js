@@ -26,6 +26,27 @@ function initAdmin() {
   initializeApp({ credential: cert(serviceAccount) });
 }
 
+// Hadiahkan Sahabat airmoon (2026-09-12) — resolves a gift recipient's
+// email to their uid via the Identity Toolkit REST API using the service
+// account's own OAuth access token (from the admin app's credential we
+// already initialize above), deliberately NOT `firebase-admin/auth`'s
+// getUserByEmail(): that import pulls in jwks-rsa → the ESM-only `jose`
+// package and crashed a different Vercel function in production with
+// ERR_REQUIRE_ESM (see send-prayer-notifications.js's own note on the
+// same issue) — this stays a plain fetch, no new import.
+async function resolveUidByEmail(email) {
+  const { credential } = getApps()[0].options;
+  const { access_token: accessToken } = await credential.getAccessToken();
+  const res = await fetch('https://identitytoolkit.googleapis.com/v1/accounts:lookup', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+    body: JSON.stringify({ email: [email] }),
+  });
+  if (!res.ok) return null;
+  const data = await res.json();
+  return data.users?.[0]?.localId || null;
+}
+
 function page(title, body) {
   return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${title}</title>
@@ -60,15 +81,27 @@ export default async function handler(req, res) {
 
     const isSupporter = report.type === 'supporter';
 
+    let giftRecipientNotFound = false;
     if (isSupporter) {
       // No `collected` to credit and no campaign to check "funded" against
-      // — this just flips a status flag on the payer's own profile.
+      // — this just flips a status flag on the payer's own profile (or,
+      // for a gifted purchase, the recipient's).
       // `supporterSince` only set the first time, so a repeat "Dukung
       // lagi" purchase later doesn't reset how long they've been one.
-      const userRef = db.collection('users').doc(report.uid);
+      let recipientUid = report.uid;
+      if (report.giftRecipientEmail) {
+        const resolved = await resolveUidByEmail(report.giftRecipientEmail);
+        if (resolved) {
+          recipientUid = resolved;
+        } else {
+          giftRecipientNotFound = true; // fall back to crediting the gifter, flagged in the response page below
+        }
+      }
+      const userRef = db.collection('users').doc(recipientUid);
       const userSnap = await userRef.get();
       const update = { isSupporter: true };
       if (!userSnap.data()?.supporterSince) update.supporterSince = FieldValue.serverTimestamp();
+      if (report.giftRecipientEmail && recipientUid !== report.uid) update.supporterGiftedBy = report.uid;
       await userRef.set(update, { merge: true });
     } else {
       await db.collection('donations').doc(report.donationId).set(
@@ -111,7 +144,14 @@ export default async function handler(req, res) {
 
     return res.status(200).send(
       isSupporter
-        ? page('Terima kasih ✅', `Kamu resmi jadi Sahabat airmoon. Rp ${report.amount.toLocaleString('id-ID')} sudah dikonfirmasi — jazakallahu khairan!`)
+        ? page(
+            'Terima kasih ✅',
+            giftRecipientNotFound
+              ? `Rp ${report.amount.toLocaleString('id-ID')} sudah dikonfirmasi, TAPI email hadiah "${report.giftRecipientEmail}" gak ketemu akunnya — status Sahabat airmoon dikasih ke akun si pengirim dulu, cek manual ya.`
+              : report.giftRecipientEmail
+              ? `Hadiah Sahabat airmoon buat ${report.giftRecipientEmail} udah aktif. Rp ${report.amount.toLocaleString('id-ID')} sudah dikonfirmasi — jazakallahu khairan!`
+              : `Kamu resmi jadi Sahabat airmoon. Rp ${report.amount.toLocaleString('id-ID')} sudah dikonfirmasi — jazakallahu khairan!`
+          )
         : page('Dikonfirmasi ✅', `Rp ${report.amount.toLocaleString('id-ID')} untuk "${report.donationTitle}" sudah ditambahkan ke angka terkumpul.`)
     );
   } catch (err) {
