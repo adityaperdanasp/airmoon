@@ -28,6 +28,7 @@ import {
   AmalanCalendarIcon,
   LightbulbIcon,
   HelpIcon,
+  GroupIcon,
 } from '../components/serviceIcons';
 
 // All hand-drawn gradient icons (see serviceIcons.jsx) — this grid used
@@ -62,6 +63,7 @@ const SECTIONS = [
     items: [
       { to: '/lainnya/ringkasan-ibadah', label: 'Ringkasan Ibadah', bg: 'var(--peach)', node: <StatsIcon size={30} />, prefetch: () => import('./RingkasanIbadah') },
       { to: '/lainnya/kalender-ibadah', label: 'Kalender Ibadah', bg: 'var(--cream)', node: <AmalanCalendarIcon size={30} />, prefetch: () => import('./KalenderIbadah') },
+      { to: '/lainnya/grup-ibadah', label: 'Grup Ibadah', bg: 'var(--blue-gray)', node: <GroupIcon size={30} />, prefetch: () => import('./GrupIbadah') },
     ],
   },
   {

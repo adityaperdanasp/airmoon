@@ -846,6 +846,29 @@ export function LightbulbIcon({ size = 42 }) {
   );
 }
 
+// Grup Ibadah (2026-09-12) — two overlapping figures, same gradient pair.
+export function GroupIcon({ size = 42 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 42 42" fill="none">
+      <defs>
+        <linearGradient id="groupBodyG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#2fa190" />
+          <stop offset="1" stopColor="#0a4a43" />
+        </linearGradient>
+        <linearGradient id="groupGoldG" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor="#fff2cf" />
+          <stop offset="0.55" stopColor="#f0c04d" />
+          <stop offset="1" stopColor="#c98f22" />
+        </linearGradient>
+      </defs>
+      <circle cx="16" cy="16" r="5.5" fill="url(#groupBodyG)" />
+      <path d="M7 32 c0 -6.5 4 -10.5 9 -10.5 s9 4 9 10.5 Z" fill="url(#groupBodyG)" />
+      <circle cx="27" cy="14" r="4.5" fill="url(#groupGoldG)" />
+      <path d="M20 31 c0.6 -5.6 4 -9 8 -9 s7.5 3.6 7.5 9.5 Z" fill="url(#groupGoldG)" opacity="0.9" />
+    </svg>
+  );
+}
+
 // Bantuan (2026-09-12) — a question mark badge.
 export function HelpIcon({ size = 42 }) {
   return (
