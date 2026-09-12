@@ -179,6 +179,7 @@ export function routeForTag(tag = '') {
   if (tag.startsWith('sholat-belum-')) return '/?focus=amalan';
   if (tag === 'rekap-mingguan') return '/lainnya/ringkasan-ibadah';
   if (tag === 'maulid-nabi' || tag === 'tahun-baru-hijriah' || tag === 'idul-adha') return '/lainnya/kalender-hijriah';
+  if (tag === 'supporter-anniversary') return '/pengaturan';
   return '/jadwal-sholat'; // adzan-* and any unrecognized tag
 }
 
@@ -192,7 +193,7 @@ export function routeForTag(tag = '') {
 export function categoryForTag(tag = '') {
   if (tag.startsWith('doa-')) return 'komunitas';
   if (tag.startsWith('campaign-funded-')) return 'donasi';
-  if (tag === 'pledge-reminder' || tag === 'sedekah-recap') return 'donasi';
+  if (tag === 'pledge-reminder' || tag === 'sedekah-recap' || tag === 'supporter-anniversary') return 'donasi';
   if (tag === 'kutipan-harian' || tag === 'rekap-mingguan') return 'konten';
   if (tag === 'imsak' || tag.startsWith('adzan-')) return 'adzan';
   if (tag === 'test-notification') return 'lainnya';

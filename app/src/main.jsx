@@ -8,12 +8,14 @@ import { ThemeProvider } from './context/ThemeContext';
 import { LangProvider } from './context/LangContext';
 import { ToastProvider } from './context/ToastContext';
 import { initRemoteConfig } from './lib/remoteConfig';
+import { initErrorLog } from './lib/errorLog';
 
 // [PM 2026-09-12] Fired once at boot, not awaited — a cheap flag-fetch
 // shouldn't gate the app's first paint. Feature checks that read it
 // later (isSupporterCrossSellEnabled/isNpsPromptEnabled) just fall back
 // to the safe defaultConfig in lib/remoteConfig.js until this resolves.
 initRemoteConfig();
+initErrorLog();
 
 // Registered unconditionally now (not just when someone opts into prayer
 // notifications, see lib/notifications.js) so its offline-caching fetch

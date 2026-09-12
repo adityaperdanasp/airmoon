@@ -424,6 +424,7 @@ export default function Pengaturan() {
   const [importing, setImporting] = useState(false);
   const [pendingImportFile, setPendingImportFile] = useState(null); // File awaiting confirmation, or null
   const [referralCount, setReferralCount] = useState(0);
+  const [referralActivatedCount, setReferralActivatedCount] = useState(0);
   const [referralRewardReceived, setReferralRewardReceived] = useState(false);
   const [isSupporter, setIsSupporter] = useState(false);
   const [emailOptIn, setEmailOptInState] = useState(true);
@@ -432,6 +433,7 @@ export default function Pengaturan() {
 
   useEffect(() => watchUserProfile(user?.uid, (p) => {
     setReferralCount(p?.referralCount || 0);
+    setReferralActivatedCount(p?.referralActivatedCount || 0);
     setReferralRewardReceived(p?.referralRewardReceived || false);
     setIsSupporter(p?.isSupporter || false);
     setInterestTagState(p?.interestTag || null);
@@ -669,7 +671,11 @@ export default function Pengaturan() {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 1, minWidth: 0 }}>
                 <span style={{ fontSize: 13, fontWeight: 700 }}>Ajak Teman Pakai airmoon</span>
-                <span style={{ fontSize: 10.5, color: 'var(--muted)' }}>Dapetin warna aksen Rose Gold tiap ada yang daftar{referralCount > 0 ? ` · ${referralCount} orang udah gabung` : ''}</span>
+                <span style={{ fontSize: 10.5, color: 'var(--muted)' }}>
+                  Dapetin warna aksen Rose Gold tiap ada yang daftar
+                  {referralCount > 0 ? ` · ${referralCount} orang udah gabung` : ''}
+                  {referralActivatedCount > 0 ? ` (${referralActivatedCount} aktif pakai)` : ''}
+                </span>
               </div>
             </div>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" style={{ flexShrink: 0 }}><path d="m9 6 6 6-6 6" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
@@ -677,11 +683,12 @@ export default function Pengaturan() {
 
           {referralLeaderboard.length > 0 && (
             <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: 16 }}>
-              <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--muted)' }}>🏆 Top Pengajak Minggu Ini</span>
+              <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--muted)' }}>🏆 Top Pengajak</span>
+              <span style={{ fontSize: 10, color: 'var(--muted-soft)' }}>Diurutkan dari yang temannya beneran aktif pakai airmoon, bukan cuma daftar</span>
               {referralLeaderboard.slice(0, 5).map((row, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                   <span style={{ fontSize: 12.5, fontWeight: 700 }}>{i + 1}. {row.name}</span>
-                  <span style={{ fontSize: 11.5, color: 'var(--muted)' }}>{row.count} orang</span>
+                  <span style={{ fontSize: 11.5, color: 'var(--muted)' }}>{row.count} orang aktif</span>
                 </div>
               ))}
             </div>
@@ -740,6 +747,28 @@ export default function Pengaturan() {
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink)"><circle cx="12" cy="12" r="9" strokeWidth="1.6" /><path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2 1.8-2 3.3M12 16.5v.01" strokeWidth="1.8" strokeLinecap="round" /></svg>
               </div>
               <span style={{ fontSize: 13, fontWeight: 700 }}>Bantuan</span>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)"><path d="m9 6 6 6-6 6" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+          </Link>
+
+          <Link
+            to="/dampak"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '14px 16px',
+              borderRadius: 18,
+              border: '1px solid var(--border)',
+              textDecoration: 'none',
+              color: 'inherit',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: 'var(--peach)' }}>
+                <span style={{ fontSize: 16 }}>🌍</span>
+              </div>
+              <span style={{ fontSize: 13, fontWeight: 700 }}>Dampak airmoon</span>
             </div>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)"><path d="m9 6 6 6-6 6" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
           </Link>

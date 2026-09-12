@@ -648,6 +648,30 @@ async function checkWeeklyRecapPush(db) {
       if (reading > 0) parts.push(`streak baca ${reading} hari`);
       if (dzikirPagi > 0 || dzikirPetang > 0) parts.push(`streak dzikir ${Math.max(dzikirPagi, dzikirPetang)} hari`);
       if (sedekah > 0) parts.push(`sedekah Rp ${sedekah.toLocaleString('id-ID')}`);
+
+      // [PM 2026-09-12] Grup Ibadah mention — only queried for users who
+      // already have something to report (the continue above already
+      // filtered those out), and only the first group someone's in
+      // (`limit(1)`) — a reasonable bound given Grup Ibadah's own
+      // deliberately-small MVP scope, most members are in 0 or 1 group.
+      // Best-effort: a failed lookup here shouldn't block the personal
+      // recap itself, which is already worth sending regardless.
+      try {
+        const groupSnap = await db.collection('groups').where('memberUids', 'array-contains', docSnap.id).limit(1).get();
+        if (!groupSnap.empty) {
+          const group = groupSnap.docs[0];
+          const statsSnap = await group.ref.collection('memberStats').get();
+          let groupTotal = 0;
+          statsSnap.forEach((s) => {
+            const d = s.data();
+            groupTotal += (d.dzikirPagiStreak || 0) + (d.dzikirPetangStreak || 0) + (d.readingStreak || 0);
+          });
+          if (groupTotal > 0) parts.push(`grup "${group.data().name}" total streak gabungan ${groupTotal} hari`);
+        }
+      } catch {
+        // Best-effort — the personal recap below still sends without this line.
+      }
+
       const body = `Minggu ini: ${parts.join(', ')}. Alhamdulillah, terus lanjutkan!`;
 
       const result = await messaging.sendEachForMulticast({
@@ -737,11 +761,135 @@ async function checkSeasonalReminders(db) {
 // why this is a small public snapshot doc rather than a live client
 // query over `users` (owner-read-only, and would over-expose referral
 // counts even if it weren't). Only names + counts, no uid/email.
+//
+// Ranked by referralActivatedCount, not the raw referralCount
+// (2026-09-12) — a referral who signed up and never came back again
+// isn't the same growth signal as one who's actually using the app (see
+// checkReferralActivationSignal above). Someone with a lot of raw
+// signups but few activations would otherwise outrank someone whose
+// referrals genuinely stuck.
 async function checkReferralLeaderboard(db) {
-  const snap = await db.collection('users').where('referralCount', '>', 0).orderBy('referralCount', 'desc').limit(10).get();
-  const top = snap.docs.map((d) => ({ name: d.data().displayName || 'Sahabat airmoon', count: d.data().referralCount }));
+  const snap = await db.collection('users').where('referralActivatedCount', '>', 0).orderBy('referralActivatedCount', 'desc').limit(10).get();
+  const top = snap.docs.map((d) => ({ name: d.data().displayName || 'Sahabat airmoon', count: d.data().referralActivatedCount }));
   await db.collection('leaderboards').doc('referral').set({ top, updatedAt: FieldValue.serverTimestamp() });
   return { count: top.length };
+}
+
+// Sahabat airmoon anniversary nudge (2026-09-12) — distinct from the
+// existing monthly Pengingat Donasi Bulanan: that one asks for a fresh
+// donation on a recurring schedule, this recognizes a real one-time
+// milestone (Sahabat airmoon is a one-time purchase, not a subscription
+// — see SupporterCard.jsx's own honesty note) and asks whether they'd
+// like to support again. `yearsSince` generalizes to any anniversary
+// (1st, 2nd, ...), not just the first, via `lastSupporterAnniversaryYear`
+// tracking which milestone was already sent.
+async function checkSupporterAnniversary(db) {
+  const messaging = getMessaging();
+  const snap = await db.collection('users').where('isSupporter', '==', true).get();
+  const notified = [];
+  const errors = [];
+  const now = Date.now();
+
+  for (const docSnap of snap.docs) {
+    try {
+      const u = docSnap.data();
+      const tokens = u.fcmTokens || [];
+      const supporterSince = u.supporterSince?.toMillis ? u.supporterSince.toMillis() : null;
+      if (!tokens.length || !supporterSince || u.notifPrefs?.donasi === false) continue;
+
+      const daysSince = Math.floor((now - supporterSince) / (24 * 60 * 60 * 1000));
+      const yearsSince = Math.floor(daysSince / 365);
+      if (yearsSince < 1 || u.lastSupporterAnniversaryYear === yearsSince) continue;
+
+      const result = await messaging.sendEachForMulticast({
+        tokens,
+        data: {
+          tag: 'supporter-anniversary',
+          title: '🌹 Terima Kasih, Sahabat airmoon',
+          body: `Udah ${yearsSince} tahun kamu jadi Sahabat airmoon — mau lanjut dukung lagi?`,
+        },
+      });
+
+      await docSnap.ref.update({ lastSupporterAnniversaryYear: yearsSince });
+
+      const deadTokens = result.responses.map((r, i) => (!r.success ? tokens[i] : null)).filter(Boolean);
+      if (deadTokens.length) {
+        await docSnap.ref.update({ fcmTokens: FieldValue.arrayRemove(...deadTokens) });
+      }
+
+      notified.push({ uid: docSnap.id, successCount: result.successCount });
+    } catch (err) {
+      errors.push({ uid: docSnap.id, error: err.message });
+    }
+  }
+
+  return { notified, errors };
+}
+
+// Referral quality signal (2026-09-12) — raw signup counts (referralCount,
+// credited by checkReferralRewards above) don't distinguish "someone
+// clicked a link and made an account" from "someone actually started
+// using the app". `activatedAt` (lib/amalanHarian.js's activation
+// metric — 2 distinct days opened) is the same bar this app already uses
+// elsewhere for that; this just credits it to the REFERRER as a second,
+// more meaningful count once it's set. `referralActivationCounted` on
+// the REFEREE's own doc is what makes this idempotent — checked instead
+// of re-deriving from referralActivatedCount (which lives on a different
+// document entirely).
+async function checkReferralActivationSignal(db) {
+  const snap = await db.collection('users')
+    .where('referralActivationCounted', '==', false)
+    .get();
+  const counted = [];
+  const errors = [];
+
+  for (const docSnap of snap.docs) {
+    try {
+      const u = docSnap.data();
+      if (!u.referredBy || !u.activatedAt) continue;
+      const referrerRef = db.collection('users').doc(u.referredBy);
+      const referrerSnap = await referrerRef.get();
+      if (referrerSnap.exists) {
+        await referrerRef.set({ referralActivatedCount: FieldValue.increment(1) }, { merge: true });
+      }
+      await docSnap.ref.set({ referralActivationCounted: true }, { merge: true });
+      counted.push({ referee: docSnap.id, referrer: u.referredBy });
+    } catch (err) {
+      errors.push({ uid: docSnap.id, error: err.message });
+    }
+  }
+
+  return { counted, errors };
+}
+
+// Dampak airmoon public stats (2026-09-12) — see pages/DampakAirmoon.jsx.
+// A daily-computed public snapshot, same reasoning as the referral
+// leaderboard above: `donations` is already public-read so the sedekah/
+// campaign totals could in principle be summed client-side, but
+// `users` is owner-read-only, so a real user COUNT has no client-side
+// path at all without this. One combined doc avoids 3 separate public
+// collections for what's really one "impact" concept.
+async function checkPublicImpactStats(db) {
+  const [donationsSnap, usersCountSnap] = await Promise.all([
+    db.collection('donations').get(),
+    db.collection('users').count().get(),
+  ]);
+
+  let totalSedekah = 0;
+  let totalMasjid = 0;
+  donationsSnap.forEach((d) => {
+    totalSedekah += d.data().collected || 0;
+    totalMasjid += 1;
+  });
+
+  await db.collection('publicStats').doc('impact').set({
+    totalSedekah,
+    totalMasjid,
+    totalUsers: usersCountSnap.data().count,
+    updatedAt: FieldValue.serverTimestamp(),
+  });
+
+  return { totalSedekah, totalMasjid, totalUsers: usersCountSnap.data().count };
 }
 
 function initAdmin() {
@@ -809,6 +957,9 @@ export default async function handler(req, res) {
     const weeklyRecapResult = await checkWeeklyRecapPush(db);
     const seasonalResult = await checkSeasonalReminders(db);
     const referralLeaderboardResult = await checkReferralLeaderboard(db);
+    const supporterAnniversaryResult = await checkSupporterAnniversary(db);
+    const referralActivationResult = await checkReferralActivationSignal(db);
+    const publicImpactResult = await checkPublicImpactStats(db);
 
     return res.status(200).json({
       checked: snap.size,
@@ -826,6 +977,9 @@ export default async function handler(req, res) {
       weeklyRecap: weeklyRecapResult,
       seasonalReminder: seasonalResult,
       referralLeaderboard: referralLeaderboardResult,
+      supporterAnniversary: supporterAnniversaryResult,
+      referralActivation: referralActivationResult,
+      publicImpact: publicImpactResult,
     });
   } catch (err) {
     console.error('check-campaign-deadlines error:', err);

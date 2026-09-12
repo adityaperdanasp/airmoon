@@ -138,6 +138,7 @@ self.addEventListener('notificationclick', (event) => {
   else if (tag.startsWith('sholat-belum-')) url = '/?focus=amalan';
   else if (tag === 'rekap-mingguan') url = '/lainnya/ringkasan-ibadah';
   else if (tag === 'maulid-nabi' || tag === 'tahun-baru-hijriah' || tag === 'idul-adha') url = '/lainnya/kalender-hijriah';
+  else if (tag === 'supporter-anniversary') url = '/pengaturan';
   event.waitUntil(clients.openWindow(url));
 });
 

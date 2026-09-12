@@ -63,13 +63,19 @@ export async function recordReferralIfPending(uid) {
   // `referralRewardReceived` is the referee's own cosmetic unlock (see
   // lib/accentColor.js's Rose Gold option) — a plain self-write, safe to
   // set immediately rather than waiting on the daily cron below, since it
-  // doesn't touch anyone else's document. `referralRewarded: false` is
-  // what that cron actually watches for, to credit the REFERRER's
-  // referralCount — that part genuinely can't happen from this session
-  // (firestore.rules only allows a user to write their own doc).
+  // doesn't touch anyone else's document. `referralRewarded` and
+  // `referralActivationCounted` are both explicit `false` (not left
+  // undefined) so the cron's own `where(..., '==', false)` queries can
+  // match cleanly instead of needing a "field doesn't exist" trick —
+  // the first credits the referrer's raw referralCount once this signup
+  // has landed, the second later credits referralActivatedCount once
+  // this same account's own activatedAt gets set (see
+  // checkReferralActivationSignal in check-campaign-deadlines.js) — a
+  // real signal of "actually started using the app", not just "made an
+  // account".
   await setDoc(
     doc(db, 'users', uid),
-    { referredBy: refUid, referralRewarded: false, referralRewardReceived: true },
+    { referredBy: refUid, referralRewarded: false, referralRewardReceived: true, referralActivationCounted: false },
     { merge: true }
   );
 }

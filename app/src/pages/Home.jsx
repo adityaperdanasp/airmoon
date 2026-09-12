@@ -22,6 +22,7 @@ import { SkeletonCard } from '../components/Skeleton';
 import InstallAppCard from '../components/InstallAppCard';
 import EmptyState from '../components/EmptyState';
 import AmalanHarianCard from '../components/AmalanHarianCard';
+import MoodCheckIn from '../components/MoodCheckIn';
 import AmalanHeatmap from '../components/AmalanHeatmap';
 import CountUp from '../components/CountUp';
 import PullToRefresh from '../components/PullToRefresh';
@@ -35,7 +36,12 @@ import { markLoginPoint } from '../lib/amalanHarian';
 import FadeImage from '../components/FadeImage';
 import NPSPromptModal from '../components/NPSPromptModal';
 import { shouldShowNpsPrompt, markNpsPromptShown, dismissNpsPromptForever, submitNpsResponse } from '../lib/npsPrompt';
-import { isNpsPromptEnabled } from '../lib/remoteConfig';
+import { isNpsPromptEnabled, getHomeHeadlineVariant } from '../lib/remoteConfig';
+import { checkAndUpdateLastSeen } from '../lib/lastSeen';
+import { shouldShowChurnSurvey, markChurnSurveyShown, dismissChurnSurveyForever, submitChurnSurveyResponse } from '../lib/churnSurvey';
+import ChurnSurveyModal from '../components/ChurnSurveyModal';
+import { CHANGELOG } from '../data/changelog';
+import { shouldShowChangelogSpotlight, markChangelogSpotlightSeen } from '../lib/changelogSpotlight';
 
 const dateFmt = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
@@ -168,6 +174,39 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, [showOnboarding, user]);
 
+  // Last-seen tracking (2026-09-12) — computed once per mount, feeds both
+  // the "welcome back" banner (a lightweight, non-modal nudge, so it can
+  // coexist with the full-screen prompts above) and the churn survey
+  // below (a modal, so it DOES join the same one-prompt-per-visit
+  // priority chain: onboarding > rating > NPS > churn).
+  const [daysAway, setDaysAway] = useState(null);
+  const [showWelcomeBack, setShowWelcomeBack] = useState(false);
+  useEffect(() => {
+    const away = checkAndUpdateLastSeen();
+    setDaysAway(away);
+    if (away !== null && away >= 14) setShowWelcomeBack(true);
+  }, []);
+
+  // Spotlight fitur baru sesuai minat (2026-09-12) — checked once
+  // interestTag has actually loaded (starts null while watchUserProfile's
+  // first snapshot is in flight, same as everywhere else this field is
+  // read), against just the latest changelog entry.
+  const latestChangelogEntry = CHANGELOG[0];
+  const [showChangelogSpotlight, setShowChangelogSpotlight] = useState(false);
+  useEffect(() => {
+    if (!interestTag) return;
+    setShowChangelogSpotlight(shouldShowChangelogSpotlight(latestChangelogEntry, interestTag));
+  }, [interestTag]);
+
+  const [showChurnSurvey, setShowChurnSurvey] = useState(false);
+  useEffect(() => {
+    if (showOnboarding || !user || daysAway === null) return;
+    if (shouldShowRatingPrompt() || (isNpsPromptEnabled() && shouldShowNpsPrompt())) return;
+    if (!shouldShowChurnSurvey(daysAway)) return;
+    const timer = setTimeout(() => setShowChurnSurvey(true), 1200);
+    return () => clearTimeout(timer);
+  }, [showOnboarding, user, daysAway]);
+
   // Poin & Medali's daily login point — markLoginPoint() itself checks
   // whether today's point is already recorded before writing, so this
   // firing on every Home mount (not just once ever) is fine.
@@ -245,7 +284,17 @@ export default function Home() {
   }, [user]);
 
   const mySedekahTotal = myContributions.reduce((sum, c) => sum + c.amount, 0);
-  const headline = HEADLINES[todaysHeadlineIndex()][lang];
+  // [PM 2026-09-12] The first real Remote Config experiment actually
+  // wired end-to-end (lib/remoteConfig.js shipped last batch with no
+  // parameter ever set in the console) — 'personal_name' prepends the
+  // user's own name to the rotating headline instead of showing it bare.
+  // Uses only data Home already has (user.displayName), no new fetch.
+  // Toggle `home_headline_variant` between 'default'/'personal_name' in
+  // Firebase Console → Remote Config to actually run this.
+  const baseHeadline = HEADLINES[todaysHeadlineIndex()][lang];
+  const headline = getHomeHeadlineVariant() === 'personal_name' && user?.displayName
+    ? `${user.displayName.split(' ')[0]},\n${baseHeadline}`
+    : baseHeadline;
   // A different photo pool per theme (not the same photo just dimmed —
   // an explicit ask), one per day so it isn't the exact same picture
   // every single visit, same day-of-year approach as the headline above.
@@ -365,6 +414,37 @@ export default function Home() {
             {headline}
           </h1>
         </div>
+
+        {showWelcomeBack && (
+          <div className="card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '12px 14px', background: 'var(--mint-soft)' }}>
+            <span style={{ fontSize: 12, fontWeight: 700 }}>👋 Kangen nih! Yuk lanjutkan lagi kebiasaan ibadahmu.</span>
+            <button
+              onClick={() => setShowWelcomeBack(false)}
+              aria-label="Tutup"
+              style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: 16, cursor: 'pointer', padding: 0, lineHeight: 1, flexShrink: 0 }}
+            >
+              ×
+            </button>
+          </div>
+        )}
+
+        {showChangelogSpotlight && (
+          <Link
+            to="/yang-baru"
+            onClick={() => { markChangelogSpotlightSeen(latestChangelogEntry.version); setShowChangelogSpotlight(false); }}
+            className="card"
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '12px 14px', background: 'var(--cream)', textDecoration: 'none', color: 'inherit' }}
+          >
+            <span style={{ fontSize: 12, fontWeight: 700 }}>✨ Ada fitur baru yang cocok buat kamu: {latestChangelogEntry.title}</span>
+            <button
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); markChangelogSpotlightSeen(latestChangelogEntry.version); setShowChangelogSpotlight(false); }}
+              aria-label="Tutup"
+              style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: 16, cursor: 'pointer', padding: 0, lineHeight: 1, flexShrink: 0 }}
+            >
+              ×
+            </button>
+          </Link>
+        )}
 
         <Link to="/ask-me" className="input-row" style={{ borderRadius: 999, textDecoration: 'none' }}>
           <IconMoon width="16" height="16" style={{ color: 'var(--ink)' }} />
@@ -560,6 +640,8 @@ export default function Home() {
           </div>
         )}
 
+        {user && <MoodCheckIn uid={user.uid} />}
+
         {user && <AmalanHeatmap uid={user.uid} />}
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -641,6 +723,23 @@ export default function Home() {
           onNever={() => {
             dismissNpsPromptForever();
             setShowNpsPrompt(false);
+          }}
+        />
+      )}
+
+      {showChurnSurvey && (
+        <ChurnSurveyModal
+          onSubmit={(reason) => {
+            markChurnSurveyShown();
+            if (user) submitChurnSurveyResponse(user.uid, reason, daysAway);
+          }}
+          onLater={() => {
+            markChurnSurveyShown();
+            setShowChurnSurvey(false);
+          }}
+          onNever={() => {
+            dismissChurnSurveyForever();
+            setShowChurnSurvey(false);
           }}
         />
       )}

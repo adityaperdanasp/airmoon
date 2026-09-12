@@ -233,15 +233,25 @@ service cloud.firestore {
         && request.resource.data.name is string
         && request.resource.data.name.size() > 0
         && request.resource.data.name.size() <= 60;
-      // Joining: the only client-writable transition is "append exactly
-      // my own uid to memberUids, touch nothing else" — validated without
-      // requiring the joiner to have read access to the doc first (see
-      // groupInvites above).
-      allow update: if request.auth != null
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['memberUids'])
-        && request.resource.data.memberUids.size() == resource.data.memberUids.size() + 1
-        && request.resource.data.memberUids.hasAll(resource.data.memberUids)
-        && (request.auth.uid in request.resource.data.memberUids);
+      // Two independent client-writable transitions, nothing else: (1)
+      // joining — append exactly my own uid to memberUids, validated
+      // without requiring the joiner to have read access to the doc
+      // first (see groupInvites above); (2) the owner setting/clearing a
+      // weekly challenge target (2026-09-12) — no validation on the
+      // shape of `challenge` itself beyond "only the owner can touch it",
+      // same low-stakes trust level as everything else in this
+      // collection (no money involved).
+      allow update: if request.auth != null && (
+        (
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['memberUids'])
+          && request.resource.data.memberUids.size() == resource.data.memberUids.size() + 1
+          && request.resource.data.memberUids.hasAll(resource.data.memberUids)
+          && (request.auth.uid in request.resource.data.memberUids)
+        ) || (
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['challenge'])
+          && request.auth.uid == resource.data.ownerUid
+        )
+      );
       allow delete: if false;
 
       // Each member self-reports their own current streak numbers here
@@ -313,6 +323,40 @@ service cloud.firestore {
         && request.resource.data.score is int
         && request.resource.data.score >= 0
         && request.resource.data.score <= 10;
+      allow read, update, delete: if false;
+    }
+
+    // Dampak airmoon public stats (2026-09-12) — see
+    // pages/DampakAirmoon.jsx and check-campaign-deadlines.js's
+    // checkPublicImpactStats. Public-read, same shape as the referral
+    // leaderboard above.
+    match /publicStats/impact {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Survei churn super singkat (2026-09-12) — same create-only, no
+    // client read-back shape as npsResponses above.
+    match /churnSurveyResponses/{id} {
+      allow create: if request.auth != null
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.reason is string
+        && request.resource.data.reason.size() <= 200;
+      allow read, update, delete: if false;
+    }
+
+    // Lightweight error log (2026-09-12) — see lib/errorLog.js's header
+    // for what this is and isn't. Deliberately allows an unauthenticated
+    // create (an error on Login/SignUp before sign-in is exactly the
+    // kind of thing worth capturing) — low stakes even fully open
+    // (Firestore write spam at worst, no money/PII exposure), so this
+    // trades a little abuse surface for actually catching pre-auth
+    // errors, same trade-off `doas` already made for a different reason.
+    match /errorLogs/{id} {
+      allow create: if request.resource.data.message is string
+        && request.resource.data.message.size() <= 500
+        && request.resource.data.source is string
+        && request.resource.data.url is string;
       allow read, update, delete: if false;
     }
 
