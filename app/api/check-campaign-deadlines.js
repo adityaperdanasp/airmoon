@@ -862,6 +862,74 @@ async function checkReferralActivationSignal(db) {
   return { counted, errors };
 }
 
+// Referral Admin Masjid (2026-09-12) — a special credit on top of the
+// plain signup/activation referral signals above: when someone who was
+// REFERRED goes on to submit an Ajukan Campaign Masjid request
+// (AjukanMasjid.jsx → lib/leadForms.js's submitCampaignRequest, which now
+// stamps `referralMasjidCredited: false` at creation), the referrer gets
+// a `referralMasjidAdminCount` bump on their own profile — a rarer,
+// higher-value action than a plain signup, worth its own signal.
+// `referralMasjidCredited` on the REQUEST doc (not the user doc) is what
+// makes this idempotent, since a single user could submit more than one
+// campaign request over time.
+async function checkMasjidAdminReferrals(db) {
+  const snap = await db.collection('campaignRequests').where('referralMasjidCredited', '==', false).get();
+  const credited = [];
+  const errors = [];
+
+  for (const docSnap of snap.docs) {
+    try {
+      const r = docSnap.data();
+      const userRef = db.collection('users').doc(r.uid);
+      const userSnap = await userRef.get();
+      const u = userSnap.data() || {};
+      const referredBy = u.referredBy || null;
+      // Only the referee's FIRST campaign submission credits their
+      // referrer (`referralMasjidAdminCredited` on the REFEREE's own doc,
+      // checked before crediting) — otherwise the same referred person
+      // submitting several campaign requests would bump their referrer's
+      // count once per request, letting two colluding accounts inflate
+      // this badge for free.
+      if (referredBy && !u.referralMasjidAdminCredited) {
+        const referrerRef = db.collection('users').doc(referredBy);
+        const referrerSnap = await referrerRef.get();
+        if (referrerSnap.exists) {
+          await referrerRef.set({ referralMasjidAdminCount: FieldValue.increment(1) }, { merge: true });
+        }
+        await userRef.set({ referralMasjidAdminCredited: true }, { merge: true });
+      }
+      await docSnap.ref.set({ referralMasjidCredited: true }, { merge: true });
+      credited.push({ requestId: docSnap.id, referrer: referredBy });
+    } catch (err) {
+      errors.push({ requestId: docSnap.id, error: err.message });
+    }
+  }
+
+  return { credited, errors };
+}
+
+// Retensi errorLogs (2026-09-12) — lib/errorLog.js writes one doc per
+// uncaught error with no cap of its own (unlike e.g. analytics/
+// onboardingFunnel, which is a single shared counter doc and genuinely
+// can't grow unbounded the same way — checked during this round's
+// planning and correctly does NOT need this treatment). 30 days is
+// plenty to skim recent errors; anything older is noise by then.
+// `deadline`/batch pattern mirrors nothing else in this file since
+// nothing else here deletes at volume — capped at 450 per run (comfortably
+// under Firestore's 500-write batch limit) so a rare backlog just cleans
+// up over a few days' worth of cron runs instead of risking the limit.
+const ERROR_LOG_RETENTION_DAYS = 30;
+async function cleanupOldErrorLogs(db) {
+  const cutoff = new Date(Date.now() - ERROR_LOG_RETENTION_DAYS * 24 * 60 * 60 * 1000);
+  const snap = await db.collection('errorLogs').where('createdAt', '<', cutoff).limit(450).get();
+  if (snap.empty) return { deleted: 0 };
+
+  const batch = db.batch();
+  snap.docs.forEach((docSnap) => batch.delete(docSnap.ref));
+  await batch.commit();
+  return { deleted: snap.size };
+}
+
 // Dampak airmoon public stats (2026-09-12) — see pages/DampakAirmoon.jsx.
 // A daily-computed public snapshot, same reasoning as the referral
 // leaderboard above: `donations` is already public-read so the sedekah/
@@ -959,7 +1027,9 @@ export default async function handler(req, res) {
     const referralLeaderboardResult = await checkReferralLeaderboard(db);
     const supporterAnniversaryResult = await checkSupporterAnniversary(db);
     const referralActivationResult = await checkReferralActivationSignal(db);
+    const masjidAdminReferralResult = await checkMasjidAdminReferrals(db);
     const publicImpactResult = await checkPublicImpactStats(db);
+    const errorLogCleanupResult = await cleanupOldErrorLogs(db);
 
     return res.status(200).json({
       checked: snap.size,
@@ -979,7 +1049,9 @@ export default async function handler(req, res) {
       referralLeaderboard: referralLeaderboardResult,
       supporterAnniversary: supporterAnniversaryResult,
       referralActivation: referralActivationResult,
+      masjidAdminReferral: masjidAdminReferralResult,
       publicImpact: publicImpactResult,
+      errorLogCleanup: errorLogCleanupResult,
     });
   } catch (err) {
     console.error('check-campaign-deadlines error:', err);
