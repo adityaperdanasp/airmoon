@@ -17,6 +17,8 @@ import { useSwipeReveal } from '../lib/useSwipeReveal';
 import ProgressRing from '../components/ProgressRing';
 import SegButton from '../components/SegButton';
 import ToggleSwitch from '../components/ToggleSwitch';
+import { Link } from 'react-router-dom';
+import { watchActiveDonations } from '../lib/donations';
 
 // Includes the time, not just the date — two calculations saved minutes
 // apart on the same day used to be indistinguishable in the list.
@@ -149,6 +151,14 @@ export default function KalkulatorZakat() {
   const jumlahJiwaN = Number(digitsOnly(jumlahJiwa)) || 0;
   const ricePricePerKgN = Number(digitsOnly(ricePricePerKg)) || 0;
   const zakatFitrah = calcZakatFitrah(RICE_KG_PER_PERSON, ricePricePerKgN, jumlahJiwaN);
+
+  // [PM 2026-09-12] Was calculate-only, no path to actually pay it inside
+  // the app (the BAZNAS link below covers the "no idea where to pay"
+  // case generally) — for a masjid-connected campaign specifically,
+  // reusing the same active-campaigns list Donasi.jsx already shows is a
+  // more concrete option than a generic external link.
+  const [activeDonations, setActiveDonations] = useState(null);
+  useEffect(() => watchActiveDonations(setActiveDonations), []);
 
   const [zakatHistory, setZakatHistory] = useState(loadZakatHistory);
   const [showHistory, setShowHistory] = useState(false);
@@ -438,6 +448,23 @@ export default function KalkulatorZakat() {
               </svg>
               <span style={{ fontSize: 11, lineHeight: 1.5, color: 'var(--muted)' }}>{t('fitrah_info')}</span>
             </div>
+
+            {activeDonations?.length > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--muted)' }}>Atau salurkan lewat campaign masjid aktif:</span>
+                {activeDonations.slice(0, 2).map((d) => (
+                  <Link
+                    key={d.id}
+                    to="/donasi"
+                    className="card"
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '12px 14px', textDecoration: 'none', color: 'inherit' }}
+                  >
+                    <span style={{ fontSize: 12, fontWeight: 700 }}>{d.title}</span>
+                    <span style={{ fontSize: 11, color: 'var(--primary)', fontWeight: 700, flexShrink: 0 }}>Pilih →</span>
+                  </Link>
+                ))}
+              </div>
+            )}
           </>
         )}
 

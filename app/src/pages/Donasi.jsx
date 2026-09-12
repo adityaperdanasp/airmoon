@@ -129,13 +129,26 @@ function SedekahGoalCard({ user, myContributions }) {
 // own comment on watchMonthlyPledge for why that distinction matters here
 // specifically (no saved payment method, no auto-charge — every month
 // still needs a real tap-through Midtrans/manual-transfer confirmation).
-function MonthlyPledgeCard({ user }) {
+function MonthlyPledgeCard({ user, myContributions }) {
   const { showToast } = useToast();
   const [pledge, setPledge] = useState(null);
-  const [amount, setAmount] = useState(PLEDGE_AMOUNTS[0]);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => watchMonthlyPledge(user?.uid, setPledge), [user?.uid]);
+
+  // [PM 2026-09-12] Was always a flat generic amount by default — a
+  // real "kebiasaan kamu" suggestion (rounded to the nearest Rp 5.000 so
+  // it reads as an intentional figure, not a literal average) uses data
+  // this app already has (myContributions, already fetched by the parent
+  // for SedekahGoalCard) instead of guessing. Only shown once there's
+  // real history and it's a meaningfully distinct number from the fixed
+  // presets — a suggestion that duplicates an existing chip isn't worth
+  // its own row.
+  const avgAmount = myContributions?.length
+    ? Math.round((myContributions.reduce((sum, c) => sum + (c.amount || 0), 0) / myContributions.length) / 5000) * 5000
+    : null;
+  const showAvgSuggestion = avgAmount > 0 && !PLEDGE_AMOUNTS.includes(avgAmount);
+  const [amount, setAmount] = useState(() => (showAvgSuggestion ? avgAmount : PLEDGE_AMOUNTS[0]));
 
   if (!user) return null;
 
@@ -201,7 +214,28 @@ function MonthlyPledgeCard({ user }) {
             {formatRupiah(amt).replace('Rp ', '')}
           </button>
         ))}
+        {showAvgSuggestion && (
+          <button
+            onClick={() => setAmount(avgAmount)}
+            style={{
+              flex: 1,
+              padding: '8px 0',
+              borderRadius: 10,
+              fontSize: 12,
+              fontWeight: 700,
+              border: amount === avgAmount ? '1.5px solid var(--gold-ink)' : '1px solid var(--gold-ink)',
+              background: amount === avgAmount ? 'var(--cream)' : 'transparent',
+              color: 'var(--gold-ink-dark)',
+              cursor: 'pointer',
+            }}
+          >
+            {formatRupiah(avgAmount).replace('Rp ', '')}
+          </button>
+        )}
       </div>
+      {showAvgSuggestion && (
+        <span style={{ fontSize: 10, color: 'var(--muted-soft)' }}>💡 Angka bergaris emas = rata-rata sedekah kamu sendiri selama ini.</span>
+      )}
       <button className="btn-outline" disabled={saving} onClick={() => handleSet(amount)}>
         Aktifkan Pengingat
       </button>
@@ -348,7 +382,7 @@ export default function Donasi() {
 
         <DaftarkanMasjidCard user={user} />
         <AjukanMasjidLink user={user} />
-        <MonthlyPledgeCard user={user} />
+        <MonthlyPledgeCard user={user} myContributions={myContributions} />
         <SedekahGoalCard user={user} myContributions={myContributions} />
 
         {!donations && (

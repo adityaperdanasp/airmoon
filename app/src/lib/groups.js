@@ -82,3 +82,16 @@ export async function reportMyGroupStats(groupId, user, userData) {
 export function watchGroupMemberStats(groupId, callback) {
   return onSnapshot(collection(db, 'groups', groupId, 'memberStats'), (snap) => callback(snap.docs.map((d) => ({ uid: d.id, ...d.data() }))));
 }
+
+// Tantangan Mingguan (2026-09-12) — a single shared target the owner
+// sets (e.g. "gabungan 20 hari streak minggu ini"), progress computed
+// client-side from the same memberStats sum GroupDetail already shows,
+// not a separate tracked counter — simplest thing that could work for
+// an MVP challenge, no new subcollection needed.
+export async function setGroupChallenge(groupId, target) {
+  await updateDoc(doc(db, 'groups', groupId), { challenge: { target, createdAt: serverTimestamp() } });
+}
+
+export async function clearGroupChallenge(groupId) {
+  await updateDoc(doc(db, 'groups', groupId), { challenge: null });
+}

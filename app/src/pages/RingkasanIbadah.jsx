@@ -73,7 +73,13 @@ export default function RingkasanIbadah() {
   useEffect(() => watchReadingStreak(user?.uid, (v) => { setReadingStreak(v); markLoaded('readingStreak'); }), [user?.uid]);
   useEffect(() => {
     if (!user?.uid) return;
-    fetchRecentAmalanHarian(user.uid, 7).then(setRecentDays);
+    // [PM 2026-09-12] Widened from 7 to 28 days — the sparkline below only
+    // ever needed the last 7, but "hari paling konsisten kamu" (which day
+    // of the week you actually show up most) needs a real sample size a
+    // single week can't give; one extra month of the same already-cheap
+    // per-day getDoc reads (see fetchRecentAmalanHarian's own note on why
+    // this isn't a range query) covers both without a second fetch.
+    fetchRecentAmalanHarian(user.uid, 28).then(setRecentDays);
   }, [user?.uid]);
 
   if (!user) {
@@ -91,6 +97,30 @@ export default function RingkasanIbadah() {
   const bestStreak = Math.max(streaks?.pagi?.best || 0, streaks?.petang?.best || 0);
   const badgeTier = highestTier(bestStreak);
   const totalSedekah = contributions.reduce((sum, c) => sum + (c.amount || 0), 0);
+
+  // [PM 2026-09-12] "Hari paling konsisten kamu" — a small personal
+  // insight computed entirely client-side from the same 28-day fetch the
+  // sparkline above already made, no new backend call. Averages each
+  // weekday's score across however many occurrences of it fell in the
+  // window (4 or 5, depending on the exact date range) rather than
+  // summing, so a weekday that happened to land 5 times isn't unfairly
+  // favored over one that landed 4. Needs at least 2 real (non-zero)
+  // days logged before showing anything — otherwise "paling konsisten"
+  // on a near-empty history is just noise, not a real insight.
+  const WEEKDAY_LABELS = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+  let bestWeekday = null;
+  if (recentDays && recentDays.some((d) => d.score > 0)) {
+    const totals = Array(7).fill(0);
+    const counts = Array(7).fill(0);
+    recentDays.forEach((d) => {
+      const dow = new Date(`${d.dateKey}T00:00:00`).getDay();
+      totals[dow] += d.score;
+      counts[dow] += 1;
+    });
+    const averages = totals.map((t, i) => (counts[i] ? t / counts[i] : 0));
+    const bestIdx = averages.reduce((best, v, i) => (v > averages[best] ? i : best), 0);
+    if (averages[bestIdx] > 0) bestWeekday = { label: WEEKDAY_LABELS[bestIdx], avg: averages[bestIdx] };
+  }
   const totalMinutes = readingStats.totalMinutes || 0;
   const hours = Math.floor(totalMinutes / 60);
   const mins = totalMinutes % 60;
@@ -172,7 +202,17 @@ export default function RingkasanIbadah() {
               <span style={{ fontSize: 13, fontWeight: 800 }}>📈 Tren 7 Hari</span>
               <span style={{ fontSize: 10.5, color: 'var(--muted)' }}>Poin Amalan Harian, per hari</span>
             </div>
-            <Sparkline values={recentDays.map((d) => d.score)} max={recentDays[0]?.max} />
+            <Sparkline values={recentDays.slice(-7).map((d) => d.score)} max={recentDays[0]?.max} />
+          </div>
+        )}
+
+        {bestWeekday && (
+          <div className="card" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 16 }}>
+            <span style={{ fontSize: 22 }}>⭐</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <span style={{ fontSize: 13, fontWeight: 800 }}>Kamu paling konsisten di hari {bestWeekday.label}</span>
+              <span style={{ fontSize: 10.5, color: 'var(--muted)' }}>Rata-rata {bestWeekday.avg.toFixed(1)} poin, dari 4 minggu terakhir</span>
+            </div>
           </div>
         )}
 

@@ -13,6 +13,14 @@ export const CHANGELOG = [
     version: 6,
     date: '2026-09-04',
     title: 'Kalkulator Waris, Pengingat Puasa Sunnah, dan lainnya',
+    // [PM 2026-09-12] `interestTags` (optional, matches lib/interestTag.js's
+    // INTEREST_OPTIONS keys) powers a one-time Home spotlight for anyone
+    // whose onboarding interest matches an entry they haven't seen yet —
+    // see lib/changelogSpotlight.js. Best-effort retroactive tagging on
+    // this one entry (a mix of Qur'an-reading and ibadah-tracking
+    // features); add real tags on future entries as they're written,
+    // rather than guessing at old ones going forward.
+    interestTags: ['quran', 'sholat'],
     items: [
       'Kalkulator Waris (Ilmu Faraidh) — baru, di menu Lainnya.',
       'Progress Khatam Qur\'an + waktu baca total, ditampilkan di halaman Al-Qur\'an.',

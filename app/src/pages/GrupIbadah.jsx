@@ -6,7 +6,7 @@ import EmptyState from '../components/EmptyState';
 import { watchUserProfile } from '../lib/profile';
 import {
   createGroup, joinGroupByCode, watchMyGroups, watchGroup,
-  reportMyGroupStats, watchGroupMemberStats,
+  reportMyGroupStats, watchGroupMemberStats, setGroupChallenge, clearGroupChallenge,
 } from '../lib/groups';
 
 // Grup Ibadah (2026-09-12) — small circles (family/pengajian) sharing
@@ -20,6 +20,8 @@ function GroupDetail({ groupId, onBack }) {
   const [group, setGroup] = useState(null);
   const [members, setMembers] = useState([]);
   const [copied, setCopied] = useState(false);
+  const [showChallengeForm, setShowChallengeForm] = useState(false);
+  const [challengeTarget, setChallengeTarget] = useState('20');
 
   useEffect(() => watchGroup(groupId, setGroup), [groupId]);
   useEffect(() => watchGroupMemberStats(groupId, setMembers), [groupId]);
@@ -43,7 +45,19 @@ function GroupDetail({ groupId, onBack }) {
     }
   }
 
-  const sorted = [...members].sort((a, b) => (b.readingStreak + b.dzikirPagiStreak + b.dzikirPetangStreak) - (a.readingStreak + a.dzikirPagiStreak + a.dzikirPetangStreak));
+  const memberTotal = (m) => m.readingStreak + m.dzikirPagiStreak + m.dzikirPetangStreak;
+  const sorted = [...members].sort((a, b) => memberTotal(b) - memberTotal(a));
+  const groupTotal = members.reduce((sum, m) => sum + memberTotal(m), 0);
+  const isOwner = user && group?.ownerUid === user.uid;
+
+  async function handleSetChallenge(e) {
+    e.preventDefault();
+    const target = Number(challengeTarget);
+    if (!target || target <= 0) return;
+    await setGroupChallenge(groupId, target);
+    setShowChallengeForm(false);
+    showToast('Tantangan mingguan diset!');
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -59,6 +73,66 @@ function GroupDetail({ groupId, onBack }) {
               <span style={{ fontSize: 11, color: 'var(--muted)' }}>Kode Undangan</span>
               <span style={{ fontSize: 14, fontWeight: 800, fontFamily: 'monospace', letterSpacing: '0.05em' }}>{copied ? 'Tersalin!' : group.inviteCode}</span>
             </div>
+            {/* [PM 2026-09-12] Was copy-only — a one-tap WhatsApp share is
+                the realistic way a family/pengajian circle actually
+                spreads an invite code, not "copy then paste it somewhere
+                yourself". */}
+            <button
+              className="btn-outline"
+              onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(`Yuk gabung grup ibadah "${group.name}" di airmoon! Pakai kode: ${group.inviteCode}\n\nBuka airmoon → Lainnya → Grup Ibadah → Gabung Grup.`)}`, '_blank')}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+            >
+              Bagikan Undangan lewat WhatsApp
+            </button>
+          </div>
+
+          {/* Tantangan Mingguan (2026-09-12) — a single shared target the
+              owner sets; progress is just the same memberStats sum
+              already computed above, not a separately tracked counter.
+              No week-boundary reset logic yet (an MVP scope call) — the
+              owner re-sets it manually for a fresh week. */}
+          <div className="card" style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: 13, fontWeight: 800 }}>🎯 Tantangan Mingguan</span>
+              {isOwner && (
+                <button
+                  onClick={() => setShowChallengeForm((v) => !v)}
+                  style={{ background: 'none', border: 'none', color: 'var(--primary)', fontSize: 11, fontWeight: 700, cursor: 'pointer', padding: 0 }}
+                >
+                  {group.challenge ? 'Ubah' : 'Atur'}
+                </button>
+              )}
+            </div>
+
+            {showChallengeForm && (
+              <form onSubmit={handleSetChallenge} style={{ display: 'flex', gap: 8 }}>
+                <div className="input-row" style={{ flex: 1 }}>
+                  <input type="number" min="1" value={challengeTarget} onChange={(e) => setChallengeTarget(e.target.value)} placeholder="Target total streak (hari)" />
+                </div>
+                <button className="btn" type="submit" style={{ width: 'auto', padding: '0 16px' }}>Simpan</button>
+                {group.challenge && (
+                  <button type="button" className="btn-outline" style={{ width: 'auto', padding: '0 14px' }} onClick={() => { clearGroupChallenge(groupId); setShowChallengeForm(false); }}>
+                    Hapus
+                  </button>
+                )}
+              </form>
+            )}
+
+            {group.challenge ? (
+              <>
+                <div style={{ height: 7, borderRadius: 999, background: 'var(--border)', overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: `${Math.min(100, Math.round((groupTotal / group.challenge.target) * 100))}%`, background: 'var(--primary)', transition: 'width var(--dur-3) var(--ease)' }} />
+                </div>
+                <span style={{ fontSize: 10.5, color: 'var(--muted)' }}>
+                  {groupTotal}/{group.challenge.target} hari gabungan
+                  {groupTotal >= group.challenge.target ? ' — Alhamdulillah, tercapai! 🎉' : ''}
+                </span>
+              </>
+            ) : (
+              <span style={{ fontSize: 10.5, color: 'var(--muted)' }}>
+                {isOwner ? 'Belum ada tantangan — atur target streak gabungan minggu ini.' : 'Belum ada tantangan minggu ini.'}
+              </span>
+            )}
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>

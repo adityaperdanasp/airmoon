@@ -78,6 +78,18 @@ export async function setTilawahDone(uid, done) {
   await setDoc(doc(db, 'users', uid, 'amalanHarian', todayKey()), { tilawah: done }, { merge: true });
 }
 
+// Check-in mood/niat harian (2026-09-12) — an ultra-light daily
+// engagement touchpoint: pick 1 of a few mood/niat emoji, no analysis or
+// judgment attached, just a personal log someone can glance back on
+// (visible today via components/MoodCheckIn.jsx; a history view isn't
+// built yet, this is the write side only for now). Stored on the same
+// per-day amalanHarian doc as everything else — deliberately NOT scored
+// into DAILY_POINTS_MAX/scoreForDay above, this isn't a "did you do the
+// thing" habit like sholat/tilawah/dzikir, it doesn't belong in that math.
+export async function setMoodCheckIn(uid, mood) {
+  await setDoc(doc(db, 'users', uid, 'amalanHarian', todayKey()), { moodCheckIn: mood }, { merge: true });
+}
+
 // +1 poin buat sekadar buka/login ke app hari ini — idempotent per hari
 // (getDoc-before-write, same reasoning as lib/readingGoal.js's own
 // day-rollover check: a blind arrayUnion-style write can't tell "already

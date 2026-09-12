@@ -58,6 +58,7 @@ const UsulanFitur = lazy(() => import('./pages/UsulanFitur'));
 const Bantuan = lazy(() => import('./pages/Bantuan'));
 const AjukanMasjid = lazy(() => import('./pages/AjukanMasjid'));
 const GrupIbadah = lazy(() => import('./pages/GrupIbadah'));
+const DampakAirmoon = lazy(() => import('./pages/DampakAirmoon'));
 
 function P({ children }) {
   return <ProtectedRoute>{children}</ProtectedRoute>;
@@ -124,6 +125,7 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<SignUp />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/dampak" element={<DampakAirmoon />} />
         {/* Internal design reference — no nav link, not login-gated, one
             URL away for a design review. See pages/DesignSystem.jsx. */}
         <Route path="/design-system" element={<DesignSystem />} />
