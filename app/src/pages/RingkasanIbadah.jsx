@@ -244,6 +244,7 @@ export default function RingkasanIbadah() {
           totalSedekah={formatRupiah(totalSedekah)}
           puasaCount={puasaDates?.length || 0}
           readingStreakDays={readingStreak.current}
+          readingTimeLabel={hours > 0 ? `${hours} jam ${mins} menit` : `${mins} menit`}
           theme={theme}
           onClose={() => setShowShareModal(false)}
         />

@@ -49,7 +49,7 @@ function statRow(ctx, y, icon, label, value) {
   ctx.fillText(value, 155, y + 20);
 }
 
-export async function drawRingkasanIbadahCard(canvas, { displayName, khatamPct, badgeLabel, totalSedekah, puasaCount, readingStreakDays, theme = 'light' }) {
+export async function drawRingkasanIbadahCard(canvas, { displayName, khatamPct, badgeLabel, totalSedekah, puasaCount, readingStreakDays, readingTimeLabel, theme = 'light' }) {
   canvas.width = W;
   canvas.height = H;
   const ctx = canvas.getContext('2d');
@@ -99,6 +99,7 @@ export async function drawRingkasanIbadahCard(canvas, { displayName, khatamPct, 
   statRow(ctx, 640, '💝', 'Total Sedekah', totalSedekah);
   statRow(ctx, 760, '🌙', 'Puasa Sunnah', `${puasaCount}x`);
   statRow(ctx, 880, '📚', 'Streak Baca Qur\'an', `${readingStreakDays} hari`);
+  if (readingTimeLabel) statRow(ctx, 1000, '⏱️', 'Total Waktu Baca Qur\'an', readingTimeLabel);
 
   ctx.textAlign = 'center';
   ctx.font = '800 40px Poppins, sans-serif';
