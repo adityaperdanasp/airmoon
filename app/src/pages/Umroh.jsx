@@ -1,8 +1,97 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import BottomNav from '../components/BottomNav';
 import PageHeaderPhoto from '../components/PageHeaderPhoto';
 import { PAGE_PHOTOS } from '../data/photos';
 import { ManasikIcon, BadalUmrahIcon, ChecklistIcon, SavingsJarIcon } from '../components/serviceIcons';
+import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
+import { submitUmrohLead } from '../lib/leadForms';
+
+const BUDGET_OPTIONS = ['< Rp 25 juta', 'Rp 25-35 juta', 'Rp 35-50 juta', '> Rp 50 juta'];
+
+// Minat Umroh (2026-09-12) — a lead-gen form, not a booking flow. No
+// travel-agency partnership exists yet; the Tabungan Umroh page right
+// next to this one exists specifically because someone's actively saving
+// toward this, so the intent is already real — this just captures it
+// (name/phone/budget/target bulan) for the founder to manually follow up
+// with a licensed agency later, once real demand numbers justify that
+// conversation. See lib/leadForms.js / firestore.rules for why this
+// never auto-books anything.
+function MinatUmrohForm() {
+  const { user } = useAuth();
+  const { showToast } = useToast();
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState(user?.displayName || '');
+  const [phone, setPhone] = useState('');
+  const [budgetRange, setBudgetRange] = useState(BUDGET_OPTIONS[0]);
+  const [targetMonth, setTargetMonth] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [sent, setSent] = useState(false);
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    if (!user || !phone.trim() || submitting) return;
+    setSubmitting(true);
+    try {
+      await submitUmrohLead(user.uid, { name: name.trim(), phone: phone.trim(), budgetRange, targetMonth });
+      setSent(true);
+      showToast('Minat kamu udah kecatat, tim kami bakal hubungi lewat WA/telepon');
+    } catch {
+      showToast('Gagal kirim, coba lagi.', { type: 'danger' });
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  if (sent) {
+    return (
+      <div className="card" style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 4 }}>
+        <span style={{ fontSize: 13, fontWeight: 800 }}>✅ Minat kamu udah kecatat</span>
+        <span style={{ fontSize: 11, color: 'var(--muted)' }}>Tim kami bakal hubungi kamu lewat WA/telepon yang tadi diisi.</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="card" style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <span style={{ fontSize: 13, fontWeight: 800 }}>✈️ Berencana Umroh?</span>
+        <span style={{ fontSize: 11, color: 'var(--muted)' }}>Kasih tau minat kamu, tim kami bantu carikan agen travel umroh terpercaya.</span>
+      </div>
+      {!open ? (
+        <button className="btn-outline" onClick={() => (user ? setOpen(true) : showToast('Masuk dulu ya.', { type: 'danger' }))}>
+          Saya Berminat
+        </button>
+      ) : (
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div className="input-row">
+            <input placeholder="Nama" value={name} onChange={(e) => setName(e.target.value)} />
+          </div>
+          <div className="input-row">
+            <input required placeholder="No. WA/Telepon" value={phone} onChange={(e) => setPhone(e.target.value)} />
+          </div>
+          <select
+            value={budgetRange}
+            onChange={(e) => setBudgetRange(e.target.value)}
+            aria-label="Perkiraan budget"
+            style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--ink)', fontSize: 12.5 }}
+          >
+            {BUDGET_OPTIONS.map((b) => (
+              <option key={b} value={b}>{b}</option>
+            ))}
+          </select>
+          <div className="input-row">
+            <input placeholder="Target bulan berangkat (opsional)" value={targetMonth} onChange={(e) => setTargetMonth(e.target.value)} />
+          </div>
+          <button className="btn" type="submit" disabled={submitting}>
+            {submitting ? 'Mengirim...' : 'Kirim Minat'}
+          </button>
+        </form>
+      )}
+    </div>
+  );
+}
 
 // All 4 now real pages (content written/sourced per an explicit ask to
 // fill these in — was 4 flat "segera hadir" cards before). Manasik/Badal
@@ -46,6 +135,7 @@ export default function Umroh() {
             </Link>
           ))}
         </div>
+        <MinatUmrohForm />
       </div>
       <BottomNav />
     </div>

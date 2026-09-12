@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { watchMyContributions, watchActiveDonations, watchMonthlyPledge, setMonthlyPledge, cancelMonthlyPledge } from '../lib/donations';
 import { formatRupiah } from '../lib/zakat';
 import { useAuth } from '../context/AuthContext';
@@ -261,6 +262,19 @@ function DaftarkanMasjidCard({ user }) {
   );
 }
 
+// [UI 2026-09-12] An in-app alternative to the Google Form above — same
+// manual-review process, just tied to the submitter's own account so they
+// can check status without wondering if their form response got seen.
+// Shown regardless of whether MASJID_FORM_URL is configured.
+function AjukanMasjidLink({ user }) {
+  if (!user) return null;
+  return (
+    <Link to="/lainnya/ajukan-masjid" style={{ fontSize: 11, color: 'var(--muted)', textAlign: 'center', textDecoration: 'underline' }}>
+      atau ajukan langsung lewat app
+    </Link>
+  );
+}
+
 export default function Donasi() {
   const { user } = useAuth();
   const [donations, setDonations] = useState(null);
@@ -333,6 +347,7 @@ export default function Donasi() {
         </div>
 
         <DaftarkanMasjidCard user={user} />
+        <AjukanMasjidLink user={user} />
         <MonthlyPledgeCard user={user} />
         <SedekahGoalCard user={user} myContributions={myContributions} />
 

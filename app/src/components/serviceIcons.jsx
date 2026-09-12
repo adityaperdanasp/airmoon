@@ -820,3 +820,50 @@ export function SavingsJarIcon({ size = 42 }) {
     </svg>
   );
 }
+
+// Usulkan Fitur (2026-09-12) — a lightbulb, same teal-body/gold-accent
+// gradient pair every other tile in this grid already uses.
+export function LightbulbIcon({ size = 42 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 42 42" fill="none">
+      <defs>
+        <linearGradient id="bulbBodyG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#2fa190" />
+          <stop offset="1" stopColor="#0a4a43" />
+        </linearGradient>
+        <radialGradient id="bulbGlowG" cx="0.4" cy="0.35" r="0.8">
+          <stop offset="0" stopColor="#fff2cf" />
+          <stop offset="0.55" stopColor="#f0c04d" />
+          <stop offset="1" stopColor="#c98f22" />
+        </radialGradient>
+      </defs>
+      <circle cx="21" cy="17" r="11" fill="url(#bulbGlowG)" />
+      <circle cx="21" cy="17" r="11" fill="url(#bulbBodyG)" opacity="0.15" />
+      <path d="M17 26 h8 v3 a2 2 0 0 1 -2 2 h-4 a2 2 0 0 1 -2 -2 Z" fill="url(#bulbBodyG)" />
+      <path d="M18 29 h6" stroke="#0a4a43" strokeWidth="1.4" strokeLinecap="round" />
+      <path d="M21 6 v3 M31 17 h-3 M11 17 h3 M28.5 9.5 l-2.1 2.1 M13.5 9.5 l2.1 2.1" stroke="#0a4a43" strokeWidth="1.6" strokeLinecap="round" opacity="0.4" />
+    </svg>
+  );
+}
+
+// Bantuan (2026-09-12) — a question mark badge.
+export function HelpIcon({ size = 42 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 42 42" fill="none">
+      <defs>
+        <linearGradient id="helpBodyG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#2fa190" />
+          <stop offset="1" stopColor="#0a4a43" />
+        </linearGradient>
+        <linearGradient id="helpGoldG" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor="#fff2cf" />
+          <stop offset="0.55" stopColor="#f0c04d" />
+          <stop offset="1" stopColor="#c98f22" />
+        </linearGradient>
+      </defs>
+      <circle cx="21" cy="21" r="14" fill="url(#helpBodyG)" />
+      <path d="M17 16.5 a4.5 4.5 0 1 1 6.6 4 c-1.4 0.9 -2.1 1.6 -2.1 3.3" stroke="url(#helpGoldG)" strokeWidth="2.6" strokeLinecap="round" fill="none" />
+      <circle cx="21" cy="28" r="1.6" fill="url(#helpGoldG)" />
+    </svg>
+  );
+}

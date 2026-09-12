@@ -26,6 +26,8 @@ import {
   PuasaSunnahIcon,
   StatsIcon,
   AmalanCalendarIcon,
+  LightbulbIcon,
+  HelpIcon,
 } from '../components/serviceIcons';
 
 // All hand-drawn gradient icons (see serviceIcons.jsx) — this grid used
@@ -93,6 +95,8 @@ const SECTIONS = [
       { to: '/cari', label: 'Cari', bg: 'var(--mint)', node: <GlobalSearchIcon size={30} />, prefetch: () => import('./CariGlobal') },
       { to: '/notifikasi', label: 'Notifikasi', bg: 'var(--cream)', node: <NotificationBellIcon size={30} />, prefetch: () => import('./NotifikasiCenter') },
       { to: '/yang-baru', label: 'Yang Baru', bg: 'var(--peach)', node: <WhatsNewIcon size={30} />, prefetch: () => import('./Changelog') },
+      { to: '/lainnya/usulan-fitur', label: 'Usulkan Fitur', bg: 'var(--mint)', node: <LightbulbIcon size={30} />, prefetch: () => import('./UsulanFitur') },
+      { to: '/lainnya/bantuan', label: 'Bantuan', bg: 'var(--blue-gray)', node: <HelpIcon size={30} />, prefetch: () => import('./Bantuan') },
     ],
   },
 ];

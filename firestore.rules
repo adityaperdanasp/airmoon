@@ -136,6 +136,81 @@ service cloud.firestore {
       }
     }
 
+    // Ajukan Campaign Masjid (2026-09-12) — an in-app alternative to the
+    // existing Google Form intake (still live, see CLAUDE.md's "Daftarkan
+    // Masjid" note): a signed-in user submits, the founder reviews it
+    // manually (via the daily digest folded into
+    // check-campaign-deadlines.js, same as umrohLeads/supportRequests
+    // below) and — if approved — replicates it into the real, proven
+    // approve-masjid.js pipeline. Deliberately NOT auto-published: this is
+    // a donation/fundraising surface, the same fraud/trust boundary that
+    // keeps `donations` itself fully server-write-only above.
+    match /campaignRequests/{id} {
+      allow create: if request.auth != null
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.namaMasjid is string
+        && request.resource.data.namaMasjid.size() > 0
+        && request.resource.data.namaMasjid.size() <= 200;
+      allow read: if request.auth != null && resource.data.uid == request.auth.uid;
+      allow update, delete: if false; // status only ever moves via the founder's manual follow-up, not a client write
+    }
+
+    // Minat Umroh — a lead-gen form on the Umroh hub (2026-09-12), for the
+    // founder to manually connect with a licensed travel agency later. No
+    // agency partnership exists yet — this just captures real interest so
+    // that conversation has actual demand data behind it.
+    match /umrohLeads/{id} {
+      allow create: if request.auth != null
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.phone is string
+        && request.resource.data.phone.size() > 0
+        && request.resource.data.phone.size() <= 30;
+      allow read: if request.auth != null && resource.data.uid == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    // In-app "Hubungi Kami" support requests (2026-09-12) — see
+    // pages/Bantuan.jsx. Same manual-review shape as the two above: no
+    // support ticketing system exists, the founder follows up directly
+    // (phone/email/WA, whatever the submitter left).
+    match /supportRequests/{id} {
+      allow create: if request.auth != null
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.message is string
+        && request.resource.data.message.size() > 0
+        && request.resource.data.message.size() <= 1000;
+      allow read: if request.auth != null && resource.data.uid == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    // Usulan Fitur — a public feature-request board (2026-09-12), same
+    // "public read, narrow-validated create, single-field update" shape
+    // `doas` already established above (no money/fraud stakes here
+    // either — worst case is a low-effort annoyance, not an exploit).
+    match /featureRequests/{id} {
+      allow read: if true;
+      allow create: if request.auth != null
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.title.size() <= 120
+        && request.resource.data.description is string
+        && request.resource.data.description.size() <= 1000
+        && request.resource.data.upvoteCount == 0
+        && request.resource.data.status == 'baru';
+      allow update: if request.auth != null
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['upvoteCount']);
+      allow delete: if request.auth != null && request.auth.uid == resource.data.uid;
+
+      // One doc per user who has upvoted this request — same existence-
+      // only-matters shape as doas/{id}/amins/{uid}.
+      match /upvotes/{uid} {
+        allow read: if true;
+        allow write: if request.auth != null && request.auth.uid == uid;
+      }
+    }
+
     // Everything else stays locked until it has a real data model.
     match /{document=**} {
       allow read, write: if false;
