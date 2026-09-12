@@ -7,6 +7,8 @@ import { useToast } from '../context/ToastContext';
 import { loadStarredAnswers, starAnswer, unstarAnswer } from '../lib/starredAnswers';
 import StarredAnswersSheet from '../components/StarredAnswersSheet';
 import { useVoiceInput } from '../lib/useVoiceInput';
+import { useAuth } from '../context/AuthContext';
+import { submitAskMeFeedback } from '../lib/askMeFeedback';
 
 // Filled in after the Vercel deploy — see CLAUDE.md. Absolute URL so this
 // works no matter which host (Firebase or Vercel) serves the frontend.
@@ -65,8 +67,10 @@ function formatStarredAnswers(entries) {
 
 export default function AskMe() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { showToast } = useToast();
   const [messages, setMessages] = useState(loadHistory);
+  const [feedbackGiven, setFeedbackGiven] = useState({});
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [starred, setStarred] = useState(loadStarredAnswers);
   const [showStarred, setShowStarred] = useState(false);
@@ -184,6 +188,16 @@ export default function AskMe() {
     showToast('Jawaban disimpan.');
   }
 
+  function handleFeedback(index, helpful) {
+    if (!user || feedbackGiven[index]) return;
+    setFeedbackGiven((f) => ({ ...f, [index]: helpful }));
+    const question = messages[index - 1]?.role === 'user' ? messages[index - 1].content : '';
+    submitAskMeFeedback(user.uid, { question, answer: messages[index].content, helpful }).catch(() => {
+      // best-effort signal — failing silently is fine, this isn't
+      // anything the user is waiting to see confirmed.
+    });
+  }
+
   async function handleShareTranscript() {
     const result = await shareText({ text: formatTranscript(messages), title: 'Obrolan dengan Ust. Rewin' });
     if (result === 'copied') showToast('Obrolan disalin ke clipboard.');
@@ -284,6 +298,26 @@ export default function AskMe() {
               >
                 {starred.some((e) => e.answer === m.content) ? '⭐' : '☆'}
               </button>
+            )}
+            {m.role === 'assistant' && m !== WELCOME_MESSAGE && user && !(busy && i === messages.length - 1) && (
+              <div style={{ flexShrink: 0, alignSelf: 'flex-end', display: 'flex', gap: 2 }}>
+                <button
+                  onClick={() => handleFeedback(i, true)}
+                  disabled={feedbackGiven[i] !== undefined}
+                  aria-label="Jawaban membantu"
+                  style={{ background: 'none', border: 'none', fontSize: 14, cursor: feedbackGiven[i] !== undefined ? 'default' : 'pointer', padding: '4px 2px', opacity: feedbackGiven[i] === false ? 0.35 : 1 }}
+                >
+                  👍
+                </button>
+                <button
+                  onClick={() => handleFeedback(i, false)}
+                  disabled={feedbackGiven[i] !== undefined}
+                  aria-label="Jawaban kurang membantu"
+                  style={{ background: 'none', border: 'none', fontSize: 14, cursor: feedbackGiven[i] !== undefined ? 'default' : 'pointer', padding: '4px 2px', opacity: feedbackGiven[i] === true ? 0.35 : 1 }}
+                >
+                  👎
+                </button>
+              </div>
             )}
             {m.role === 'assistant' && m !== WELCOME_MESSAGE && i === messages.length - 1 && !busy && (
               <button
