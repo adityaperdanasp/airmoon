@@ -13,6 +13,7 @@ import { markSeen } from '../lib/unseenBadges';
 import { HEADLINES, todaysHeadlineIndex } from '../data/headlines';
 import { getDailyTip } from '../data/dailyTips';
 import { shouldShowLangNudge, dismissLangNudge } from '../lib/langNudge';
+import { getMustajabWindow } from '../lib/mustajabTime';
 import { todaysHomePhoto } from '../data/photos';
 import { formatRupiah } from '../lib/zakat';
 import BottomNav from '../components/BottomNav';
@@ -126,7 +127,7 @@ export default function Home() {
   const { user } = useAuth();
   const { t, lang } = useLang();
   const { theme } = useTheme();
-  const { next, status: prayerStatus } = usePrayerTimes();
+  const { next, status: prayerStatus, data: prayerData } = usePrayerTimes();
   const [donations, setDonations] = useState(null);
   const [myContributions, setMyContributions] = useState([]);
   const [showSedekahHistory, setShowSedekahHistory] = useState(false);
@@ -204,6 +205,21 @@ export default function Home() {
   useEffect(() => {
     setShowLangNudge(shouldShowLangNudge(lang));
   }, [lang]);
+
+  // Waktu Mustajab Doa (2026-09-12) — recomputed every minute, not a
+  // one-time dismissible nudge like the banners above, since this
+  // reflects a real recurring time window rather than a one-off event.
+  const [mustajabWindow, setMustajabWindow] = useState(null);
+  useEffect(() => {
+    if (!prayerData?.timings) {
+      setMustajabWindow(null);
+      return;
+    }
+    const check = () => setMustajabWindow(getMustajabWindow(prayerData.timings));
+    check();
+    const timer = setInterval(check, 60000);
+    return () => clearInterval(timer);
+  }, [prayerData?.timings]);
 
   const [showChurnSurvey, setShowChurnSurvey] = useState(false);
   useEffect(() => {
@@ -451,6 +467,17 @@ export default function Home() {
               </button>
             </div>
           </div>
+        )}
+
+        {mustajabWindow && (
+          <Link
+            to="/lainnya/doa-harian"
+            className="card"
+            style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', background: 'var(--cream)', textDecoration: 'none', color: 'inherit' }}
+          >
+            <span style={{ fontSize: 16 }}>🤲</span>
+            <span style={{ fontSize: 12, fontWeight: 700, flex: 1 }}>{mustajabWindow.message}</span>
+          </Link>
         )}
 
         {showWelcomeBack && (
