@@ -19,6 +19,8 @@ import AchievementShareModal from '../components/AchievementShareModal';
 import { ACCENT_OPTIONS, loadAccentColor, setAccentColor } from '../lib/accentColor';
 import SegButton from '../components/SegButton';
 import ToggleSwitch from '../components/ToggleSwitch';
+import { watchEmailOptIn, setEmailOptIn } from '../lib/emailPrefs';
+import SupporterCard from '../components/SupporterCard';
 
 // [UI 2026-09-12] Both file pickers on this page (avatar photo, data
 // import) hid their real <input type="file"> with `display: none` — that
@@ -374,7 +376,7 @@ function ProfileCard() {
   );
 }
 
-const SHARE_TEXT = "Yuk pakai airmoon — baca Qur'an, jadwal sholat, & donasi listrik masjid langsung dari HP kamu.";
+const SHARE_TEXT = "Yuk pakai airmoon — baca Qur'an, jadwal sholat, & donasi listrik masjid langsung dari HP kamu. Daftar lewat link aku, kita berdua dapet warna aksen eksklusif Rose Gold 🌹";
 // The custom domain, not the vercel.app one — a shared link is meant to
 // look like a real, permanent address, not an internal hosting detail.
 // api/* calls elsewhere in the app stay pointed at vercel.app on purpose
@@ -386,16 +388,23 @@ const SHARE_URL = 'https://jalanmenujusurga.web.id';
 // whatever's installed) when available; WhatsApp's own wa.me deep link as
 // the fallback for browsers that don't support it (mainly desktop) rather
 // than a dead button.
-async function handleShareApp() {
+//
+// [UI 2026-09-12] Was a bare share button with no loop at all — no
+// reward, no tracking of who invited whom. Now appends `?ref=<uid>` to
+// the shared link (see lib/referral.js — a referral code is just the
+// referrer's own uid, no separate short-code system needed for an MVP)
+// so SignUp.jsx can credit it.
+async function handleShareApp(uid) {
+  const url = uid ? `${SHARE_URL}/signup?ref=${uid}` : SHARE_URL;
   if (navigator.share) {
     try {
-      await navigator.share({ title: 'airmoon', text: SHARE_TEXT, url: SHARE_URL });
+      await navigator.share({ title: 'airmoon', text: SHARE_TEXT, url });
     } catch {
       // Share sheet cancelled by the user — nothing to do.
     }
     return;
   }
-  window.open(`https://wa.me/?text=${encodeURIComponent(`${SHARE_TEXT} ${SHARE_URL}`)}`, '_blank');
+  window.open(`https://wa.me/?text=${encodeURIComponent(`${SHARE_TEXT} ${url}`)}`, '_blank');
 }
 
 export default function Pengaturan() {
@@ -412,6 +421,21 @@ export default function Pengaturan() {
   const [exporting, setExporting] = useState(false);
   const [importing, setImporting] = useState(false);
   const [pendingImportFile, setPendingImportFile] = useState(null); // File awaiting confirmation, or null
+  const [referralCount, setReferralCount] = useState(0);
+  const [referralRewardReceived, setReferralRewardReceived] = useState(false);
+  const [isSupporter, setIsSupporter] = useState(false);
+  const [emailOptIn, setEmailOptInState] = useState(true);
+
+  useEffect(() => watchUserProfile(user?.uid, (p) => {
+    setReferralCount(p?.referralCount || 0);
+    setReferralRewardReceived(p?.referralRewardReceived || false);
+    setIsSupporter(p?.isSupporter || false);
+  }), [user?.uid]);
+  useEffect(() => watchEmailOptIn(user?.uid, setEmailOptInState), [user?.uid]);
+
+  // Rose Gold accent (lib/accentColor.js) unlocks 3 ways: you've referred
+  // someone, you were referred, or you're a Sahabat airmoon supporter.
+  const hasExclusiveAccent = referralCount > 0 || referralRewardReceived || isSupporter;
 
   // Export/backup personal data — dzikir streak, ayat favorit, tabungan
   // umroh, and a few other personal records had no way for a user to get
@@ -528,31 +552,43 @@ export default function Pengaturan() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 4, borderTop: '1px solid var(--border)' }}>
               <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--muted)' }}>Warna Aksen</span>
-              <div style={{ display: 'flex', gap: 10 }}>
-                {ACCENT_OPTIONS.map((opt) => (
-                  <button
-                    key={opt.id}
-                    onClick={() => {
-                      setAccentColor(opt.id);
-                      setAccentId(opt.id);
-                    }}
-                    aria-label={opt.label}
-                    aria-pressed={accentId === opt.id}
-                    title={opt.label}
-                    style={{
-                      width: 34,
-                      height: 34,
-                      borderRadius: '50%',
-                      border: accentId === opt.id ? '2.5px solid var(--ink)' : '2px solid transparent',
-                      padding: 2,
-                      background: 'none',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    <span style={{ display: 'block', width: '100%', height: '100%', borderRadius: '50%', background: opt.swatch }} />
-                  </button>
-                ))}
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                {ACCENT_OPTIONS.map((opt) => {
+                  const locked = opt.exclusive && !hasExclusiveAccent;
+                  return (
+                    <button
+                      key={opt.id}
+                      onClick={() => {
+                        if (locked) return;
+                        setAccentColor(opt.id);
+                        setAccentId(opt.id);
+                      }}
+                      aria-label={locked ? `${opt.label} (terkunci — ajak teman atau jadi Sahabat airmoon buat buka)` : opt.label}
+                      aria-pressed={accentId === opt.id}
+                      title={locked ? `${opt.label} — ajak teman atau jadi Sahabat airmoon buat buka` : opt.label}
+                      style={{
+                        position: 'relative',
+                        width: 34,
+                        height: 34,
+                        borderRadius: '50%',
+                        border: accentId === opt.id ? '2.5px solid var(--ink)' : '2px solid transparent',
+                        padding: 2,
+                        background: 'none',
+                        cursor: locked ? 'default' : 'pointer',
+                        opacity: locked ? 0.4 : 1,
+                      }}
+                    >
+                      <span style={{ display: 'block', width: '100%', height: '100%', borderRadius: '50%', background: opt.swatch }} />
+                      {locked && (
+                        <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12 }}>🔒</span>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
+              {!hasExclusiveAccent && (
+                <span style={{ fontSize: 10, color: 'var(--muted-soft)' }}>Warna Rose Gold terkunci — ajak teman (di atas) atau jadi Sahabat airmoon (di bawah) buat buka.</span>
+              )}
             </div>
           </div>
 
@@ -569,7 +605,7 @@ export default function Pengaturan() {
           <InstallAppCard variant="settings" />
 
           <button
-            onClick={handleShareApp}
+            onClick={() => handleShareApp(user?.uid)}
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -584,17 +620,77 @@ export default function Pengaturan() {
               fontFamily: 'inherit',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
               <div style={{ width: 36, height: 36, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: 'var(--mint)' }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)">
                   <circle cx="18" cy="5" r="2.6" strokeWidth="1.6" /><circle cx="6" cy="12" r="2.6" strokeWidth="1.6" /><circle cx="18" cy="19" r="2.6" strokeWidth="1.6" />
                   <path d="m8.3 10.7 7.4-4.2M8.3 13.3l7.4 4.2" strokeWidth="1.6" strokeLinecap="round" />
                 </svg>
               </div>
-              <span style={{ fontSize: 13, fontWeight: 700 }}>Ajak Teman Pakai airmoon</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 1, minWidth: 0 }}>
+                <span style={{ fontSize: 13, fontWeight: 700 }}>Ajak Teman Pakai airmoon</span>
+                <span style={{ fontSize: 10.5, color: 'var(--muted)' }}>Dapetin warna aksen Rose Gold tiap ada yang daftar{referralCount > 0 ? ` · ${referralCount} orang udah gabung` : ''}</span>
+              </div>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" style={{ flexShrink: 0 }}><path d="m9 6 6 6-6 6" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+          </button>
+
+          {user && <SupporterCard user={user} isSupporter={isSupporter} />}
+
+          <div
+            className="card"
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '14px 16px' }}
+          >
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 1, minWidth: 0 }}>
+              <span style={{ fontSize: 13, fontWeight: 700 }}>Boleh Dihubungi Lewat Email</span>
+              <span style={{ fontSize: 10.5, color: 'var(--muted)' }}>Buat info penting kalau kamu jarang buka notifikasi</span>
+            </div>
+            <ToggleSwitch checked={emailOptIn} onChange={(v) => { setEmailOptInState(v); user && setEmailOptIn(user.uid, v); }} />
+          </div>
+
+          <Link
+            to="/lainnya/usulan-fitur"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '14px 16px',
+              borderRadius: 18,
+              border: '1px solid var(--border)',
+              textDecoration: 'none',
+              color: 'inherit',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: 'var(--cream)' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gold-ink-dark)"><path d="M12 3v13m0 0-4-4m4 4 4-4M5 19h14" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              </div>
+              <span style={{ fontSize: 13, fontWeight: 700 }}>Usulkan Fitur</span>
             </div>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)"><path d="m9 6 6 6-6 6" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
-          </button>
+          </Link>
+
+          <Link
+            to="/lainnya/bantuan"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '14px 16px',
+              borderRadius: 18,
+              border: '1px solid var(--border)',
+              textDecoration: 'none',
+              color: 'inherit',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: 'var(--blue-gray)' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink)"><circle cx="12" cy="12" r="9" strokeWidth="1.6" /><path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2 1.8-2 3.3M12 16.5v.01" strokeWidth="1.8" strokeLinecap="round" /></svg>
+              </div>
+              <span style={{ fontSize: 13, fontWeight: 700 }}>Bantuan</span>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)"><path d="m9 6 6 6-6 6" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+          </Link>
 
           <button
             onClick={handleExportData}

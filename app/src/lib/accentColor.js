@@ -15,6 +15,13 @@ export const ACCENT_OPTIONS = [
   { id: 'safir', label: 'Safir', swatch: '#1d4e89', primary: '#1d4e89', primaryDark: '#122f54', accent: '#9cc3ee' },
   { id: 'marun', label: 'Marun', swatch: '#7a2233', primary: '#7a2233', primaryDark: '#4a1420', accent: '#eeaab6' },
   { id: 'ungu', label: 'Ungu', swatch: '#5b3a8e', primary: '#5b3a8e', primaryDark: '#382258', accent: '#d3bbf5' },
+  // Exclusive — only shown/selectable once `referralCount > 0` or
+  // `isSupporter === true` on the user's profile (see Pengaturan.jsx's
+  // rendering of this list). A real, no-new-infra incentive for the
+  // referral program and the Sahabat airmoon supporter tier, both added
+  // 2026-09-12, rather than a cash/points reward neither of those needed
+  // new payment/currency plumbing to grant.
+  { id: 'rosegold', label: 'Rose Gold', swatch: '#a8657a', primary: '#a8657a', primaryDark: '#6e3d4c', accent: '#f0c3d1', exclusive: true },
 ];
 
 const KEY = 'airmoon-accent-color';

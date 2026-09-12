@@ -8,6 +8,7 @@ import Logo from '../components/Logo';
 import { AUTH_PHOTO_LIGHT, AUTH_PHOTO_DARK } from '../data/photos';
 import PasswordField from '../components/PasswordField';
 import FadeImage from '../components/FadeImage';
+import { capturePendingReferral, recordReferralIfPending } from '../lib/referral';
 
 function mapAuthError(code) {
   const m = {
@@ -32,8 +33,18 @@ export default function SignUp() {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
+  // Referral program (2026-09-12) — captured on mount (survives a detour
+  // through Login before actually signing up), credited once the signup
+  // itself actually succeeds.
   useEffect(() => {
-    if (user) navigate('/');
+    capturePendingReferral();
+  }, []);
+
+  useEffect(() => {
+    if (user) {
+      recordReferralIfPending(user.uid);
+      navigate('/');
+    }
   }, [user, navigate]);
 
   async function handleSubmit(e) {

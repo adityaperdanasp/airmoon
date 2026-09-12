@@ -4,16 +4,20 @@
 // completed, (3) the Friday Al-Kahf reminder, (4) the monthly donation
 // pledge reminder, (5) the Zakat Fitrah reminder (last 5 days of Ramadan),
 // (6) the Puasa Sunnah reminder (Senin/Kamis + Ayyamul Bidh), (7) the
-// daily "Kutipan Hari Ini" push, (8) the monthly sedekah recap, and (9)
-// the monthly Zakat Penghasilan reminder — everything but (1) is a real
-// FCM push to the user themselves. All nine live in one function/one cron
-// entry deliberately — the Hobby plan caps a deployment at 12 Serverless
-// Functions total, and this repo was already at that cap, so a separate
-// daily-cron function for any one of these alone would have pushed a
-// `vercel --prod` deploy over the limit (hit for real, 2026-09-02: "No
-// more than 12 Serverless Functions can be added..."). None of the nine
-// is time-sensitive enough to need its own schedule, so merging them costs
-// nothing.
+// daily "Kutipan Hari Ini" push, (8) the monthly sedekah recap, (9) the
+// monthly Zakat Penghasilan reminder, (10) crediting a referrer's
+// referralCount once their referral's signup has landed (2026-09-12 —
+// see lib/referral.js), and (11) a combined digest of new
+// campaignRequests/umrohLeads/supportRequests submissions (2026-09-12) —
+// everything but (1) and (11) is a real FCM push to the user themselves,
+// (11) is a Telegram alert to the founder. All eleven live in one
+// function/one cron entry deliberately — the Hobby plan caps a deployment
+// at 12 Serverless Functions total, and this repo was already at that
+// cap, so a separate daily-cron function for any one of these alone would
+// have pushed a `vercel --prod` deploy over the limit (hit for real,
+// 2026-09-02: "No more than 12 Serverless Functions can be added...").
+// None of the eleven is time-sensitive enough to need its own schedule,
+// so merging them costs nothing.
 //
 // Triggered once a day by Vercel's own native Cron Jobs (see the `crons`
 // entry in vercel.json) rather than the external cron-job.org pinger
@@ -164,7 +168,11 @@ async function checkMonthlyPledgeReminders(db) {
       const u = docSnap.data();
       const pledge = u.monthlyPledge;
       const tokens = u.fcmTokens || [];
-      if (!tokens.length || !pledge?.amount || u.lastPledgeReminderMonth === monthKey || u.notifPrefs?.donasi === false) continue;
+      // Sahabat airmoon supporters (2026-09-12) skip this specific nag —
+      // a real perk for someone already financially supporting the app,
+      // not a suppression of every donation-related push (campaign-funded
+      // and sedekah-recap notifications still reach them normally).
+      if (!tokens.length || !pledge?.amount || u.lastPledgeReminderMonth === monthKey || u.notifPrefs?.donasi === false || u.isSupporter) continue;
 
       const amountStr = `Rp ${Number(pledge.amount).toLocaleString('id-ID')}`;
       const result = await messaging.sendEachForMulticast({
@@ -521,6 +529,76 @@ async function checkZakatPenghasilanReminder(db) {
   return { notified, errors };
 }
 
+// Referral program (2026-09-12) — see lib/referral.js's own header for
+// why crediting the REFERRER's reward can't happen from the referee's
+// client session (firestore.rules only allows a user to write their own
+// doc). This query only ever matches a user with a referral genuinely
+// still pending reward, so it stays small regardless of total user count.
+async function checkReferralRewards(db) {
+  const snap = await db.collection('users').where('referralRewarded', '==', false).get();
+  const rewarded = [];
+  const errors = [];
+
+  for (const docSnap of snap.docs) {
+    try {
+      const u = docSnap.data();
+      if (!u.referredBy) continue;
+      const referrerRef = db.collection('users').doc(u.referredBy);
+      const referrerSnap = await referrerRef.get();
+      if (referrerSnap.exists) {
+        await referrerRef.set({ referralCount: FieldValue.increment(1) }, { merge: true });
+      }
+      await docSnap.ref.set({ referralRewarded: true }, { merge: true });
+      rewarded.push({ referee: docSnap.id, referrer: u.referredBy });
+    } catch (err) {
+      errors.push({ uid: docSnap.id, error: err.message });
+    }
+  }
+
+  return { rewarded, errors };
+}
+
+// Daily digest for 3 new lead-gen forms (2026-09-12): Ajukan Campaign
+// Masjid, Minat Umroh, and "Hubungi Kami" support requests — see
+// lib/leadForms.js and firestore.rules' matching comments for why none
+// of these auto-publish/auto-respond. One combined Telegram message
+// covering all three rather than three separate alerts, and folded into
+// this existing daily cron rather than a new endpoint for the same
+// 12-function Hobby-plan reason as every other check in this file — the
+// real trade-off is a submission surfaces to the founder up to ~24h
+// later, not instantly, which is an acceptable delay for a manually-
+// reviewed form (unlike, say, a prayer-time push).
+async function checkNewLeadFormsDigest(db) {
+  const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const [campaignSnap, umrohSnap, supportSnap] = await Promise.all([
+    db.collection('campaignRequests').where('createdAt', '>=', since).get(),
+    db.collection('umrohLeads').where('createdAt', '>=', since).get(),
+    db.collection('supportRequests').where('createdAt', '>=', since).get(),
+  ]);
+
+  if (!campaignSnap.size && !umrohSnap.size && !supportSnap.size) {
+    return { skipped: 'nothing-new' };
+  }
+
+  const lines = ['📋 Rekap pengajuan baru (24 jam terakhir):'];
+  if (campaignSnap.size) {
+    lines.push(`\n🕌 Ajukan Campaign Masjid (${campaignSnap.size}):`);
+    campaignSnap.forEach((d) => lines.push(`- ${d.data().namaMasjid} (${d.data().lokasi || 'lokasi belum diisi'})`));
+  }
+  if (umrohSnap.size) {
+    lines.push(`\n✈️ Minat Umroh (${umrohSnap.size}):`);
+    umrohSnap.forEach((d) => lines.push(`- ${d.data().name || 'Tanpa nama'} · ${d.data().phone}`));
+  }
+  if (supportSnap.size) {
+    lines.push(`\n💬 Hubungi Kami (${supportSnap.size}):`);
+    supportSnap.forEach((d) => lines.push(`- ${d.data().subject || 'Tanpa subjek'}: ${(d.data().message || '').slice(0, 80)}`));
+  }
+  lines.push('\nCek Firestore console (campaignRequests / umrohLeads / supportRequests) untuk detail lengkap & tindak lanjut.');
+
+  await sendTelegramNotification(lines.join('\n'));
+  return { campaignRequests: campaignSnap.size, umrohLeads: umrohSnap.size, supportRequests: supportSnap.size };
+}
+
 function initAdmin() {
   if (getApps().length) return;
   const b64 = process.env.FIREBASE_SERVICE_ACCOUNT_B64;
@@ -581,6 +659,8 @@ export default async function handler(req, res) {
     const quoteResult = await checkDailyQuoteReminder(db);
     const sedekahRecapResult = await checkMonthlySedekahRecap(db);
     const zakatPenghasilanResult = await checkZakatPenghasilanReminder(db);
+    const referralResult = await checkReferralRewards(db);
+    const leadFormsDigestResult = await checkNewLeadFormsDigest(db);
 
     return res.status(200).json({
       checked: snap.size,
@@ -593,6 +673,8 @@ export default async function handler(req, res) {
       dailyQuote: quoteResult,
       sedekahRecap: sedekahRecapResult,
       zakatPenghasilan: zakatPenghasilanResult,
+      referralRewards: referralResult,
+      leadFormsDigest: leadFormsDigestResult,
     });
   } catch (err) {
     console.error('check-campaign-deadlines error:', err);

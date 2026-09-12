@@ -20,8 +20,18 @@
 // honest under-counting of real history, not a bug, since that data was
 // never captured.
 
-import { doc, onSnapshot, setDoc, getDoc, collection, getDocs } from 'firebase/firestore';
+import { doc, onSnapshot, setDoc, getDoc, collection, getDocs, increment, serverTimestamp } from 'firebase/firestore';
 import { db } from './firebase';
+
+// Activation metric (2026-09-12) — "did onboarding actually work" had no
+// answer without a full analytics suite, which this app doesn't have.
+// A plain, queryable Firestore field is a real (if blunt) substitute: a
+// user counts as activated once they've opened the app on 2 distinct
+// days — not just once, which barely distinguishes a curious visitor
+// from someone who's actually coming back. `loginDayCount` only
+// increments on the days markLoginPoint below actually awards the point
+// (already guarded to once/day), so this never double-counts.
+const ACTIVATION_LOGIN_DAYS = 2;
 
 export const SHOLAT_KEYS = ['subuh', 'dzuhur', 'ashar', 'maghrib', 'isya'];
 export const SHOLAT_LABELS = { subuh: 'Subuh', dzuhur: 'Dzuhur', ashar: 'Ashar', maghrib: 'Maghrib', isya: 'Isya' };
@@ -82,6 +92,25 @@ export async function markLoginPoint(uid) {
   const snap = await getDoc(ref);
   if (snap.exists() && snap.data().loginPoint) return;
   await setDoc(ref, { loginPoint: true }, { merge: true });
+  await bumpLoginDayCountAndActivation(uid);
+}
+
+// Split out from markLoginPoint so a failure here (rare — just an extra
+// write) never blocks the point itself from being recorded above.
+async function bumpLoginDayCountAndActivation(uid) {
+  try {
+    const userRef = doc(db, 'users', uid);
+    const userSnap = await getDoc(userRef);
+    const current = userSnap.data() || {};
+    const nextCount = (current.loginDayCount || 0) + 1;
+    const update = { loginDayCount: increment(1) };
+    if (!current.activatedAt && nextCount >= ACTIVATION_LOGIN_DAYS) {
+      update.activatedAt = serverTimestamp();
+    }
+    await setDoc(userRef, update, { merge: true });
+  } catch {
+    // Best-effort — losing this write just delays the activatedAt flag, doesn't break login itself.
+  }
 }
 
 // Recent-days completion, for a GitHub-style heatmap (components/
