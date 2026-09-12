@@ -8,6 +8,7 @@ import { fetchSurahDetail, RECITERS } from '../lib/quranApi';
 import { hasWordSync, fetchChapterTiming } from '../lib/quranTimingApi';
 import { fetchWordGloss } from '../lib/wordGlossApi';
 import { watchFavoriteAyat, addFavoriteAyat, removeFavoriteAyat } from '../lib/favoriteAyat';
+import { watchHafalanProgress, markAyatHafal, unmarkAyatHafal } from '../lib/hafalanProgress';
 import { useNightMode, NIGHT_STYLE_VARS, useArabicFontSize, MIN_ARABIC_SIZE, MAX_ARABIC_SIZE, useArabicFont, ARABIC_FONTS, useAutoNextSurah } from '../lib/readingPrefs';
 import { useFontReady } from '../lib/useFontReady';
 import { fetchSurahTafsir } from '../lib/tafsirApi';
@@ -170,6 +171,22 @@ export default function SurahReader() {
 
   useEffect(() => watchFavoriteAyat(user?.uid, setFavorites), [user?.uid]);
   const favoriteKeys = new Set(favorites.map((f) => f.id));
+  const [hafalanVerses, setHafalanVerses] = useState([]);
+  useEffect(() => watchHafalanProgress(user?.uid, setHafalanVerses), [user?.uid]);
+  const hafalanKeys = new Set(hafalanVerses);
+
+  async function toggleHafal(a) {
+    if (!user || !surah) return;
+    const key = `${surah.nomor}:${a.nomorAyat}`;
+    hapticTick();
+    if (hafalanKeys.has(key)) {
+      await unmarkAyatHafal(user.uid, surah.nomor, a.nomorAyat);
+      showToast('Ditandai belum hafal');
+    } else {
+      await markAyatHafal(user.uid, surah.nomor, a.nomorAyat);
+      showToast('Ditandai sudah hafal 🎉');
+    }
+  }
   // Per-ayat pop tracking, not lib/usePopAnimation.js's hook — this button
   // lives inside a .map() over every ayat in the surah, so a single
   // shared "popped" boolean would bounce every star at once instead of
@@ -631,6 +648,17 @@ export default function SurahReader() {
                   >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill={favoriteKeys.has(`${surah.nomor}:${a.nomorAyat}`) ? 'currentColor' : 'none'} stroke="currentColor">
                       <path d="m12 3 2.7 6.2 6.8.6-5.1 4.5 1.6 6.7L12 17.3l-5.9 3.5 1.5-6.7-5-4.5 6.7-.6Z" strokeWidth="1.4" strokeLinejoin="round" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={() => toggleHafal(a)}
+                    style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'inline-flex', color: hafalanKeys.has(`${surah.nomor}:${a.nomorAyat}`) ? 'var(--success)' : 'var(--muted-soft)' }}
+                    aria-label="Tandai sudah hafal"
+                    title="Tandai sudah hafal"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <path d="M12 3a4 4 0 0 0-4 4v1.5a4 4 0 0 0-2 3.3V15a4 4 0 0 0 4 4h.5M12 3a4 4 0 0 1 4 4v1.5a4 4 0 0 1 2 3.3V15a4 4 0 0 1-4 4h-.5M12 3v16" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                      {hafalanKeys.has(`${surah.nomor}:${a.nomorAyat}`) && <path d="m8.5 12.5 2 2 4-4.5" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />}
                     </svg>
                   </button>
                   <button

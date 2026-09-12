@@ -7,7 +7,8 @@ import { watchMyContributions } from '../lib/donations';
 import { watchPuasaSunnahLog } from '../lib/puasaSunnahLog';
 import { watchReadingStats } from '../lib/readingTime';
 import { watchReadingStreak } from '../lib/readingStreak';
-import { highestTier } from '../lib/badges';
+import { highestTier, highestHafalanTier } from '../lib/badges';
+import { watchHafalanProgress } from '../lib/hafalanProgress';
 import { formatRupiah } from '../lib/zakat';
 import { fetchRecentAmalanHarian } from '../lib/amalanHarian';
 import PageHeaderPhoto from '../components/PageHeaderPhoto';
@@ -58,7 +59,8 @@ export default function RingkasanIbadah() {
   // objects) can be told apart from "actually zero" at a glance. Tracks
   // each source's first-callback separately (rather than one combined
   // guess) since they resolve at genuinely different times.
-  const [loaded, setLoaded] = useState({ khatam: false, streaks: false, contributions: false, puasa: false, readingStats: false, readingStreak: false });
+  const [hafalanVerses, setHafalanVerses] = useState([]);
+  const [loaded, setLoaded] = useState({ khatam: false, streaks: false, contributions: false, puasa: false, readingStats: false, readingStreak: false, hafalan: false });
   const markLoaded = (key) => setLoaded((prev) => (prev[key] ? prev : { ...prev, [key]: true }));
   const allLoaded = Object.values(loaded).every(Boolean);
 
@@ -71,6 +73,7 @@ export default function RingkasanIbadah() {
   useEffect(() => watchPuasaSunnahLog(user?.uid, (v) => { setPuasaDates(v); markLoaded('puasa'); }), [user?.uid]);
   useEffect(() => watchReadingStats(user?.uid, (v) => { setReadingStats(v); markLoaded('readingStats'); }), [user?.uid]);
   useEffect(() => watchReadingStreak(user?.uid, (v) => { setReadingStreak(v); markLoaded('readingStreak'); }), [user?.uid]);
+  useEffect(() => watchHafalanProgress(user?.uid, (v) => { setHafalanVerses(v); markLoaded('hafalan'); }), [user?.uid]);
   useEffect(() => {
     if (!user?.uid) return;
     // [PM 2026-09-12] Widened from 7 to 28 days — the sparkline below only
@@ -194,6 +197,12 @@ export default function RingkasanIbadah() {
           <StatCard icon="💝" label="Total Sedekah" value={<CountUp value={totalSedekah} formatter={formatRupiah} />} sub={`${contributions.length} kali berdonasi`} />
           <StatCard icon="🌙" label="Puasa Sunnah" value={puasaDates === null ? '…' : <CountUp value={puasaDates.length} formatter={(v) => `${v}x`} />} sub="Senin/Kamis & Ayyamul Bidh" />
           <StatCard icon="📚" label="Streak Baca Qur'an" value={<CountUp value={readingStreak.current} formatter={(v) => `${v} hari`} />} sub={readingStreak.best > readingStreak.current ? `Rekor ${readingStreak.best} hari` : 'Buka Qur\'an tiap hari buat jaga streak'} />
+          <StatCard
+            icon="🧠"
+            label="Ayat Dihafal"
+            value={<CountUp value={hafalanVerses.length} formatter={(v) => `${v}`} />}
+            sub={highestHafalanTier(hafalanVerses.length) ? `${highestHafalanTier(hafalanVerses.length).icon} Badge ${highestHafalanTier(hafalanVerses.length).label}` : 'Tandai ayat yang udah dihafal di Qur\'an'}
+          />
         </div>
 
         {recentDays && (

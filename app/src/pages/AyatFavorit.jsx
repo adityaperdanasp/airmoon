@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { watchFavoriteAyat, removeFavoriteAyat, addFavoriteAyat, setFavoriteCollection } from '../lib/favoriteAyat';
+import { watchFavoriteAyat, removeFavoriteAyat, addFavoriteAyat, setFavoriteCollection, setTadabburNote } from '../lib/favoriteAyat';
 import EmptyState from '../components/EmptyState';
 import ConfirmDialog from '../components/ConfirmDialog';
 import CollectionPickerSheet from '../components/CollectionPickerSheet';
@@ -19,8 +19,21 @@ import { SkeletonCard } from '../components/Skeleton';
 // too — swipe is additive, not a replacement, and both funnel into the
 // exact same onRemove (the existing confirm + undo-toast flow further
 // down this file, not duplicated here).
-function FavoriteAyatRow({ f, onMove, onRemove }) {
+function FavoriteAyatRow({ f, onMove, onRemove, user }) {
   const { dragX, revealed, close, revealWidth, handlers } = useSwipeReveal();
+  const [showNote, setShowNote] = useState(!!f.tadabbur);
+  const [noteText, setNoteText] = useState(f.tadabbur || '');
+  const [savingNote, setSavingNote] = useState(false);
+
+  async function handleSaveNote() {
+    if (savingNote) return;
+    setSavingNote(true);
+    try {
+      await setTadabburNote(user.uid, f.chapter, f.verse, noteText);
+    } finally {
+      setSavingNote(false);
+    }
+  }
   const guardNav = (e) => {
     if (revealed) {
       e.preventDefault();
@@ -102,6 +115,17 @@ function FavoriteAyatRow({ f, onMove, onRemove }) {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
             <button
+              onClick={() => setShowNote((v) => !v)}
+              style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: f.tadabbur ? 'var(--primary)' : 'var(--muted-soft)' }}
+              aria-label="Catatan tadabbur"
+              title="Catatan tadabbur"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M4 19.5V5.5A1.5 1.5 0 0 1 5.5 4h9.5l5 5v10.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 19.5Z" strokeWidth="1.5" strokeLinejoin="round" />
+                <path d="M8 12h8M8 16h5" strokeWidth="1.4" strokeLinecap="round" />
+              </svg>
+            </button>
+            <button
               onClick={() => onMove(f)}
               style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'var(--muted-soft)' }}
               aria-label="Pindahkan ke koleksi"
@@ -126,6 +150,21 @@ function FavoriteAyatRow({ f, onMove, onRemove }) {
           <div style={{ fontFamily: "'Amiri', serif", fontSize: 19, lineHeight: 1.8, direction: 'rtl', textAlign: 'right' }}>{f.arabic}</div>
           <p style={{ margin: 0, fontSize: 12, lineHeight: 1.55, color: 'var(--muted)' }}>{f.translation}</p>
         </Link>
+
+        {showNote && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <span style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Catatan Tadabbur</span>
+            <textarea
+              placeholder="Apa yang kamu pelajari/rasakan dari ayat ini?"
+              value={noteText}
+              onChange={(e) => setNoteText(e.target.value)}
+              onBlur={handleSaveNote}
+              maxLength={500}
+              rows={2}
+              style={{ padding: '8px 10px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--ink)', fontSize: 12, fontFamily: 'inherit', resize: 'vertical' }}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
@@ -282,7 +321,7 @@ export default function AyatFavorit() {
         {favorites && favorites.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {filtered.map((f) => (
-              <FavoriteAyatRow key={f.id} f={f} onMove={setPickerFor} onRemove={setPendingRemove} />
+              <FavoriteAyatRow key={f.id} f={f} onMove={setPickerFor} onRemove={setPendingRemove} user={user} />
             ))}
 
             {filtered.length === 0 && (

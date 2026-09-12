@@ -77,3 +77,22 @@ export function highestGrupIbadahTier(count) {
   }
   return earned;
 }
+
+// Tahfiz (2026-09-12) — gated on the lifetime count of ayat marked
+// memorized (lib/hafalanProgress.js), a plain count rather than a
+// per-surah/per-juz completion model (this app has no ayat-per-surah
+// metadata cached anywhere to compute "which surahs are 100% done" from).
+export const HAFALAN_TIERS = [
+  { count: 10, icon: '🌱', label: '10 Ayat Dihafal' },
+  { count: 50, icon: '🔥', label: '50 Ayat Dihafal' },
+  { count: 200, icon: '🏅', label: '200 Ayat Dihafal' },
+  { count: 604, icon: '💎', label: '604 Ayat Dihafal' },
+];
+
+export function highestHafalanTier(count) {
+  let earned = null;
+  for (const tier of HAFALAN_TIERS) {
+    if (count >= tier.count) earned = tier;
+  }
+  return earned;
+}

@@ -44,3 +44,16 @@ export async function setFavoriteCollection(uid, chapter, verse, collectionName)
     { merge: true }
   );
 }
+
+// Catatan Tadabbur (2026-09-12) — a personal reflection note on a
+// favorited ayat, same flat-field-on-the-same-doc shape as `collection`
+// above rather than a separate subcollection: one note per ayat is all
+// this needs, and it means a note can never end up orphaned from its
+// ayat either.
+export async function setTadabburNote(uid, chapter, verse, note) {
+  await setDoc(
+    doc(db, 'users', uid, 'favoriteAyat', `${chapter}:${verse}`),
+    { tadabbur: note || null },
+    { merge: true }
+  );
+}
