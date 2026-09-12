@@ -115,6 +115,28 @@ function ManualTransferSection({ donation, user, amounts }) {
         style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--ink)', fontSize: 13 }}
       />
 
+      {/* Bulatkan & Sedekahkan (2026-09-12) — a one-tap round-up-to-nearest-
+          Rp5.000 suggestion, only shown when the typed amount isn't already
+          a round number and is a real positive value. Framing the
+          difference as "sedekah tambahan" is the whole point — a proven
+          micro-giving pattern (round-up fintech apps), applied honestly
+          here since it's purely a one-tap suggestion, never automatic. */}
+      {(() => {
+        const amountNum = Number(amount);
+        if (!Number.isFinite(amountNum) || amountNum <= 0 || amountNum % 5000 === 0) return null;
+        const rounded = Math.ceil(amountNum / 5000) * 5000;
+        return (
+          <button
+            type="button"
+            onClick={() => setAmount(String(rounded))}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '9px 12px', borderRadius: 10, border: '1px dashed var(--primary)', background: 'var(--mint)', color: 'var(--primary)', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}
+          >
+            <span>🌙 Bulatkan jadi {formatRupiah(rounded)}?</span>
+            <span>+{formatRupiah(rounded - amountNum)} sedekah tambahan</span>
+          </button>
+        );
+      })()}
+
       <button className="btn-outline" disabled={submitting} onClick={handleReport} style={{ opacity: submitting ? 0.6 : 1 }}>
         {submitting ? 'Mengirim...' : 'Saya sudah transfer'}
       </button>
