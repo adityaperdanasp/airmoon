@@ -11,6 +11,8 @@ import { watchUserProfile } from '../lib/profile';
 import { watchDoas } from '../lib/doa';
 import { markSeen } from '../lib/unseenBadges';
 import { HEADLINES, todaysHeadlineIndex } from '../data/headlines';
+import { getDailyTip } from '../data/dailyTips';
+import { shouldShowLangNudge, dismissLangNudge } from '../lib/langNudge';
 import { todaysHomePhoto } from '../data/photos';
 import { formatRupiah } from '../lib/zakat';
 import BottomNav from '../components/BottomNav';
@@ -198,6 +200,11 @@ export default function Home() {
     setShowChangelogSpotlight(shouldShowChangelogSpotlight(latestChangelogEntry, interestTag));
   }, [interestTag]);
 
+  const [showLangNudge, setShowLangNudge] = useState(false);
+  useEffect(() => {
+    setShowLangNudge(shouldShowLangNudge(lang));
+  }, [lang]);
+
   const [showChurnSurvey, setShowChurnSurvey] = useState(false);
   useEffect(() => {
     if (showOnboarding || !user || daysAway === null) return;
@@ -299,6 +306,11 @@ export default function Home() {
   // an explicit ask), one per day so it isn't the exact same picture
   // every single visit, same day-of-year approach as the headline above.
   const headerPhoto = todaysHomePhoto(theme);
+  // Tips Islami Harian (2026-09-12) — same interestTag Home already
+  // reorders the Layanan grid by (see reorderSvcByInterest above),
+  // reused so the one daily tip actually matches why this person opened
+  // the app instead of showing the same generic quote to everyone.
+  const dailyTip = getDailyTip(interestTag);
 
   return (
     <div className="screen">
@@ -414,6 +426,32 @@ export default function Home() {
             {headline}
           </h1>
         </div>
+
+        <div className="card" style={{ display: 'flex', gap: 10, padding: '12px 14px', alignItems: 'flex-start' }}>
+          <span style={{ fontSize: 16, lineHeight: 1 }}>💡</span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <span style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Tips Hari Ini</span>
+            <span style={{ fontSize: 12, lineHeight: 1.5 }}>{dailyTip}</span>
+          </div>
+        </div>
+
+        {showLangNudge && (
+          <div className="card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '12px 14px', background: 'var(--blue-gray)' }}>
+            <span style={{ fontSize: 12, fontWeight: 700 }}>🌐 Your phone looks set to English — switch airmoon's language in Settings.</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+              <Link to="/pengaturan" onClick={() => { dismissLangNudge(); setShowLangNudge(false); }} style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--primary)', textDecoration: 'none' }}>
+                Settings
+              </Link>
+              <button
+                onClick={() => { dismissLangNudge(); setShowLangNudge(false); }}
+                aria-label="Tutup"
+                style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: 16, cursor: 'pointer', padding: 0, lineHeight: 1 }}
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        )}
 
         {showWelcomeBack && (
           <div className="card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '12px 14px', background: 'var(--mint-soft)' }}>
