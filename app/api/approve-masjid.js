@@ -71,6 +71,8 @@ export default async function handler(req, res) {
     if (body.meterPhotoUrl) docData.meterPhotoUrl = String(body.meterPhotoUrl);
     if (body.waPic) docData.waPic = String(body.waPic);
     if (body.submissionRow) docData.submissionRow = body.submissionRow; // for tracing back to the Sheet row
+    if (body.lokasi) docData.lokasi = String(body.lokasi).trim(); // e.g. "Kota Bandung, Jawa Barat" — for the location filter
+    if (body.submitterUid) docData.submitterUid = String(body.submitterUid).trim(); // lets that uid post "Update dari Masjid" later
 
     const ref = await db.collection('donations').add(docData);
     return res.status(200).json({ ok: true, id: ref.id });

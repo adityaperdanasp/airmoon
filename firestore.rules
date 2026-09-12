@@ -69,6 +69,48 @@ service cloud.firestore {
     match /donations/{id} {
       allow read: if true;
       allow write: if false;
+
+      // Wall of Gratitude (2026-09-12) — re-scoped from "masjid admin
+      // posts a thank-you" (this app has no clean way to authenticate
+      // "you're the admin of this specific masjid" — donations/{id} has
+      // no owner uid) to a public testimoni wall: any signed-in user can
+      // post a short note of thanks on a campaign that's actually funded
+      // (request.resource.data still can't fake a fully-funded campaign
+      // — the `get()` check reads the REAL donation doc). Same low-stakes
+      // trust level as doas/featureRequests, no money involved here
+      // either.
+      match /gratitude/{gratitudeId} {
+        allow read: if true;
+        allow create: if request.auth != null
+          && request.resource.data.uid == request.auth.uid
+          && request.resource.data.text is string
+          && request.resource.data.text.size() > 0
+          && request.resource.data.text.size() <= 300
+          && get(/databases/$(database)/documents/donations/$(id)).data.collected
+             >= get(/databases/$(database)/documents/donations/$(id)).data.target;
+        allow update, delete: if request.auth != null && request.auth.uid == resource.data.uid;
+      }
+
+      // Update dari Masjid (2026-09-12) — a lean "admin dashboard"
+      // substitute: `donations/{id}.submitterUid` is a new OPTIONAL field
+      // (api/approve-masjid.js accepts it from the Sheet, same
+      // "only stored if present" pattern every other optional field
+      // there already uses) the founder can set when approving a
+      // campaign that came from a known Ajukan Campaign Masjid
+      // submission. No existing campaign has this set yet — it's
+      // shovel-ready, not yet usable, until the founder starts passing
+      // it through. Whoever's uid matches it can post short public
+      // updates on their own campaign.
+      match /updates/{updateId} {
+        allow read: if true;
+        allow create: if request.auth != null
+          && request.resource.data.uid == request.auth.uid
+          && request.resource.data.text is string
+          && request.resource.data.text.size() > 0
+          && request.resource.data.text.size() <= 500
+          && request.auth.uid == get(/databases/$(database)/documents/donations/$(id)).data.submitterUid;
+        allow update, delete: if false;
+      }
     }
 
     // One doc per Midtrans Snap transaction attempt, created by
@@ -357,6 +399,65 @@ service cloud.firestore {
         && request.resource.data.message.size() <= 500
         && request.resource.data.source is string
         && request.resource.data.url is string;
+      allow read, update, delete: if false;
+    }
+
+    // Kalkulator Zakat Korporat lead (2026-09-12) — same create-own,
+    // no-read-back, founder-follows-up-manually shape as
+    // campaignRequests/umrohLeads/supportRequests above.
+    match /corporateZakatLeads/{id} {
+      allow create: if request.auth != null
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.companyName is string
+        && request.resource.data.companyName.size() > 0
+        && request.resource.data.companyName.size() <= 200
+        && request.resource.data.contact is string
+        && request.resource.data.contact.size() > 0;
+      allow read, update, delete: if false;
+    }
+
+    // Doa Bersama Terjadwal (2026-09-12) — a scheduled community-prayer
+    // moment anyone can propose (same public-write trust level as `doas`
+    // itself — no money, worst case a low-effort annoyance), others can
+    // "Ikut" (join). `participantCount` follows the exact same
+    // increment-on-toggle/existence-subcollection shape `doas.aminCount`
+    // already established.
+    match /doaBersama/{id} {
+      allow read: if true;
+      allow create: if request.auth != null
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.title.size() <= 120
+        && request.resource.data.scheduledFor is timestamp
+        && request.resource.data.participantCount == 0;
+      allow update: if request.auth != null
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['participantCount']);
+      allow delete: if request.auth != null && request.auth.uid == resource.data.uid;
+
+      match /participants/{uid} {
+        allow read: if true;
+        allow write: if request.auth != null && request.auth.uid == uid;
+      }
+    }
+
+    // Reaksi jawaban Ust. Rewin (2026-09-12) — one doc per feedback tap,
+    // no read-back needed (aggregate quality signal only, founder skims
+    // via console) — same create-only shape as npsResponses.
+    match /askMeFeedback/{id} {
+      allow create: if request.auth != null
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.helpful is bool;
+      allow read, update, delete: if false;
+    }
+
+    // Minat Jadi Relawan (2026-09-12) — same lead-gen shape as
+    // umrohLeads/corporateZakatLeads above.
+    match /volunteerLeads/{id} {
+      allow create: if request.auth != null
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.phone is string
+        && request.resource.data.phone.size() > 0;
       allow read, update, delete: if false;
     }
 

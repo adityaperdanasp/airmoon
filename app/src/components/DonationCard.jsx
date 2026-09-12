@@ -5,6 +5,8 @@ import { formatRupiah } from '../lib/zakat';
 import { useAuth } from '../context/AuthContext';
 import { watchUserProfile } from '../lib/profile';
 import { isSupporterCrossSellEnabled } from '../lib/remoteConfig';
+import { watchGratitude, postGratitude } from '../lib/gratitude';
+import { watchDonationUpdates, postDonationUpdate } from '../lib/donationUpdates';
 
 const dateFmt = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
@@ -126,6 +128,116 @@ function ManualTransferSection({ donation, user, amounts }) {
   );
 }
 
+// Update dari Masjid + Wall of Gratitude (2026-09-12) — collapsed by
+// default so it doesn't bloat this same component's compact rendering on
+// Home. See lib/donationUpdates.js/lib/gratitude.js for the two
+// underlying features; kept in one collapsible section since they're
+// both "extra context about this specific campaign", not core to the
+// give-money flow above.
+function UpdatesAndGratitude({ donation, user }) {
+  const [open, setOpen] = useState(false);
+  const [updates, setUpdates] = useState(null);
+  const [gratitude, setGratitude] = useState(null);
+  const [text, setText] = useState('');
+  const [posting, setPosting] = useState(false);
+  const [updateText, setUpdateText] = useState('');
+  const [postingUpdate, setPostingUpdate] = useState(false);
+  const isFunded = donation.collected >= donation.target;
+  const isSubmitter = !!user && !!donation.submitterUid && user.uid === donation.submitterUid;
+
+  useEffect(() => {
+    if (!open) return;
+    const unsubUpdates = watchDonationUpdates(donation.id, setUpdates);
+    const unsubGratitude = watchGratitude(donation.id, setGratitude);
+    return () => {
+      unsubUpdates();
+      unsubGratitude();
+    };
+  }, [open, donation.id]);
+
+  async function handlePost(e) {
+    e.preventDefault();
+    if (!user || posting) return;
+    setPosting(true);
+    try {
+      await postGratitude(donation.id, text, user);
+      setText('');
+    } finally {
+      setPosting(false);
+    }
+  }
+
+  async function handlePostUpdate(e) {
+    e.preventDefault();
+    if (!user || postingUpdate) return;
+    setPostingUpdate(true);
+    try {
+      await postDonationUpdate(donation.id, updateText, user);
+      setUpdateText('');
+    } finally {
+      setPostingUpdate(false);
+    }
+  }
+
+  if (!open) {
+    return (
+      <button
+        onClick={() => setOpen(true)}
+        style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: 11.5, textDecoration: 'underline', cursor: 'pointer', padding: 0 }}
+      >
+        Update & Ucapan Masjid
+      </button>
+    );
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      {updates?.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <span style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Update dari Masjid</span>
+          {updates.map((u) => (
+            <p key={u.id} style={{ margin: 0, fontSize: 12, lineHeight: 1.5, padding: '8px 10px', borderRadius: 10, background: 'var(--bg)' }}>{u.text}</p>
+          ))}
+        </div>
+      )}
+
+      {gratitude?.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <span style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Ucapan Terima Kasih</span>
+          {gratitude.map((g) => (
+            <div key={g.id} style={{ padding: '8px 10px', borderRadius: 10, background: 'var(--cream)' }}>
+              <span style={{ fontSize: 12, lineHeight: 1.5 }}>{g.text}</span>
+              <div style={{ fontSize: 10, color: 'var(--muted)', marginTop: 2 }}>— {g.authorName}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {isSubmitter && (
+        <form onSubmit={handlePostUpdate} style={{ display: 'flex', gap: 8 }}>
+          <div className="input-row" style={{ flex: 1 }}>
+            <input placeholder="Tulis update progress campaign..." value={updateText} onChange={(e) => setUpdateText(e.target.value)} maxLength={500} />
+          </div>
+          <button className="btn" type="submit" style={{ width: 'auto', padding: '0 16px' }} disabled={postingUpdate || !updateText.trim()}>Post</button>
+        </form>
+      )}
+
+      {isFunded && user && (
+        <form onSubmit={handlePost} style={{ display: 'flex', gap: 8 }}>
+          <div className="input-row" style={{ flex: 1 }}>
+            <input placeholder="Tulis ucapan terima kasih..." value={text} onChange={(e) => setText(e.target.value)} maxLength={300} />
+          </div>
+          <button className="btn" type="submit" style={{ width: 'auto', padding: '0 16px' }} disabled={posting || !text.trim()}>Kirim</button>
+        </form>
+      )}
+
+      {!updates?.length && !gratitude?.length && (
+        <span style={{ fontSize: 11, color: 'var(--muted-soft)' }}>Belum ada update atau ucapan buat campaign ini.</span>
+      )}
+    </div>
+  );
+}
+
 // Self-contained: owns its own Midtrans Snap flow (loading state + result
 // message) so any page can just render one of these per campaign without
 // wiring up payment handling itself — used by both Donasi.jsx (full list)
@@ -186,6 +298,20 @@ export default function DonationCard({ donation, amounts = [10000, 25000, 50000]
           <span style={{ fontSize: 11, color: 'var(--muted)' }}>#PLN-{donation.plnId} · Connect ke PLN Mobile</span>
         </div>
       </div>
+
+      {/* [PM 2026-09-12] Originally scoped as a "verified" filter badge,
+          re-scoped after checking api/approve-masjid.js: every single
+          live campaign is ALREADY only ever created via that manually-
+          reviewed pipeline (donations/{id} has been fully server-write-
+          only for a while now — see firestore.rules) — there's no
+          "unverified" tier to actually distinguish from. A plain trust
+          signal instead, shown on all of them equally, honestly
+          reflecting what's actually true rather than implying a filter
+          that doesn't exist. */}
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, alignSelf: 'flex-start', fontSize: 10, fontWeight: 700, color: 'var(--success)' }}>
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m4 12 5 5L20 6" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" /></svg>
+        Direview Tim airmoon
+      </span>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         <div style={{ width: '100%', height: 7, borderRadius: 999, overflow: 'hidden', background: 'var(--mint)' }}>
           <div style={{ width: `${pct}%`, height: '100%', background: 'var(--accent)' }} />
@@ -255,6 +381,7 @@ export default function DonationCard({ donation, amounts = [10000, 25000, 50000]
       )}
 
       <ManualTransferSection donation={donation} user={user} amounts={amounts} />
+      <UpdatesAndGratitude donation={donation} user={user} />
     </div>
   );
 }
