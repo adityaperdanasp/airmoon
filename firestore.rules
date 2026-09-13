@@ -492,13 +492,21 @@ service cloud.firestore {
         allow write: if request.auth != null && request.auth.uid == uid;
       }
 
+      // `questionUid` (2026-09-13) — denormalized onto the answer so
+      // check-campaign-deadlines.js's weekly recap can group new answers
+      // by asker via one collectionGroup query instead of a per-question
+      // lookup. Cross-checked against the real question doc's own `uid`
+      // via get() so a client can never spoof it to point at the wrong
+      // asker — same "never trust client-asserted state for anything
+      // that matters" posture as the gratitude/donation-funded check.
       match /answers/{answerId} {
         allow read: if true;
         allow create: if request.auth != null
           && request.resource.data.uid == request.auth.uid
           && request.resource.data.text is string
           && request.resource.data.text.size() > 0
-          && request.resource.data.text.size() <= 1000;
+          && request.resource.data.text.size() <= 1000
+          && request.resource.data.questionUid == get(/databases/$(database)/documents/communityQuestions/$(id)).data.uid;
         allow update, delete: if request.auth != null && request.auth.uid == resource.data.uid;
       }
     }

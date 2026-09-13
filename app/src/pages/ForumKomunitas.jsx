@@ -66,7 +66,7 @@ function QuestionDetail({ question, onBack }) {
     if (!user || posting) return;
     setPosting(true);
     try {
-      await submitAnswer(question.id, user, text);
+      await submitAnswer(question, user, text);
       setText('');
     } catch (err) {
       showToast(err.message || 'Gagal kirim jawaban.', { type: 'danger' });

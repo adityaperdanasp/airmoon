@@ -627,6 +627,25 @@ async function checkWeeklyRecapPush(db) {
     sedekahTotals.set(uid, (sedekahTotals.get(uid) || 0) + (doc.data().amount || 0));
   }
 
+  // Jawaban forum baru (2026-09-13) — one collectionGroup query across
+  // every question's `answers` subcollection, grouped by the ASKER's uid
+  // (`questionUid`, denormalized onto each answer doc at write time by
+  // lib/communityQA.js's submitAnswer — see its own comment for why: this
+  // avoids a per-question lookup here entirely, same cheap shape as the
+  // `contributions` collectionGroup query right above). Capped at 2 titles
+  // per asker so someone with a very active question doesn't get an
+  // unreadably long line.
+  const answersSnap = await db.collectionGroup('answers').where('createdAt', '>=', weekStart).get();
+  const newAnswersByAsker = new Map();
+  for (const doc of answersSnap.docs) {
+    const d = doc.data();
+    if (!d.questionUid) continue; // answers from before this field existed
+    if (d.questionUid === d.uid) continue; // someone answering their own question isn't a notification-worthy event
+    const list = newAnswersByAsker.get(d.questionUid) || [];
+    if (list.length < 2) list.push(d.questionTitle || 'pertanyaanmu');
+    newAnswersByAsker.set(d.questionUid, list);
+  }
+
   const messaging = getMessaging();
   const snap = await db.collection('users').where('notifEnabled', '==', true).get();
   const notified = [];
@@ -676,13 +695,16 @@ async function checkWeeklyRecapPush(db) {
         await docSnap.ref.set({ lastKnownBadgeThresholds: currentThresholds }, { merge: true });
       }
 
-      if (!dzikirPagi && !dzikirPetang && !reading && !sedekah && !newBadges.length) continue;
+      const newAnswers = newAnswersByAsker.get(docSnap.id) || [];
+
+      if (!dzikirPagi && !dzikirPetang && !reading && !sedekah && !newBadges.length && !newAnswers.length) continue;
 
       const parts = [];
       if (reading > 0) parts.push(`streak baca ${reading} hari`);
       if (dzikirPagi > 0 || dzikirPetang > 0) parts.push(`streak dzikir ${Math.max(dzikirPagi, dzikirPetang)} hari`);
       if (sedekah > 0) parts.push(`sedekah Rp ${sedekah.toLocaleString('id-ID')}`);
       if (newBadges.length > 0) parts.push(`badge baru: ${newBadges.join(', ')}`);
+      if (newAnswers.length > 0) parts.push(`ada jawaban baru buat "${newAnswers.join('", "')}" di Tanya Jawab`);
 
       // [PM 2026-09-12] Grup Ibadah mention — only queried for users who
       // already have something to report (the continue above already
@@ -702,6 +724,29 @@ async function checkWeeklyRecapPush(db) {
             groupTotal += (d.dzikirPagiStreak || 0) + (d.dzikirPetangStreak || 0) + (d.readingStreak || 0);
           });
           if (groupTotal > 0) parts.push(`grup "${group.data().name}" total streak gabungan ${groupTotal} hari`);
+        }
+      } catch {
+        // Best-effort — the personal recap below still sends without this line.
+      }
+
+      // Progress teman di Tantangan Teman (2026-09-13) — identical shape
+      // to the Grup Ibadah lookup right above (a friend pair IS a
+      // `groups` doc, see lib/friends.js), just reading the OTHER
+      // member's `weeklyScore` instead of summing streak fields. Also
+      // best-effort, same reasoning.
+      try {
+        const friendSnap = await db.collection('groups')
+          .where('memberUids', 'array-contains', docSnap.id)
+          .where('type', '==', 'friend')
+          .limit(1)
+          .get();
+        if (!friendSnap.empty) {
+          const pairRef = friendSnap.docs[0].ref;
+          const statsSnap = await pairRef.collection('memberStats').get();
+          const partner = statsSnap.docs.map((s) => ({ uid: s.id, ...s.data() })).find((m) => m.uid !== docSnap.id);
+          if (partner && (partner.weeklyScore || 0) > 0) {
+            parts.push(`temanmu di Tantangan Teman dapet ${partner.weeklyScore} poin minggu ini`);
+          }
         }
       } catch {
         // Best-effort — the personal recap below still sends without this line.

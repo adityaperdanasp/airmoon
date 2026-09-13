@@ -74,19 +74,28 @@ export function watchAnswers(questionId, callback) {
 // writing) so the new answer doc and the parent's answerCount bump land
 // together: a batch is atomic, so a rules rejection on either half never
 // leaves an orphaned answer with no count, or vice versa.
-export async function submitAnswer(questionId, user, text) {
+//
+// `questionUid` (2026-09-13) — denormalized from the parent question
+// onto the answer doc itself so check-campaign-deadlines.js's weekly
+// recap can group new answers by asker via one collectionGroup('answers')
+// query, no per-question lookup needed. firestore.rules' create rule
+// cross-checks this against the real question doc via get(), so it can
+// never be spoofed to point at the wrong asker.
+export async function submitAnswer(question, user, text) {
   const trimmed = text.trim();
   if (!trimmed) throw new Error('Jawaban gak boleh kosong.');
   if (trimmed.length > MAX_ANSWER_LENGTH) throw new Error(`Jawaban maksimal ${MAX_ANSWER_LENGTH} karakter.`);
 
   const batch = writeBatch(db);
-  const answerRef = doc(collection(db, 'communityQuestions', questionId, 'answers'));
+  const answerRef = doc(collection(db, 'communityQuestions', question.id, 'answers'));
   batch.set(answerRef, {
     uid: user.uid,
     authorName: user.displayName || user.email || 'Sahabat airmoon',
     text: trimmed,
+    questionUid: question.uid,
+    questionTitle: question.title,
     createdAt: serverTimestamp(),
   });
-  batch.update(doc(db, 'communityQuestions', questionId), { answerCount: increment(1) });
+  batch.update(doc(db, 'communityQuestions', question.id), { answerCount: increment(1) });
   await batch.commit();
 }
