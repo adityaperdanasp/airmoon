@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import TopBar from '../components/TopBar';
 import EmptyState from '../components/EmptyState';
+import { SkeletonCard } from '../components/Skeleton';
 import { watchUserProfile } from '../lib/profile';
 import {
   createGroup, joinGroupByCode, watchMyGroups, watchGroup,
@@ -255,7 +256,12 @@ export default function GrupIbadah() {
               </form>
             )}
 
-            {groups === null ? null : groups.length === 0 ? (
+            {groups === null ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <SkeletonCard height={56} radius={14} />
+                <SkeletonCard height={56} radius={14} />
+              </div>
+            ) : groups.length === 0 ? (
               <EmptyState icon="👪" title="Belum punya grup" subtitle="Buat grup buat keluarga/circle pengajian kamu, atau gabung pakai kode undangan." />
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>

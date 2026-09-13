@@ -3,6 +3,8 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import TopBar from '../components/TopBar';
 import EmptyState from '../components/EmptyState';
+import { SkeletonCard } from '../components/Skeleton';
+import { hapticTick } from '../lib/haptics';
 import {
   createFriendPair, joinFriendPairByCode, watchMyFriendPairs,
   watchFriendPairStats, reportMyWeeklyScore, watchGroupDoc,
@@ -94,6 +96,7 @@ export default function TantanganTeman() {
 
   async function handleCreate() {
     if (!user || busy) return;
+    hapticTick();
     setBusy(true);
     try {
       const { groupId } = await createFriendPair(user);
@@ -109,6 +112,7 @@ export default function TantanganTeman() {
   async function handleJoin(e) {
     e.preventDefault();
     if (!user || busy) return;
+    hapticTick();
     setBusy(true);
     try {
       const groupId = await joinFriendPairByCode(user, joinCode, 1);
@@ -157,8 +161,19 @@ export default function TantanganTeman() {
               </form>
             )}
 
-            {pairs === null ? null : pairs.length === 0 ? (
-              <EmptyState icon="🤝" title="Belum ada tantangan" subtitle="Ajak temanmu buat saling pantau konsistensi ibadah mingguan." />
+            {pairs === null ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <SkeletonCard height={56} radius={14} />
+                <SkeletonCard height={56} radius={14} />
+              </div>
+            ) : pairs.length === 0 ? (
+              <EmptyState
+                icon="🤝"
+                title="Belum ada tantangan"
+                subtitle="Ajak temanmu buat saling pantau konsistensi ibadah mingguan."
+                actionLabel="Ajak Teman"
+                onAction={handleCreate}
+              />
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {pairs.map((p) => (

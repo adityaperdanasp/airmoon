@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import TopBar from '../components/TopBar';
 import { JUMAT_ITEMS, todayDateKey, watchJumatChecklist, setJumatChecklistItem } from '../lib/jumatChecklist';
+import { hapticTick } from '../lib/haptics';
 
 const dateFmt = new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
@@ -43,7 +44,7 @@ export default function JumatChecklist() {
               return (
                 <button
                   key={item.key}
-                  onClick={() => setJumatChecklistItem(user.uid, dateKey, item.key, !checked)}
+                  onClick={() => { hapticTick(); setJumatChecklistItem(user.uid, dateKey, item.key, !checked); }}
                   className="card"
                   style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', border: 'none', background: 'var(--card)', textAlign: 'left', cursor: 'pointer', font: 'inherit', color: 'inherit', width: '100%' }}
                 >

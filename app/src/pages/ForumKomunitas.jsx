@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import TopBar from '../components/TopBar';
 import EmptyState from '../components/EmptyState';
 import { SkeletonCard } from '../components/Skeleton';
 import SegButton from '../components/SegButton';
+import { hapticTick } from '../lib/haptics';
 import {
   watchQuestions, submitQuestion, watchMyQuestionUpvote, toggleQuestionUpvote,
   watchAnswers, submitAnswer,
@@ -21,6 +22,7 @@ function UpvoteButton({ questionId, upvoteCount }) {
 
   async function handleTap() {
     if (!user || busy) return;
+    hapticTick();
     setBusy(true);
     try {
       await toggleQuestionUpvote(questionId, user.uid);
@@ -34,6 +36,7 @@ function UpvoteButton({ questionId, upvoteCount }) {
       onClick={handleTap}
       disabled={busy}
       aria-pressed={upvoted}
+      aria-label="Upvote pertanyaan ini"
       style={{
         display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, padding: '8px 12px', borderRadius: 12,
         border: upvoted ? 'none' : '1px solid var(--border)',
@@ -54,6 +57,7 @@ function QuestionDetail({ question, onBack }) {
   const [answers, setAnswers] = useState(null);
   const [text, setText] = useState('');
   const [posting, setPosting] = useState(false);
+  const answerFieldRef = useRef(null);
 
   useEffect(() => watchAnswers(question.id, setAnswers), [question.id]);
 
@@ -90,8 +94,19 @@ function QuestionDetail({ question, onBack }) {
         Jawaban ({answers?.length ?? 0})
       </span>
 
-      {answers === null ? null : answers.length === 0 ? (
-        <EmptyState icon="💬" title="Belum ada jawaban" subtitle="Jadi yang pertama bantu jawab pertanyaan ini." />
+      {answers === null ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <SkeletonCard height={64} radius={14} />
+          <SkeletonCard height={64} radius={14} />
+        </div>
+      ) : answers.length === 0 ? (
+        <EmptyState
+          icon="💬"
+          title="Belum ada jawaban"
+          subtitle="Jadi yang pertama bantu jawab pertanyaan ini."
+          actionLabel={user ? 'Tulis Jawaban' : undefined}
+          onAction={user ? () => answerFieldRef.current?.focus() : undefined}
+        />
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {answers.map((a) => (
@@ -108,6 +123,7 @@ function QuestionDetail({ question, onBack }) {
       {user ? (
         <form onSubmit={handlePost} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <textarea
+            ref={answerFieldRef}
             placeholder="Tulis jawaban kamu..."
             value={text}
             onChange={(e) => setText(e.target.value)}
@@ -213,7 +229,13 @@ export default function ForumKomunitas() {
             )}
 
             {questions?.length === 0 && (
-              <EmptyState icon="💬" title="Belum ada pertanyaan" subtitle="Jadi yang pertama nanya sesuatu ke sesama pengguna airmoon." />
+              <EmptyState
+                icon="💬"
+                title="Belum ada pertanyaan"
+                subtitle="Jadi yang pertama nanya sesuatu ke sesama pengguna airmoon."
+                actionLabel={user && !showForm ? 'Ajukan Pertanyaan' : undefined}
+                onAction={user && !showForm ? () => setShowForm(true) : undefined}
+              />
             )}
 
             {questions && questions.length > 0 && (

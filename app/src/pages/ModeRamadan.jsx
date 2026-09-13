@@ -8,11 +8,12 @@ import PageHeaderPhoto from '../components/PageHeaderPhoto';
 import { PAGE_PHOTOS } from '../data/photos';
 import { SkeletonCard } from '../components/Skeleton';
 import RamadanShareModal from '../components/RamadanShareModal';
+import { hapticTick } from '../lib/haptics';
 
-function Toggle({ checked, onChange }) {
+function Toggle({ checked, onChange, label }) {
   return (
     <button
-      onClick={() => onChange(!checked)}
+      onClick={() => { hapticTick(); onChange(!checked); }}
       style={{
         width: 42,
         height: 24,
@@ -25,7 +26,8 @@ function Toggle({ checked, onChange }) {
         border: 'none',
         cursor: 'pointer',
       }}
-      aria-label="toggle"
+      aria-label={label || 'toggle'}
+      aria-pressed={checked}
     >
       <div style={{ width: 20, height: 20, borderRadius: '50%', background: '#fff' }} />
     </button>
@@ -196,7 +198,7 @@ export default function ModeRamadan() {
                   <span style={{ fontSize: 13, fontWeight: 700 }}>{t('ramadan_puasa_hari_ini')}</span>
                   <span style={{ fontSize: 11, color: 'var(--muted)' }}>{t('ramadan_puasa_tercatat')} {tracker.puasaCount}/{monthDays}</span>
                 </div>
-                <Toggle checked={!!tracker.puasa[today]} onChange={(v) => tracker.setDay('puasa', today, v)} />
+                <Toggle checked={!!tracker.puasa[today]} onChange={(v) => tracker.setDay('puasa', today, v)} label="Puasa hari ini" />
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 16px', borderRadius: 16, background: 'var(--card)' }}>
@@ -204,7 +206,7 @@ export default function ModeRamadan() {
                   <span style={{ fontSize: 13, fontWeight: 700 }}>{t('ramadan_tarawih_malam_ini')}</span>
                   <span style={{ fontSize: 11, color: 'var(--muted)' }}>{t('ramadan_tarawih_tercatat')} {tracker.tarawihCount}/{monthDays}</span>
                 </div>
-                <Toggle checked={!!tracker.tarawih[today]} onChange={(v) => tracker.setDay('tarawih', today, v)} />
+                <Toggle checked={!!tracker.tarawih[today]} onChange={(v) => tracker.setDay('tarawih', today, v)} label="Tarawih malam ini" />
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 16px', borderRadius: 16, background: 'var(--card)' }}>
@@ -212,7 +214,7 @@ export default function ModeRamadan() {
                   <span style={{ fontSize: 13, fontWeight: 700 }}>{t('ramadan_tadarus_hari_ini')}</span>
                   <span style={{ fontSize: 11, color: 'var(--muted)' }}>{t('ramadan_tadarus_tercatat')} {tracker.tadarusCount}/{monthDays}</span>
                 </div>
-                <Toggle checked={!!tracker.tadarus[today]} onChange={(v) => tracker.setDay('tadarus', today, v)} />
+                <Toggle checked={!!tracker.tadarus[today]} onChange={(v) => tracker.setDay('tadarus', today, v)} label="Tadarus hari ini" />
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 16px', borderRadius: 16, background: 'var(--card)' }}>
@@ -220,7 +222,7 @@ export default function ModeRamadan() {
                   <span style={{ fontSize: 13, fontWeight: 700 }}>{t('ramadan_sedekah_hari_ini')}</span>
                   <span style={{ fontSize: 11, color: 'var(--muted)' }}>{t('ramadan_sedekah_tercatat')} {tracker.sedekahCount}/{monthDays}</span>
                 </div>
-                <Toggle checked={!!tracker.sedekah[today]} onChange={(v) => tracker.setDay('sedekah', today, v)} />
+                <Toggle checked={!!tracker.sedekah[today]} onChange={(v) => tracker.setDay('sedekah', today, v)} label="Sedekah hari ini" />
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 16px', borderRadius: 16, background: 'var(--card)' }}>
@@ -228,7 +230,7 @@ export default function ModeRamadan() {
                   <span style={{ fontSize: 13, fontWeight: 700 }}>{t('ramadan_itikaf_hari_ini')}</span>
                   <span style={{ fontSize: 11, color: 'var(--muted)' }}>{t('ramadan_itikaf_tercatat')} {tracker.itikafCount}/{monthDays}</span>
                 </div>
-                <Toggle checked={!!tracker.itikaf[today]} onChange={(v) => tracker.setDay('itikaf', today, v)} />
+                <Toggle checked={!!tracker.itikaf[today]} onChange={(v) => tracker.setDay('itikaf', today, v)} label="I'tikaf hari ini" />
               </div>
             </div>
 

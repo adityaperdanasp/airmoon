@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import TopBar from '../components/TopBar';
 import EmptyState from '../components/EmptyState';
+import { SkeletonCard } from '../components/Skeleton';
 import { watchUpcomingDoaBersama, createDoaBersama, deleteDoaBersama, watchIsJoined, joinDoaBersama, leaveDoaBersama } from '../lib/doaBersama';
 
 const dateFmt = new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
@@ -138,8 +139,19 @@ export default function DoaBersama() {
           )
         )}
 
-        {doaList === null ? null : doaList.length === 0 ? (
-          <EmptyState icon="🤲" title="Belum ada Doa Bersama terjadwal" subtitle="Jadwalkan satu di atas, atau tunggu ajakan dari sahabat airmoon lain." />
+        {doaList === null ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <SkeletonCard height={110} radius={16} />
+            <SkeletonCard height={110} radius={16} />
+          </div>
+        ) : doaList.length === 0 ? (
+          <EmptyState
+            icon="🤲"
+            title="Belum ada Doa Bersama terjadwal"
+            subtitle="Jadwalkan satu di atas, atau tunggu ajakan dari sahabat airmoon lain."
+            actionLabel={user && !showForm ? 'Jadwalkan Doa Bersama' : undefined}
+            onAction={user && !showForm ? () => setShowForm(true) : undefined}
+          />
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {doaList.map((doa) => (
