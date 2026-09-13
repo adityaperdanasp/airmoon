@@ -642,12 +642,47 @@ async function checkWeeklyRecapPush(db) {
       const dzikirPetang = u.dzikirStreak?.petang?.current || 0;
       const reading = u.readingStreak?.current || 0;
       const sedekah = sedekahTotals.get(docSnap.id) || 0;
-      if (!dzikirPagi && !dzikirPetang && !reading && !sedekah) continue;
+
+      // Badge digest (2026-09-13) — folds a "new badge reached this week"
+      // signal into this same weekly push instead of a separate
+      // notification per badge (this app has none of those today anyway,
+      // but the intent is to keep it that way as more tier systems get
+      // added). Thresholds are duplicated from src/lib/badges.js's
+      // STREAK_TIERS/HAFALAN_TIERS/REFERRAL_TIERS on purpose — that file
+      // is frontend code Vercel's function bundler for this file doesn't
+      // resolve, same "small duplicated constant, kept in sync by hand"
+      // trade-off this codebase already accepts elsewhere (e.g.
+      // RAMADAN_HIJRI_MONTH). PUASA_TIERS/GRUP_IBADAH_TIERS are skipped
+      // here — both need a subcollection read per user this already-daily
+      // cron shouldn't take on for every one of potentially many users
+      // just for this nice-to-have line.
+      const bestStreakDays = Math.max(u.dzikirStreak?.pagi?.best || 0, u.dzikirStreak?.petang?.best || 0);
+      const hafalanCount = u.hafalan?.verses?.length || 0;
+      const referralActivatedCount = u.referralActivatedCount || 0;
+      const lastKnown = u.lastKnownBadgeThresholds || {};
+      const highestThreshold = (value, thresholds) => thresholds.reduce((best, t) => (value >= t ? t : best), 0);
+      const currentThresholds = {
+        streak: highestThreshold(bestStreakDays, [3, 7, 30, 100]),
+        hafalan: highestThreshold(hafalanCount, [10, 50, 200, 604]),
+        referral: highestThreshold(referralActivatedCount, [1, 5, 15, 50]),
+      };
+      const newBadges = [];
+      if (currentThresholds.streak > (lastKnown.streak || 0)) newBadges.push(`🔥 Streak Dzikir ${currentThresholds.streak} Hari`);
+      if (currentThresholds.hafalan > (lastKnown.hafalan || 0)) newBadges.push(`🧠 ${currentThresholds.hafalan} Ayat Dihafal`);
+      if (currentThresholds.referral > (lastKnown.referral || 0)) newBadges.push(`🌱 ${currentThresholds.referral} Referral Aktif`);
+      if (
+        JSON.stringify(currentThresholds) !== JSON.stringify({ streak: lastKnown.streak || 0, hafalan: lastKnown.hafalan || 0, referral: lastKnown.referral || 0 })
+      ) {
+        await docSnap.ref.set({ lastKnownBadgeThresholds: currentThresholds }, { merge: true });
+      }
+
+      if (!dzikirPagi && !dzikirPetang && !reading && !sedekah && !newBadges.length) continue;
 
       const parts = [];
       if (reading > 0) parts.push(`streak baca ${reading} hari`);
       if (dzikirPagi > 0 || dzikirPetang > 0) parts.push(`streak dzikir ${Math.max(dzikirPagi, dzikirPetang)} hari`);
       if (sedekah > 0) parts.push(`sedekah Rp ${sedekah.toLocaleString('id-ID')}`);
+      if (newBadges.length > 0) parts.push(`badge baru: ${newBadges.join(', ')}`);
 
       // [PM 2026-09-12] Grup Ibadah mention — only queried for users who
       // already have something to report (the continue above already
