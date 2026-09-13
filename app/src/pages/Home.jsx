@@ -14,6 +14,8 @@ import { HEADLINES, todaysHeadlineIndex } from '../data/headlines';
 import { getDailyTip } from '../data/dailyTips';
 import { shouldShowLangNudge, dismissLangNudge } from '../lib/langNudge';
 import { getMustajabWindow } from '../lib/mustajabTime';
+import { getForYouSuggestions } from '../lib/forYouSuggestions';
+import { getRecentLainnya } from '../lib/recentLainnya';
 import { todaysHomePhoto } from '../data/photos';
 import { formatRupiah } from '../lib/zakat';
 import BottomNav from '../components/BottomNav';
@@ -327,6 +329,7 @@ export default function Home() {
   // reused so the one daily tip actually matches why this person opened
   // the app instead of showing the same generic quote to everyone.
   const dailyTip = getDailyTip(interestTag);
+  const forYouItems = getForYouSuggestions(interestTag, getRecentLainnya());
 
   return (
     <div className="screen">
@@ -442,6 +445,23 @@ export default function Home() {
             {headline}
           </h1>
         </div>
+
+        {forYouItems.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <span style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.03em', paddingLeft: 2 }}>Untuk Kamu</span>
+            <div className="hide-scrollbar" style={{ display: 'flex', gap: 8, overflowX: 'auto' }}>
+              {forYouItems.map((it) => (
+                <Link
+                  key={it.to}
+                  to={it.to}
+                  style={{ flexShrink: 0, padding: '9px 16px', borderRadius: 999, background: 'var(--card)', border: '1px solid var(--border)', textDecoration: 'none', color: 'var(--ink)', fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap' }}
+                >
+                  {it.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="card" style={{ display: 'flex', gap: 10, padding: '12px 14px', alignItems: 'flex-start' }}>
           <span style={{ fontSize: 16, lineHeight: 1 }}>💡</span>
