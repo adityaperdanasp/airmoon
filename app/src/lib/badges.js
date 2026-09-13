@@ -78,6 +78,19 @@ export function highestGrupIbadahTier(count) {
   return earned;
 }
 
+// Progress-nudge (2026-09-13) — turns a bare current-tier badge into a
+// concrete next step ("5 ayat lagi menuju 🔥 50 Ayat Dihafal"), reused by
+// KoleksiBadge.jsx and any stat card that wants the same nudge instead of
+// just naming whatever tier is already earned. `tiers` entries may key
+// their threshold as `count` or `days` (STREAK_TIERS uses `days`,
+// everything else uses `count`) — this reads whichever is present.
+export function nextTierNudge(value, tiers, unit = '') {
+  const next = tiers.find((t) => (t.count ?? t.days) > value);
+  if (!next) return null;
+  const threshold = next.count ?? next.days;
+  return `${threshold - value}${unit} lagi menuju ${next.icon} ${next.label}`;
+}
+
 // Tahfiz (2026-09-12) — gated on the lifetime count of ayat marked
 // memorized (lib/hafalanProgress.js), a plain count rather than a
 // per-surah/per-juz completion model (this app has no ayat-per-surah

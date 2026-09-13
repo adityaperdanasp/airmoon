@@ -7,7 +7,7 @@ import { watchMyContributions } from '../lib/donations';
 import { watchPuasaSunnahLog } from '../lib/puasaSunnahLog';
 import { watchReadingStats } from '../lib/readingTime';
 import { watchReadingStreak } from '../lib/readingStreak';
-import { highestTier, highestHafalanTier } from '../lib/badges';
+import { highestTier, highestHafalanTier, HAFALAN_TIERS, nextTierNudge } from '../lib/badges';
 import { watchHafalanProgress } from '../lib/hafalanProgress';
 import { formatRupiah } from '../lib/zakat';
 import { fetchRecentAmalanHarian } from '../lib/amalanHarian';
@@ -201,7 +201,7 @@ export default function RingkasanIbadah() {
             icon="🧠"
             label="Ayat Dihafal"
             value={<CountUp value={hafalanVerses.length} formatter={(v) => `${v}`} />}
-            sub={highestHafalanTier(hafalanVerses.length) ? `${highestHafalanTier(hafalanVerses.length).icon} Badge ${highestHafalanTier(hafalanVerses.length).label}` : 'Tandai ayat yang udah dihafal di Qur\'an'}
+            sub={nextTierNudge(hafalanVerses.length, HAFALAN_TIERS, ' ayat') || (highestHafalanTier(hafalanVerses.length) ? `${highestHafalanTier(hafalanVerses.length).icon} Badge ${highestHafalanTier(hafalanVerses.length).label}` : 'Tandai ayat yang udah dihafal di Qur\'an')}
           />
         </div>
 
