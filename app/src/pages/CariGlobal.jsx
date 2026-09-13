@@ -39,7 +39,7 @@ export default function CariGlobal() {
     }
   }
 
-  const totalResults = results ? results.ayat.length + results.asmaulHusna.length + results.doa.length + results.favoriteAyat.length : 0;
+  const totalResults = results ? results.ayat.length + results.asmaulHusna.length + results.doa.length + results.favoriteAyat.length + results.pages.length : 0;
 
   return (
     <div className="screen">
@@ -74,6 +74,23 @@ export default function CariGlobal() {
           <p style={{ fontSize: 12.5, color: 'var(--muted)', textAlign: 'center', padding: '24px 12px' }}>
             Ketik kata kunci lalu tekan Enter — nyari di ayat Qur'an, Asmaul Husna, dan Doa Harian sekaligus.
           </p>
+        )}
+
+        {!loading && results && results.pages.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <SectionLabel>Fitur</SectionLabel>
+            {results.pages.map((p) => (
+              <Link
+                key={p.to}
+                to={p.to}
+                className="card"
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: 12, textDecoration: 'none', color: 'inherit' }}
+              >
+                <span style={{ fontSize: 13, fontWeight: 700 }}>{p.label}</span>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--muted)"><path d="m9 6 6 6-6 6" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              </Link>
+            ))}
+          </div>
         )}
 
         {!loading && results && results.favoriteAyat.length > 0 && (

@@ -10,6 +10,7 @@ import { db } from './firebase';
 import { searchQuran } from './quranSearchApi';
 import { asmaulHusna } from '../data/asmaulHusna';
 import { dzikirPagi, dzikirPetang, doaKegiatan } from '../data/doaHarian';
+import { searchPages } from '../data/searchablePages';
 
 const DOA_SOURCES = [
   ...dzikirPagi.map((d) => ({ ...d, category: 'pagi' })),
@@ -50,11 +51,12 @@ async function searchFavoriteAyat(uid, q) {
 
 export async function searchAll(term, { uid } = {}) {
   const q = term.trim();
-  if (!q) return { ayat: [], asmaulHusna: [], doa: [], favoriteAyat: [] };
+  if (!q) return { ayat: [], asmaulHusna: [], doa: [], favoriteAyat: [], pages: [] };
 
   const asmaulHusnaResults = searchAsmaulHusna(q);
   const doaResults = searchDoa(q);
   const favoriteAyatResults = await searchFavoriteAyat(uid, q);
+  const pageResults = searchPages(q);
   let ayatResults = [];
   try {
     ayatResults = await searchQuran(q, { size: 8 });
@@ -63,5 +65,5 @@ export async function searchAll(term, { uid } = {}) {
     // result sets, which don't depend on that same network call.
   }
 
-  return { ayat: ayatResults, asmaulHusna: asmaulHusnaResults, doa: doaResults, favoriteAyat: favoriteAyatResults };
+  return { ayat: ayatResults, asmaulHusna: asmaulHusnaResults, doa: doaResults, favoriteAyat: favoriteAyatResults, pages: pageResults };
 }

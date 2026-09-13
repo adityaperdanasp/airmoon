@@ -66,6 +66,8 @@ const JumatChecklist = lazy(() => import('./pages/JumatChecklist'));
 const PanduanSholat = lazy(() => import('./pages/PanduanSholat'));
 const ForumKomunitas = lazy(() => import('./pages/ForumKomunitas'));
 const TantanganTeman = lazy(() => import('./pages/TantanganTeman'));
+const KoleksiBadge = lazy(() => import('./pages/KoleksiBadge'));
+const Bagikan = lazy(() => import('./pages/Bagikan'));
 
 function P({ children }) {
   return <ProtectedRoute>{children}</ProtectedRoute>;
@@ -187,6 +189,8 @@ export default function App() {
         <Route path="/lainnya/panduan-sholat" element={<P><PanduanSholat /></P>} />
         <Route path="/lainnya/forum" element={<P><ForumKomunitas /></P>} />
         <Route path="/lainnya/tantangan-teman" element={<P><TantanganTeman /></P>} />
+        <Route path="/lainnya/koleksi-badge" element={<P><KoleksiBadge /></P>} />
+        <Route path="/lainnya/bagikan" element={<P><Bagikan /></P>} />
       </Routes>
     </Suspense>
     </>

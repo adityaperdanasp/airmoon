@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { useLang } from '../context/LangContext';
 import TopBar from '../components/TopBar';
 import { getRecentLainnya, markLainnyaVisited } from '../lib/recentLainnya';
+import { getPinnedLainnya, togglePinLainnya, MAX_PINS_REACHED } from '../lib/pinnedLainnya';
+import { useToast } from '../context/ToastContext';
 import { getUnseenNotificationCount } from '../lib/notificationLog';
 import { hasUnseenChangelog } from '../lib/changelogSeen';
 import {
@@ -31,6 +33,7 @@ import {
   GroupIcon,
   ChecklistIcon,
   MosqueIcon,
+  MedalIcon,
 } from '../components/serviceIcons';
 
 // All hand-drawn gradient icons (see serviceIcons.jsx) — this grid used
@@ -69,6 +72,7 @@ const SECTIONS = [
       { to: '/lainnya/grup-ibadah', label: 'Grup Ibadah', bg: 'var(--blue-gray)', node: <GroupIcon size={30} />, prefetch: () => import('./GrupIbadah') },
       { to: '/lainnya/doa-bersama', label: 'Doa Bersama', bg: 'var(--cream)', node: <CuppedHandsIcon size={30} />, prefetch: () => import('./DoaBersama') },
       { to: '/lainnya/tantangan-teman', label: 'Tantangan Teman', bg: 'var(--peach)', node: <GroupIcon size={30} />, prefetch: () => import('./TantanganTeman') },
+      { to: '/lainnya/koleksi-badge', label: 'Koleksi Badge Saya', bg: 'var(--mint)', node: <MedalIcon size={30} />, prefetch: () => import('./KoleksiBadge') },
     ],
   },
   {
@@ -108,13 +112,25 @@ const SECTIONS = [
       { to: '/lainnya/forum', label: 'Tanya Jawab Sesama Pengguna', bg: 'var(--cream)', node: <GroupIcon size={30} />, prefetch: () => import('./ForumKomunitas') },
       { to: '/lainnya/bantuan', label: 'Bantuan', bg: 'var(--blue-gray)', node: <HelpIcon size={30} />, prefetch: () => import('./Bantuan') },
       { to: '/lainnya/relawan', label: 'Jadi Relawan', bg: 'var(--peach)', node: <CuppedHandsIcon size={30} />, prefetch: () => import('./Relawan') },
+      {
+        to: '/lainnya/bagikan',
+        label: 'Bagikan',
+        bg: 'var(--cream)',
+        node: (
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--primary)">
+            <circle cx="18" cy="5" r="3" strokeWidth="1.6" /><circle cx="6" cy="12" r="3" strokeWidth="1.6" /><circle cx="18" cy="19" r="3" strokeWidth="1.6" />
+            <path d="M8.6 10.5 15.4 6.5M8.6 13.5 15.4 17.5" strokeWidth="1.6" />
+          </svg>
+        ),
+        prefetch: () => import('./Bagikan'),
+      },
     ],
   },
 ];
 
 const ALL_ITEMS = SECTIONS.flatMap((s) => s.items);
 
-function Tile({ it, label, badge, count }) {
+function Tile({ it, label, badge, count, pinned, onTogglePin }) {
   return (
     <Link
       to={it.to}
@@ -134,6 +150,36 @@ function Tile({ it, label, badge, count }) {
         color: 'inherit',
       }}
     >
+      {onTogglePin && (
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onTogglePin(it.to);
+          }}
+          aria-label={pinned ? `Lepas pin ${label}` : `Pin ${label}`}
+          style={{
+            position: 'absolute',
+            top: 6,
+            left: 6,
+            zIndex: 1,
+            width: 20,
+            height: 20,
+            padding: 0,
+            border: 'none',
+            borderRadius: '50%',
+            background: pinned ? 'var(--primary)' : 'rgba(0,0,0,0.08)',
+            color: pinned ? 'var(--on-primary)' : 'var(--muted)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            fontSize: 10,
+          }}
+        >
+          📌
+        </button>
+      )}
       <div style={{ position: 'relative', width: 48, height: 48, borderRadius: 16, overflow: 'visible', display: 'flex', alignItems: 'center', justifyContent: 'center', background: it.bg }}>
         <div style={{ width: 48, height: 48, borderRadius: 16, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{it.node}</div>
         {/* A numeric count when there's a real number to show (unseen
@@ -173,27 +219,85 @@ function Tile({ it, label, badge, count }) {
 
 export default function Lainnya() {
   const { t } = useLang();
+  const { showToast } = useToast();
   const [recent, setRecent] = useState([]);
+  const [pinned, setPinned] = useState([]);
   const [unseenNotifCount, setUnseenNotifCount] = useState(0);
   const [hasUnseenNews, setHasUnseenNews] = useState(false);
+  const [query, setQuery] = useState('');
+  const [collapsed, setCollapsed] = useState({});
 
   useEffect(() => setRecent(getRecentLainnya()), []);
+  useEffect(() => setPinned(getPinnedLainnya()), []);
   useEffect(() => {
     getUnseenNotificationCount().then(setUnseenNotifCount);
     setHasUnseenNews(hasUnseenChangelog());
   }, []);
 
   const recentItems = recent.map((to) => ALL_ITEMS.find((it) => it.to === to)).filter(Boolean);
+  const pinnedItems = pinned.map((to) => ALL_ITEMS.find((it) => it.to === to)).filter(Boolean);
   const labelFor = (it) => (it.key ? t(it.key) : it.label);
   const badgeFor = (it) => it.to === '/yang-baru' && hasUnseenNews;
   const countFor = (it) => (it.to === '/notifikasi' ? unseenNotifCount : 0);
+
+  function handleTogglePin(to) {
+    const result = togglePinLainnya(to);
+    if (result === MAX_PINS_REACHED) {
+      showToast('Maksimal 6 favorit — lepas satu dulu buat pin yang baru.', { type: 'danger' });
+      return;
+    }
+    setPinned(result);
+  }
+
+  // Search filters across every section by displayed label (translated
+  // where applicable) — this grid grew to 30+ tiles across 6 sections
+  // (see this file's own header comment), scanning the whole page to
+  // find one feature stopped being reasonable a while ago.
+  const trimmedQuery = query.trim().toLowerCase();
+  const searching = trimmedQuery.length > 0;
+  const filteredSections = searching
+    ? SECTIONS.map((section) => ({
+        ...section,
+        items: section.items.filter((it) => labelFor(it).toLowerCase().includes(trimmedQuery)),
+      })).filter((section) => section.items.length > 0)
+    : SECTIONS;
 
   return (
     <div className="screen">
       <div className="screen-content">
         <TopBar title={t('lainnya_title')} />
 
-        {recentItems.length > 0 && (
+        <div className="input-row" style={{ borderRadius: 999 }}>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" style={{ opacity: 0.6, flexShrink: 0 }}>
+            <circle cx="11" cy="11" r="7" strokeWidth="1.8" /><path d="m20 20-3.5-3.5" strokeWidth="1.8" strokeLinecap="round" />
+          </svg>
+          <input
+            placeholder="Cari fitur di sini..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            aria-label="Cari fitur di halaman Lainnya"
+          />
+          {query && (
+            <button onClick={() => setQuery('')} aria-label="Hapus pencarian" style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: 16, cursor: 'pointer', padding: 0, lineHeight: 1 }}>
+              ×
+            </button>
+          )}
+        </div>
+
+        {!searching && pinnedItems.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <span className="section-label" style={{ color: 'var(--muted)', fontSize: 11.5, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+              Favorit Kamu
+            </span>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              {pinnedItems.map((it) => (
+                <Tile key={it.to} it={it} label={labelFor(it)} badge={badgeFor(it)} count={countFor(it)} pinned onTogglePin={handleTogglePin} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {!searching && recentItems.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             <span className="section-label" style={{ color: 'var(--muted)', fontSize: 11.5, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
               Terakhir Dibuka
@@ -229,18 +333,47 @@ export default function Lainnya() {
           </div>
         )}
 
-        {SECTIONS.map((section) => (
-          <div key={section.title} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <span className="section-label" style={{ color: 'var(--muted)', fontSize: 11.5, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-              {section.title}
-            </span>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              {section.items.map((it) => (
-                <Tile key={it.to} it={it} label={labelFor(it)} badge={badgeFor(it)} count={countFor(it)} />
-              ))}
+        {searching && filteredSections.length === 0 && (
+          <p className="state-msg">Gak ada fitur yang cocok dengan "{query}".</p>
+        )}
+
+        {filteredSections.map((section) => {
+          // Collapse only applies when NOT searching — a search result
+          // hiding behind a collapsed section would be a confusing dead
+          // end, so `searching` always forces every matching section open.
+          const isCollapsed = !searching && collapsed[section.title];
+          return (
+            <div key={section.title} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <button
+                onClick={() => setCollapsed((c) => ({ ...c, [section.title]: !c[section.title] }))}
+                aria-expanded={!isCollapsed}
+                style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', padding: 0, cursor: 'pointer', alignSelf: 'flex-start' }}
+              >
+                <span className="section-label" style={{ color: 'var(--muted)', fontSize: 11.5, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                  {section.title}
+                </span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" style={{ transform: isCollapsed ? 'rotate(-90deg)' : 'none', transition: 'transform 0.15s ease' }}>
+                  <path d="m6 9 6 6 6-6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+              {!isCollapsed && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  {section.items.map((it) => (
+                    <Tile
+                      key={it.to}
+                      it={it}
+                      label={labelFor(it)}
+                      badge={badgeFor(it)}
+                      count={countFor(it)}
+                      pinned={pinned.includes(it.to)}
+                      onTogglePin={handleTogglePin}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
