@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useLang } from '../context/LangContext';
 import TopBar from '../components/TopBar';
 import { watchDzikirStreak } from '../lib/dzikirStreak';
 import { watchPuasaSunnahLog } from '../lib/puasaSunnahLog';
@@ -15,7 +16,12 @@ import {
   nextTierNudge,
 } from '../lib/badges';
 
-function BadgeRow({ icon, title, value, unit, tiers, earned }) {
+// `earned.label`/`tier.label`/the `nudge` string all come from
+// lib/badges.js, which stays Indonesian-only for now (translating 5 tier
+// systems' worth of labels, plus keeping check-campaign-deadlines.js's
+// own digest push in sync, was judged out of scope for this pass) — only
+// this page's own chrome (titles, empty states) is wired to t() below.
+function BadgeRow({ icon, title, value, unit, tiers, earned, tercapaiLabel, belumAdaLabel }) {
   const nudge = nextTierNudge(value, tiers, unit);
 
   return (
@@ -25,7 +31,7 @@ function BadgeRow({ icon, title, value, unit, tiers, earned }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 1, flex: 1, minWidth: 0 }}>
           <span style={{ fontSize: 13, fontWeight: 800 }}>{title}</span>
           <span style={{ fontSize: 11, color: 'var(--muted)' }}>
-            {earned ? `${earned.label} tercapai` : 'Belum ada badge'}
+            {earned ? `${earned.label} ${tercapaiLabel}` : belumAdaLabel}
           </span>
         </div>
         <span style={{ fontSize: 15, fontWeight: 800, color: 'var(--primary)', flexShrink: 0 }}>{value}{unit}</span>
@@ -59,6 +65,7 @@ function BadgeRow({ icon, title, value, unit, tiers, earned }) {
 // concrete "X lagi menuju Y" nudge instead of a bare number.
 export default function KoleksiBadge() {
   const { user } = useAuth();
+  const { t } = useLang();
   const [dzikirStreak, setDzikirStreak] = useState({});
   const [puasaDates, setPuasaDates] = useState([]);
   const [referralActivatedCount, setReferralActivatedCount] = useState(0);
@@ -91,13 +98,15 @@ export default function KoleksiBadge() {
   }, [myGroups, user?.uid]);
 
   const bestStreak = Math.max(dzikirStreak?.pagi?.best || 0, dzikirStreak?.petang?.best || 0);
+  const tercapaiLabel = t('koleksi_badge_tercapai');
+  const belumAdaLabel = t('koleksi_badge_belum_ada');
 
   if (!user) {
     return (
       <div className="screen">
         <div className="screen-content">
-          <TopBar title="Koleksi Badge Saya" />
-          <p className="state-msg">Masuk dulu buat lihat koleksi badge kamu.</p>
+          <TopBar title={t('koleksi_badge_title')} />
+          <p className="state-msg">{t('koleksi_badge_masuk_dulu')}</p>
         </div>
       </div>
     );
@@ -106,20 +115,20 @@ export default function KoleksiBadge() {
   return (
     <div className="screen">
       <div className="screen-content">
-        <TopBar title="Koleksi Badge Saya" />
+        <TopBar title={t('koleksi_badge_title')} />
 
-        <BadgeRow icon="🔥" title="Rentetan Dzikir" value={bestStreak} unit=" hari" tiers={STREAK_TIERS} earned={highestTier(bestStreak)} />
-        <BadgeRow icon="🌙" title="Puasa Sunnah" value={puasaDates.length} unit="x" tiers={PUASA_TIERS} earned={highestPuasaTier(puasaDates.length)} />
-        <BadgeRow icon="🧠" title="Tahfiz Qur'an" value={hafalanVerses.length} unit=" ayat" tiers={HAFALAN_TIERS} earned={highestHafalanTier(hafalanVerses.length)} />
-        <BadgeRow icon="🌱" title="Referral Aktif" value={referralActivatedCount} unit="" tiers={REFERRAL_TIERS} earned={highestReferralTier(referralActivatedCount)} />
+        <BadgeRow icon="🔥" title={t('koleksi_badge_rentetan_dzikir')} value={bestStreak} unit={` ${t('koleksi_badge_unit_hari')}`} tiers={STREAK_TIERS} earned={highestTier(bestStreak)} tercapaiLabel={tercapaiLabel} belumAdaLabel={belumAdaLabel} />
+        <BadgeRow icon="🌙" title={t('koleksi_badge_puasa_sunnah')} value={puasaDates.length} unit="x" tiers={PUASA_TIERS} earned={highestPuasaTier(puasaDates.length)} tercapaiLabel={tercapaiLabel} belumAdaLabel={belumAdaLabel} />
+        <BadgeRow icon="🧠" title={t('koleksi_badge_tahfiz')} value={hafalanVerses.length} unit={` ${t('koleksi_badge_unit_ayat')}`} tiers={HAFALAN_TIERS} earned={highestHafalanTier(hafalanVerses.length)} tercapaiLabel={tercapaiLabel} belumAdaLabel={belumAdaLabel} />
+        <BadgeRow icon="🌱" title={t('koleksi_badge_referral_aktif')} value={referralActivatedCount} unit="" tiers={REFERRAL_TIERS} earned={highestReferralTier(referralActivatedCount)} tercapaiLabel={tercapaiLabel} belumAdaLabel={belumAdaLabel} />
         {myGroups.length > 0 ? (
-          <BadgeRow icon="👪" title="Grup Ibadah" value={groupTimesReported} unit="x" tiers={GRUP_IBADAH_TIERS} earned={highestGrupIbadahTier(groupTimesReported)} />
+          <BadgeRow icon="👪" title={t('koleksi_badge_grup_ibadah')} value={groupTimesReported} unit="x" tiers={GRUP_IBADAH_TIERS} earned={highestGrupIbadahTier(groupTimesReported)} tercapaiLabel={tercapaiLabel} belumAdaLabel={belumAdaLabel} />
         ) : (
           <div className="card" style={{ padding: 16, display: 'flex', alignItems: 'center', gap: 12, opacity: 0.6 }}>
             <span style={{ fontSize: 28 }}>👪</span>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-              <span style={{ fontSize: 13, fontWeight: 800 }}>Grup Ibadah</span>
-              <span style={{ fontSize: 11, color: 'var(--muted)' }}>Gabung/buat Grup Ibadah dulu buat mulai kumpulin badge ini.</span>
+              <span style={{ fontSize: 13, fontWeight: 800 }}>{t('koleksi_badge_grup_ibadah')}</span>
+              <span style={{ fontSize: 11, color: 'var(--muted)' }}>{t('koleksi_badge_grup_locked')}</span>
             </div>
           </div>
         )}

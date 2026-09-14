@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useLang } from '../context/LangContext';
 import TopBar from '../components/TopBar';
 import { JUMAT_ITEMS, todayDateKey, watchJumatChecklist, setJumatChecklistItem } from '../lib/jumatChecklist';
 import { hapticTick } from '../lib/haptics';
@@ -15,6 +16,7 @@ const dateFmt = new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: 'numeri
 // Friday, or checking in early, shouldn't be blocked from using it.
 export default function JumatChecklist() {
   const { user } = useAuth();
+  const { t } = useLang();
   const dateKey = todayDateKey();
   const [checklist, setChecklist] = useState({});
 
@@ -26,17 +28,17 @@ export default function JumatChecklist() {
   return (
     <div className="screen">
       <div className="screen-content">
-        <TopBar title="Checklist Sunnah Jumat" />
+        <TopBar title={t('jumat_title')} />
 
         <div className="card" style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 4 }}>
           <span style={{ fontSize: 13, fontWeight: 700 }}>{dateFmt.format(new Date())}</span>
           <span style={{ fontSize: 11, color: 'var(--muted)' }}>
-            {isFriday ? `${doneCount}/${JUMAT_ITEMS.length} sunnah tercatat hari ini` : 'Bukan hari Jumat — checklist ini tetap bisa dicoret kapan aja.'}
+            {isFriday ? `${doneCount}/${JUMAT_ITEMS.length} ${t('jumat_progress_suffix')}` : t('jumat_not_friday')}
           </span>
         </div>
 
         {!user ? (
-          <p className="state-msg">Masuk dulu buat nyimpen checklist Jumat kamu.</p>
+          <p className="state-msg">{t('jumat_masuk_dulu')}</p>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {JUMAT_ITEMS.map((item) => {
@@ -60,7 +62,7 @@ export default function JumatChecklist() {
                     )}
                   </div>
                   <span style={{ fontSize: 13, fontWeight: 700, textDecoration: checked ? 'line-through' : 'none', color: checked ? 'var(--muted)' : 'var(--ink)' }}>
-                    {item.label}
+                    {t(item.labelKey)}
                   </span>
                 </button>
               );
@@ -68,14 +70,14 @@ export default function JumatChecklist() {
 
             {checklist.alKahfi === false || checklist.alKahfi === undefined ? (
               <Link to="/quran/18" style={{ fontSize: 11.5, color: 'var(--primary)', fontWeight: 700, textAlign: 'center', textDecoration: 'none' }}>
-                Buka Surah Al-Kahfi →
+                {t('jumat_buka_alkahfi')}
               </Link>
             ) : null}
 
             {doneCount === JUMAT_ITEMS.length && (
               <div className="card" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 16, background: 'var(--mint)' }}>
                 <span style={{ fontSize: 22 }}>🕌</span>
-                <span style={{ fontSize: 12.5, fontWeight: 700 }}>Sunnah Jumat lengkap hari ini — barakallahu fiik!</span>
+                <span style={{ fontSize: 12.5, fontWeight: 700 }}>{t('jumat_lengkap')}</span>
               </div>
             )}
           </div>

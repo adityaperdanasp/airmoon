@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import { useLang } from '../context/LangContext';
 import TopBar from '../components/TopBar';
 import EmptyState from '../components/EmptyState';
 import { SkeletonCard } from '../components/Skeleton';
@@ -12,6 +13,7 @@ import {
 
 function FriendPairDetail({ groupId, onBack }) {
   const { user } = useAuth();
+  const { t } = useLang();
   const [group, setGroup] = useState(null);
   const [members, setMembers] = useState([]);
   const [copied, setCopied] = useState(false);
@@ -43,28 +45,28 @@ function FriendPairDetail({ groupId, onBack }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       <button onClick={onBack} style={{ alignSelf: 'flex-start', background: 'none', border: 'none', color: 'var(--primary)', fontSize: 12, fontWeight: 700, cursor: 'pointer', padding: 0 }}>
-        ← Semua Tantangan
+        {t('tantangan_semua')}
       </button>
 
       {group && members.length < 2 && (
         <div className="card" style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <span style={{ fontSize: 13, fontWeight: 700 }}>Ajak 1 teman buat mulai tantangan</span>
+          <span style={{ fontSize: 13, fontWeight: 700 }}>{t('tantangan_ajak_teman_desc')}</span>
           <div onClick={copyCode} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', borderRadius: 10, background: 'var(--bg)', cursor: 'pointer' }}>
-            <span style={{ fontSize: 11, color: 'var(--muted)' }}>Kode Undangan</span>
-            <span style={{ fontSize: 14, fontWeight: 800, fontFamily: 'monospace', letterSpacing: '0.05em' }}>{copied ? 'Tersalin!' : group.inviteCode}</span>
+            <span style={{ fontSize: 11, color: 'var(--muted)' }}>{t('tantangan_kode_undangan')}</span>
+            <span style={{ fontSize: 14, fontWeight: 800, fontFamily: 'monospace', letterSpacing: '0.05em' }}>{copied ? t('tersalin') : group.inviteCode}</span>
           </div>
         </div>
       )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         <span className="section-label" style={{ color: 'var(--muted)', fontSize: 11.5, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-          Skor Amalan Harian — 7 Hari Terakhir
+          {t('tantangan_skor_judul')}
         </span>
         {sorted.map((m, i) => (
           <div key={m.uid} className="card" style={{ padding: 14, display: 'flex', flexDirection: 'column', gap: 6 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <span style={{ fontSize: 13, fontWeight: 700 }}>
-                {i === 0 && sorted.length > 1 ? '🏆 ' : ''}{m.displayName}{m.uid === user?.uid ? ' (kamu)' : ''}
+                {i === 0 && sorted.length > 1 ? '🏆 ' : ''}{m.displayName}{m.uid === user?.uid ? ` ${t('tantangan_kamu_suffix')}` : ''}
               </span>
               <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--primary)' }}>{m.weeklyScore || 0}</span>
             </div>
@@ -86,6 +88,7 @@ function FriendPairDetail({ groupId, onBack }) {
 export default function TantanganTeman() {
   const { user } = useAuth();
   const { showToast } = useToast();
+  const { t } = useLang();
   const [pairs, setPairs] = useState(null);
   const [activeId, setActiveId] = useState(null);
   const [showJoin, setShowJoin] = useState(false);
@@ -101,9 +104,9 @@ export default function TantanganTeman() {
     try {
       const { groupId } = await createFriendPair(user);
       setActiveId(groupId);
-      showToast('Tantangan dibuat! Ajak temanmu pakai kode undangan.');
+      showToast(t('tantangan_toast_dibuat'));
     } catch (err) {
-      showToast(err.message || 'Gagal bikin tantangan.', { type: 'danger' });
+      showToast(err.message || t('tantangan_gagal_buat'), { type: 'danger' });
     } finally {
       setBusy(false);
     }
@@ -119,9 +122,9 @@ export default function TantanganTeman() {
       setJoinCode('');
       setShowJoin(false);
       setActiveId(groupId);
-      showToast('Berhasil gabung tantangan!');
+      showToast(t('tantangan_toast_gabung'));
     } catch (err) {
-      showToast(err.message || 'Gagal gabung tantangan.', { type: 'danger' });
+      showToast(err.message || t('tantangan_gagal_gabung'), { type: 'danger' });
     } finally {
       setBusy(false);
     }
@@ -131,7 +134,7 @@ export default function TantanganTeman() {
     return (
       <div className="screen">
         <div className="screen-content">
-          <TopBar title="Tantangan Teman" />
+          <TopBar title={t('tantangan_title')} />
           <FriendPairDetail groupId={activeId} onBack={() => setActiveId(null)} />
         </div>
       </div>
@@ -141,23 +144,23 @@ export default function TantanganTeman() {
   return (
     <div className="screen">
       <div className="screen-content">
-        <TopBar title="Tantangan Teman" />
+        <TopBar title={t('tantangan_title')} />
 
         {!user ? (
-          <p className="state-msg">Masuk dulu buat ajak teman tantangan.</p>
+          <p className="state-msg">{t('tantangan_masuk_dulu')}</p>
         ) : (
           <>
             <div style={{ display: 'flex', gap: 8 }}>
-              <button className="btn" style={{ flex: 1 }} onClick={handleCreate} disabled={busy}>+ Ajak Teman</button>
-              <button className="btn-outline" style={{ flex: 1 }} onClick={() => setShowJoin((v) => !v)}>Gabung Kode</button>
+              <button className="btn" style={{ flex: 1 }} onClick={handleCreate} disabled={busy}>{t('tantangan_ajak_teman_btn')}</button>
+              <button className="btn-outline" style={{ flex: 1 }} onClick={() => setShowJoin((v) => !v)}>{t('tantangan_gabung_kode_btn')}</button>
             </div>
 
             {showJoin && (
               <form onSubmit={handleJoin} className="card" style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <div className="input-row">
-                  <input required placeholder="Kode undangan (mis. AB3XYZ)" value={joinCode} onChange={(e) => setJoinCode(e.target.value)} maxLength={6} style={{ textTransform: 'uppercase' }} />
+                  <input required placeholder={t('tantangan_placeholder_kode')} value={joinCode} onChange={(e) => setJoinCode(e.target.value)} maxLength={6} style={{ textTransform: 'uppercase' }} />
                 </div>
-                <button className="btn" type="submit" disabled={busy || !joinCode.trim()}>{busy ? 'Bergabung...' : 'Gabung'}</button>
+                <button className="btn" type="submit" disabled={busy || !joinCode.trim()}>{busy ? t('tantangan_bergabung') : t('tantangan_gabung')}</button>
               </form>
             )}
 
@@ -169,9 +172,9 @@ export default function TantanganTeman() {
             ) : pairs.length === 0 ? (
               <EmptyState
                 icon="🤝"
-                title="Belum ada tantangan"
-                subtitle="Ajak temanmu buat saling pantau konsistensi ibadah mingguan."
-                actionLabel="Ajak Teman"
+                title={t('tantangan_empty_title')}
+                subtitle={t('tantangan_empty_subtitle')}
+                actionLabel={t('tantangan_empty_action')}
                 onAction={handleCreate}
               />
             ) : (
@@ -184,7 +187,7 @@ export default function TantanganTeman() {
                     style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 14, border: 'none', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', color: 'inherit' }}
                   >
                     <span style={{ fontSize: 13, fontWeight: 700 }}>{p.name}</span>
-                    <span style={{ fontSize: 11, color: 'var(--muted)' }}>{p.memberUids.length}/2 orang</span>
+                    <span style={{ fontSize: 11, color: 'var(--muted)' }}>{p.memberUids.length}/2 {t('tantangan_orang_suffix')}</span>
                   </button>
                 ))}
               </div>

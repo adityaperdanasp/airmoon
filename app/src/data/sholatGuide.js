@@ -1,9 +1,22 @@
+// Rincian Jumlah Rakaat (2026-09-14) — the 5 daily fardhu counts, plus
+// their most commonly prayed sunnah rawatib (before/after), since the
+// step-by-step guide below deliberately only ever covered the shared
+// rakaat cycle, not "how many of these do I actually do, and when".
+export const PRAYER_RAKAAT_INFO = [
+  { name: 'Subuh', fardhu: 2, sunnahSebelum: 2, sunnahSesudah: 0, catatan: 'Sunnah 2 rakaat sebelum Subuh sangat dianjurkan — jangan sampai terlewat.' },
+  { name: 'Dzuhur', fardhu: 4, sunnahSebelum: 2, sunnahSesudah: 2, catatan: '' },
+  { name: 'Ashar', fardhu: 4, sunnahSebelum: 0, sunnahSesudah: 0, catatan: 'Tidak ada sunnah rawatib, tapi boleh sholat sunnah mutlak.' },
+  { name: 'Maghrib', fardhu: 3, sunnahSebelum: 0, sunnahSesudah: 2, catatan: '' },
+  { name: 'Isya', fardhu: 4, sunnahSebelum: 0, sunnahSesudah: 2, catatan: '' },
+];
+
 // Panduan Sholat Pemula (2026-09-12) — a step-by-step walkthrough of one
 // full rakaat cycle (niat through salam), aimed at a muallaf or anyone
 // relearning sholat from scratch. Deliberately covers the shared core
 // every rakaat has in common rather than all 5 sholat's full rakaat
 // counts/specifics — that's a much bigger reference this single guide
-// isn't trying to replace.
+// isn't trying to replace. PRAYER_RAKAAT_INFO above now covers the "how
+// many rakaat, kapan" part that was missing.
 export const SHOLAT_STEPS = [
   {
     title: 'Niat',

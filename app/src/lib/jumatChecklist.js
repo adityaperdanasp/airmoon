@@ -7,11 +7,13 @@
 import { doc, onSnapshot, setDoc } from 'firebase/firestore';
 import { db } from './firebase';
 
+// `labelKey` (2026-09-14) points at translations.js, not a raw string —
+// JumatChecklist.jsx renders each via t(item.labelKey).
 export const JUMAT_ITEMS = [
-  { key: 'mandi', label: 'Mandi Jumat' },
-  { key: 'wangi', label: 'Pakai Wangi-Wangian' },
-  { key: 'kuku', label: 'Potong Kuku & Rapikan Diri' },
-  { key: 'alKahfi', label: 'Baca Surah Al-Kahfi' },
+  { key: 'mandi', labelKey: 'jumat_item_mandi' },
+  { key: 'wangi', labelKey: 'jumat_item_wangi' },
+  { key: 'kuku', labelKey: 'jumat_item_kuku' },
+  { key: 'alKahfi', labelKey: 'jumat_item_alkahfi' },
 ];
 
 export function todayDateKey(date = new Date()) {
