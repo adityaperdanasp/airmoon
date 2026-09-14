@@ -7,7 +7,7 @@
 // app's whole personal footprint is small enough to fetch client-side in
 // one shot.
 
-import { doc, getDoc, setDoc, collection, getDocs, query, orderBy, writeBatch, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, collection, getDocs, query, where, orderBy, writeBatch, serverTimestamp } from 'firebase/firestore';
 import { db } from './firebase';
 
 async function subcollection(uid, name) {
@@ -22,15 +22,35 @@ async function subcollection(uid, name) {
   }
 }
 
+// Own posts in top-level (not users/{uid}-nested) public collections —
+// same reasoning as `subcollection()` above but a plain `where('uid',...)`
+// query instead, since these docs live at the collection's own top level.
+async function ownDocsIn(uid, collectionName) {
+  const snap = await getDocs(query(collection(db, collectionName), where('uid', '==', uid)));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
+// Answers the user wrote on OTHER people's questions — `answers` only
+// exists as a subcollection of `communityQuestions/{id}`, so finding
+// "every answer this uid wrote" needs a collectionGroup query rather
+// than `ownDocsIn`'s plain top-level one. Needs `answers.uid` enabled at
+// COLLECTION_GROUP scope in firestore.indexes.json (added alongside this).
+async function ownAnswers(uid) {
+  const { collectionGroup, getDocs: getDocsFn } = await import('firebase/firestore');
+  const snap = await getDocsFn(collectionGroup(db, 'answers'));
+  return snap.docs.filter((d) => d.data().uid === uid).map((d) => ({ id: d.id, questionId: d.ref.parent.parent.id, ...d.data() }));
+}
+
 export async function buildUserDataExport(user) {
   const profileSnap = await getDoc(doc(db, 'users', user.uid));
   const profile = profileSnap.data() || {};
 
-  const [favoriteAyat, umrohDeposits, contributions, amalanHarian] = await Promise.all([
+  const [favoriteAyat, umrohDeposits, contributions, amalanHarian, jumatChecklist] = await Promise.all([
     subcollection(user.uid, 'favoriteAyat'),
     subcollection(user.uid, 'umrohDeposits'),
     subcollection(user.uid, 'contributions'),
     subcollection(user.uid, 'amalanHarian'),
+    subcollection(user.uid, 'jumatChecklist'),
   ]);
 
   return {
@@ -52,6 +72,8 @@ export async function buildUserDataExport(user) {
     },
     riwayatSedekah: contributions,
     amalanHarian,
+    hafalan: profile.hafalan || null,
+    checklistJumat: jumatChecklist,
   };
 }
 
