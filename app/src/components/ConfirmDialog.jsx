@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import Portal from './Portal';
 import { useEscapeKey } from '../lib/useEscapeKey';
 import { useSwipeDismiss } from '../lib/useSwipeDismiss';
@@ -31,7 +31,8 @@ export default function ConfirmDialog({ title, message, confirmLabel = 'Ya, Lanj
   function guardedCancel() {
     if (!confirming) onCancel();
   }
-  useEscapeKey(guardedCancel);
+  const dialogRef = useRef(null);
+  useEscapeKey(guardedCancel, dialogRef);
   const { dragY, dragging, handlers } = useSwipeDismiss(guardedCancel);
 
   async function handleConfirm() {
@@ -61,6 +62,11 @@ export default function ConfirmDialog({ title, message, confirmLabel = 'Ya, Lanj
       }}
     >
       <div
+        ref={dialogRef}
+        tabIndex={-1}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
         onClick={(e) => e.stopPropagation()}
         {...handlers}
         style={{

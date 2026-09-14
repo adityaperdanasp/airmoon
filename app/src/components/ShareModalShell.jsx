@@ -27,10 +27,11 @@ export default function ShareModalShell({
   onClose,
 }) {
   const canvasRef = useRef(null);
+  const dialogRef = useRef(null);
   const [ready, setReady] = useState(false);
   const [busy, setBusy] = useState(false);
   const [wallpaperBusy, setWallpaperBusy] = useState(false);
-  useEscapeKey(onClose);
+  useEscapeKey(onClose, dialogRef);
 
   // drawArgs is a fresh object literal on every render — serialise it so
   // the redraw effect only fires when a value inside it actually changes.
@@ -87,7 +88,7 @@ export default function ShareModalShell({
         onClick={onClose}
         style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 50, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: 20 }}
       >
-        <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, width: '100%', maxWidth: 340 }}>
+        <div ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label={shareTitle} onClick={(e) => e.stopPropagation()} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, width: '100%', maxWidth: 340 }}>
           <div style={{ position: 'relative', width: '100%', borderRadius: 18, overflow: 'hidden', boxShadow: '0 20px 40px rgba(0,0,0,0.4)' }}>
             <canvas ref={canvasRef} style={{ width: '100%', display: 'block', aspectRatio }} />
             {!ready && (
