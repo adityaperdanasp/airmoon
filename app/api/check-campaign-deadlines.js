@@ -1010,6 +1010,37 @@ async function cleanupOldErrorLogs(db) {
   return { deleted: snap.size };
 }
 
+// Retensi Doa Bersama (2026-09-14) — NOT the same shape as errorLogs'
+// cleanup above, on purpose: `communityQuestions` is genuine content (a
+// public Q&A archive people browse, same as `doas`/`featureRequests`,
+// neither of which get cleaned up either) and deleting it would destroy
+// real user contributions, not clear noise — checked during this
+// round's planning and deliberately left alone, correcting the original
+// proposal's framing that lumped it in with errorLogs.
+// `doaBersama` is different: it has a genuine expiration
+// (`scheduledFor`), the UI already only ever shows upcoming ones
+// (`watchUpcomingDoaBersama`'s query), and a past event is never
+// actionable again — so removing it once its date is a week gone loses
+// nothing anyone can still use. Its `participants` subcollection is
+// deleted first since removing a parent doc never cascade-deletes
+// subcollections in Firestore.
+async function cleanupOldDoaBersama(db) {
+  const cutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const snap = await db.collection('doaBersama').where('scheduledFor', '<', cutoff).limit(100).get();
+  if (snap.empty) return { deleted: 0 };
+
+  let deleted = 0;
+  for (const docSnap of snap.docs) {
+    const participantsSnap = await docSnap.ref.collection('participants').get();
+    const batch = db.batch();
+    participantsSnap.docs.forEach((p) => batch.delete(p.ref));
+    batch.delete(docSnap.ref);
+    await batch.commit();
+    deleted++;
+  }
+  return { deleted };
+}
+
 // Dampak airmoon public stats (2026-09-12) — see pages/DampakAirmoon.jsx.
 // A daily-computed public snapshot, same reasoning as the referral
 // leaderboard above: `donations` is already public-read so the sedekah/
@@ -1110,6 +1141,7 @@ export default async function handler(req, res) {
     const masjidAdminReferralResult = await checkMasjidAdminReferrals(db);
     const publicImpactResult = await checkPublicImpactStats(db);
     const errorLogCleanupResult = await cleanupOldErrorLogs(db);
+    const doaBersamaCleanupResult = await cleanupOldDoaBersama(db);
 
     return res.status(200).json({
       checked: snap.size,
@@ -1132,6 +1164,7 @@ export default async function handler(req, res) {
       masjidAdminReferral: masjidAdminReferralResult,
       publicImpact: publicImpactResult,
       errorLogCleanup: errorLogCleanupResult,
+      doaBersamaCleanup: doaBersamaCleanupResult,
     });
   } catch (err) {
     console.error('check-campaign-deadlines error:', err);
