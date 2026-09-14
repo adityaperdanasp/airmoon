@@ -1,4 +1,5 @@
 import TopBar from '../components/TopBar';
+import { useDocumentTitle } from '../lib/useDocumentTitle';
 
 function Section({ title, children }) {
   return (
@@ -17,6 +18,7 @@ function Section({ title, children }) {
 // (Ekspor Data Saya, Hapus Akun) that make most of "Hak Kamu" below
 // actually actionable in-app rather than only via email.
 export default function PrivacyPolicy() {
+  useDocumentTitle('Kebijakan Privasi');
   return (
     <div className="screen">
       <div className="screen-content" style={{ gap: 26 }}>

@@ -5,6 +5,7 @@ import CountUp from '../components/CountUp';
 import { SkeletonCard } from '../components/Skeleton';
 import { watchPublicImpactStats } from '../lib/publicStats';
 import { formatRupiah } from '../lib/zakat';
+import { useDocumentTitle } from '../lib/useDocumentTitle';
 
 function StatCard({ icon, label, value }) {
   return (
@@ -27,6 +28,7 @@ function StatCard({ icon, label, value }) {
 export default function DampakAirmoon() {
   const [stats, setStats] = useState(undefined); // undefined = loading, null = no snapshot yet
 
+  useDocumentTitle('Dampak airmoon');
   useEffect(() => watchPublicImpactStats(setStats), []);
 
   return (
