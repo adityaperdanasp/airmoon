@@ -39,7 +39,7 @@ const SLIDES = [
   {
     art: <ArtMore />,
     title: 'Masih banyak lagi di tab "Lainnya"',
-    body: 'Tasbih digital, kalkulator zakat & waris, Asmaul Husna, dzikir pagi/petang, dan lebih dari selusin fitur lain nunggu buat dijelajahi.',
+    body: 'Tasbih digital, kalkulator zakat & waris, Asmaul Husna, Tanya Jawab sesama pengguna, Tantangan Teman, Koleksi Badge, dan puluhan fitur lain nunggu buat dijelajahi.',
   },
 ];
 
