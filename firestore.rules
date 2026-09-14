@@ -521,6 +521,19 @@ service cloud.firestore {
       allow read, update, delete: if false;
     }
 
+    // Laporkan (2026-09-14) — flags a piece of public content
+    // (communityQuestions/answers, donations/{id}/gratitude) for the
+    // founder to review via the Firestore console. Auth-required create,
+    // no client read-back — same shape as npsResponses/askMeFeedback.
+    match /contentReports/{id} {
+      allow create: if request.auth != null
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.contentType is string
+        && request.resource.data.contentPath is string
+        && request.resource.data.reason.size() <= 500;
+      allow read, update, delete: if false;
+    }
+
     // Everything else stays locked until it has a real data model.
     match /{document=**} {
       allow read, write: if false;

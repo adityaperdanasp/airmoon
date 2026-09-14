@@ -7,6 +7,8 @@ import { watchUserProfile } from '../lib/profile';
 import { isSupporterCrossSellEnabled } from '../lib/remoteConfig';
 import { watchGratitude, postGratitude } from '../lib/gratitude';
 import { watchDonationUpdates, postDonationUpdate } from '../lib/donationUpdates';
+import ContentActionsMenu from './ContentActionsMenu';
+import { isUserBlocked } from '../lib/blockedUsers';
 
 const dateFmt = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
@@ -164,6 +166,7 @@ function UpdatesAndGratitude({ donation, user }) {
   const [posting, setPosting] = useState(false);
   const [updateText, setUpdateText] = useState('');
   const [postingUpdate, setPostingUpdate] = useState(false);
+  const [blockedVersion, setBlockedVersion] = useState(0);
   const isFunded = donation.collected >= donation.target;
   const isSubmitter = !!user && !!donation.submitterUid && user.uid === donation.submitterUid;
 
@@ -223,13 +226,22 @@ function UpdatesAndGratitude({ donation, user }) {
         </div>
       )}
 
-      {gratitude?.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      {gratitude?.filter((g) => !isUserBlocked(g.uid)).length > 0 && (
+        <div key={blockedVersion} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           <span style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Ucapan Terima Kasih</span>
-          {gratitude.map((g) => (
-            <div key={g.id} style={{ padding: '8px 10px', borderRadius: 10, background: 'var(--cream)' }}>
-              <span style={{ fontSize: 12, lineHeight: 1.5 }}>{g.text}</span>
-              <div style={{ fontSize: 10, color: 'var(--muted)', marginTop: 2 }}>— {g.authorName}</div>
+          {gratitude.filter((g) => !isUserBlocked(g.uid)).map((g) => (
+            <div key={g.id} style={{ padding: '8px 10px', borderRadius: 10, background: 'var(--cream)', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+              <div style={{ flex: 1 }}>
+                <span style={{ fontSize: 12, lineHeight: 1.5 }}>{g.text}</span>
+                <div style={{ fontSize: 10, color: 'var(--muted)', marginTop: 2 }}>— {g.authorName}</div>
+              </div>
+              <ContentActionsMenu
+                contentType="gratitude"
+                contentPath={`donations/${donation.id}/gratitude/${g.id}`}
+                authorUid={g.uid}
+                authorName={g.authorName}
+                onBlocked={() => setBlockedVersion((v) => v + 1)}
+              />
             </div>
           ))}
         </div>
