@@ -247,7 +247,7 @@ export default function JadwalSholat() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {prayerOrder.map((key) => {
                 const isNext = key === next.key;
-                return (
+                const row = (
                   <div
                     key={key}
                     style={{
@@ -264,6 +264,33 @@ export default function JadwalSholat() {
                       <span style={{ fontSize: 13.5, fontWeight: 700, color: isNext ? 'var(--on-primary)' : 'var(--ink)' }}>{prayerLabel[key]}</span>
                     </div>
                     <span style={{ fontSize: 14, fontWeight: 700, color: isNext ? 'var(--on-primary)' : 'var(--ink)' }}>{data.timings[key]}</span>
+                  </div>
+                );
+
+                // Syuruq (2026-09-14) — matahari terbit, bukan waktu sholat
+                // (ini justru batas AKHIR waktu sholat Subuh, bukan waktu
+                // sholat sendiri) — jadi cuma info, gak pernah ikut
+                // notifikasi adzan (prayerOrder di lib/usePrayerTimes.js
+                // sengaja gak diubah, itu yang dipakai buat next-prayer
+                // countdown, ICS export, dan enable/disable notif adzan).
+                if (key !== 'Fajr' || !data.timings.Sunrise) return row;
+                return (
+                  <div key="Fajr-group" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {row}
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '11px 16px',
+                        borderRadius: 16,
+                        background: 'var(--card)',
+                        opacity: 0.75,
+                      }}
+                    >
+                      <span style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--muted)' }}>☀️ Syuruq</span>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--muted)' }}>{data.timings.Sunrise}</span>
+                    </div>
                   </div>
                 );
               })}
