@@ -4,24 +4,21 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
 import { useLang } from '../context/LangContext';
-import { useTheme } from '../context/ThemeContext';
 import { usePrayerTimes } from '../lib/usePrayerTimes';
 import { watchActiveDonations, watchMyContributions } from '../lib/donations';
 import { watchUserProfile } from '../lib/profile';
 import { watchDoas } from '../lib/doa';
 import { markSeen } from '../lib/unseenBadges';
-import { HEADLINES, todaysHeadlineIndex } from '../data/headlines';
 import { getDailyTip } from '../data/dailyTips';
 import { shouldShowLangNudge, dismissLangNudge } from '../lib/langNudge';
 import { getMustajabWindow } from '../lib/mustajabTime';
 import { getForYouSuggestions } from '../lib/forYouSuggestions';
 import { getRecentLainnya } from '../lib/recentLainnya';
-import { todaysHomePhoto } from '../data/photos';
 import { formatRupiah } from '../lib/zakat';
 import BottomNav from '../components/BottomNav';
 import DonationCard from '../components/DonationCard';
 import DoaCard from '../components/DoaCard';
-import { IconBell, IconSearch, IconMoon } from '../components/icons';
+import { IconSearch, IconMoon } from '../components/icons';
 import { QiblaCompassIcon, QuranBookIcon, MosqueIcon, PrayerClockIcon } from '../components/serviceIcons';
 import { SkeletonCard } from '../components/Skeleton';
 import InstallAppCard from '../components/InstallAppCard';
@@ -36,12 +33,10 @@ import { hasSeenOnboarding, markOnboardingSeen } from '../lib/onboarding';
 import RatingPromptModal from '../components/RatingPromptModal';
 import { shouldShowRatingPrompt, markRatingPromptShown, dismissRatingPromptForever } from '../lib/ratingPrompt';
 import { submitFeedback } from '../lib/feedback';
-import PointsBadge from '../components/PointsBadge';
 import { markLoginPoint } from '../lib/amalanHarian';
-import FadeImage from '../components/FadeImage';
 import NPSPromptModal from '../components/NPSPromptModal';
 import { shouldShowNpsPrompt, markNpsPromptShown, dismissNpsPromptForever, submitNpsResponse } from '../lib/npsPrompt';
-import { isNpsPromptEnabled, getHomeHeadlineVariant } from '../lib/remoteConfig';
+import { isNpsPromptEnabled } from '../lib/remoteConfig';
 import { checkAndUpdateLastSeen } from '../lib/lastSeen';
 import { shouldShowChurnSurvey, markChurnSurveyShown, dismissChurnSurveyForever, submitChurnSurveyResponse } from '../lib/churnSurvey';
 import ChurnSurveyModal from '../components/ChurnSurveyModal';
@@ -128,14 +123,11 @@ function reorderSvcByInterest(interestTag) {
 export default function Home() {
   const { user } = useAuth();
   const { t, lang } = useLang();
-  const { theme } = useTheme();
   const { next, status: prayerStatus, data: prayerData } = usePrayerTimes();
   const [donations, setDonations] = useState(null);
   const [myContributions, setMyContributions] = useState([]);
   const [showSedekahHistory, setShowSedekahHistory] = useState(false);
   const [doas, setDoas] = useState(null);
-  const [avatarColor, setAvatarColor] = useState(null);
-  const [avatarPhoto, setAvatarPhoto] = useState(null);
   const [interestTag, setInterestTagState] = useState(null);
   const [lastReadAyat, setLastReadAyat] = useState(null);
   const [lastReadMushaf, setLastReadMushaf] = useState(null);
@@ -241,8 +233,6 @@ export default function Home() {
 
   useEffect(() => watchActiveDonations(setDonations), []);
   useEffect(() => watchUserProfile(user?.uid, (p) => {
-    setAvatarColor(p?.avatarColor || null);
-    setAvatarPhoto(p?.avatarPhoto || null);
     setInterestTagState(p?.interestTag || null);
   }), [user?.uid]);
   useEffect(() => watchDoas(setDoas), []);
@@ -309,21 +299,6 @@ export default function Home() {
   }, [user]);
 
   const mySedekahTotal = myContributions.reduce((sum, c) => sum + c.amount, 0);
-  // [PM 2026-09-12] The first real Remote Config experiment actually
-  // wired end-to-end (lib/remoteConfig.js shipped last batch with no
-  // parameter ever set in the console) — 'personal_name' prepends the
-  // user's own name to the rotating headline instead of showing it bare.
-  // Uses only data Home already has (user.displayName), no new fetch.
-  // Toggle `home_headline_variant` between 'default'/'personal_name' in
-  // Firebase Console → Remote Config to actually run this.
-  const baseHeadline = HEADLINES[todaysHeadlineIndex()][lang];
-  const headline = getHomeHeadlineVariant() === 'personal_name' && user?.displayName
-    ? `${user.displayName.split(' ')[0]},\n${baseHeadline}`
-    : baseHeadline;
-  // A different photo pool per theme (not the same photo just dimmed —
-  // an explicit ask), one per day so it isn't the exact same picture
-  // every single visit, same day-of-year approach as the headline above.
-  const headerPhoto = todaysHomePhoto(theme);
   // Tips Islami Harian (2026-09-12) — same interestTag Home already
   // reorders the Layanan grid by (see reorderSvcByInterest above),
   // reused so the one daily tip actually matches why this person opened
@@ -335,117 +310,6 @@ export default function Home() {
     <div className="screen">
       <div className="screen-content">
       <PullToRefresh onRefresh={handlePullRefresh}>
-        <div
-          style={{
-            position: 'relative',
-            borderRadius: 26,
-            overflow: 'hidden',
-            padding: '18px 20px 22px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 16,
-          }}
-        >
-          <FadeImage
-            src={headerPhoto}
-            alt=""
-            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 40%' }}
-          />
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              background:
-                theme === 'dark'
-                  ? 'linear-gradient(160deg, rgba(11,12,10,0.55) 0%, rgba(11,12,10,0.88) 100%)'
-                  : 'linear-gradient(160deg, rgba(13,77,71,0.62) 0%, rgba(13,77,71,0.85) 100%)',
-            }}
-          />
-          <div className="topbar" style={{ position: 'relative', zIndex: 1 }}>
-            {/* [UI 2026-09-11] minWidth: 0 + the name span's own overflow
-                rule below — without this, a long fallback (user.email
-                when displayName isn't set, e.g. "suherman.aditya@
-                gmail.com") could refuse to shrink at all (a flex item's
-                default min-width is its own content width), pushing
-                PointsBadge + the icon button on the right off-balance or
-                clipped on a narrow ~375px phone. flexShrink: 0 on that
-                right-hand group below guarantees the reverse never
-                happens either — those never get squeezed to fit. */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 11, minWidth: 0 }}>
-              <div
-                style={{
-                  width: 46,
-                  height: 46,
-                  borderRadius: '50%',
-                  padding: 2.5,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  background: 'rgba(255,255,255,0.3)',
-                }}
-              >
-                {avatarPhoto ? (
-                  <img src={avatarPhoto} alt="" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover', display: 'block' }} />
-                ) : (
-                  <div
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      borderRadius: '50%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontWeight: 800,
-                      fontSize: 16,
-                      color: '#fff',
-                      background: avatarColor || 'var(--primary)',
-                    }}
-                  >
-                    {(user?.displayName || 'A')[0].toUpperCase()}
-                  </div>
-                )}
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-                <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.75)' }}>{t('greeting')}</span>
-                <span style={{ fontSize: 15.5, fontWeight: 700, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.displayName || user?.email}</span>
-              </div>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-              {user && <PointsBadge uid={user.uid} />}
-              <Link
-                to="/pengaturan"
-                className="icon-btn"
-                aria-label={t('pengaturan')}
-                style={{ textDecoration: 'none', background: 'rgba(255,255,255,0.2)', color: '#fff' }}
-              >
-                <IconBell width="17" height="17" />
-              </Link>
-            </div>
-          </div>
-
-          <h1
-            style={{
-              position: 'relative',
-              zIndex: 1,
-              margin: 0,
-              // Was 22px — with a 100-line rotating pool (data/headlines.js)
-              // some lines wrapped to 3 visual lines at that size and
-              // dominated the whole photo card. 18px keeps every headline
-              // to its intended 2 lines (each already has its own \n) at
-              // this card's width.
-              fontSize: 18,
-              lineHeight: 1.35,
-              fontWeight: 800,
-              letterSpacing: '-0.01em',
-              whiteSpace: 'pre-line',
-              color: '#fff',
-              textShadow: '0 2px 10px rgba(0,0,0,0.25)',
-            }}
-          >
-            {headline}
-          </h1>
-        </div>
-
         {forYouItems.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <span style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.03em', paddingLeft: 2 }}>Untuk Kamu</span>
@@ -462,6 +326,38 @@ export default function Home() {
             </div>
           </div>
         )}
+
+        <Link
+          to="/jadwal-sholat"
+          style={{
+            textDecoration: 'none',
+            position: 'relative',
+            overflow: 'hidden',
+            borderRadius: 22,
+            padding: '18px 20px',
+            background: `linear-gradient(135deg, var(--primary), var(--primary-dark))`,
+            color: '#fff',
+          }}
+        >
+          <GeometricPattern id="prayer-pattern" />
+          <div style={{ position: 'relative', zIndex: 1 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--accent)' }}>
+              {t('jadwal_sholat')}
+            </div>
+            {prayerStatus === 'ready' && next ? (
+              <>
+                <div style={{ fontSize: 22, fontWeight: 800, marginTop: 6 }}>
+                  {next.label} &middot; {next.time}
+                </div>
+                <div style={{ fontSize: 12, opacity: 0.75, marginTop: 2 }}>{next.countdown} lagi</div>
+              </>
+            ) : prayerStatus === 'denied' ? (
+              <div style={{ fontSize: 12, opacity: 0.8, marginTop: 8 }}>Izinkan akses lokasi buat lihat jadwal sholat</div>
+            ) : (
+              <div style={{ fontSize: 12, opacity: 0.8, marginTop: 8 }}>Memuat jadwal sholat…</div>
+            )}
+          </div>
+        </Link>
 
         <div className="card" style={{ display: 'flex', gap: 10, padding: '12px 14px', alignItems: 'flex-start' }}>
           <span style={{ fontSize: 16, lineHeight: 1 }}>💡</span>
@@ -571,39 +467,6 @@ export default function Home() {
             )}
           </div>
         )}
-
-        <Link
-          to="/jadwal-sholat"
-          style={{
-            textDecoration: 'none',
-            color: 'inherit',
-            position: 'relative',
-            overflow: 'hidden',
-            borderRadius: 22,
-            padding: '18px 20px',
-            background: `linear-gradient(135deg, var(--primary), var(--primary-dark))`,
-            color: '#fff',
-          }}
-        >
-          <GeometricPattern id="prayer-pattern" />
-          <div style={{ position: 'relative', zIndex: 1 }}>
-            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--accent)' }}>
-              {t('jadwal_sholat')}
-            </div>
-            {prayerStatus === 'ready' && next ? (
-              <>
-                <div style={{ fontSize: 22, fontWeight: 800, marginTop: 6 }}>
-                  {next.label} &middot; {next.time}
-                </div>
-                <div style={{ fontSize: 12, opacity: 0.75, marginTop: 2 }}>{next.countdown} lagi</div>
-              </>
-            ) : prayerStatus === 'denied' ? (
-              <div style={{ fontSize: 12, opacity: 0.8, marginTop: 8 }}>Izinkan akses lokasi buat lihat jadwal sholat</div>
-            ) : (
-              <div style={{ fontSize: 12, opacity: 0.8, marginTop: 8 }}>Memuat jadwal sholat…</div>
-            )}
-          </div>
-        </Link>
 
         {(lastReadAyat || lastReadMushaf) && (
           // Side-by-side when both bookmarks exist (Mode Ayat and Mode
