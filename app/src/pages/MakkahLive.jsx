@@ -1,10 +1,23 @@
 import { useLang } from '../context/LangContext';
 import TopBar from '../components/TopBar';
 
-// Video id verified via web search (not guessed) — a public 24/7 Kaaba/
-// Masjid al-Haram live stream. Swap for the founder's preferred official
-// channel embed if there's a specific licensing/partnership preference.
-const YOUTUBE_ID = 'gReqANyDHCE';
+// Video id verified via web search (not guessed) — the currently-live
+// video from the official KSA Qur'an TV channel (2.75M subscribers,
+// youtube.com/channel/UCos52azQNBgW63_9uDJoPDA), resolved by navigating
+// that channel's own /live redirect rather than trusting a random search
+// result — several other "24/7 Makkah live" search hits were checked
+// the same way (2026-10-01) and turned out to already be dead
+// ("Video unavailable") despite reading like real, current streams.
+// This is the real failure mode, not a one-off: a broadcaster's live
+// video id rotates whenever they end/restart their stream, so this id
+// WILL go stale again eventually — re-verify via the channel's /live
+// URL (not a fresh search) when that happens, rather than swapping in
+// another search result that might already be dead too. A live
+// re-embed via youtube.com/embed/live_stream?channel=<id> was tried
+// first specifically to avoid this rot, but tested as "video
+// unavailable" in a real iframe — YouTube doesn't support that path
+// for this channel, so a fixed id is the only working option for now.
+const YOUTUBE_ID = 'eC4LfEVxvKg';
 
 export default function MakkahLive() {
   const { t } = useLang();
