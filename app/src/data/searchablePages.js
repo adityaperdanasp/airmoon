@@ -26,6 +26,7 @@ export const SEARCHABLE_PAGES = [
   { to: '/lainnya/sejarah-islam', label: 'Sejarah Islam' },
   { to: '/lainnya/kutipan-inspirasi', label: 'Kutipan Inspirasi' },
   { to: '/lainnya/panduan-sholat', label: 'Panduan Sholat Pemula' },
+  { to: '/lainnya/panduan-jenazah', label: 'Tatacara Penanganan Jenazah' },
   { to: '/lainnya/kalkulator-zakat', label: 'Kalkulator Zakat' },
   { to: '/lainnya/zakat-korporat', label: 'Zakat Korporat' },
   { to: '/lainnya/kalkulator-waris', label: 'Kalkulator Waris' },

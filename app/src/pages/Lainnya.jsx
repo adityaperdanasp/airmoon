@@ -82,6 +82,7 @@ const SECTIONS = [
       { to: '/lainnya/sejarah-islam', label: 'Sejarah Islam', bg: 'var(--peach)', node: <HistoryBookIcon size={30} />, prefetch: () => import('./SejarahIslam') },
       { to: '/lainnya/kutipan-inspirasi', key: 'item_kutipan_inspirasi', bg: 'var(--cream)', node: <ScrollIcon size={30} />, prefetch: () => import('./KutipanInspirasi') },
       { to: '/lainnya/panduan-sholat', key: 'panduan_sholat_title', bg: 'var(--mint)', node: <MosqueIcon size={30} />, prefetch: () => import('./PanduanSholat') },
+      { to: '/lainnya/panduan-jenazah', key: 'panduan_jenazah_title', bg: 'var(--blue-gray)', node: <CuppedHandsIcon size={30} />, prefetch: () => import('./PanduanJenazah') },
     ],
   },
   {

@@ -246,6 +246,14 @@ export const translations = {
     panduan_sholat_sunnah_sebelum: 'Sunnah sebelum',
     panduan_sholat_sunnah_sesudah: 'Sunnah sesudah',
 
+    // Panduan Jenazah (PanduanJenazah.jsx)
+    panduan_jenazah_title: 'Tatacara Penanganan Jenazah',
+    panduan_jenazah_langkah: 'Tahap',
+    panduan_jenazah_sebelumnya: '← Sebelumnya',
+    panduan_jenazah_selanjutnya: 'Selanjutnya →',
+    panduan_jenazah_ulangi: 'Ulangi dari Awal',
+    panduan_jenazah_footer_note: 'Panduan umum sesuai pendapat mayoritas mazhab Sunni — praktik detail (jumlah lapis kafan, bacaan talqin, dll) bisa beda tipis antar daerah/ormas. Kalau ada kasus khusus, tetep konsultasi ke ustadz/DKM setempat.',
+
     // Koleksi Badge Saya (KoleksiBadge.jsx)
     koleksi_badge_title: 'Koleksi Badge Saya',
     koleksi_badge_tercapai: 'tercapai',
@@ -525,6 +533,12 @@ export const translations = {
     panduan_sholat_selanjutnya: 'Next →',
     panduan_sholat_ulangi: 'Restart from the Beginning',
     panduan_sholat_footer_note: "This guide shows one complete rakaat cycle (from niyyah to salam) — the number of rakaat and details differ per prayer (Fajr/Dhuhr/etc.), check Jadwal Sholat for timing and rakaat counts.",
+    panduan_jenazah_title: 'Funeral Handling Guide',
+    panduan_jenazah_langkah: 'Stage',
+    panduan_jenazah_sebelumnya: '← Previous',
+    panduan_jenazah_selanjutnya: 'Next →',
+    panduan_jenazah_ulangi: 'Restart from the Beginning',
+    panduan_jenazah_footer_note: "A general guide following the majority Sunni view — exact practice (number of shroud layers, talqin recitation, etc.) can vary slightly by region/organization. For specific cases, consult a local ustadz or mosque committee.",
     panduan_sholat_rincian_toggle: 'See rakaat counts for every prayer',
     panduan_sholat_rakaat_unit: 'rakaat',
     panduan_sholat_sunnah_sebelum: 'Sunnah before',
