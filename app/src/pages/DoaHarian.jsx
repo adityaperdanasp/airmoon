@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { doaCategories } from '../data/doaHarian';
 import { useLang } from '../context/LangContext';
 import { useAuth } from '../context/AuthContext';
@@ -33,7 +34,12 @@ const ALL_ITEMS = doaCategories.flatMap((c) => c.items.map((it) => ({ ...it, cat
 export default function DoaHarian() {
   const { t } = useLang();
   const { user } = useAuth();
-  const [activeId, setActiveId] = useState('pagi');
+  const location = useLocation();
+  // Deep-linked from Panduan Jenazah's "Lihat Doa Terkait" button
+  // (navigate(..., { state: { activeId: 'kematian' } })) — only read once
+  // on mount, same as a URL param would be; switching tabs after landing
+  // here works normally via setActiveId below.
+  const [activeId, setActiveId] = useState(location.state?.activeId ?? 'pagi');
   const [streaks, setStreaks] = useState({});
   const [marking, setMarking] = useState(false);
   const [query, setQuery] = useState('');

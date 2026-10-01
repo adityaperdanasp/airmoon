@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { IconMoon, IconBack } from '../components/icons';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { shareText } from '../lib/share';
@@ -67,6 +67,7 @@ function formatStarredAnswers(entries) {
 
 export default function AskMe() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const { showToast } = useToast();
   const [messages, setMessages] = useState(loadHistory);
@@ -100,6 +101,23 @@ export default function AskMe() {
   useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: 'smooth' });
   }, [messages, busy]);
+
+  // Konsultasi ke Ust. Rewin — Kalkulator Waris's "consult this result"
+  // button navigates here with a prefilled question via router state
+  // (navigate('/ask-me', { state: { prefill: '...' } })), same send(text)
+  // path as tapping one of the SUGGESTED_QUESTIONS chips. Only fires once
+  // per navigation (prefillSentRef guards React 18's double-invoke in
+  // dev), and the state is cleared right after so refreshing or coming
+  // back later never resends it.
+  const prefillSentRef = useRef(false);
+  useEffect(() => {
+    const prefill = location.state?.prefill;
+    if (!prefill || prefillSentRef.current) return;
+    prefillSentRef.current = true;
+    send(prefill);
+    navigate(location.pathname, { replace: true, state: null });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Shared by send() and handleRegenerate() below — streams the reply and
   // appends it as a fresh assistant message. `historyForApi` is everything

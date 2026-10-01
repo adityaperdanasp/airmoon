@@ -1,11 +1,14 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { calcWaris } from '../lib/warisCalc';
 import { formatRupiah } from '../lib/zakat';
 import PageHeaderPhoto from '../components/PageHeaderPhoto';
 import { PAGE_PHOTOS } from '../data/photos';
 import WarisShareModal from '../components/WarisShareModal';
+import WarisShareDiagram from '../components/WarisShareDiagram';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { loadWarisScenarios, saveWarisScenario, deleteWarisScenario } from '../lib/warisScenarios';
+import { exportWarisPdf } from '../lib/warisPdf';
 import { useToast } from '../context/ToastContext';
 
 function digitsOnly(v) {
@@ -56,7 +59,9 @@ function ToggleRow({ label, value, onChange }) {
 
 const WARNING_TEXT = {
   aul: "⚠️ Total bagian fardh melebihi harta (kasus 'aul) — semua bagian di bawah sudah diskalakan proporsional sesuai ketentuan fiqh.",
-  radd: '⚠️ Total bagian fardh tidak mencapai keseluruhan harta dan tidak ada ahli waris ashabah (anak/ayah) di sini yang menghabiskan sisanya — kasus ini butuh perhitungan radd (pengembalian sisa) yang belum dihitung otomatis. Sebaiknya konsultasikan ke ahli faraidh/ulama.',
+  radd: '⚠️ Total bagian fardh tidak mencapai keseluruhan harta dan tidak ada ahli waris ashabah yang menghabiskan sisanya — sisa sudah dikembalikan (radd) secara proporsional ke ahli waris fardh yang ada (selain suami/istri), sesuai ketentuan fiqh.',
+  raddNoRecipient: '⚠️ Total bagian fardh tidak mencapai keseluruhan harta dan tidak ada ahli waris lain (selain suami/istri) untuk menerima pengembalian sisa (radd) — kasus ini butuh konsultasi ke ahli faraidh/ulama.',
+  ashabahMaalGhair: "⚠️ Ada anak perempuan (tanpa anak laki-laki) bersamaan dengan saudara kandung — kasus ini berpotensi 'ashabah ma'al ghair (saudara perempuan ikut jadi ashabah) yang belum dihitung di sini. Saudara kandung di atas ditampilkan TIDAK mendapat bagian; itu belum tentu benar untuk kasus ini. WAJIB konsultasi ke ahli faraidh/ulama.",
 };
 
 // Kalkulator Waris (Ilmu Faraidh) — lihat lib/warisCalc.js untuk cakupan
@@ -65,12 +70,17 @@ const WARNING_TEXT = {
 // ini, dan temanya (fiqh muamalah/harta) cukup dekat dengan Zakat.
 export default function KalkulatorWaris() {
   const { showToast } = useToast();
+  const navigate = useNavigate();
   const [hasSuami, setHasSuami] = useState(false);
   const [jumlahIstri, setJumlahIstri] = useState(0);
   const [anakLaki, setAnakLaki] = useState(0);
   const [anakPerempuan, setAnakPerempuan] = useState(0);
   const [hasAyah, setHasAyah] = useState(false);
   const [hasIbu, setHasIbu] = useState(false);
+  const [hasKakek, setHasKakek] = useState(false);
+  const [hasNenek, setHasNenek] = useState(false);
+  const [saudaraLaki, setSaudaraLaki] = useState(0);
+  const [saudaraPerempuan, setSaudaraPerempuan] = useState(0);
   const [harta, setHarta] = useState('500000000');
   const hartaN = Number(digitsOnly(harta)) || 0;
   const [showShare, setShowShare] = useState(false);
@@ -90,20 +100,27 @@ export default function KalkulatorWaris() {
     setAnakPerempuan(s.inputs.anakPerempuan);
     setHasAyah(s.inputs.hasAyah);
     setHasIbu(s.inputs.hasIbu);
+    // ?? false / ?? 0 — scenarios saved before kakek/nenek/saudara existed
+    // won't have these fields at all; treat a missing field as "not
+    // present" rather than crashing on undefined.
+    setHasKakek(s.inputs.hasKakek ?? false);
+    setHasNenek(s.inputs.hasNenek ?? false);
+    setSaudaraLaki(s.inputs.saudaraLaki ?? 0);
+    setSaudaraPerempuan(s.inputs.saudaraPerempuan ?? 0);
     setHarta(s.inputs.harta);
   }
 
   function handleSaveScenario() {
     const name = scenarioName.trim() || `Skenario ${scenarios.length + 1}`;
-    setScenarios(saveWarisScenario(name, { hasSuami, jumlahIstri, anakLaki, anakPerempuan, hasAyah, hasIbu, harta }));
+    setScenarios(saveWarisScenario(name, { hasSuami, jumlahIstri, anakLaki, anakPerempuan, hasAyah, hasIbu, hasKakek, hasNenek, saudaraLaki, saudaraPerempuan, harta }));
     setScenarioName('');
     setShowSaveScenario(false);
   }
 
-  const noHeirs = !hasSuami && jumlahIstri === 0 && anakLaki === 0 && anakPerempuan === 0 && !hasAyah && !hasIbu;
+  const noHeirs = !hasSuami && jumlahIstri === 0 && anakLaki === 0 && anakPerempuan === 0 && !hasAyah && !hasIbu && !hasKakek && !hasNenek && saudaraLaki === 0 && saudaraPerempuan === 0;
   const { results, warnings } = noHeirs
     ? { results: [], warnings: [] }
-    : calcWaris({ hasSuami, jumlahIstri, anakLaki, anakPerempuan, hasAyah, hasIbu, totalHarta: hartaN });
+    : calcWaris({ hasSuami, jumlahIstri, anakLaki, anakPerempuan, hasAyah, hasIbu, hasKakek, hasNenek, saudaraLaki, saudaraPerempuan, totalHarta: hartaN });
 
   // Bandingkan 2 Skenario Berdampingan — previously scenarios could only
   // be applied one at a time, overwriting the form; comparing two meant
@@ -112,10 +129,47 @@ export default function KalkulatorWaris() {
   // without touching the live form state above at all.
   function scenarioResult(s) {
     if (!s) return null;
-    const { hasSuami: hs, jumlahIstri: ji, anakLaki: al, anakPerempuan: ap, hasAyah: ha, hasIbu: hi, harta: h } = s.inputs;
+    const { hasSuami: hs, jumlahIstri: ji, anakLaki: al, anakPerempuan: ap, hasAyah: ha, hasIbu: hi, hasKakek: hk, hasNenek: hn, saudaraLaki: sl, saudaraPerempuan: sp, harta: h } = s.inputs;
     const totalHarta = Number(digitsOnly(String(h))) || 0;
-    const noH = !hs && ji === 0 && al === 0 && ap === 0 && !ha && !hi;
-    return noH ? { results: [], warnings: [], totalHarta } : { ...calcWaris({ hasSuami: hs, jumlahIstri: ji, anakLaki: al, anakPerempuan: ap, hasAyah: ha, hasIbu: hi, totalHarta }), totalHarta };
+    const hkEff = hk ?? false; const hnEff = hn ?? false; const slEff = sl ?? 0; const spEff = sp ?? 0;
+    const noH = !hs && ji === 0 && al === 0 && ap === 0 && !ha && !hi && !hkEff && !hnEff && slEff === 0 && spEff === 0;
+    return noH
+      ? { results: [], warnings: [], totalHarta }
+      : { ...calcWaris({ hasSuami: hs, jumlahIstri: ji, anakLaki: al, anakPerempuan: ap, hasAyah: ha, hasIbu: hi, hasKakek: hkEff, hasNenek: hnEff, saudaraLaki: slEff, saudaraPerempuan: spEff, totalHarta }), totalHarta };
+  }
+
+  // Simulasi Cepat — one-tap +1 chips right where the result already is,
+  // so testing "kalau ada anak laki-laki" doesn't mean scrolling back up
+  // to the Stepper every time. Mirrors the exact same setters the form
+  // below already uses — this is a shortcut to them, not a parallel
+  // state.
+  const QUICK_SIM_CHIPS = [
+    { label: '+ Suami', onTap: () => setHasSuami(true) },
+    { label: '+ Istri', onTap: () => setJumlahIstri((v) => Math.min(4, v + 1)) },
+    { label: '+ Anak L', onTap: () => setAnakLaki((v) => v + 1) },
+    { label: '+ Anak P', onTap: () => setAnakPerempuan((v) => v + 1) },
+    { label: '+ Ayah', onTap: () => setHasAyah(true) },
+    { label: '+ Ibu', onTap: () => setHasIbu(true) },
+  ];
+  function handleResetSimulation() {
+    setHasSuami(false); setJumlahIstri(0); setAnakLaki(0); setAnakPerempuan(0);
+    setHasAyah(false); setHasIbu(false); setHasKakek(false); setHasNenek(false);
+    setSaudaraLaki(0); setSaudaraPerempuan(0);
+  }
+
+  function handleKonsultasi() {
+    const lines = [
+      'Tolong bantu jelaskan hasil perhitungan waris ini:',
+      `Total Harta: ${formatRupiah(hartaN)}`,
+      ...results.map((r) => `${r.label}: ${formatRupiah(r.amount)} (${(r.fraction * 100).toFixed(2)}%)`),
+    ];
+    if (warnings.length) lines.push('', 'Catatan dari kalkulator:', ...warnings.map((w) => WARNING_TEXT[w]));
+    navigate('/ask-me', { state: { prefill: lines.join('\n') } });
+  }
+
+  function handleExportPdf() {
+    const ok = exportWarisPdf({ totalHarta: hartaN, results, warningTexts: warnings.map((w) => WARNING_TEXT[w]) });
+    if (!ok) showToast('Gagal membuka jendela PDF — izinkan pop-up untuk situs ini.');
   }
   const compareA = scenarios.find((s) => s.id === compareAId);
   const compareB = scenarios.find((s) => s.id === compareBId);
@@ -156,7 +210,7 @@ export default function KalkulatorWaris() {
         <PageHeaderPhoto title="Kalkulator Waris" photo={PAGE_PHOTOS.zakat} subtitle="Ilmu Faraidh" />
 
         <div style={{ padding: '10px 14px', borderRadius: 12, background: 'var(--cream)', fontSize: 11, color: 'var(--gold-ink-dark)', lineHeight: 1.5 }}>
-          Mengcover kombinasi ahli waris paling umum (suami/istri, anak, ayah/ibu). Kasus lebih kompleks (kakek/nenek, saudara kandung, cucu, wasiat, hutang jenazah) tidak tercakup — konsultasikan ke ahli faraidh/ulama untuk kasus itu.
+          Mengcover suami/istri, anak, ayah/ibu, kakek (ayah dari ayah), nenek (ibu dari ibu), dan saudara kandung. Kasus lebih kompleks (saudara seayah/seibu, cucu pengganti, wasiat, hutang jenazah) tidak tercakup — konsultasikan ke ahli faraidh/ulama untuk kasus itu.
         </div>
 
 
@@ -182,7 +236,36 @@ export default function KalkulatorWaris() {
           <Stepper label="Anak Perempuan" value={anakPerempuan} onChange={setAnakPerempuan} />
           <ToggleRow label="Ayah" value={hasAyah} onChange={setHasAyah} />
           <ToggleRow label="Ibu" value={hasIbu} onChange={setHasIbu} />
+          <ToggleRow label="Kakek (Ayah dari Ayah)" value={hasKakek} onChange={setHasKakek} />
+          <ToggleRow label="Nenek (Ibu dari Ibu)" value={hasNenek} onChange={setHasNenek} />
+          <Stepper label="Saudara Laki-laki Kandung" value={saudaraLaki} onChange={setSaudaraLaki} />
+          <Stepper label="Saudara Perempuan Kandung" value={saudaraPerempuan} onChange={setSaudaraPerempuan} />
+          {(hasKakek || hasNenek || saudaraLaki > 0 || saudaraPerempuan > 0) && (
+            <span style={{ fontSize: 10.5, color: 'var(--muted-soft)', lineHeight: 1.5 }}>
+              Kakek terhijab (tidak dapat bagian) kalau ayah masih ada. Nenek terhijab kalau ibu masih ada. Saudara kandung cuma dapat bagian kalau tidak ada anak sama sekali dan tidak ada ayah/kakek.
+            </span>
+          )}
         </div>
+
+        {!noHeirs && (
+          <div className="hide-scrollbar" style={{ display: 'flex', gap: 6, overflowX: 'auto', padding: '2px 0' }}>
+            {QUICK_SIM_CHIPS.map((chip) => (
+              <button
+                key={chip.label}
+                onClick={chip.onTap}
+                style={{ flexShrink: 0, padding: '7px 12px', borderRadius: 999, border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--ink)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
+              >
+                {chip.label}
+              </button>
+            ))}
+            <button
+              onClick={handleResetSimulation}
+              style={{ flexShrink: 0, padding: '7px 12px', borderRadius: 999, border: '1px solid var(--border)', background: 'none', color: 'var(--muted)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
+            >
+              ↺ Reset
+            </button>
+          </div>
+        )}
 
         {noHeirs && (
           <p className="state-msg">Pilih setidaknya satu ahli waris buat lihat pembagiannya.</p>
@@ -194,18 +277,27 @@ export default function KalkulatorWaris() {
               <span className="section-label" style={{ color: 'var(--muted)', fontSize: 11.5, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
                 Pembagian
               </span>
-              <button
-                onClick={() => setShowShare(true)}
-                style={{ background: 'none', border: 'none', color: 'var(--primary)', fontSize: 11, fontWeight: 700, cursor: 'pointer', padding: 0 }}
-              >
-                ↗ Bagikan
-              </button>
+              <div style={{ display: 'flex', gap: 12 }}>
+                <button
+                  onClick={handleExportPdf}
+                  style={{ background: 'none', border: 'none', color: 'var(--primary)', fontSize: 11, fontWeight: 700, cursor: 'pointer', padding: 0 }}
+                >
+                  ⬇ PDF
+                </button>
+                <button
+                  onClick={() => setShowShare(true)}
+                  style={{ background: 'none', border: 'none', color: 'var(--primary)', fontSize: 11, fontWeight: 700, cursor: 'pointer', padding: 0 }}
+                >
+                  ↗ Bagikan
+                </button>
+              </div>
             </div>
             {warnings.map((w) => (
               <div key={w} style={{ padding: '10px 14px', borderRadius: 12, background: 'var(--cream)', fontSize: 11, color: 'var(--gold-ink-dark)', lineHeight: 1.5 }}>
                 {WARNING_TEXT[w]}
               </div>
             ))}
+            <WarisShareDiagram results={results} />
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {results.map((r, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', borderRadius: 14, background: 'var(--card)' }}>
@@ -217,6 +309,9 @@ export default function KalkulatorWaris() {
                 </div>
               ))}
             </div>
+            <button onClick={handleKonsultasi} className="btn-outline" style={{ padding: '10px', fontSize: 12 }}>
+              💬 Konsultasi Hasil ke Ust. Rewin
+            </button>
           </div>
         )}
 

@@ -52,4 +52,97 @@ describe('calcWaris', () => {
     expect(grandTotal).toBeLessThanOrEqual(1.0000001);
     expect(totalFraction(results)).toBeCloseTo(grandTotal);
   });
+
+  it('kakek steps in as ashabah only when ayah is absent (hijab)', () => {
+    const withAyah = calcWaris({
+      hasSuami: false, jumlahIstri: 0, anakLaki: 0, anakPerempuan: 0, hasAyah: true, hasIbu: false, hasKakek: true, totalHarta: 1_000_000,
+    });
+    expect(withAyah.results.find((r) => r.label.includes('Kakek'))).toBeUndefined();
+    expect(withAyah.results.find((r) => r.label.includes('Ayah')).fraction).toBeCloseTo(1);
+
+    const noAyah = calcWaris({
+      hasSuami: false, jumlahIstri: 0, anakLaki: 0, anakPerempuan: 0, hasAyah: false, hasIbu: false, hasKakek: true, totalHarta: 1_000_000,
+    });
+    expect(noAyah.results.find((r) => r.label.includes("Kakek ('ashabah)")).fraction).toBeCloseTo(1);
+  });
+
+  it('nenek gets fardh 1/6 only when ibu is absent (hijab)', () => {
+    const withIbu = calcWaris({
+      hasSuami: true, jumlahIstri: 0, anakLaki: 1, anakPerempuan: 0, hasAyah: false, hasIbu: true, hasNenek: true, totalHarta: 1_000_000,
+    });
+    expect(withIbu.results.find((r) => r.label.includes('Nenek'))).toBeUndefined();
+
+    const noIbu = calcWaris({
+      hasSuami: true, jumlahIstri: 0, anakLaki: 1, anakPerempuan: 0, hasAyah: false, hasIbu: false, hasNenek: true, totalHarta: 1_000_000,
+    });
+    expect(noIbu.results.find((r) => r.label.includes('Nenek')).fraction).toBeCloseTo(1 / 6);
+  });
+
+  it('saudara kandung only inherit with no anak and no ayah/kakek, split 2:1 as ashabah', () => {
+    const blocked = calcWaris({
+      hasSuami: false, jumlahIstri: 0, anakLaki: 1, anakPerempuan: 0, hasAyah: false, hasIbu: false, saudaraLaki: 1, totalHarta: 1_000_000,
+    });
+    expect(blocked.results.some((r) => r.label.includes('Saudara'))).toBe(false);
+
+    const eligible = calcWaris({
+      hasSuami: false, jumlahIstri: 0, anakLaki: 0, anakPerempuan: 0, hasAyah: false, hasIbu: false, saudaraLaki: 1, saudaraPerempuan: 1, totalHarta: 900_000,
+    });
+    const bro = eligible.results.find((r) => r.label.includes('Laki-laki'));
+    const sis = eligible.results.find((r) => r.label.includes('Perempuan'));
+    expect(bro.fraction).toBeCloseTo(2 / 3);
+    expect(sis.fraction).toBeCloseTo(1 / 3);
+  });
+
+  it('saudari-only (no brothers) gets fardh: 1/2 for one, 2/3 combined for two or more', () => {
+    const one = calcWaris({
+      hasSuami: true, jumlahIstri: 0, anakLaki: 0, anakPerempuan: 0, hasAyah: false, hasIbu: false, saudaraPerempuan: 1, totalHarta: 1_000_000,
+    });
+    expect(one.results.find((r) => r.label.includes('Saudara Perempuan')).fraction).toBeCloseTo(1 / 2);
+
+    // With nobody else present, 2 sisters' combined 2/3 fardh undershoots
+    // the estate and nothing else is left to absorb the rest as ashabah
+    // — correctly resolves via radd to the full estate, not a bare 2/3.
+    const two = calcWaris({
+      hasSuami: false, jumlahIstri: 0, anakLaki: 0, anakPerempuan: 0, hasAyah: false, hasIbu: false, saudaraPerempuan: 2, totalHarta: 1_000_000,
+    });
+    const sisters = two.results.filter((r) => r.label.includes('Saudara Perempuan'));
+    expect(sisters.reduce((s, r) => s + r.fraction, 0)).toBeCloseTo(1);
+    expect(two.warnings).toContain('radd');
+  });
+
+  it('ibu drops to 1/6 once there are 2+ saudara, even if the siblings themselves inherit nothing', () => {
+    const { results } = calcWaris({
+      hasSuami: false, jumlahIstri: 0, anakLaki: 0, anakPerempuan: 0, hasAyah: true, hasIbu: true, saudaraLaki: 2, totalHarta: 1_000_000,
+    });
+    expect(results.find((r) => r.label === 'Ibu').fraction).toBeCloseTo(1 / 6);
+  });
+
+  it('flags ashabahMaalGhair when anak perempuan (no anak laki) coexists with saudara, uncomputed', () => {
+    const { warnings, results } = calcWaris({
+      hasSuami: false, jumlahIstri: 0, anakLaki: 0, anakPerempuan: 1, hasAyah: false, hasIbu: false, saudaraPerempuan: 1, totalHarta: 1_000_000,
+    });
+    expect(warnings).toContain('ashabahMaalGhair');
+    expect(results.some((r) => r.label.includes('Saudara'))).toBe(false);
+  });
+
+  it('redistributes a real radd shortfall proportionally among fardh heirs, never to suami/istri', () => {
+    // ibu (1/3, no anak/2+ saudara) + 1 saudari (1/2) with suami (1/2) —
+    // 1/2 + 1/3 + 1/2 = 4/3 > 1, so this is actually an 'aul case, not
+    // radd. Use ibu alone (1/3) with no other heir and no residuary —
+    // genuinely undershoots 1, nothing to absorb the rest except ibu
+    // herself via radd.
+    const { results, warnings, grandTotal } = calcWaris({
+      hasSuami: false, jumlahIstri: 0, anakLaki: 0, anakPerempuan: 0, hasAyah: false, hasIbu: true, totalHarta: 900_000,
+    });
+    expect(warnings).toContain('radd');
+    expect(grandTotal).toBeCloseTo(1);
+    expect(results.find((r) => r.label === 'Ibu').fraction).toBeCloseTo(1);
+  });
+
+  it('flags raddNoRecipient when only suami/istri are present and shares undershoot 1', () => {
+    const { warnings } = calcWaris({
+      hasSuami: true, jumlahIstri: 0, anakLaki: 0, anakPerempuan: 0, hasAyah: false, hasIbu: false, totalHarta: 500_000,
+    });
+    expect(warnings).toContain('raddNoRecipient');
+  });
 });
