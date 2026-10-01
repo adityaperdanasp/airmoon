@@ -152,6 +152,7 @@ self.addEventListener('notificationclick', (event) => {
   else if (tag === 'rekap-mingguan') url = '/lainnya/ringkasan-ibadah';
   else if (tag === 'maulid-nabi' || tag === 'tahun-baru-hijriah' || tag === 'idul-adha') url = '/lainnya/kalender-hijriah';
   else if (tag === 'supporter-anniversary') url = '/pengaturan';
+  else if (tag === 'tahlilan') url = '/lainnya/panduan-jenazah';
   event.waitUntil(clients.openWindow(url));
 });
 

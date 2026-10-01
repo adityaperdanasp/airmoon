@@ -117,11 +117,34 @@ describe('calcWaris', () => {
     expect(results.find((r) => r.label === 'Ibu').fraction).toBeCloseTo(1 / 6);
   });
 
-  it('flags ashabahMaalGhair when anak perempuan (no anak laki) coexists with saudara, uncomputed', () => {
-    const { warnings, results } = calcWaris({
+  it("computes 'ashabah ma'al ghair: 1 anak perempuan + 1 saudari = 1/2 + 1/2 (classic textbook case)", () => {
+    const { warnings, results, grandTotal } = calcWaris({
       hasSuami: false, jumlahIstri: 0, anakLaki: 0, anakPerempuan: 1, hasAyah: false, hasIbu: false, saudaraPerempuan: 1, totalHarta: 1_000_000,
     });
-    expect(warnings).toContain('ashabahMaalGhair');
+    expect(results.find((r) => r.label === 'Anak Perempuan').fraction).toBeCloseTo(1 / 2);
+    expect(results.find((r) => r.label.includes('Saudara Perempuan')).fraction).toBeCloseTo(1 / 2);
+    expect(grandTotal).toBeCloseTo(1);
+    expect(warnings).not.toContain('ashabahMaalGhair');
+  });
+
+  it("'ashabah ma'al ghair with a brother present splits the residue 2:1 as normal ashabah, after anak perempuan's fardh", () => {
+    const { results, grandTotal } = calcWaris({
+      hasSuami: false, jumlahIstri: 0, anakLaki: 0, anakPerempuan: 1, hasAyah: false, hasIbu: false, saudaraLaki: 1, saudaraPerempuan: 1, totalHarta: 1_200_000,
+    });
+    const anak = results.find((r) => r.label === 'Anak Perempuan');
+    const bro = results.find((r) => r.label.includes('Laki-laki'));
+    const sis = results.find((r) => r.label.includes('Perempuan') && r.label !== 'Anak Perempuan');
+    expect(anak.fraction).toBeCloseTo(1 / 2);
+    const residue = 1 / 2;
+    expect(bro.fraction).toBeCloseTo(residue * (2 / 3));
+    expect(sis.fraction).toBeCloseTo(residue * (1 / 3));
+    expect(grandTotal).toBeCloseTo(1);
+  });
+
+  it('a male descendant line (even just anak laki-laki) blocks ashabah ma\'al ghair entirely — saudara get nothing', () => {
+    const { results } = calcWaris({
+      hasSuami: false, jumlahIstri: 0, anakLaki: 1, anakPerempuan: 1, hasAyah: false, hasIbu: false, saudaraPerempuan: 1, totalHarta: 1_000_000,
+    });
     expect(results.some((r) => r.label.includes('Saudara'))).toBe(false);
   });
 
@@ -144,5 +167,41 @@ describe('calcWaris', () => {
       hasSuami: true, jumlahIstri: 0, anakLaki: 0, anakPerempuan: 0, hasAyah: false, hasIbu: false, totalHarta: 500_000,
     });
     expect(warnings).toContain('raddNoRecipient');
+  });
+
+  it('ahli waris pengganti: 2 cucu laki-laki stand in for one deceased son, splitting his 2-unit share evenly', () => {
+    const { results, warnings, grandTotal } = calcWaris({
+      hasSuami: false, jumlahIstri: 0, anakLaki: 0, anakPerempuan: 0, hasAyah: false, hasIbu: false,
+      anakLakiWafatPengganti: true, cucuLakiPengganti: 2, cucuPerempuanPengganti: 0, totalHarta: 1_200_000,
+    });
+    const cucu = results.filter((r) => r.label.includes('Cucu Laki-laki'));
+    expect(cucu).toHaveLength(2);
+    expect(cucu[0].fraction).toBeCloseTo(1 / 2);
+    expect(cucu[1].fraction).toBeCloseTo(1 / 2);
+    expect(grandTotal).toBeCloseTo(1);
+    expect(warnings).toContain('ahliWarisPengganti');
+  });
+
+  it('ahli waris pengganti combines with a living anak perempuan, split 2:1 by unit exactly like a real son would', () => {
+    const { results } = calcWaris({
+      hasSuami: false, jumlahIstri: 0, anakLaki: 0, anakPerempuan: 1, hasAyah: false, hasIbu: false,
+      anakLakiWafatPengganti: true, cucuLakiPengganti: 1, cucuPerempuanPengganti: 1, totalHarta: 900_000,
+    });
+    // units: anak perempuan=1, pengganti pool=2 (1 cucu laki=2u + 1 cucu perempuan=1u -> 3u within the pool)
+    const anak = results.find((r) => r.label === 'Anak Perempuan');
+    const cucuLaki = results.find((r) => r.label.includes('Cucu Laki-laki'));
+    const cucuPerempuan = results.find((r) => r.label.includes('Cucu Perempuan'));
+    expect(anak.fraction).toBeCloseTo(1 / 3);
+    expect(cucuLaki.fraction).toBeCloseTo(4 / 9);
+    expect(cucuPerempuan.fraction).toBeCloseTo(2 / 9);
+    expect(anak.fraction + cucuLaki.fraction + cucuPerempuan.fraction).toBeCloseTo(1);
+  });
+
+  it('a pengganti line (even cucu perempuan only) still blocks ashabah ma\'al ghair, same as a living son', () => {
+    const { results } = calcWaris({
+      hasSuami: false, jumlahIstri: 0, anakLaki: 0, anakPerempuan: 1, hasAyah: false, hasIbu: false,
+      anakLakiWafatPengganti: true, cucuPerempuanPengganti: 1, saudaraPerempuan: 1, totalHarta: 1_000_000,
+    });
+    expect(results.some((r) => r.label.includes('Saudara'))).toBe(false);
   });
 });

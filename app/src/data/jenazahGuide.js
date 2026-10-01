@@ -94,3 +94,37 @@ export const JENAZAH_STEPS = [
     ],
   },
 ];
+
+// Panduan Kasus Khusus (2026-10-01) — situasi yang beda dari penanganan
+// jenazah pada umumnya di atas; sengaja ringkas dan merujuk balik ke
+// tahapan normal untuk bagian yang sama, bukan menulis ulang semuanya.
+// Sama caveat-nya kayak konten fiqh lain di app ini — kalau ragu, tetep
+// konsultasi ke ustadz/DKM setempat, apalagi buat kasus-kasus ini yang
+// detailnya bisa beda tergantung situasi.
+export const JENAZAH_KASUS_KHUSUS = [
+  {
+    title: 'Jenazah Bayi / Anak',
+    poin: [
+      'Bayi yang lahir dalam keadaan sudah bernapas/menangis (lahir hidup) lalu wafat: tetap dimandikan, dikafani, disholatkan, dan dikuburkan seperti jenazah dewasa — sama 4 tahap di atas.',
+      'Bayi yang lahir dalam keadaan sudah wafat (lahir mati/keguguran setelah usia kandungan tertentu): mayoritas ulama tetap menganjurkan dimandikan dan dikafani, TAPI tidak disholatkan (karena belum pernah bernapas) — ini salah satu titik beda pendapat antar mazhab/ormas, konsultasikan ke ustadz/DKM setempat soal batas usia kandungan yang dipakai.',
+      'Jumlah kain kafan untuk bayi/anak boleh lebih sedikit lapis (1 lembar sudah sah), tidak wajib sama seperti dewasa.',
+    ],
+  },
+  {
+    title: 'Jenazah Kecelakaan (Kondisi Tidak Utuh)',
+    poin: [
+      'Kalau tubuh tidak utuh/rusak parah, prioritaskan membersihkan bagian yang masih bisa dibersihkan dengan lembut tanpa memperparah kondisi — tidak wajib memaksakan mandi penuh kalau berisiko merusak lebih jauh; cukup diusapkan air/tayamum sebagai gantinya kalau benar-benar tidak memungkinkan.',
+      'Kafani seluruh bagian tubuh yang ada, bungkus serapi mungkin.',
+      'Tetap disholatkan dan dikuburkan seperti biasa — kerusakan fisik tidak menghilangkan haknya untuk diperlakukan sebagai jenazah muslim.',
+      'Kalau identitas belum pasti (misal korban kecelakaan massal), tunggu proses identifikasi resmi (kepolisian/rumah sakit) sebelum pemakaman, demi memastikan hak ahli waris & administrasi kematian.',
+    ],
+  },
+  {
+    title: 'Meninggal Jauh dari Kampung Halaman / di Luar Negeri',
+    poin: [
+      'Secara fiqh, jenazah sebaiknya dikuburkan di tempat wafatnya (tidak wajib dipindah/repatriasi ke kampung halaman) — memindahkan jenazah jarak jauh berisiko merusak kondisi tubuh dan menunda penguburan.',
+      'Kalau keluarga tetap ingin repatriasi (terutama dari luar negeri): hubungi KBRI/Konsulat setempat untuk proses dokumen (surat kematian internasional, izin angkut jenazah/peti khusus, dll) — ini proses administratif terpisah dari tatacara fiqh di atas.',
+      'Kalau waktu tempuh repatriasi lama, pertimbangkan prioritas fiqh "segerakan penguburan" (dianjurkan tidak menunda-nunda) dibanding keinginan dikuburkan di kampung halaman — konsultasikan ke ustadz/DKM setempat soal mana yang lebih diutamakan untuk situasi spesifik keluarga.',
+    ],
+  },
+];

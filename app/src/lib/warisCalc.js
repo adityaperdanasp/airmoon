@@ -1,84 +1,113 @@
 // Kalkulator Waris (Ilmu Faraidh) — covers the common combination (Suami,
-// Istri, Anak, Ayah, Ibu) plus, as of 2026-10-01, Kakek (ayah dari ayah),
-// Nenek (ibu dari ibu), and Saudara Kandung (laki-laki/perempuan). Still
-// does NOT cover: saudara seayah/seibu (half-siblings — different fardh
-// rules than full siblings), cucu pengganti ahli waris, wasiat, or hutang
-// jenazah — same disclaimer stance as the rest of this app's fiqh content
-// (see data/asmaulHusna.js): for cases outside this, consult an ahli
-// faraidh/ulama, don't rely on these numbers alone.
+// Istri, Anak, Ayah, Ibu) plus Kakek (ayah dari ayah), Nenek (ibu dari
+// ibu), Saudara Kandung (laki-laki/perempuan), and, as of 2026-10-01,
+// 'ashabah ma'al ghair (saudara perempuan kandung ikut jadi ashabah
+// bersama anak perempuan) and ahli waris pengganti (cucu menggantikan
+// posisi SATU anak laki-laki yang wafat lebih dulu). Still does NOT
+// cover: saudara seayah/seibu (half-siblings — different fardh rules
+// than full siblings), lebih dari satu anak laki-laki yang wafat dengan
+// cucu masing-masing berbeda (disederhanakan jadi satu kelompok
+// pengganti gabungan), cucu dari anak PEREMPUAN yang wafat (bukan ahli
+// waris dalam fiqih Sunni klasik, jadi memang tidak dihitung), wasiat,
+// atau hutang jenazah (ditangani di luar fungsi ini, lihat
+// KalkulatorWaris.jsx's hutang/wasiat deduction sebelum totalHarta
+// dikirim ke sini) — konsultasikan ke ahli faraidh/ulama untuk kasus di
+// luar ini.
 //
 // Aturan bagian tetap (fardh) merujuk QS. An-Nisa 11-12 & 176 (fiqh
 // mawaris, pendapat mayoritas mazhab Sunni):
 // - Suami: 1/2 bila tidak ada anak, 1/4 bila ada anak.
 // - Istri (gabungan semua istri): 1/4 bila tidak ada anak, 1/8 bila ada
 //   anak — dibagi rata ke semua istri.
-// - Ibu: 1/3 bila tidak ada anak DAN tidak ada 2+ saudara (dari jenis
-//   apa pun — "hijab nuqsan", ibu turun ke 1/6 begitu ada 2 saudara atau
-//   lebih, meskipun saudara itu sendiri akhirnya tidak kebagian karena
-//   terhijab ayah/kakek); 1/6 bila ada anak atau 2+ saudara.
+// - Ibu: 1/3 bila tidak ada anak DAN tidak ada 2+ saudara (hijab
+//   nuqsan — ibu turun ke 1/6 begitu ada 2 saudara atau lebih, meskipun
+//   saudara itu sendiri akhirnya tidak kebagian karena terhijab
+//   ayah/kakek); 1/6 bila ada anak atau 2+ saudara.
 // - Ayah: 1/6 (fardh) bila ada anak; jadi ashabah (sisa) bila tidak ada
 //   anak.
 // - Kakek (ayah dari ayah): HANYA berlaku kalau ayah sudah tidak ada
-//   (terhijab oleh ayah) — perannya sama seperti ayah: fardh 1/6 bila
-//   ada anak, 'ashabah bila tidak ada anak. Kakek dari pihak ibu TIDAK
-//   termasuk ahli waris dalam fiqih Sunni (dzawil arham), makanya toggle
-//   ini secara eksplisit diberi label "Ayah dari Ayah".
+//   (terhijab oleh ayah) — perannya sama seperti ayah. Kakek dari pihak
+//   ibu TIDAK termasuk ahli waris (dzawil arham).
 // - Nenek (ibu dari ibu): fardh 1/6, HANYA berlaku kalau ibu sudah tidak
-//   ada (terhijab oleh ibu). Nenek dari pihak ayah punya aturan hijab
-//   yang sedikit beda (terhijab ayah, bukan ibu) — di luar cakupan toggle
-//   tunggal ini, makanya labelnya eksplisit "Ibu dari Ibu".
-// - Saudara Kandung (laki-laki/perempuan): HANYA berlaku kalau tidak ada
-//   anak sama sekali DAN tidak ada ayah/kakek (QS. An-Nisa 176, kasus
-//   kalalah) — ayah/kakek/anak menghijab saudara kandung sepenuhnya.
-//   Kalau ada saudara laki-laki, mereka jadi 'ashabah (sisa, dibagi
-//   laki:perempuan = 2:1 dengan saudara perempuan). Kalau cuma saudara
-//   perempuan (tanpa saudara laki-laki): 1 orang dapat fardh 1/2, 2 orang
-//   atau lebih dapat fardh 2/3 (dibagi rata).
-//   PERHATIAN: kalau ada anak perempuan (tanpa anak laki-laki) DAN ada
-//   saudara kandung, secara fiqh ada kemungkinan kasus 'ashabah ma'al
-//   ghair (saudara perempuan ikut jadi ashabah bersama anak perempuan) —
-//   kasus ini TIDAK dihitung di sini (saudara akan tampak tidak dapat
-//   bagian), flag peringatan 'ashabahMaalGhair akan muncul, WAJIB
-//   konsultasi ke ahli faraidh untuk kasus ini.
-// - Anak: sisa harta (ashabah) dibagi laki:perempuan = 2:1. Kalau cuma
-//   anak perempuan (tanpa anak laki-laki) dan tanpa ashabah lain yang
-//   bersaing, mereka tetap mengambil seluruh sisa (bukan fardh 1/2 atau
-//   2/3 klasik) — itu konsisten karena ayah/suami/istri/ibu di atas semua
-//   sudah dihitung sebagai fardh terpisah, dan anak di sini selalu berlaku
-//   sebagai ashabah terhadap sisanya.
+//   ada (terhijab oleh ibu).
+// - Saudara Kandung: HANYA berlaku kalau tidak ada anak LAKI-LAKI (atau
+//   garis pengganti laki-laki, lihat bawah) sama sekali DAN tidak ada
+//   ayah/kakek. Kalau ada saudara laki-laki, mereka jadi 'ashabah
+//   (dibagi 2:1 dengan saudara perempuan). Kalau cuma saudara perempuan:
+//   1 orang fardh 1/2, 2+ orang fardh 2/3 (dibagi rata).
+// - 'Ashabah ma'al ghair: kalau yang ada CUMA anak perempuan (tanpa anak
+//   laki-laki atau garis pengganti laki-laki) dan tidak ada ayah/kakek,
+//   TAPI ada saudara kandung — anak perempuan tetap dapat fardh (1/2
+//   untuk 1 orang, 2/3 untuk 2+), dan SISANYA diberikan ke saudara
+//   kandung: kalau ada saudara laki-laki, mereka + saudara perempuan
+//   jadi 'ashabah (2:1 seperti biasa); kalau cuma saudara perempuan,
+//   mereka sendiri jadi 'ashabah ma'al ghair (dibagi rata, bukan fardh
+//   1/2 atau 2/3 lagi karena sekarang berperan sebagai ashabah bukan
+//   fardh). Ini kasus klasik "anak perempuan + saudari = 1/2 + 1/2".
+// - Ahli Waris Pengganti: kalau ada SATU anak laki-laki yang wafat lebih
+//   dulu dari pewaris, posisinya (termasuk untuk urusan hijab/fardh
+//   pihak lain — dianggap tetap "ada anak laki-laki") bisa digantikan
+//   oleh cucunya (laki-laki/perempuan, dibagi 2:1 di antara mereka
+//   sendiri) — mengikuti pandangan yang juga dipakai Kompilasi Hukum
+//   Islam (KHI) di Indonesia. Kalau ada LEBIH dari satu anak laki-laki
+//   yang wafat, kalkulator ini menggabungkan semua cucu pengganti jadi
+//   satu kelompok (menerima gabungan 2 unit seperti satu anak laki-laki)
+//   — bukan dihitung per garis keturunan masing-masing; flagged lewat
+//   warning 'ahliWarisPengganti', bukan dianggap pasti presisi untuk
+//   kasus lebih dari satu garis.
+// - Anak: sisa harta (ashabah) dibagi laki:perempuan = 2:1 (termasuk
+//   kelompok cucu pengganti, yang menerima porsi gabungan setara satu
+//   anak laki-laki lalu dibagi lagi 2:1 di antara mereka sendiri). Kalau
+//   cuma anak perempuan (tanpa anak laki-laki/pengganti) dan tanpa
+//   saudara kandung yang memicu 'ashabah ma'al ghair di atas, mereka
+//   tetap mengambil seluruh sisa (bukan fardh 1/2 atau 2/3 klasik) —
+//   konsisten karena ayah/suami/istri/ibu di atas semua sudah dihitung
+//   sebagai fardh terpisah.
 export function calcWaris({
   hasSuami, jumlahIstri, anakLaki, anakPerempuan, hasAyah, hasIbu,
   hasKakek = false, hasNenek = false, saudaraLaki = 0, saudaraPerempuan = 0,
+  anakLakiWafatPengganti = false, cucuLakiPengganti = 0, cucuPerempuanPengganti = 0,
   totalHarta,
 }) {
-  const hasAnak = anakLaki > 0 || anakPerempuan > 0;
+  const hasPenggantiAnak = anakLakiWafatPengganti && (cucuLakiPengganti + cucuPerempuanPengganti) > 0;
+  // The pengganti "slot" carries the deceased son's own hijab character
+  // regardless of whether his representing children are boys or girls —
+  // it's his position being filled, not a fresh male-only check.
+  const hasMaleLineage = anakLaki > 0 || hasPenggantiAnak;
+  const hasAnak = hasMaleLineage || anakPerempuan > 0;
+
   const effectiveAyah = hasAyah;
   const effectiveKakek = hasKakek && !hasAyah; // kakek terhijab oleh ayah
   const effectiveNenek = hasNenek && !hasIbu; // nenek (ibu dari ibu) terhijab oleh ibu
   const hasAscendantMale = effectiveAyah || effectiveKakek;
 
   const siblingsCount = saudaraLaki + saudaraPerempuan;
-  // Saudara kandung cuma berhak waris kalau tidak ada anak sama sekali
-  // DAN tidak ada ayah/kakek yang menghijab (QS. An-Nisa 176).
+  // Saudara kandung cuma berhak waris kalau tidak ada anak laki-laki
+  // (atau garis pengganti) sama sekali DAN tidak ada ayah/kakek.
   const siblingsEligible = !hasAnak && !hasAscendantMale && siblingsCount > 0;
+  // 'Ashabah ma'al ghair: ada anak perempuan (tapi tidak ada garis
+  // laki-laki sama sekali) + tidak ada ayah/kakek + ada saudara kandung.
+  const onlyDaughtersWithSiblings = hasAnak && !hasMaleLineage && anakPerempuan > 0 && !hasAscendantMale && siblingsCount > 0;
 
   const fixed = {}; // heir key -> fraction of the WHOLE estate (istri = combined, split further below)
 
   if (hasSuami) fixed.suami = hasAnak ? 1 / 4 : 1 / 2;
   if (jumlahIstri > 0) fixed.istri = hasAnak ? 1 / 8 : 1 / 4;
-  // Hijab nuqsan: ibu turun ke 1/6 begitu ada anak ATAU 2+ saudara —
-  // berlaku berdasarkan keberadaan saudara, bukan apakah saudara itu
-  // sendiri akhirnya kebagian warisan.
+  // Hijab nuqsan: ibu turun ke 1/6 begitu ada anak ATAU 2+ saudara.
   if (hasIbu) fixed.ibu = (hasAnak || siblingsCount >= 2) ? 1 / 6 : 1 / 3;
   if (effectiveNenek) fixed.nenek = 1 / 6;
   if (effectiveAyah && hasAnak) fixed.ayah = 1 / 6; // only a fixed share when anak exist — otherwise ayah is 'ashabah below
   if (effectiveKakek && hasAnak) fixed.kakek = 1 / 6; // same role as ayah, only when ayah absent
 
-  let saudariFardh = 0;
   if (siblingsEligible && saudaraLaki === 0) {
-    // Cuma saudara perempuan (tanpa saudara laki-laki): fardh, bukan ashabah.
-    saudariFardh = saudaraPerempuan === 1 ? 1 / 2 : 2 / 3;
-    fixed.saudari = saudariFardh;
+    // Cuma saudara perempuan, tanpa anak sama sekali: fardh, bukan ashabah.
+    fixed.saudari = saudaraPerempuan === 1 ? 1 / 2 : 2 / 3;
+  }
+  if (onlyDaughtersWithSiblings) {
+    // Anak perempuan tetap fardh di sini (bukan ambil semua sisa) —
+    // sisanya nanti diberikan ke saudara kandung sebagai 'ashabah
+    // ma'al ghair, dihitung setelah fixedTotal di bawah.
+    fixed.anakPerempuanFardh = anakPerempuan === 1 ? 1 / 2 : 2 / 3;
   }
 
   const fixedTotal = Object.values(fixed).reduce((s, v) => s + v, 0);
@@ -86,8 +115,14 @@ export function calcWaris({
   let anakShare = 0;
   let ayahAshabah = 0;
   let kakekAshabah = 0;
-  let siblingAshabah = 0;
-  if (hasAnak) {
+  let siblingAshabah = 0; // saudara laki-laki + perempuan, 2:1 (dua jalur: saudara-only ATAU 'ashabah ma'al ghair)
+  let saudariAshabahGhair = 0; // 'ashabah ma'al ghair, cuma saudara perempuan (tanpa saudara laki-laki)
+
+  if (onlyDaughtersWithSiblings) {
+    const residue = Math.max(0, 1 - fixedTotal);
+    if (saudaraLaki > 0) siblingAshabah = residue;
+    else saudariAshabahGhair = residue;
+  } else if (hasAnak) {
     anakShare = Math.max(0, 1 - fixedTotal);
   } else if (effectiveAyah) {
     ayahAshabah = Math.max(0, 1 - fixedTotal);
@@ -97,23 +132,15 @@ export function calcWaris({
     siblingAshabah = Math.max(0, 1 - fixedTotal);
   }
 
-  let grandTotal = fixedTotal + anakShare + ayahAshabah + kakekAshabah + siblingAshabah;
+  let grandTotal = fixedTotal + anakShare + ayahAshabah + kakekAshabah + siblingAshabah + saudariAshabahGhair;
   const warnings = [];
-
-  // Kemungkinan 'ashabah ma'al ghair yang tidak dihitung di sini: anak
-  // perempuan (tanpa anak laki-laki) + saudara kandung, tanpa
-  // ayah/kakek. Saudara di skenario ini TIDAK dihitung dapat bagian oleh
-  // kode di atas (siblingsEligible = false karena hasAnak true) —
-  // tandai dengan jelas, jangan biarkan diam-diam tampak "tidak dapat".
-  if (hasAnak && anakLaki === 0 && anakPerempuan > 0 && !hasAscendantMale && siblingsCount > 0) {
-    warnings.push('ashabahMaalGhair');
-  }
+  if (hasPenggantiAnak) warnings.push('ahliWarisPengganti');
 
   // 'Aul — every fardh share is fixed by the Qur'an, but nothing stops a
-  // real family's combination from summing to more than the whole estate
-  // (e.g. suami + 2 anak perempuan + ibu can exceed 1). Classical fiqh's
-  // fix is to scale every fardh share down proportionally so they sum to
-  // exactly 1, rather than honoring the fractions literally over 100%.
+  // real family's combination from summing to more than the whole estate.
+  // Classical fiqh's fix is to scale every fardh share down proportionally
+  // so they sum to exactly 1, rather than honoring the fractions
+  // literally over 100%.
   if (grandTotal > 1.0000001) {
     const scale = 1 / grandTotal;
     for (const k in fixed) fixed[k] *= scale;
@@ -121,18 +148,16 @@ export function calcWaris({
     ayahAshabah *= scale;
     kakekAshabah *= scale;
     siblingAshabah *= scale;
+    saudariAshabahGhair *= scale;
     grandTotal = 1;
     warnings.push('aul');
   }
 
   // Radd (pengembalian sisa) — when the fardh shares undershoot 1 and
-  // there's no residuary heir (anak/ayah/kakek/saudara-as-ashabah) left
-  // to absorb the remainder, classical fiqh redistributes the leftover
-  // proportionally among the fardh heirs present EXCEPT suami/istri
-  // (spouse shares are always fixed, never grow via radd — majority
-  // view). Distributed in proportion to each eligible heir's own
-  // existing fardh fraction.
-  const hasResiduaryHeir = hasAnak || ayahAshabah > 0 || kakekAshabah > 0 || siblingAshabah > 0;
+  // there's no residuary heir left to absorb the remainder, classical
+  // fiqh redistributes the leftover proportionally among the fardh heirs
+  // present EXCEPT suami/istri (spouse shares never grow via radd).
+  const hasResiduaryHeir = hasAnak || ayahAshabah > 0 || kakekAshabah > 0 || siblingAshabah > 0 || saudariAshabahGhair > 0;
   if (grandTotal < 0.9999999 && !hasResiduaryHeir && Object.keys(fixed).length > 0) {
     const raddKeys = Object.keys(fixed).filter((k) => k !== 'suami' && k !== 'istri');
     const raddPool = raddKeys.reduce((s, k) => s + fixed[k], 0);
@@ -142,9 +167,6 @@ export function calcWaris({
       grandTotal = 1;
       warnings.push('radd');
     } else {
-      // Shortfall exists but only suami/istri are present (no blood-
-      // relative fardh heir to redistribute to) — a genuinely rare edge
-      // case; flag it rather than silently leaving the estate short.
       warnings.push('raddNoRecipient');
     }
   }
@@ -183,6 +205,12 @@ export function calcWaris({
       results.push({ label: saudaraPerempuan > 1 ? `Saudara Perempuan Kandung ${i}` : 'Saudara Perempuan Kandung', fraction: perSaudari, amount: totalHarta * perSaudari });
     }
   }
+  if (fixed.anakPerempuanFardh) {
+    const perAnak = fixed.anakPerempuanFardh / anakPerempuan;
+    for (let i = 1; i <= anakPerempuan; i++) {
+      results.push({ label: anakPerempuan > 1 ? `Anak Perempuan ${i}` : 'Anak Perempuan', fraction: perAnak, amount: totalHarta * perAnak });
+    }
+  }
   if (siblingAshabah > 0) {
     const units = saudaraLaki * 2 + saudaraPerempuan;
     const perUnit = units > 0 ? siblingAshabah / units : 0;
@@ -193,14 +221,39 @@ export function calcWaris({
       results.push({ label: saudaraPerempuan > 1 ? `Saudara Perempuan Kandung ${i}` : 'Saudara Perempuan Kandung', fraction: perUnit, amount: totalHarta * perUnit });
     }
   }
+  if (saudariAshabahGhair > 0) {
+    const perSaudari = saudariAshabahGhair / saudaraPerempuan;
+    for (let i = 1; i <= saudaraPerempuan; i++) {
+      results.push({
+        label: saudaraPerempuan > 1 ? `Saudara Perempuan Kandung ${i} ('ashabah ma'al ghair)` : "Saudara Perempuan Kandung ('ashabah ma'al ghair)",
+        fraction: perSaudari,
+        amount: totalHarta * perSaudari,
+      });
+    }
+  }
   if (anakShare > 0) {
-    const units = anakLaki * 2 + anakPerempuan;
+    const unitsPengganti = hasPenggantiAnak ? 2 : 0;
+    const units = anakLaki * 2 + anakPerempuan + unitsPengganti;
     const perUnit = units > 0 ? anakShare / units : 0;
     for (let i = 1; i <= anakLaki; i++) {
       results.push({ label: anakLaki > 1 ? `Anak Laki-laki ${i}` : 'Anak Laki-laki', fraction: perUnit * 2, amount: totalHarta * perUnit * 2 });
     }
     for (let i = 1; i <= anakPerempuan; i++) {
       results.push({ label: anakPerempuan > 1 ? `Anak Perempuan ${i}` : 'Anak Perempuan', fraction: perUnit, amount: totalHarta * perUnit });
+    }
+    if (unitsPengganti > 0) {
+      // The pengganti pool (worth exactly one living anak laki-laki's 2
+      // units) gets redistributed to the representing cucu themselves,
+      // split 2:1 among them the same way any ashabah split works.
+      const penggantiPool = perUnit * unitsPengganti;
+      const cucuUnits = cucuLakiPengganti * 2 + cucuPerempuanPengganti;
+      const perCucuUnit = cucuUnits > 0 ? penggantiPool / cucuUnits : 0;
+      for (let i = 1; i <= cucuLakiPengganti; i++) {
+        results.push({ label: cucuLakiPengganti > 1 ? `Cucu Laki-laki (Pengganti) ${i}` : 'Cucu Laki-laki (Pengganti)', fraction: perCucuUnit * 2, amount: totalHarta * perCucuUnit * 2 });
+      }
+      for (let i = 1; i <= cucuPerempuanPengganti; i++) {
+        results.push({ label: cucuPerempuanPengganti > 1 ? `Cucu Perempuan (Pengganti) ${i}` : 'Cucu Perempuan (Pengganti)', fraction: perCucuUnit, amount: totalHarta * perCucuUnit });
+      }
     }
   }
 

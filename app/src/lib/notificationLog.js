@@ -180,6 +180,7 @@ export function routeForTag(tag = '') {
   if (tag === 'rekap-mingguan') return '/lainnya/ringkasan-ibadah';
   if (tag === 'maulid-nabi' || tag === 'tahun-baru-hijriah' || tag === 'idul-adha') return '/lainnya/kalender-hijriah';
   if (tag === 'supporter-anniversary') return '/pengaturan';
+  if (tag === 'tahlilan') return '/lainnya/panduan-jenazah';
   return '/jadwal-sholat'; // adzan-* and any unrecognized tag
 }
 

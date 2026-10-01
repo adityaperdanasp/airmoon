@@ -22,6 +22,9 @@
 // over the limit (hit for real, 2026-09-02: "No more than 12 Serverless
 // Functions can be added..."). None of the fourteen is time-sensitive
 // enough to need its own schedule, so merging them costs nothing.
+// (Several more checks folded in after this comment was first written —
+// e.g. the Pengingat Tahlilan 7/40/100 hari check, 2026-10-01 — same
+// reasoning each time, not re-numbering this whole list per addition.)
 //
 // Triggered once a day by Vercel's own native Cron Jobs (see the `crons`
 // entry in vercel.json) rather than the external cron-job.org pinger
@@ -86,6 +89,62 @@ async function checkZakatHaul(db) {
       }
 
       notified.push({ uid: docSnap.id, successCount: result.successCount });
+    } catch (err) {
+      errors.push({ uid: docSnap.id, error: err.message });
+    }
+  }
+
+  return { notified, errors };
+}
+
+// Pengingat Tahlilan (7/40/100 Hari) — 2026-10-01, lib/tahlilanReminder.js
+// (client) lets someone set a tanggalWafat once; this checks every user
+// with that field set and sends a push on the day their hari ke- crosses
+// 7, 40, or 100, each gated by its own per-milestone flag
+// (tahlilanNotified7/40/100) so a milestone never re-fires once sent —
+// unlike most of this file's other checks, a user can cross more than
+// one milestone across the lifetime of this field (just never twice for
+// the same one).
+const TAHLILAN_MILESTONES = [
+  { day: 7, field: 'tahlilanNotified7', label: 'ke-7' },
+  { day: 40, field: 'tahlilanNotified40', label: 'ke-40' },
+  { day: 100, field: 'tahlilanNotified100', label: 'ke-100' },
+];
+
+async function checkTahlilanReminder(db) {
+  const messaging = getMessaging();
+  const snap = await db.collection('users').where('tahlilanTanggalWafat', '!=', null).get();
+  const notified = [];
+  const errors = [];
+
+  for (const docSnap of snap.docs) {
+    try {
+      const u = docSnap.data();
+      const tokens = u.fcmTokens || [];
+      if (!tokens.length || u.notifPrefs?.pengingat === false) continue;
+      const elapsed = daysSince(u.tahlilanTanggalWafat);
+
+      for (const m of TAHLILAN_MILESTONES) {
+        if (elapsed < m.day || u[m.field]) continue;
+
+        const result = await messaging.sendEachForMulticast({
+          tokens,
+          data: {
+            tag: 'tahlilan',
+            title: `🤲 Tahlilan Hari ${m.label}`,
+            body: `Hari ini hari ${m.label} — waktunya mendoakan ${u.tahlilanNama || 'almarhum/almarhumah'}.`,
+          },
+        });
+
+        await docSnap.ref.update({ [m.field]: true });
+
+        const deadTokens = result.responses.map((r, i) => (!r.success ? tokens[i] : null)).filter(Boolean);
+        if (deadTokens.length) {
+          await docSnap.ref.update({ fcmTokens: FieldValue.arrayRemove(...deadTokens) });
+        }
+
+        notified.push({ uid: docSnap.id, milestone: m.day, successCount: result.successCount });
+      }
     } catch (err) {
       errors.push({ uid: docSnap.id, error: err.message });
     }
@@ -1124,6 +1183,7 @@ export default async function handler(req, res) {
     }
 
     const haulResult = await checkZakatHaul(db);
+    const tahlilanResult = await checkTahlilanReminder(db);
     const jumatResult = await checkJumatReminder(db);
     const pledgeResult = await checkMonthlyPledgeReminders(db);
     const fitrahResult = await checkZakatFitrahReminder(db);
@@ -1147,6 +1207,7 @@ export default async function handler(req, res) {
       checked: snap.size,
       notified,
       zakatHaul: haulResult,
+      tahlilanReminder: tahlilanResult,
       jumatReminder: jumatResult,
       pledgeReminder: pledgeResult,
       zakatFitrah: fitrahResult,

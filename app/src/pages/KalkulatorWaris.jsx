@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { calcWaris } from '../lib/warisCalc';
 import { formatRupiah } from '../lib/zakat';
@@ -9,6 +9,8 @@ import WarisShareDiagram from '../components/WarisShareDiagram';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { loadWarisScenarios, saveWarisScenario, deleteWarisScenario } from '../lib/warisScenarios';
 import { exportWarisPdf } from '../lib/warisPdf';
+import { WARIS_DOC_GROUPS, loadWarisDocChecklist, toggleWarisDocChecklistItem } from '../lib/warisDocChecklist';
+import { loadWarisHistory, saveWarisHistoryEntry, deleteWarisHistoryEntry } from '../lib/warisHistory';
 import { useToast } from '../context/ToastContext';
 
 function digitsOnly(v) {
@@ -61,7 +63,7 @@ const WARNING_TEXT = {
   aul: "⚠️ Total bagian fardh melebihi harta (kasus 'aul) — semua bagian di bawah sudah diskalakan proporsional sesuai ketentuan fiqh.",
   radd: '⚠️ Total bagian fardh tidak mencapai keseluruhan harta dan tidak ada ahli waris ashabah yang menghabiskan sisanya — sisa sudah dikembalikan (radd) secara proporsional ke ahli waris fardh yang ada (selain suami/istri), sesuai ketentuan fiqh.',
   raddNoRecipient: '⚠️ Total bagian fardh tidak mencapai keseluruhan harta dan tidak ada ahli waris lain (selain suami/istri) untuk menerima pengembalian sisa (radd) — kasus ini butuh konsultasi ke ahli faraidh/ulama.',
-  ashabahMaalGhair: "⚠️ Ada anak perempuan (tanpa anak laki-laki) bersamaan dengan saudara kandung — kasus ini berpotensi 'ashabah ma'al ghair (saudara perempuan ikut jadi ashabah) yang belum dihitung di sini. Saudara kandung di atas ditampilkan TIDAK mendapat bagian; itu belum tentu benar untuk kasus ini. WAJIB konsultasi ke ahli faraidh/ulama.",
+  ahliWarisPengganti: 'ℹ️ Cucu di atas menggantikan posisi anak laki-laki yang telah wafat (ahli waris pengganti) — mengikuti pandangan yang juga dipakai Kompilasi Hukum Islam (KHI) di Indonesia; sebagian mazhab fiqih klasik punya pandangan berbeda soal ini. Kalkulator ini menggabungkan semua cucu pengganti jadi satu kelompok — kalau ada lebih dari satu anak laki-laki yang wafat dengan cucu masing-masing berbeda jumlah, konsultasikan ke ahli faraidh untuk presisi penuh.',
 };
 
 // Kalkulator Waris (Ilmu Faraidh) — lihat lib/warisCalc.js untuk cakupan
@@ -81,8 +83,20 @@ export default function KalkulatorWaris() {
   const [hasNenek, setHasNenek] = useState(false);
   const [saudaraLaki, setSaudaraLaki] = useState(0);
   const [saudaraPerempuan, setSaudaraPerempuan] = useState(0);
+  const [anakLakiWafatPengganti, setAnakLakiWafatPengganti] = useState(false);
+  const [cucuLakiPengganti, setCucuLakiPengganti] = useState(0);
+  const [cucuPerempuanPengganti, setCucuPerempuanPengganti] = useState(0);
   const [harta, setHarta] = useState('500000000');
+  const [hutang, setHutang] = useState('0');
+  const [wasiat, setWasiat] = useState('0');
   const hartaN = Number(digitsOnly(harta)) || 0;
+  const hutangN = Number(digitsOnly(hutang)) || 0;
+  const wasiatN = Number(digitsOnly(wasiat)) || 0;
+  const hartaSetelahHutang = Math.max(0, hartaN - hutangN);
+  const wasiatMaks = hartaSetelahHutang / 3;
+  const wasiatEfektif = Math.min(wasiatN, wasiatMaks);
+  const wasiatDibatasi = wasiatN > wasiatMaks + 0.0001;
+  const hartaUntukWaris = Math.max(0, hartaSetelahHutang - wasiatEfektif);
   const [showShare, setShowShare] = useState(false);
   const [scenarios, setScenarios] = useState(loadWarisScenarios);
   const [scenarioName, setScenarioName] = useState('');
@@ -92,6 +106,11 @@ export default function KalkulatorWaris() {
   const [showCompare, setShowCompare] = useState(false);
   const [compareAId, setCompareAId] = useState(null);
   const [compareBId, setCompareBId] = useState(null);
+  const [showDocChecklist, setShowDocChecklist] = useState(false);
+  const [docChecklist, setDocChecklist] = useState(loadWarisDocChecklist);
+  const [showHistory, setShowHistory] = useState(false);
+  const [history, setHistory] = useState(loadWarisHistory);
+  const [deleteHistoryId, setDeleteHistoryId] = useState(null);
 
   function applyScenario(s) {
     setHasSuami(s.inputs.hasSuami);
@@ -100,27 +119,61 @@ export default function KalkulatorWaris() {
     setAnakPerempuan(s.inputs.anakPerempuan);
     setHasAyah(s.inputs.hasAyah);
     setHasIbu(s.inputs.hasIbu);
-    // ?? false / ?? 0 — scenarios saved before kakek/nenek/saudara existed
-    // won't have these fields at all; treat a missing field as "not
-    // present" rather than crashing on undefined.
+    // ?? false / ?? 0 — scenarios saved before kakek/nenek/saudara/
+    // hutang/wasiat/pengganti existed won't have these fields at all;
+    // treat a missing field as "not present" rather than crashing on
+    // undefined.
     setHasKakek(s.inputs.hasKakek ?? false);
     setHasNenek(s.inputs.hasNenek ?? false);
     setSaudaraLaki(s.inputs.saudaraLaki ?? 0);
     setSaudaraPerempuan(s.inputs.saudaraPerempuan ?? 0);
+    setAnakLakiWafatPengganti(s.inputs.anakLakiWafatPengganti ?? false);
+    setCucuLakiPengganti(s.inputs.cucuLakiPengganti ?? 0);
+    setCucuPerempuanPengganti(s.inputs.cucuPerempuanPengganti ?? 0);
     setHarta(s.inputs.harta);
+    setHutang(s.inputs.hutang ?? '0');
+    setWasiat(s.inputs.wasiat ?? '0');
   }
 
   function handleSaveScenario() {
     const name = scenarioName.trim() || `Skenario ${scenarios.length + 1}`;
-    setScenarios(saveWarisScenario(name, { hasSuami, jumlahIstri, anakLaki, anakPerempuan, hasAyah, hasIbu, hasKakek, hasNenek, saudaraLaki, saudaraPerempuan, harta }));
+    setScenarios(saveWarisScenario(name, {
+      hasSuami, jumlahIstri, anakLaki, anakPerempuan, hasAyah, hasIbu, hasKakek, hasNenek, saudaraLaki, saudaraPerempuan,
+      anakLakiWafatPengganti, cucuLakiPengganti, cucuPerempuanPengganti, harta, hutang, wasiat,
+    }));
     setScenarioName('');
     setShowSaveScenario(false);
   }
 
-  const noHeirs = !hasSuami && jumlahIstri === 0 && anakLaki === 0 && anakPerempuan === 0 && !hasAyah && !hasIbu && !hasKakek && !hasNenek && saudaraLaki === 0 && saudaraPerempuan === 0;
+  const hasPenggantiInput = anakLakiWafatPengganti && (cucuLakiPengganti > 0 || cucuPerempuanPengganti > 0);
+  const noHeirs = !hasSuami && jumlahIstri === 0 && anakLaki === 0 && anakPerempuan === 0 && !hasAyah && !hasIbu
+    && !hasKakek && !hasNenek && saudaraLaki === 0 && saudaraPerempuan === 0 && !hasPenggantiInput;
   const { results, warnings } = noHeirs
     ? { results: [], warnings: [] }
-    : calcWaris({ hasSuami, jumlahIstri, anakLaki, anakPerempuan, hasAyah, hasIbu, hasKakek, hasNenek, saudaraLaki, saudaraPerempuan, totalHarta: hartaN });
+    : calcWaris({
+        hasSuami, jumlahIstri, anakLaki, anakPerempuan, hasAyah, hasIbu, hasKakek, hasNenek, saudaraLaki, saudaraPerempuan,
+        anakLakiWafatPengganti, cucuLakiPengganti, cucuPerempuanPengganti, totalHarta: hartaUntukWaris,
+      });
+
+  // Riwayat Perhitungan Otomatis (2026-10-01) — tersimpan otomatis tiap
+  // kali hasil berubah, beda dari Skenario Tersimpan yang butuh tekan
+  // "+ Simpan Ini" dulu. Debounced (1.5s) biar gak nyimpen tiap
+  // keystroke/toggle, dan saveWarisHistoryEntry sendiri dedup terhadap
+  // entry paling baru.
+  const historyTimerRef = useRef(null);
+  useEffect(() => {
+    if (noHeirs) return;
+    clearTimeout(historyTimerRef.current);
+    historyTimerRef.current = setTimeout(() => {
+      setHistory(saveWarisHistoryEntry(
+        { hasSuami, jumlahIstri, anakLaki, anakPerempuan, hasAyah, hasIbu, hasKakek, hasNenek, saudaraLaki, saudaraPerempuan, anakLakiWafatPengganti, cucuLakiPengganti, cucuPerempuanPengganti },
+        hartaUntukWaris,
+        results
+      ));
+    }, 1500);
+    return () => clearTimeout(historyTimerRef.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- results is derived from the same inputs already listed; including it too would just re-run this identically
+  }, [hasSuami, jumlahIstri, anakLaki, anakPerempuan, hasAyah, hasIbu, hasKakek, hasNenek, saudaraLaki, saudaraPerempuan, anakLakiWafatPengganti, cucuLakiPengganti, cucuPerempuanPengganti, hartaUntukWaris, noHeirs]);
 
   // Bandingkan 2 Skenario Berdampingan — previously scenarios could only
   // be applied one at a time, overwriting the form; comparing two meant
@@ -129,13 +182,26 @@ export default function KalkulatorWaris() {
   // without touching the live form state above at all.
   function scenarioResult(s) {
     if (!s) return null;
-    const { hasSuami: hs, jumlahIstri: ji, anakLaki: al, anakPerempuan: ap, hasAyah: ha, hasIbu: hi, hasKakek: hk, hasNenek: hn, saudaraLaki: sl, saudaraPerempuan: sp, harta: h } = s.inputs;
-    const totalHarta = Number(digitsOnly(String(h))) || 0;
+    const { hasSuami: hs, jumlahIstri: ji, anakLaki: al, anakPerempuan: ap, hasAyah: ha, hasIbu: hi, hasKakek: hk, hasNenek: hn, saudaraLaki: sl, saudaraPerempuan: sp, anakLakiWafatPengganti: alwp, cucuLakiPengganti: clp, cucuPerempuanPengganti: cpp, harta: h, hutang: hu, wasiat: wa } = s.inputs;
+    const grossHarta = Number(digitsOnly(String(h))) || 0;
+    const hutangVal = Number(digitsOnly(String(hu ?? '0'))) || 0;
+    const wasiatVal = Number(digitsOnly(String(wa ?? '0'))) || 0;
+    const sisaSetelahHutang = Math.max(0, grossHarta - hutangVal);
+    const wasiatEff = Math.min(wasiatVal, sisaSetelahHutang / 3);
+    const totalHarta = Math.max(0, sisaSetelahHutang - wasiatEff);
     const hkEff = hk ?? false; const hnEff = hn ?? false; const slEff = sl ?? 0; const spEff = sp ?? 0;
-    const noH = !hs && ji === 0 && al === 0 && ap === 0 && !ha && !hi && !hkEff && !hnEff && slEff === 0 && spEff === 0;
+    const alwpEff = alwp ?? false; const clpEff = clp ?? 0; const cppEff = cpp ?? 0;
+    const hasPengganti = alwpEff && (clpEff > 0 || cppEff > 0);
+    const noH = !hs && ji === 0 && al === 0 && ap === 0 && !ha && !hi && !hkEff && !hnEff && slEff === 0 && spEff === 0 && !hasPengganti;
     return noH
       ? { results: [], warnings: [], totalHarta }
-      : { ...calcWaris({ hasSuami: hs, jumlahIstri: ji, anakLaki: al, anakPerempuan: ap, hasAyah: ha, hasIbu: hi, hasKakek: hkEff, hasNenek: hnEff, saudaraLaki: slEff, saudaraPerempuan: spEff, totalHarta }), totalHarta };
+      : {
+          ...calcWaris({
+            hasSuami: hs, jumlahIstri: ji, anakLaki: al, anakPerempuan: ap, hasAyah: ha, hasIbu: hi, hasKakek: hkEff, hasNenek: hnEff, saudaraLaki: slEff, saudaraPerempuan: spEff,
+            anakLakiWafatPengganti: alwpEff, cucuLakiPengganti: clpEff, cucuPerempuanPengganti: cppEff, totalHarta,
+          }),
+          totalHarta,
+        };
   }
 
   // Simulasi Cepat — one-tap +1 chips right where the result already is,
@@ -155,12 +221,13 @@ export default function KalkulatorWaris() {
     setHasSuami(false); setJumlahIstri(0); setAnakLaki(0); setAnakPerempuan(0);
     setHasAyah(false); setHasIbu(false); setHasKakek(false); setHasNenek(false);
     setSaudaraLaki(0); setSaudaraPerempuan(0);
+    setAnakLakiWafatPengganti(false); setCucuLakiPengganti(0); setCucuPerempuanPengganti(0);
   }
 
   function handleKonsultasi() {
     const lines = [
       'Tolong bantu jelaskan hasil perhitungan waris ini:',
-      `Total Harta: ${formatRupiah(hartaN)}`,
+      `Total Harta Waris Bersih: ${formatRupiah(hartaUntukWaris)}`,
       ...results.map((r) => `${r.label}: ${formatRupiah(r.amount)} (${(r.fraction * 100).toFixed(2)}%)`),
     ];
     if (warnings.length) lines.push('', 'Catatan dari kalkulator:', ...warnings.map((w) => WARNING_TEXT[w]));
@@ -168,7 +235,7 @@ export default function KalkulatorWaris() {
   }
 
   function handleExportPdf() {
-    const ok = exportWarisPdf({ totalHarta: hartaN, results, warningTexts: warnings.map((w) => WARNING_TEXT[w]) });
+    const ok = exportWarisPdf({ totalHarta: hartaUntukWaris, results, warningTexts: warnings.map((w) => WARNING_TEXT[w]) });
     if (!ok) showToast('Gagal membuka jendela PDF — izinkan pop-up untuk situs ini.');
   }
   const compareA = scenarios.find((s) => s.id === compareAId);
@@ -210,13 +277,12 @@ export default function KalkulatorWaris() {
         <PageHeaderPhoto title="Kalkulator Waris" photo={PAGE_PHOTOS.zakat} subtitle="Ilmu Faraidh" />
 
         <div style={{ padding: '10px 14px', borderRadius: 12, background: 'var(--cream)', fontSize: 11, color: 'var(--gold-ink-dark)', lineHeight: 1.5 }}>
-          Mengcover suami/istri, anak, ayah/ibu, kakek (ayah dari ayah), nenek (ibu dari ibu), dan saudara kandung. Kasus lebih kompleks (saudara seayah/seibu, cucu pengganti, wasiat, hutang jenazah) tidak tercakup — konsultasikan ke ahli faraidh/ulama untuk kasus itu.
+          Mengcover suami/istri, anak (termasuk cucu pengganti), ayah/ibu, kakek (ayah dari ayah), nenek (ibu dari ibu), saudara kandung (termasuk 'ashabah ma'al ghair), dan pengurangan hutang/wasiat sebelum pembagian. Kasus lebih kompleks (saudara seayah/seibu, cucu dari anak perempuan, lebih dari satu anak laki-laki yang wafat dengan cucu berbeda jumlah) tidak tercakup — konsultasikan ke ahli faraidh/ulama untuk kasus itu.
         </div>
-
 
         <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 14, padding: 16 }}>
           <span className="section-label" style={{ color: 'var(--muted)', fontSize: 11.5, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-            Total Harta Warisan
+            Total Harta Warisan (Kotor)
           </span>
           <input
             inputMode="numeric"
@@ -224,6 +290,42 @@ export default function KalkulatorWaris() {
             onChange={(e) => setHarta(digitsOnly(e.target.value))}
             style={{ padding: '12px 14px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--ink)', fontSize: 15, fontWeight: 700 }}
           />
+
+          <span className="section-label" style={{ color: 'var(--muted)', fontSize: 11.5, letterSpacing: '0.04em', textTransform: 'uppercase', marginTop: 4 }}>
+            Hutang Almarhum (Opsional)
+          </span>
+          <input
+            inputMode="numeric"
+            value={Number(hutang).toLocaleString('id-ID')}
+            onChange={(e) => setHutang(digitsOnly(e.target.value))}
+            style={{ padding: '12px 14px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--ink)', fontSize: 15, fontWeight: 700 }}
+          />
+
+          <span className="section-label" style={{ color: 'var(--muted)', fontSize: 11.5, letterSpacing: '0.04em', textTransform: 'uppercase', marginTop: 4 }}>
+            Wasiat (Opsional, Maks. 1/3 Sisa)
+          </span>
+          <input
+            inputMode="numeric"
+            value={Number(wasiat).toLocaleString('id-ID')}
+            onChange={(e) => setWasiat(digitsOnly(e.target.value))}
+            style={{ padding: '12px 14px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--ink)', fontSize: 15, fontWeight: 700 }}
+          />
+
+          {(hutangN > 0 || wasiatN > 0) && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '10px 12px', borderRadius: 12, background: 'var(--mint-soft)', fontSize: 11.5 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Harta Kotor</span><span style={{ fontWeight: 700 }}>{formatRupiah(hartaN)}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>− Hutang</span><span style={{ fontWeight: 700 }}>{formatRupiah(hutangN)}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>− Wasiat (efektif)</span><span style={{ fontWeight: 700 }}>{formatRupiah(wasiatEfektif)}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 6, borderTop: '1px solid rgba(0,0,0,0.08)' }}>
+                <span style={{ fontWeight: 800 }}>Harta Waris Bersih</span><span style={{ fontWeight: 800, color: 'var(--primary)' }}>{formatRupiah(hartaUntukWaris)}</span>
+              </div>
+              {wasiatDibatasi && (
+                <span style={{ fontSize: 10, color: 'var(--gold-ink-dark)', lineHeight: 1.5, marginTop: 2 }}>
+                  ⚠️ Wasiat yang diminta ({formatRupiah(wasiatN)}) melebihi 1/3 sisa harta setelah hutang — dibatasi otomatis ke {formatRupiah(wasiatMaks)} sesuai ketentuan fiqh (maksimal 1/3).
+                </span>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: 16 }}>
@@ -240,9 +342,16 @@ export default function KalkulatorWaris() {
           <ToggleRow label="Nenek (Ibu dari Ibu)" value={hasNenek} onChange={setHasNenek} />
           <Stepper label="Saudara Laki-laki Kandung" value={saudaraLaki} onChange={setSaudaraLaki} />
           <Stepper label="Saudara Perempuan Kandung" value={saudaraPerempuan} onChange={setSaudaraPerempuan} />
-          {(hasKakek || hasNenek || saudaraLaki > 0 || saudaraPerempuan > 0) && (
+          <ToggleRow label="Ada Anak Laki-laki yang Wafat Lebih Dulu?" value={anakLakiWafatPengganti} onChange={setAnakLakiWafatPengganti} />
+          {anakLakiWafatPengganti && (
+            <>
+              <Stepper label="Cucu Laki-laki (Pengganti)" value={cucuLakiPengganti} onChange={setCucuLakiPengganti} />
+              <Stepper label="Cucu Perempuan (Pengganti)" value={cucuPerempuanPengganti} onChange={setCucuPerempuanPengganti} />
+            </>
+          )}
+          {(hasKakek || hasNenek || saudaraLaki > 0 || saudaraPerempuan > 0 || anakLakiWafatPengganti) && (
             <span style={{ fontSize: 10.5, color: 'var(--muted-soft)', lineHeight: 1.5 }}>
-              Kakek terhijab (tidak dapat bagian) kalau ayah masih ada. Nenek terhijab kalau ibu masih ada. Saudara kandung cuma dapat bagian kalau tidak ada anak sama sekali dan tidak ada ayah/kakek.
+              Kakek terhijab (tidak dapat bagian) kalau ayah masih ada. Nenek terhijab kalau ibu masih ada. Saudara kandung cuma dapat bagian kalau tidak ada anak (atau cucu pengganti) sama sekali dan tidak ada ayah/kakek. Cucu pengganti menggantikan posisi satu anak laki-laki yang wafat — kalau lebih dari satu anak laki-laki wafat, kalkulator ini menggabungkan semua cucu pengganti jadi satu kelompok.
             </span>
           )}
         </div>
@@ -312,6 +421,90 @@ export default function KalkulatorWaris() {
             <button onClick={handleKonsultasi} className="btn-outline" style={{ padding: '10px', fontSize: 12 }}>
               💬 Konsultasi Hasil ke Ust. Rewin
             </button>
+          </div>
+        )}
+
+        <button
+          onClick={() => setShowDocChecklist((v) => !v)}
+          aria-expanded={showDocChecklist}
+          className="card"
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '13px 16px', border: 'none', cursor: 'pointer', fontFamily: 'inherit', color: 'var(--ink)' }}
+        >
+          <span style={{ fontSize: 12, fontWeight: 800, letterSpacing: '0.03em', textTransform: 'uppercase', color: 'var(--muted)' }}>
+            📋 Checklist Dokumen Pengurusan Warisan
+          </span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" style={{ transform: showDocChecklist ? 'rotate(180deg)' : 'none', transition: 'transform var(--dur-1) var(--ease)' }}>
+            <path d="m6 9 6 6 6-6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+
+        {showDocChecklist && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            {WARIS_DOC_GROUPS.map((group) => (
+              <div key={group.title} className="card" style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <h2 style={{ margin: '0 0 6px', fontSize: 14, fontWeight: 800, color: 'var(--primary)' }}>{group.title}</h2>
+                {group.items.map((item) => {
+                  const key = `${group.title}:${item}`;
+                  const isChecked = !!docChecklist[key];
+                  return (
+                    <label key={key} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '8px 0', cursor: 'pointer' }}>
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={() => setDocChecklist(toggleWarisDocChecklistItem(key))}
+                        style={{ marginTop: 3, width: 16, height: 16, accentColor: 'var(--primary)', flexShrink: 0 }}
+                      />
+                      <span style={{ fontSize: 12.5, lineHeight: 1.5, color: isChecked ? 'var(--muted)' : 'var(--ink)', textDecoration: isChecked ? 'line-through' : 'none' }}>
+                        {item}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+        )}
+
+        <button
+          onClick={() => setShowHistory((v) => !v)}
+          aria-expanded={showHistory}
+          className="card"
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '13px 16px', border: 'none', cursor: 'pointer', fontFamily: 'inherit', color: 'var(--ink)' }}
+        >
+          <span style={{ fontSize: 12, fontWeight: 800, letterSpacing: '0.03em', textTransform: 'uppercase', color: 'var(--muted)' }}>
+            🕓 Riwayat Perhitungan{history.length > 0 ? ` (${history.length})` : ''}
+          </span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" style={{ transform: showHistory ? 'rotate(180deg)' : 'none', transition: 'transform var(--dur-1) var(--ease)' }}>
+            <path d="m6 9 6 6 6-6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+
+        {showHistory && (
+          <div className="card" style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <span style={{ fontSize: 10.5, color: 'var(--muted-soft)', lineHeight: 1.5 }}>
+              Tersimpan otomatis tiap kali hasil berubah — beda dari Skenario Tersimpan di bawah yang butuh disimpan manual.
+            </span>
+            {history.length === 0 ? (
+              <span style={{ fontSize: 12, color: 'var(--muted)' }}>Belum ada riwayat.</span>
+            ) : (
+              history.map((entry) => (
+                <div key={entry.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '10px 12px', borderRadius: 12, background: 'var(--card)' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <span style={{ fontSize: 11.5, fontWeight: 700 }}>{formatRupiah(entry.totalHarta)}</span>
+                    <span style={{ fontSize: 10, color: 'var(--muted)' }}>
+                      {new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date(entry.at))} · {entry.results.length} ahli waris
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => setDeleteHistoryId(entry.id)}
+                    aria-label="Hapus entri riwayat"
+                    style={{ width: 22, height: 22, borderRadius: '50%', border: 'none', background: 'rgba(0,0,0,0.08)', color: 'var(--muted)', fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                  >
+                    ×
+                  </button>
+                </div>
+              ))
+            )}
           </div>
         )}
 
@@ -505,7 +698,7 @@ export default function KalkulatorWaris() {
         )}
       </div>
 
-      {showShare && <WarisShareModal totalHarta={hartaN} results={results} onClose={() => setShowShare(false)} />}
+      {showShare && <WarisShareModal totalHarta={hartaUntukWaris} results={results} onClose={() => setShowShare(false)} />}
 
       {deleteScenarioId && (
         <ConfirmDialog
@@ -525,6 +718,20 @@ export default function KalkulatorWaris() {
                 onAction: () => setScenarios(saveWarisScenario(removed.name, removed.inputs)),
               });
             }
+          }}
+        />
+      )}
+
+      {deleteHistoryId && (
+        <ConfirmDialog
+          title="Hapus entri riwayat ini?"
+          message="Entri riwayat perhitungan yang tersimpan di HP ini bakal dihapus."
+          confirmLabel="Ya, Hapus"
+          danger
+          onCancel={() => setDeleteHistoryId(null)}
+          onConfirm={() => {
+            setHistory(deleteWarisHistoryEntry(deleteHistoryId));
+            setDeleteHistoryId(null);
           }}
         />
       )}
