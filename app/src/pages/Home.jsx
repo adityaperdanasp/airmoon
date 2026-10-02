@@ -326,7 +326,8 @@ export default function Home() {
             position: 'relative',
             borderRadius: 26,
             overflow: 'hidden',
-            padding: '18px 20px 22px',
+            padding: '18px 20px 20px',
+            minHeight: 300,
             display: 'flex',
             flexDirection: 'column',
             gap: 16,
@@ -399,6 +400,28 @@ export default function Home() {
               </Link>
             </div>
           </div>
+
+          <div
+            style={{
+              position: 'relative',
+              zIndex: 1,
+              marginTop: 'auto',
+              display: 'flex',
+              gap: 12,
+              alignItems: 'flex-start',
+              padding: '14px 16px',
+              borderRadius: 18,
+              background: 'rgba(255,255,255,0.14)',
+              backdropFilter: 'blur(6px)',
+              WebkitBackdropFilter: 'blur(6px)',
+            }}
+          >
+            <span style={{ fontSize: 20, lineHeight: 1 }}>💡</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <span style={{ fontSize: 10.5, fontWeight: 700, color: 'rgba(255,255,255,0.75)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Tips Hari Ini</span>
+              <span style={{ fontSize: 14, lineHeight: 1.55, fontWeight: 500, color: '#fff' }}>{dailyTip}</span>
+            </div>
+          </div>
         </div>
 
         {forYouItems.length > 0 && (
@@ -449,14 +472,6 @@ export default function Home() {
             )}
           </div>
         </Link>
-
-        <div className="card" style={{ display: 'flex', gap: 10, padding: '12px 14px', alignItems: 'flex-start' }}>
-          <span style={{ fontSize: 16, lineHeight: 1 }}>💡</span>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <span style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Tips Hari Ini</span>
-            <span style={{ fontSize: 12, lineHeight: 1.5 }}>{dailyTip}</span>
-          </div>
-        </div>
 
         {showLangNudge && (
           <div className="card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '12px 14px', background: 'var(--blue-gray)' }}>
