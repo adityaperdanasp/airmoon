@@ -19,7 +19,7 @@ import { formatRupiah } from '../lib/zakat';
 import BottomNav from '../components/BottomNav';
 import DonationCard from '../components/DonationCard';
 import DoaCard from '../components/DoaCard';
-import { IconBell, IconSearch, IconMoon } from '../components/icons';
+import { IconSearch, IconMoon } from '../components/icons';
 import { QiblaCompassIcon, QuranBookIcon, MosqueIcon, PrayerClockIcon } from '../components/serviceIcons';
 import { SkeletonCard } from '../components/Skeleton';
 import InstallAppCard from '../components/InstallAppCard';
@@ -36,8 +36,7 @@ import { shouldShowRatingPrompt, markRatingPromptShown, dismissRatingPromptForev
 import { submitFeedback } from '../lib/feedback';
 import { markLoginPoint } from '../lib/amalanHarian';
 import { todaysHomePhoto } from '../data/photos';
-import PointsBadge from '../components/PointsBadge';
-import FadeImage from '../components/FadeImage';
+import HomeHero from '../components/HomeHero';
 import NPSPromptModal from '../components/NPSPromptModal';
 import { shouldShowNpsPrompt, markNpsPromptShown, dismissNpsPromptForever, submitNpsResponse } from '../lib/npsPrompt';
 import { isNpsPromptEnabled } from '../lib/remoteConfig';
@@ -321,108 +320,16 @@ export default function Home() {
     <div className="screen">
       <div className="screen-content">
       <PullToRefresh onRefresh={handlePullRefresh}>
-        <div
-          style={{
-            position: 'relative',
-            borderRadius: 26,
-            overflow: 'hidden',
-            padding: '18px 20px 20px',
-            minHeight: 300,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 16,
-          }}
-        >
-          <FadeImage
-            src={headerPhoto}
-            alt=""
-            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 40%' }}
-          />
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              background:
-                theme === 'dark'
-                  ? 'linear-gradient(160deg, rgba(11,12,10,0.55) 0%, rgba(11,12,10,0.88) 100%)'
-                  : 'linear-gradient(160deg, rgba(13,77,71,0.62) 0%, rgba(13,77,71,0.85) 100%)',
-            }}
-          />
-          <div className="topbar" style={{ position: 'relative', zIndex: 1 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 11, minWidth: 0 }}>
-              <div
-                style={{
-                  width: 46,
-                  height: 46,
-                  borderRadius: '50%',
-                  padding: 2.5,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  background: 'rgba(255,255,255,0.3)',
-                }}
-              >
-                {avatarPhoto ? (
-                  <img src={avatarPhoto} alt="" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover', display: 'block' }} />
-                ) : (
-                  <div
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      borderRadius: '50%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontWeight: 800,
-                      fontSize: 16,
-                      color: '#fff',
-                      background: avatarColor || 'var(--primary)',
-                    }}
-                  >
-                    {(user?.displayName || 'A')[0].toUpperCase()}
-                  </div>
-                )}
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-                <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.75)' }}>{t('greeting')}</span>
-                <span style={{ fontSize: 15.5, fontWeight: 700, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.displayName || user?.email}</span>
-              </div>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-              {user && <PointsBadge uid={user.uid} />}
-              <Link
-                to="/pengaturan"
-                className="icon-btn"
-                aria-label={t('pengaturan')}
-                style={{ textDecoration: 'none', background: 'rgba(255,255,255,0.2)', color: '#fff' }}
-              >
-                <IconBell width="17" height="17" />
-              </Link>
-            </div>
-          </div>
-
-          <div
-            style={{
-              position: 'relative',
-              zIndex: 1,
-              marginTop: 'auto',
-              display: 'flex',
-              gap: 12,
-              alignItems: 'flex-start',
-              padding: '14px 16px',
-              borderRadius: 18,
-              background: 'rgba(255,255,255,0.14)',
-              backdropFilter: 'blur(6px)',
-              WebkitBackdropFilter: 'blur(6px)',
-            }}
-          >
-            <span style={{ fontSize: 20, lineHeight: 1 }}>💡</span>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <span style={{ fontSize: 10.5, fontWeight: 700, color: 'rgba(255,255,255,0.75)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Tips Hari Ini</span>
-              <span style={{ fontSize: 14, lineHeight: 1.55, fontWeight: 500, color: '#fff' }}>{dailyTip}</span>
-            </div>
-          </div>
-        </div>
+        <HomeHero
+          theme={theme}
+          photo={headerPhoto}
+          user={user}
+          avatarPhoto={avatarPhoto}
+          avatarColor={avatarColor}
+          greeting={t('greeting')}
+          settingsLabel={t('pengaturan')}
+          tip={dailyTip}
+        />
 
         {forYouItems.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
