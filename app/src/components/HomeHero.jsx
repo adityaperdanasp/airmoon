@@ -1,152 +1,100 @@
 import { Link } from 'react-router-dom';
-import FadeImage from './FadeImage';
 import PointsBadge from './PointsBadge';
 import { IconBell } from './icons';
 
 const GOLD = '#e8b84b';
 
-// Home's top card (2026-10-02 redesign). One composition instead of a
-// photo header with a tip panel stuck on: the photo runs full-bleed, a
-// bottom-weighted gradient carries the text, and the day's tip is set as
-// the card's typographic centrepiece (gold rule + label + pull-quote),
-// not a separate widget. The gold hairline frame and the lattice texture
-// are the same two devices the share cards and the Jadwal Sholat card
-// below already use, so this reads as part of the same family.
-export default function HomeHero({ theme, photo, user, avatarPhoto, avatarColor, greeting, settingsLabel, tip }) {
-  const dark = theme === 'dark';
+// Sky per NEXT prayer: what you're counting down to decides the light.
+// Subuh = pre-dawn, Dzuhur = bright morning, Ashar = afternoon gold,
+// Maghrib = sunset, Isya = dusk/night.
+const SKY = {
+  Subuh: { g: ['#0f1a45', '#3b3a7a', '#d98a8f', '#f6c39c'], stars: true, orb: { x: 80, y: 86, c: '#ffd9a8', r: 18 }, ground: '#0b1030' },
+  Dzuhur: { g: ['#2a78b5', '#6db3e0', '#bfe2f3', '#eaf6fb'], stars: false, orb: { x: 76, y: 16, c: '#fff4c2', r: 22 }, ground: '#14473f' },
+  Ashar: { g: ['#2f6fa8', '#7fb0cf', '#f1d9a2', '#f6b96b'], stars: false, orb: { x: 82, y: 40, c: '#ffe3a0', r: 22 }, ground: '#0d2a27' },
+  Maghrib: { g: ['#1c2a66', '#8a4f86', '#e5688a', '#f8a24f'], stars: false, orb: { x: 78, y: 82, c: '#ffcf8a', r: 26 }, ground: '#0d2a27' },
+  Isya: { g: ['#050818', '#0c1640', '#1a2c66', '#26407f'], stars: true, orb: { x: 84, y: 30, c: '#f3efe0', r: 13 }, ground: '#02040d' },
+};
+const STARS = [[12, 14], [26, 30], [44, 10], [60, 24], [88, 12], [35, 46], [70, 40], [92, 34], [18, 52], [52, 36]];
+
+// Home's hero. The whole card is one scene: a sky that follows the next
+// prayer, a mosque skyline, the countdown set large in a serif (the one
+// place the app uses Fraunces), and the day's tip as a single italic line.
+export default function HomeHero({ user, avatarPhoto, avatarColor, greeting, settingsLabel, tip, next, status }) {
+  const s = SKY[next?.label] || SKY.Isya;
   return (
     <div
       style={{
         position: 'relative',
-        borderRadius: 28,
         overflow: 'hidden',
-        padding: '18px 20px 22px',
-        minHeight: 272,
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        gap: 28,
+        borderRadius: '0 0 34px 34px',
+        padding: 'calc(18px + env(safe-area-inset-top)) 22px 128px',
+        background: `linear-gradient(180deg, ${s.g[0]} 0%, ${s.g[1]} 38%, ${s.g[2]} 72%, ${s.g[3]} 100%)`,
+        color: '#fff',
       }}
     >
-      <FadeImage
-        src={photo}
-        alt=""
-        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 30%' }}
-      />
-
-      <div
-        aria-hidden="true"
-        style={{
-          position: 'absolute',
-          inset: 0,
-          background: dark
-            ? 'linear-gradient(180deg, rgba(11,12,10,0.45) 0%, rgba(11,12,10,0.2) 22%, rgba(11,12,10,0.82) 55%, rgba(8,9,7,0.97) 100%)'
-            : 'linear-gradient(180deg, rgba(10,54,48,0.45) 0%, rgba(10,54,48,0.15) 22%, rgba(8,44,40,0.84) 55%, rgba(6,34,30,0.97) 100%)',
-        }}
-      />
-
-      <svg
-        aria-hidden="true"
-        width="100%"
-        height="100%"
-        style={{
-          position: 'absolute',
-          inset: 0,
-          opacity: 0.12,
-          pointerEvents: 'none',
-          WebkitMaskImage: 'linear-gradient(180deg, transparent 40%, #000 100%)',
-          maskImage: 'linear-gradient(180deg, transparent 40%, #000 100%)',
-        }}
-      >
-        <defs>
-          <pattern id="hero-lattice" width="30" height="30" patternUnits="userSpaceOnUse">
-            <path d="M15 1 L29 15 L15 29 L1 15 Z" fill="none" stroke="#fff" strokeWidth="1" />
-            <circle cx="15" cy="15" r="1.6" fill="#fff" />
-          </pattern>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#hero-lattice)" />
+      <svg aria-hidden="true" width="100%" height="100%" style={{ position: 'absolute', inset: 0 }}>
+        {s.stars && STARS.map(([x, y], i) => <circle key={i} cx={`${x}%`} cy={`${y}%`} r={i % 3 === 0 ? 1.6 : 1} fill="#fff" opacity={0.5 + (i % 4) * 0.12} />)}
+        <circle cx={`${s.orb.x}%`} cy={`${s.orb.y}%`} r={s.orb.r * 2.4} fill={s.orb.c} opacity="0.16" />
+        <circle cx={`${s.orb.x}%`} cy={`${s.orb.y}%`} r={s.orb.r} fill={s.orb.c} opacity="0.95" />
+      </svg>
+      <svg viewBox="0 0 390 90" preserveAspectRatio="none" width="100%" height="120" style={{ position: 'absolute', left: 0, right: 0, bottom: 0 }} aria-hidden="true">
+        <path
+          fill={s.ground}
+          d="M0 90V70h18V58l6-10 6 10v12h14V62h10V40l3-8 3 8v22h6V70h20V56c0-12 14-22 28-22s28 10 28 22v14h14V60l4-14 4 14v10h18V50l3-12 3 12v20h20V64c0-8 8-14 16-14s16 6 16 14v6h22V54c0-14 14-26 30-26s30 12 30 26v16h16V58l4-16 4 16v12h20V66h22v24Z"
+        />
       </svg>
 
-      <div
-        aria-hidden="true"
-        style={{ position: 'absolute', inset: 0, borderRadius: 28, boxShadow: `inset 0 0 0 1px ${GOLD}55`, pointerEvents: 'none' }}
-      />
-
-      <div className="topbar" style={{ position: 'relative', zIndex: 1 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 11, minWidth: 0 }}>
+      <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
           <div
             style={{
-              width: 44,
-              height: 44,
+              width: 40,
+              height: 40,
               borderRadius: '50%',
-              padding: 2,
+              flexShrink: 0,
+              overflow: 'hidden',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              background: `linear-gradient(135deg, ${GOLD}, rgba(255,255,255,0.35))`,
-              flexShrink: 0,
+              fontWeight: 800,
+              background: avatarColor || 'var(--primary)',
+              boxShadow: `0 0 0 2px ${GOLD}`,
             }}
           >
-            {avatarPhoto ? (
-              <img src={avatarPhoto} alt="" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover', display: 'block' }} />
-            ) : (
-              <div
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontWeight: 800,
-                  fontSize: 16,
-                  color: '#fff',
-                  background: avatarColor || 'var(--primary)',
-                }}
-              >
-                {(user?.displayName || 'A')[0].toUpperCase()}
-              </div>
-            )}
+            {avatarPhoto ? <img src={avatarPhoto} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} /> : (user?.displayName || 'A')[0].toUpperCase()}
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-            <span style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.78)', letterSpacing: '0.01em' }}>{greeting}</span>
-            <span style={{ fontSize: 15.5, fontWeight: 700, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {user?.displayName || user?.email}
-            </span>
+          <div style={{ lineHeight: 1.25, minWidth: 0 }}>
+            <div style={{ fontSize: 11.5, opacity: 0.8 }}>{greeting}</div>
+            <div style={{ fontSize: 14.5, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.displayName || user?.email}</div>
           </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
           {user && <PointsBadge uid={user.uid} />}
-          <Link
-            to="/pengaturan"
-            className="icon-btn"
-            aria-label={settingsLabel}
-            style={{ textDecoration: 'none', background: 'rgba(255,255,255,0.18)', color: '#fff' }}
-          >
+          <Link to="/pengaturan" className="icon-btn" aria-label={settingsLabel} style={{ textDecoration: 'none', background: 'rgba(255,255,255,0.18)', color: '#fff' }}>
             <IconBell width="17" height="17" />
           </Link>
         </div>
       </div>
 
-      <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ width: 26, height: 1.5, borderRadius: 2, background: GOLD }} />
-          <span style={{ fontSize: 10, fontWeight: 700, color: GOLD, textTransform: 'uppercase', letterSpacing: '0.18em' }}>Tips Hari Ini</span>
-        </div>
-        <p
-          style={{
-            margin: 0,
-            fontSize: 17,
-            lineHeight: 1.5,
-            fontWeight: 600,
-            color: '#fff',
-            letterSpacing: '-0.005em',
-            textWrap: 'pretty',
-            textShadow: '0 1px 12px rgba(0,0,0,0.35)',
-          }}
-        >
-          {tip}
-        </p>
+      <div style={{ position: 'relative', marginTop: 34 }}>
+        {status === 'ready' && next ? (
+          <>
+            <div style={{ fontSize: 12, letterSpacing: '0.16em', textTransform: 'uppercase', opacity: 0.85, fontWeight: 600 }}>Menuju {next.label}</div>
+            <div style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 76, lineHeight: 1, fontWeight: 500, letterSpacing: '-0.03em', marginTop: 6 }}>{next.time}</div>
+            <div style={{ marginTop: 8, fontSize: 14, opacity: 0.92, fontVariantNumeric: 'tabular-nums' }}>{next.countdown} lagi</div>
+          </>
+        ) : (
+          <>
+            <div style={{ fontSize: 12, letterSpacing: '0.16em', textTransform: 'uppercase', opacity: 0.85, fontWeight: 600 }}>Jadwal Sholat</div>
+            <div style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 76, lineHeight: 1, fontWeight: 500, marginTop: 6, opacity: 0.5 }}>--:--</div>
+            <div style={{ marginTop: 8, fontSize: 14, opacity: 0.92 }}>{status === 'denied' ? 'Izinkan akses lokasi buat lihat jadwal sholat' : status === 'error' ? 'Gagal memuat jadwal sholat' : 'Memuat jadwal sholat…'}</div>
+          </>
+        )}
+      </div>
+
+      <div style={{ position: 'relative', marginTop: 26, display: 'flex', gap: 10, alignItems: 'flex-start', maxWidth: 235 }}>
+        <span style={{ width: 22, height: 1.5, background: GOLD, marginTop: 9, flexShrink: 0 }} />
+        <span style={{ fontSize: 13, lineHeight: 1.5, fontStyle: 'italic', opacity: 0.95, textWrap: 'pretty' }}>{tip}</span>
       </div>
     </div>
   );

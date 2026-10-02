@@ -4,29 +4,23 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
 import { useLang } from '../context/LangContext';
-import { useTheme } from '../context/ThemeContext';
 import { usePrayerTimes } from '../lib/usePrayerTimes';
 import { watchActiveDonations, watchMyContributions } from '../lib/donations';
 import { watchUserProfile } from '../lib/profile';
-import { watchDoas } from '../lib/doa';
-import { markSeen } from '../lib/unseenBadges';
+import { markSeen, watchHasNewDoa } from '../lib/unseenBadges';
 import { getDailyTip } from '../data/dailyTips';
 import { shouldShowLangNudge, dismissLangNudge } from '../lib/langNudge';
 import { getMustajabWindow } from '../lib/mustajabTime';
-import { getForYouSuggestions } from '../lib/forYouSuggestions';
-import { getRecentLainnya } from '../lib/recentLainnya';
 import { formatRupiah } from '../lib/zakat';
 import BottomNav from '../components/BottomNav';
 import DonationCard from '../components/DonationCard';
-import DoaCard from '../components/DoaCard';
-import { IconSearch, IconMoon } from '../components/icons';
-import { QiblaCompassIcon, QuranBookIcon, MosqueIcon, PrayerClockIcon } from '../components/serviceIcons';
+import { IconMoon } from '../components/icons';
+import { QiblaCompassIcon, QuranBookIcon, MosqueIcon, CalculatorIcon, TasbihIcon, CuppedHandsIcon, LanternIcon } from '../components/serviceIcons';
+import PrayerStrip from '../components/PrayerStrip';
+import HariIniCard from '../components/HariIniCard';
 import { SkeletonCard } from '../components/Skeleton';
 import InstallAppCard from '../components/InstallAppCard';
 import EmptyState from '../components/EmptyState';
-import AmalanHarianCard from '../components/AmalanHarianCard';
-import MoodCheckIn from '../components/MoodCheckIn';
-import AmalanHeatmap from '../components/AmalanHeatmap';
 import CountUp from '../components/CountUp';
 import PullToRefresh from '../components/PullToRefresh';
 import OnboardingTour from '../components/OnboardingTour';
@@ -35,7 +29,6 @@ import RatingPromptModal from '../components/RatingPromptModal';
 import { shouldShowRatingPrompt, markRatingPromptShown, dismissRatingPromptForever } from '../lib/ratingPrompt';
 import { submitFeedback } from '../lib/feedback';
 import { markLoginPoint } from '../lib/amalanHarian';
-import { todaysHomePhoto } from '../data/photos';
 import HomeHero from '../components/HomeHero';
 import NPSPromptModal from '../components/NPSPromptModal';
 import { shouldShowNpsPrompt, markNpsPromptShown, dismissNpsPromptForever, submitNpsResponse } from '../lib/npsPrompt';
@@ -48,90 +41,14 @@ import { shouldShowChangelogSpotlight, markChangelogSpotlightSeen } from '../lib
 
 const dateFmt = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
-function Wallet() {
-  return (
-    <div
-      style={{
-        width: 40,
-        height: 40,
-        borderRadius: 14,
-        flexShrink: 0,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'linear-gradient(160deg, var(--card), var(--mint-soft))',
-        boxShadow: '0 6px 14px rgba(15,32,25,0.12), inset 0 1px 0 rgba(255,255,255,0.5)',
-      }}
-    >
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)">
-        <rect x="2.5" y="5.5" width="19" height="13" rx="2.5" strokeWidth="1.7" />
-        <path d="M2.5 9.5h19" strokeWidth="1.7" />
-      </svg>
-    </div>
-  );
-}
-
-// A tasteful, abstract Islamic-geometric lattice (diamonds + dots), not a
-// literal historical arabesque tessellation — used as a low-opacity
-// texture layer so the prayer-time card isn't just a flat gradient.
-function GeometricPattern({ id }) {
-  return (
-    <svg aria-hidden="true" style={{ position: 'absolute', inset: 0, opacity: 0.1, pointerEvents: 'none' }} width="100%" height="100%">
-      <defs>
-        <pattern id={id} width="30" height="30" patternUnits="userSpaceOnUse">
-          <path d="M15 1 L29 15 L15 29 L1 15 Z" fill="none" stroke="#fff" strokeWidth="1" />
-          <circle cx="15" cy="15" r="1.6" fill="#fff" />
-        </pattern>
-      </defs>
-      <rect width="100%" height="100%" fill={`url(#${id})`} />
-    </svg>
-  );
-}
-
-// All 4 are now hand-drawn vectors from components/serviceIcons.jsx (shared
-// with the Lainnya grid) — Sholat was the last emoji (⏰) holdout, replaced
-// with PrayerClockIcon to match. Qur'an/Cari Masjid were emoji (📖/🕌)
-// until an explicit ask to match Kiblat's existing custom-icon treatment
-// for consistency (same reasoning as the Lainnya grid's icon pass) instead
-// of the mismatched Flaticon-style assets that were also considered and
-// declined for the same style-clash reasons.
-// [UI 2026-09-12] Each tile now also prefetches its own route chunk on
-// hover/touch, same pattern BottomNav's 5 tabs and Lainnya's 20 tiles
-// already use — this row is the literal first thing someone taps after
-// opening the app, and was the one major tap-target left with no head
-// start at all.
-const SVC = [
-  { to: '/quran', node: <QuranBookIcon size={46} />, key: 'nav_quran', bg: 'linear-gradient(160deg, #fdf3df, #fbe4b0)', prefetch: () => import('./SurahList') },
-  { to: '/jadwal-sholat', node: <PrayerClockIcon size={46} />, label: 'Sholat', bg: 'linear-gradient(160deg, #e2f1ec, #bfe2d4)', prefetch: () => import('./JadwalSholat') },
-  { to: '/lainnya/kiblat', node: <QiblaCompassIcon size={46} />, key: 'item_kiblat', bg: 'linear-gradient(160deg, #fbe6da, #f3c9ab)', prefetch: () => import('./QiblaCompass') },
-  { to: '/lainnya/cari-masjid', node: <MosqueIcon size={46} />, label: 'Cari Masjid', bg: 'linear-gradient(160deg, #e3e9ee, #c3d1dc)', prefetch: () => import('./CariMasjid') },
-];
-
-// [PM 2026-09-12] Reorders SVC so the tile matching the user's own
-// onboarding interest (lib/interestTag.js) leads — a modest, low-risk
-// slice of "personalize Home" rather than restructuring every section on
-// the page into a dynamically-ordered list, which would be a much bigger
-// change for a first pass. 'donasi' has no matching tile in this specific
-// grid, so it's a no-op there; 'semua'/no tag keeps the original order.
-function reorderSvcByInterest(interestTag) {
-  if (interestTag === 'quran') return SVC;
-  if (interestTag === 'sholat') {
-    const idx = SVC.findIndex((s) => s.to === '/jadwal-sholat');
-    if (idx <= 0) return SVC;
-    return [SVC[idx], ...SVC.slice(0, idx), ...SVC.slice(idx + 1)];
-  }
-  return SVC;
-}
-
 export default function Home() {
   const { user } = useAuth();
   const { t, lang } = useLang();
-  const { theme } = useTheme();
   const { next, status: prayerStatus, data: prayerData } = usePrayerTimes();
   const [donations, setDonations] = useState(null);
   const [myContributions, setMyContributions] = useState([]);
   const [showSedekahHistory, setShowSedekahHistory] = useState(false);
-  const [doas, setDoas] = useState(null);
+  const [hasNewDoa, setHasNewDoa] = useState(false);
   const [avatarColor, setAvatarColor] = useState(null);
   const [avatarPhoto, setAvatarPhoto] = useState(null);
   const [interestTag, setInterestTagState] = useState(null);
@@ -243,9 +160,7 @@ export default function Home() {
     setAvatarPhoto(p?.avatarPhoto || null);
     setInterestTagState(p?.interestTag || null);
   }), [user?.uid]);
-  useEffect(() => watchDoas(setDoas), []);
-
-  const svcOrdered = reorderSvcByInterest(interestTag);
+  useEffect(() => watchHasNewDoa(setHasNewDoa), []);
 
   // Same lastReadAyat/lastRead fallback SurahList.jsx uses — see that
   // file's own comment for why the older field name still has to be
@@ -296,7 +211,6 @@ export default function Home() {
   // actually open, rather than clearing itself the instant it appears.
   useEffect(() => {
     return () => {
-      markSeen('doa');
       markSeen('donasi');
     };
   }, []);
@@ -307,340 +221,164 @@ export default function Home() {
   }, [user]);
 
   const mySedekahTotal = myContributions.reduce((sum, c) => sum + c.amount, 0);
-  // Foto header beda per tema, ganti tiap hari.
-  const headerPhoto = todaysHomePhoto(theme);
   // Tips Islami Harian (2026-09-12) — same interestTag Home already
   // reorders the Layanan grid by (see reorderSvcByInterest above),
   // reused so the one daily tip actually matches why this person opened
   // the app instead of showing the same generic quote to everyone.
   const dailyTip = getDailyTip(interestTag);
-  const forYouItems = getForYouSuggestions(interestTag, getRecentLainnya());
+
+  const hour = new Date().getHours();
+  const dzikirTab = hour < 12 ? 'pagi' : 'petang';
+  const hasBanners = showLangNudge || mustajabWindow || showWelcomeBack || showChangelogSpotlight;
+
+  const lanjutkan = [];
+  if (lastReadAyat) {
+    lanjutkan.push({ key: 'ayat', to: `/quran/${lastReadAyat.nomor}`, title: 'Lanjut baca', sub: `${lastReadAyat.namaLatin} : ${lastReadAyat.ayat}`, bg: 'var(--cream)', icon: <QuranBookIcon size={34} />, prefetch: () => import('./SurahReader') });
+  }
+  if (lastReadMushaf) {
+    lanjutkan.push({ key: 'mushaf', to: `/quran/mushaf/${lastReadMushaf.page}?ayat=${lastReadMushaf.verseKey}`, title: 'Lanjut Mushaf', sub: `${lastReadMushaf.chapterName} : ${lastReadMushaf.page}`, bg: 'var(--mint-soft)', icon: <QuranBookIcon size={34} />, prefetch: () => import('./MushafReader') });
+  }
+  lanjutkan.push({ key: 'dzikir', to: '/lainnya/doa-harian', state: { activeId: dzikirTab }, title: dzikirTab === 'pagi' ? 'Dzikir pagi' : 'Dzikir petang', sub: 'Doa harian', bg: lanjutkan.length ? 'var(--mint-soft)' : 'var(--cream)', icon: <CuppedHandsIcon size={34} /> });
+
+  const jelajahi = [
+    { to: '/quran', label: "Qur'an", icon: <QuranBookIcon size={30} /> },
+    { to: '/lainnya/kiblat', label: 'Kiblat', icon: <QiblaCompassIcon size={30} /> },
+    { to: '/lainnya/kalkulator-zakat', label: 'Zakat', icon: <CalculatorIcon size={30} /> },
+    { to: '/lainnya/cari-masjid', label: 'Masjid', icon: <MosqueIcon size={30} /> },
+    { to: '/ask-me', label: 'Ust. Rewin', icon: <IconMoon width="26" height="26" style={{ color: 'var(--primary)' }} /> },
+    { to: '/doa', label: 'Doa & Aminkan', icon: <LanternIcon size={30} /> },
+    { to: '/lainnya/tasbih', label: 'Tasbih', icon: <TasbihIcon size={30} /> },
+    { to: '/lainnya', label: 'Semua', icon: <span style={{ fontSize: 22, color: 'var(--primary)', fontWeight: 800, lineHeight: 1 }}>⋯</span> },
+  ];
+
+  const sectionTitle = { margin: 0, fontSize: 17, fontWeight: 800 };
+  const bannerStyle = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '12px 14px', borderRadius: 18, textDecoration: 'none', color: 'inherit' };
 
   return (
     <div className="screen">
-      <div className="screen-content">
+      <div className="screen-content" style={{ padding: 0, gap: 0, paddingBottom: 'calc(130px + env(safe-area-inset-bottom))' }}>
       <PullToRefresh onRefresh={handlePullRefresh}>
         <HomeHero
-          theme={theme}
-          photo={headerPhoto}
           user={user}
           avatarPhoto={avatarPhoto}
           avatarColor={avatarColor}
           greeting={t('greeting')}
           settingsLabel={t('pengaturan')}
           tip={dailyTip}
+          next={next}
+          status={prayerStatus}
         />
+        <PrayerStrip timings={prayerData?.timings} nextKey={next?.key} />
 
-        {forYouItems.length > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <span style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.03em', paddingLeft: 2 }}>Untuk Kamu</span>
-            <div className="hide-scrollbar" style={{ display: 'flex', gap: 8, overflowX: 'auto' }}>
-              {forYouItems.map((it) => (
+        <div style={{ padding: '24px 20px 0', display: 'flex', flexDirection: 'column', gap: 26 }}>
+          {hasBanners && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {mustajabWindow && (
+                <Link to="/lainnya/doa-harian" style={{ ...bannerStyle, justifyContent: 'flex-start', background: 'var(--cream)' }}>
+                  <span style={{ fontSize: 12, fontWeight: 700, flex: 1 }}>🤲 {mustajabWindow.message}</span>
+                </Link>
+              )}
+              {showLangNudge && (
+                <div style={{ ...bannerStyle, background: 'var(--blue-gray)' }}>
+                  <span style={{ fontSize: 12, fontWeight: 700 }}>🌐 Your phone looks set to English — switch airmoon's language in Settings.</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                    <Link to="/pengaturan" onClick={() => { dismissLangNudge(); setShowLangNudge(false); }} style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--primary)', textDecoration: 'none' }}>Settings</Link>
+                    <button onClick={() => { dismissLangNudge(); setShowLangNudge(false); }} aria-label="Tutup" style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: 16, cursor: 'pointer', padding: 0, lineHeight: 1 }}>×</button>
+                  </div>
+                </div>
+              )}
+              {showWelcomeBack && (
+                <div style={{ ...bannerStyle, background: 'var(--mint-soft)' }}>
+                  <span style={{ fontSize: 12, fontWeight: 700 }}>👋 Kangen nih! Yuk lanjutkan lagi kebiasaan ibadahmu.</span>
+                  <button onClick={() => setShowWelcomeBack(false)} aria-label="Tutup" style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: 16, cursor: 'pointer', padding: 0, lineHeight: 1, flexShrink: 0 }}>×</button>
+                </div>
+              )}
+              {showChangelogSpotlight && (
                 <Link
-                  key={it.to}
-                  to={it.to}
-                  style={{ flexShrink: 0, padding: '9px 16px', borderRadius: 999, background: 'var(--card)', border: '1px solid var(--border)', textDecoration: 'none', color: 'var(--ink)', fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap' }}
+                  to="/yang-baru"
+                  onClick={() => { markChangelogSpotlightSeen(latestChangelogEntry.version); setShowChangelogSpotlight(false); }}
+                  style={{ ...bannerStyle, background: 'var(--cream)' }}
                 >
-                  {it.label}
+                  <span style={{ fontSize: 12, fontWeight: 700 }}>✨ Ada fitur baru yang cocok buat kamu: {latestChangelogEntry.title}</span>
+                  <button
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); markChangelogSpotlightSeen(latestChangelogEntry.version); setShowChangelogSpotlight(false); }}
+                    aria-label="Tutup"
+                    style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: 16, cursor: 'pointer', padding: 0, lineHeight: 1, flexShrink: 0 }}
+                  >
+                    ×
+                  </button>
+                </Link>
+              )}
+            </div>
+          )}
+
+          {user && <HariIniCard uid={user.uid} forceOpen={highlightAmalan} />}
+
+          <section>
+            <h2 style={{ ...sectionTitle, marginBottom: 12 }}>Lanjutkan</h2>
+            <div className="hide-scrollbar" style={{ display: 'flex', gap: 12, overflowX: 'auto', margin: '0 -20px', padding: '0 20px' }}>
+              {lanjutkan.map((c) => (
+                <Link key={c.key} to={c.to} state={c.state} onMouseEnter={c.prefetch} onTouchStart={c.prefetch} style={{ flexShrink: 0, width: 150, borderRadius: 22, background: c.bg, padding: 14, display: 'flex', flexDirection: 'column', gap: 18, textDecoration: 'none', color: 'var(--ink)' }}>
+                  {c.icon}
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 800 }}>{c.title}</div>
+                    <div style={{ fontSize: 11.5, color: 'var(--muted)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.sub}</div>
+                  </div>
                 </Link>
               ))}
             </div>
-          </div>
-        )}
+          </section>
 
-        <Link
-          to="/jadwal-sholat"
-          style={{
-            textDecoration: 'none',
-            position: 'relative',
-            overflow: 'hidden',
-            borderRadius: 22,
-            padding: '18px 20px',
-            background: `linear-gradient(135deg, var(--primary), var(--primary-dark))`,
-            color: '#fff',
-          }}
-        >
-          <GeometricPattern id="prayer-pattern" />
-          <div style={{ position: 'relative', zIndex: 1 }}>
-            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--accent)' }}>
-              {t('jadwal_sholat')}
-            </div>
-            {prayerStatus === 'ready' && next ? (
-              <>
-                <div style={{ fontSize: 22, fontWeight: 800, marginTop: 6 }}>
-                  {next.label} &middot; {next.time}
-                </div>
-                <div style={{ fontSize: 12, opacity: 0.75, marginTop: 2 }}>{next.countdown} lagi</div>
-              </>
-            ) : prayerStatus === 'denied' ? (
-              <div style={{ fontSize: 12, opacity: 0.8, marginTop: 8 }}>Izinkan akses lokasi buat lihat jadwal sholat</div>
-            ) : (
-              <div style={{ fontSize: 12, opacity: 0.8, marginTop: 8 }}>Memuat jadwal sholat…</div>
-            )}
-          </div>
-        </Link>
-
-        {showLangNudge && (
-          <div className="card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '12px 14px', background: 'var(--blue-gray)' }}>
-            <span style={{ fontSize: 12, fontWeight: 700 }}>🌐 Your phone looks set to English — switch airmoon's language in Settings.</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-              <Link to="/pengaturan" onClick={() => { dismissLangNudge(); setShowLangNudge(false); }} style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--primary)', textDecoration: 'none' }}>
-                Settings
-              </Link>
-              <button
-                onClick={() => { dismissLangNudge(); setShowLangNudge(false); }}
-                aria-label="Tutup"
-                style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: 16, cursor: 'pointer', padding: 0, lineHeight: 1 }}
-              >
-                ×
+          <section>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
+              <h2 style={sectionTitle}>Berbagi</h2>
+              <button onClick={() => setShowSedekahHistory((v) => !v)} aria-expanded={showSedekahHistory} style={{ background: 'none', border: 'none', padding: 0, fontSize: 12, fontFamily: 'inherit', color: 'var(--primary)', fontWeight: 700, cursor: 'pointer' }}>
+                Sedekahmu <CountUp value={mySedekahTotal} formatter={formatRupiah} /> · {showSedekahHistory ? 'Tutup' : 'Rincian'}
               </button>
             </div>
-          </div>
-        )}
-
-        {mustajabWindow && (
-          <Link
-            to="/lainnya/doa-harian"
-            className="card"
-            style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', background: 'var(--cream)', textDecoration: 'none', color: 'inherit' }}
-          >
-            <span style={{ fontSize: 16 }}>🤲</span>
-            <span style={{ fontSize: 12, fontWeight: 700, flex: 1 }}>{mustajabWindow.message}</span>
-          </Link>
-        )}
-
-        {showWelcomeBack && (
-          <div className="card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '12px 14px', background: 'var(--mint-soft)' }}>
-            <span style={{ fontSize: 12, fontWeight: 700 }}>👋 Kangen nih! Yuk lanjutkan lagi kebiasaan ibadahmu.</span>
-            <button
-              onClick={() => setShowWelcomeBack(false)}
-              aria-label="Tutup"
-              style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: 16, cursor: 'pointer', padding: 0, lineHeight: 1, flexShrink: 0 }}
-            >
-              ×
-            </button>
-          </div>
-        )}
-
-        {showChangelogSpotlight && (
-          <Link
-            to="/yang-baru"
-            onClick={() => { markChangelogSpotlightSeen(latestChangelogEntry.version); setShowChangelogSpotlight(false); }}
-            className="card"
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '12px 14px', background: 'var(--cream)', textDecoration: 'none', color: 'inherit' }}
-          >
-            <span style={{ fontSize: 12, fontWeight: 700 }}>✨ Ada fitur baru yang cocok buat kamu: {latestChangelogEntry.title}</span>
-            <button
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); markChangelogSpotlightSeen(latestChangelogEntry.version); setShowChangelogSpotlight(false); }}
-              aria-label="Tutup"
-              style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: 16, cursor: 'pointer', padding: 0, lineHeight: 1, flexShrink: 0 }}
-            >
-              ×
-            </button>
-          </Link>
-        )}
-
-        <Link to="/ask-me" className="input-row" style={{ borderRadius: 999, textDecoration: 'none' }}>
-          <IconMoon width="16" height="16" style={{ color: 'var(--ink)' }} />
-          <span style={{ flex: 1, fontSize: 13, fontWeight: 500, color: 'var(--muted)' }}>Tanya Ust. Rewin…</span>
-          <IconSearch style={{ opacity: 0.6, color: 'var(--ink)' }} />
-        </Link>
-
-        <button
-          onClick={() => setShowSedekahHistory((v) => !v)}
-          style={{ display: 'flex', alignItems: 'center', gap: 12, borderRadius: 20, padding: '14px 15px', background: 'var(--mint)', border: 'none', textAlign: 'left', cursor: 'pointer', font: 'inherit', color: 'inherit', width: '100%' }}
-        >
-          <Wallet />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1 }}>
-            <span style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--muted)' }}>Total Sedekah</span>
-            <span style={{ fontSize: 16, fontWeight: 800, color: 'var(--primary)' }}>
-              <CountUp value={mySedekahTotal} formatter={formatRupiah} />
-            </span>
-          </div>
-          <span style={{ fontSize: 11, color: 'var(--muted)' }}>{showSedekahHistory ? 'Tutup' : 'Rincian'}</span>
-        </button>
-
-        {showSedekahHistory && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {myContributions.length === 0 ? (
-              <EmptyState icon="💝" title="Belum ada riwayat sedekah" subtitle="Yuk mulai sedekah hari ini, sekecil apapun." actionLabel="Lihat Campaign" actionTo="/donasi" />
-            ) : (
-              myContributions.map((c) => (
-                <div
-                  key={c.id}
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', borderRadius: 14, background: 'var(--card)' }}
-                >
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    <span style={{ fontSize: 13, fontWeight: 700 }}>{c.donationTitle}</span>
-                    <span style={{ fontSize: 11, color: 'var(--muted)' }}>{c.createdAt ? dateFmt.format(c.createdAt.toDate()) : 'Baru saja'}</span>
-                  </div>
-                  <span style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--primary)' }}>+{formatRupiah(c.amount)}</span>
-                </div>
-              ))
+            {showSedekahHistory && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
+                {myContributions.length === 0 ? (
+                  <EmptyState icon="💝" title="Belum ada riwayat sedekah" subtitle="Yuk mulai sedekah hari ini, sekecil apapun." actionLabel="Lihat Campaign" actionTo="/donasi" />
+                ) : (
+                  myContributions.map((c) => (
+                    <div key={c.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', borderRadius: 14, background: 'var(--card)' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <span style={{ fontSize: 13, fontWeight: 700 }}>{c.donationTitle}</span>
+                        <span style={{ fontSize: 11, color: 'var(--muted)' }}>{c.createdAt ? dateFmt.format(c.createdAt.toDate()) : 'Baru saja'}</span>
+                      </div>
+                      <span style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--primary)' }}>+{formatRupiah(c.amount)}</span>
+                    </div>
+                  ))
+                )}
+              </div>
             )}
-          </div>
-        )}
-
-        {(lastReadAyat || lastReadMushaf) && (
-          // Side-by-side when both bookmarks exist (Mode Ayat and Mode
-          // Mushaf keep separate bookmarks, see the fetch effect above) —
-          // Home was getting long enough that stacking two nearly-identical
-          // rows full-width just to resume reading was worth compacting.
-          <div style={{ display: 'grid', gridTemplateColumns: lastReadAyat && lastReadMushaf ? '1fr 1fr' : '1fr', gap: 8 }}>
-            {lastReadAyat && (
-              <Link
-                to={`/quran/${lastReadAyat.nomor}`}
-                onMouseEnter={() => import('./SurahReader')}
-                onTouchStart={() => import('./SurahReader')}
-                style={{ display: 'flex', alignItems: 'center', gap: 10, borderRadius: 18, padding: '12px 13px', background: 'var(--cream)', textDecoration: 'none', color: 'inherit', minWidth: 0 }}
-              >
-                <div style={{ width: 30, height: 30, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: 'rgba(255,255,255,0.55)' }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--gold-ink)"><path d="M8 5.5v13l11-6.5-11-6.5Z" /></svg>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 1, flex: 1, minWidth: 0 }}>
-                  <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--muted)' }}>Lanjut Baca</span>
-                  <span style={{ fontSize: 12.5, fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{lastReadAyat.namaLatin} : {lastReadAyat.ayat}</span>
-                </div>
+            {donations === null && <SkeletonCard height={140} />}
+            {donations && donations.length === 0 && (
+              <EmptyState icon="🕌" title="Belum ada campaign aktif" subtitle="Campaign donasi listrik masjid baru bakal muncul di sini begitu ada yang disetujui." />
+            )}
+            {donations && donations.length > 0 && <DonationCard donation={donations[0]} />}
+            {donations && donations.length > 1 && (
+              <Link to="/donasi" style={{ display: 'block', marginTop: 10, textAlign: 'center', fontSize: 12, fontWeight: 700, color: 'var(--primary)', textDecoration: 'none' }}>
+                Lihat {donations.length - 1} campaign lainnya
               </Link>
             )}
-            {lastReadMushaf && (
-              <Link
-                to={`/quran/mushaf/${lastReadMushaf.page}?ayat=${lastReadMushaf.verseKey}`}
-                onMouseEnter={() => import('./MushafReader')}
-                onTouchStart={() => import('./MushafReader')}
-                style={{ display: 'flex', alignItems: 'center', gap: 10, borderRadius: 18, padding: '12px 13px', background: 'var(--mint)', textDecoration: 'none', color: 'inherit', minWidth: 0 }}
-              >
-                <div style={{ width: 30, height: 30, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: 'rgba(255,255,255,0.55)' }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--primary)"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H12v18H6.5A2.5 2.5 0 0 1 4 18.5v-13Z" strokeWidth="1.6" strokeLinejoin="round" /><path d="M20 5.5A2.5 2.5 0 0 0 17.5 3H12v18h5.5a2.5 2.5 0 0 0 2.5-2.5v-13Z" strokeWidth="1.6" strokeLinejoin="round" /></svg>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 1, flex: 1, minWidth: 0 }}>
-                  <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--muted)' }}>Lanjut Mushaf</span>
-                  <span style={{ fontSize: 12.5, fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{lastReadMushaf.chapterName} : {lastReadMushaf.page}</span>
-                </div>
-              </Link>
-            )}
-          </div>
-        )}
+          </section>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span className="section-label">{t('layanan')}</span>
-            <Link to="/lainnya" style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 11, fontWeight: 700, color: 'var(--primary)', textDecoration: 'none' }}>
-              {t('lihat_semua')}
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--primary)"><path d="m9 6 6 6-6 6" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-            </Link>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 8 }}>
-            {svcOrdered.map((s) => (
-              <Link key={s.to} to={s.to} onMouseEnter={s.prefetch} onTouchStart={s.prefetch} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, textDecoration: 'none', color: 'inherit' }}>
-                <div
-                  style={{
-                    width: 68,
-                    height: 68,
-                    borderRadius: 22,
-                    overflow: 'hidden',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    background: s.bg,
-                    boxShadow: '0 8px 16px rgba(15,32,25,0.14), inset 0 1px 0 rgba(255,255,255,0.5)',
-                    fontSize: 32,
-                    lineHeight: 1,
-                  }}
-                >
-                  {s.node ?? (s.icon ? <img src={s.icon} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : s.emoji)}
-                </div>
-                <span style={{ fontSize: 10.5, fontWeight: 700, textAlign: 'center' }}>{s.label || t(s.key)}</span>
-              </Link>
-            ))}
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span className="section-label">🕌 {t('donasi_kamu')}</span>
-            {/* [UI 2026-09-11] Was every active campaign stacked in full —
-                fine at 1-2, but this section has no cap and Home is
-                already long; same "peek + Lihat Semua" pattern the
-                Layanan section above already uses, once there's enough
-                to actually need it. */}
-            {donations && donations.length > 2 && (
-              <Link to="/donasi" style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 11, fontWeight: 700, color: 'var(--primary)', textDecoration: 'none' }}>
-                {t('lihat_semua')}
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--primary)"><path d="m9 6 6 6-6 6" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-              </Link>
-            )}
-          </div>
-          {donations === null && <SkeletonCard height={140} />}
-          {donations && donations.length === 0 && (
-            <EmptyState
-              icon="🕌"
-              title="Belum ada campaign aktif"
-              subtitle="Campaign donasi listrik masjid baru bakal muncul di sini begitu ada yang disetujui."
-            />
-          )}
-          {donations && donations.length > 0 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {donations.slice(0, 2).map((donation) => (
-                <DonationCard key={donation.id} donation={donation} />
+          <section>
+            <h2 style={{ ...sectionTitle, marginBottom: 12 }}>Jelajahi</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 10 }}>
+              {jelajahi.map((j) => (
+                <Link key={j.to} to={j.to} style={{ background: 'var(--card)', borderRadius: 20, padding: '14px 4px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, textDecoration: 'none', color: 'var(--ink)' }}>
+                  <div style={{ height: 30, display: 'flex', alignItems: 'center', position: 'relative' }}>{j.icon}{j.to === '/doa' && hasNewDoa && <span aria-hidden="true" className="unseen-dot" style={{ position: 'absolute', top: -2, right: -8, width: 8, height: 8, borderRadius: '50%', background: 'var(--danger)', border: '1.5px solid var(--card)' }} />}</div>
+                  <span style={{ fontSize: 11, fontWeight: 700, textAlign: 'center', lineHeight: 1.2 }}>{j.label}</span>
+                </Link>
               ))}
             </div>
-          )}
+          </section>
+
+          <InstallAppCard variant="banner" />
         </div>
-
-        {user && (
-          <div
-            id="amalan-harian"
-            style={{
-              borderRadius: 20,
-              boxShadow: highlightAmalan ? '0 0 0 2px var(--primary)' : 'none',
-              transition: 'box-shadow var(--dur-3) var(--ease)',
-            }}
-          >
-            <AmalanHarianCard uid={user.uid} />
-          </div>
-        )}
-
-        {user && <MoodCheckIn uid={user.uid} />}
-
-        {user && <AmalanHeatmap uid={user.uid} />}
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span className="section-label">🤲 Doa & Aminkan</span>
-            <Link to="/doa" style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 11, fontWeight: 700, color: 'var(--primary)', textDecoration: 'none' }}>
-              {t('lihat_semua')}
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--primary)"><path d="m9 6 6 6-6 6" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-            </Link>
-          </div>
-          {doas === null && (
-            <div style={{ display: 'flex', gap: 10, margin: '0 -20px', padding: '0 20px' }}>
-              <SkeletonCard height={100} radius={16} style={{ flex: 1 }} />
-              <SkeletonCard height={100} radius={16} style={{ flex: 1 }} />
-            </div>
-          )}
-          {doas && doas.length === 0 && (
-            <EmptyState
-              icon="🤲"
-              title="Belum ada doa"
-              subtitle="Jadilah yang pertama nulis doa buat diaminkan sahabat lain."
-              actionLabel="Tulis Doa"
-              actionTo="/doa"
-            />
-          )}
-          {doas && doas.length > 0 && (
-            <div className="hide-scrollbar" style={{ display: 'flex', gap: 10, overflowX: 'auto', scrollSnapType: 'x mandatory', margin: '0 -20px', padding: '0 20px' }}>
-              {doas.map((doa) => (
-                <DoaCard key={doa.id} doa={doa} compact />
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Very last thing on the page now, per an explicit ask — a
-            low-priority, dismiss-once nudge shouldn't compete with any
-            real content, Doa & Aminkan included, for attention. */}
-        <InstallAppCard variant="banner" />
       </PullToRefresh>
       </div>
       <BottomNav />

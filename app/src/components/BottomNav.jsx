@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useLang } from '../context/LangContext';
 import { IconHome, IconBook, IconHeart, IconKaaba, IconGrid } from './icons';
-import { watchHasNewDoa, watchHasNewDonasi } from '../lib/unseenBadges';
+import { watchHasNewDonasi } from '../lib/unseenBadges';
 
 function Dot() {
   return (
@@ -41,13 +41,12 @@ const ITEMS = [
 export default function BottomNav() {
   const { t } = useLang();
   const location = useLocation();
-  // Home surfaces both doa and donation feeds (see Home.jsx), so it badges
-  // on either being new; Donasi only cares about new campaigns. Neither
-  // is a real read/unread system — see lib/unseenBadges.js.
-  const [hasNewDoa, setHasNewDoa] = useState(false);
+  // Home shows the donation feed, so it badges on a new campaign (same as
+  // Donasi); the new-doa dot moved to Home's "Doa & Aminkan" tile along
+  // with the feed itself. Neither is a real read/unread system — see
+  // lib/unseenBadges.js.
   const [hasNewDonasi, setHasNewDonasi] = useState(false);
 
-  useEffect(() => watchHasNewDoa(setHasNewDoa), []);
   useEffect(() => watchHasNewDonasi(setHasNewDonasi), []);
 
   // Mirrors each NavLink's own exact-match `end` behavior (so the sliding
@@ -104,7 +103,7 @@ export default function BottomNav() {
           >
             <span className="nav-icon" style={{ position: 'relative', display: 'inline-flex' }}>
               <Icon strokeWidth="1.8" />
-              {to === '/' && (hasNewDoa || hasNewDonasi) && <Dot />}
+              {to === '/' && hasNewDonasi && <Dot />}
               {to === '/donasi' && hasNewDonasi && <Dot />}
             </span>
             <span>{t(labelKey)}</span>
