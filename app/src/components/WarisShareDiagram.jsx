@@ -6,7 +6,10 @@
 // bar reads the proportions correctly with zero extra layout math.
 const COLORS = ['#0d4d47', '#e8b84b', '#a8823c', '#4fbf82', '#6b4f22', '#2f6f67', '#c98a3a', '#8a5a9e'];
 
-export default function WarisShareDiagram({ results }) {
+export default function WarisShareDiagram({ results: allResults }) {
+  // Heirs barred from inheriting (e.g. anak murtad, fraction 0) stay in
+  // the list view but have no proportion to draw.
+  const results = allResults.filter((r) => r.fraction > 0);
   if (!results.length) return null;
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>

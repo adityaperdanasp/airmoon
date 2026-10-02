@@ -63,6 +63,7 @@ const WARNING_TEXT = {
   aul: "⚠️ Total bagian fardh melebihi harta (kasus 'aul) — semua bagian di bawah sudah diskalakan proporsional sesuai ketentuan fiqh.",
   radd: '⚠️ Total bagian fardh tidak mencapai keseluruhan harta dan tidak ada ahli waris ashabah yang menghabiskan sisanya — sisa sudah dikembalikan (radd) secara proporsional ke ahli waris fardh yang ada (selain suami/istri), sesuai ketentuan fiqh.',
   raddNoRecipient: '⚠️ Total bagian fardh tidak mencapai keseluruhan harta dan tidak ada ahli waris lain (selain suami/istri) untuk menerima pengembalian sisa (radd) — kasus ini butuh konsultasi ke ahli faraidh/ulama.',
+  anakMurtad: 'ℹ️ Anak yang murtad (keluar dari Islam) terhalang menerima warisan (mani\' al-irts: beda agama) — dihitung Rp 0, dan menurut pendapat jumhur dia dianggap tidak ada sehingga tidak mengubah bagian ahli waris lain. Cucu dari garis anak murtad tidak dihitung di sini; kalau ada kasus itu, konsultasikan ke ahli faraidh/ulama.',
   ahliWarisPengganti: 'ℹ️ Cucu di atas menggantikan posisi anak laki-laki yang telah wafat (ahli waris pengganti) — mengikuti pandangan yang juga dipakai Kompilasi Hukum Islam (KHI) di Indonesia; sebagian mazhab fiqih klasik punya pandangan berbeda soal ini. Kalkulator ini menggabungkan semua cucu pengganti jadi satu kelompok — kalau ada lebih dari satu anak laki-laki yang wafat dengan cucu masing-masing berbeda jumlah, konsultasikan ke ahli faraidh untuk presisi penuh.',
 };
 
@@ -83,6 +84,8 @@ export default function KalkulatorWaris() {
   const [hasNenek, setHasNenek] = useState(false);
   const [saudaraLaki, setSaudaraLaki] = useState(0);
   const [saudaraPerempuan, setSaudaraPerempuan] = useState(0);
+  const [anakLakiMurtad, setAnakLakiMurtad] = useState(0);
+  const [anakPerempuanMurtad, setAnakPerempuanMurtad] = useState(0);
   const [anakLakiWafatPengganti, setAnakLakiWafatPengganti] = useState(false);
   const [cucuLakiPengganti, setCucuLakiPengganti] = useState(0);
   const [cucuPerempuanPengganti, setCucuPerempuanPengganti] = useState(0);
@@ -127,6 +130,8 @@ export default function KalkulatorWaris() {
     setHasNenek(s.inputs.hasNenek ?? false);
     setSaudaraLaki(s.inputs.saudaraLaki ?? 0);
     setSaudaraPerempuan(s.inputs.saudaraPerempuan ?? 0);
+    setAnakLakiMurtad(s.inputs.anakLakiMurtad ?? 0);
+    setAnakPerempuanMurtad(s.inputs.anakPerempuanMurtad ?? 0);
     setAnakLakiWafatPengganti(s.inputs.anakLakiWafatPengganti ?? false);
     setCucuLakiPengganti(s.inputs.cucuLakiPengganti ?? 0);
     setCucuPerempuanPengganti(s.inputs.cucuPerempuanPengganti ?? 0);
@@ -139,7 +144,7 @@ export default function KalkulatorWaris() {
     const name = scenarioName.trim() || `Skenario ${scenarios.length + 1}`;
     setScenarios(saveWarisScenario(name, {
       hasSuami, jumlahIstri, anakLaki, anakPerempuan, hasAyah, hasIbu, hasKakek, hasNenek, saudaraLaki, saudaraPerempuan,
-      anakLakiWafatPengganti, cucuLakiPengganti, cucuPerempuanPengganti, harta, hutang, wasiat,
+      anakLakiWafatPengganti, cucuLakiPengganti, cucuPerempuanPengganti, anakLakiMurtad, anakPerempuanMurtad, harta, hutang, wasiat,
     }));
     setScenarioName('');
     setShowSaveScenario(false);
@@ -152,7 +157,7 @@ export default function KalkulatorWaris() {
     ? { results: [], warnings: [] }
     : calcWaris({
         hasSuami, jumlahIstri, anakLaki, anakPerempuan, hasAyah, hasIbu, hasKakek, hasNenek, saudaraLaki, saudaraPerempuan,
-        anakLakiWafatPengganti, cucuLakiPengganti, cucuPerempuanPengganti, totalHarta: hartaUntukWaris,
+        anakLakiWafatPengganti, cucuLakiPengganti, cucuPerempuanPengganti, anakLakiMurtad, anakPerempuanMurtad, totalHarta: hartaUntukWaris,
       });
 
   // Riwayat Perhitungan Otomatis (2026-10-01) — tersimpan otomatis tiap
@@ -166,14 +171,14 @@ export default function KalkulatorWaris() {
     clearTimeout(historyTimerRef.current);
     historyTimerRef.current = setTimeout(() => {
       setHistory(saveWarisHistoryEntry(
-        { hasSuami, jumlahIstri, anakLaki, anakPerempuan, hasAyah, hasIbu, hasKakek, hasNenek, saudaraLaki, saudaraPerempuan, anakLakiWafatPengganti, cucuLakiPengganti, cucuPerempuanPengganti },
+        { hasSuami, jumlahIstri, anakLaki, anakPerempuan, hasAyah, hasIbu, hasKakek, hasNenek, saudaraLaki, saudaraPerempuan, anakLakiWafatPengganti, cucuLakiPengganti, cucuPerempuanPengganti, anakLakiMurtad, anakPerempuanMurtad },
         hartaUntukWaris,
         results
       ));
     }, 1500);
     return () => clearTimeout(historyTimerRef.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- results is derived from the same inputs already listed; including it too would just re-run this identically
-  }, [hasSuami, jumlahIstri, anakLaki, anakPerempuan, hasAyah, hasIbu, hasKakek, hasNenek, saudaraLaki, saudaraPerempuan, anakLakiWafatPengganti, cucuLakiPengganti, cucuPerempuanPengganti, hartaUntukWaris, noHeirs]);
+  }, [hasSuami, jumlahIstri, anakLaki, anakPerempuan, hasAyah, hasIbu, hasKakek, hasNenek, saudaraLaki, saudaraPerempuan, anakLakiWafatPengganti, cucuLakiPengganti, cucuPerempuanPengganti, anakLakiMurtad, anakPerempuanMurtad, hartaUntukWaris, noHeirs]);
 
   // Bandingkan 2 Skenario Berdampingan — previously scenarios could only
   // be applied one at a time, overwriting the form; comparing two meant
@@ -182,7 +187,7 @@ export default function KalkulatorWaris() {
   // without touching the live form state above at all.
   function scenarioResult(s) {
     if (!s) return null;
-    const { hasSuami: hs, jumlahIstri: ji, anakLaki: al, anakPerempuan: ap, hasAyah: ha, hasIbu: hi, hasKakek: hk, hasNenek: hn, saudaraLaki: sl, saudaraPerempuan: sp, anakLakiWafatPengganti: alwp, cucuLakiPengganti: clp, cucuPerempuanPengganti: cpp, harta: h, hutang: hu, wasiat: wa } = s.inputs;
+    const { hasSuami: hs, jumlahIstri: ji, anakLaki: al, anakPerempuan: ap, hasAyah: ha, hasIbu: hi, hasKakek: hk, hasNenek: hn, saudaraLaki: sl, saudaraPerempuan: sp, anakLakiWafatPengganti: alwp, cucuLakiPengganti: clp, cucuPerempuanPengganti: cpp, anakLakiMurtad: alm, anakPerempuanMurtad: apm, harta: h, hutang: hu, wasiat: wa } = s.inputs;
     const grossHarta = Number(digitsOnly(String(h))) || 0;
     const hutangVal = Number(digitsOnly(String(hu ?? '0'))) || 0;
     const wasiatVal = Number(digitsOnly(String(wa ?? '0'))) || 0;
@@ -198,7 +203,7 @@ export default function KalkulatorWaris() {
       : {
           ...calcWaris({
             hasSuami: hs, jumlahIstri: ji, anakLaki: al, anakPerempuan: ap, hasAyah: ha, hasIbu: hi, hasKakek: hkEff, hasNenek: hnEff, saudaraLaki: slEff, saudaraPerempuan: spEff,
-            anakLakiWafatPengganti: alwpEff, cucuLakiPengganti: clpEff, cucuPerempuanPengganti: cppEff, totalHarta,
+            anakLakiWafatPengganti: alwpEff, cucuLakiPengganti: clpEff, cucuPerempuanPengganti: cppEff, anakLakiMurtad: alm ?? 0, anakPerempuanMurtad: apm ?? 0, totalHarta,
           }),
           totalHarta,
         };
@@ -222,6 +227,7 @@ export default function KalkulatorWaris() {
     setHasAyah(false); setHasIbu(false); setHasKakek(false); setHasNenek(false);
     setSaudaraLaki(0); setSaudaraPerempuan(0);
     setAnakLakiWafatPengganti(false); setCucuLakiPengganti(0); setCucuPerempuanPengganti(0);
+    setAnakLakiMurtad(0); setAnakPerempuanMurtad(0);
   }
 
   function handleKonsultasi() {
@@ -336,6 +342,13 @@ export default function KalkulatorWaris() {
           <Stepper label="Istri" value={jumlahIstri} onChange={setJumlahIstri} max={4} />
           <Stepper label="Anak Laki-laki" value={anakLaki} onChange={setAnakLaki} />
           <Stepper label="Anak Perempuan" value={anakPerempuan} onChange={setAnakPerempuan} />
+          <Stepper label="Anak Laki-laki Murtad" value={anakLakiMurtad} onChange={setAnakLakiMurtad} />
+          <Stepper label="Anak Perempuan Murtad" value={anakPerempuanMurtad} onChange={setAnakPerempuanMurtad} />
+          {(anakLakiMurtad > 0 || anakPerempuanMurtad > 0) && (
+            <span style={{ fontSize: 10.5, color: 'var(--muted-soft)', lineHeight: 1.5 }}>
+              Anak murtad tidak mewarisi dan dianggap tidak ada — tidak mengurangi bagian ahli waris lain. Isi di sini HANYA anak yang murtad; anak muslim tetap diisi di baris Anak Laki-laki/Perempuan di atas.
+            </span>
+          )}
           <ToggleRow label="Ayah" value={hasAyah} onChange={setHasAyah} />
           <ToggleRow label="Ibu" value={hasIbu} onChange={setHasIbu} />
           <ToggleRow label="Kakek (Ayah dari Ayah)" value={hasKakek} onChange={setHasKakek} />

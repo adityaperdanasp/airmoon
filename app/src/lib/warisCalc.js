@@ -67,8 +67,20 @@ export function calcWaris({
   hasSuami, jumlahIstri, anakLaki, anakPerempuan, hasAyah, hasIbu,
   hasKakek = false, hasNenek = false, saudaraLaki = 0, saudaraPerempuan = 0,
   anakLakiWafatPengganti = false, cucuLakiPengganti = 0, cucuPerempuanPengganti = 0,
+  anakLakiMurtad = 0, anakPerempuanMurtad = 0,
   totalHarta,
 }) {
+  // Anak murtad (keluar dari Islam) terhalang waris — mani' al-irts
+  // (beda agama). Menurut pendapat jumhur, ahli waris yang terhalang
+  // mani' dianggap TIDAK ADA sama sekali: dia tidak dapat bagian DAN
+  // tidak ikut mengubah bagian ahli waris lain (mis. ibu tidak turun
+  // ke 1/6, suami tidak turun ke 1/4, ayah tidak jadi fardh, gara-gara
+  // dia). Makanya dua param ini sengaja TIDAK dipakai di perhitungan
+  // mana pun di bawah — cuma buat ditampilkan sebagai baris Rp 0 +
+  // warning 'anakMurtad' di akhir, biar jelas dia memang dihitung
+  // terhalang, bukan lupa dimasukkan. Tidak mencakup: cucu dari anak
+  // murtad (sama-sama bukan ahli waris kalau garisnya lewat dia —
+  // diabaikan), dan harta si murtad sendiri kalau dia yang wafat.
   const hasPenggantiAnak = anakLakiWafatPengganti && (cucuLakiPengganti + cucuPerempuanPengganti) > 0;
   // The pengganti "slot" carries the deceased son's own hijab character
   // regardless of whether his representing children are boys or girls —
@@ -254,6 +266,16 @@ export function calcWaris({
       for (let i = 1; i <= cucuPerempuanPengganti; i++) {
         results.push({ label: cucuPerempuanPengganti > 1 ? `Cucu Perempuan (Pengganti) ${i}` : 'Cucu Perempuan (Pengganti)', fraction: perCucuUnit, amount: totalHarta * perCucuUnit });
       }
+    }
+  }
+
+  if (anakLakiMurtad > 0 || anakPerempuanMurtad > 0) {
+    warnings.push('anakMurtad');
+    for (let i = 1; i <= anakLakiMurtad; i++) {
+      results.push({ label: anakLakiMurtad > 1 ? `Anak Laki-laki ${i} (Murtad — tidak mewarisi)` : 'Anak Laki-laki (Murtad — tidak mewarisi)', fraction: 0, amount: 0 });
+    }
+    for (let i = 1; i <= anakPerempuanMurtad; i++) {
+      results.push({ label: anakPerempuanMurtad > 1 ? `Anak Perempuan ${i} (Murtad — tidak mewarisi)` : 'Anak Perempuan (Murtad — tidak mewarisi)', fraction: 0, amount: 0 });
     }
   }
 

@@ -204,4 +204,25 @@ describe('calcWaris', () => {
     });
     expect(results.some((r) => r.label.includes('Saudara'))).toBe(false);
   });
+  it('anak murtad gets Rp 0 and is treated as non-existent: no effect on anyone else\'s share', () => {
+    const base = { hasSuami: true, jumlahIstri: 0, anakLaki: 0, anakPerempuan: 0, hasAyah: false, hasIbu: true, totalHarta: 1_200_000 };
+    const without = calcWaris({ ...base });
+    const withMurtad = calcWaris({ ...base, anakLakiMurtad: 1, anakPerempuanMurtad: 1 });
+    // suami stays 1/2 and ibu stays 1/3 (not 1/4 / 1/6) — a murtad child doesn't count as "ada anak"
+    expect(withMurtad.results.find((r) => r.label === 'Suami').fraction).toBeCloseTo(1 / 2);
+    expect(withMurtad.results.find((r) => r.label === 'Ibu').fraction).toBeCloseTo(without.results.find((r) => r.label === 'Ibu').fraction);
+    const murtadRows = withMurtad.results.filter((r) => r.label.includes('Murtad'));
+    expect(murtadRows).toHaveLength(2);
+    expect(murtadRows.every((r) => r.fraction === 0 && r.amount === 0)).toBe(true);
+    expect(withMurtad.warnings).toContain('anakMurtad');
+    expect(withMurtad.grandTotal).toBeCloseTo(without.grandTotal);
+  });
+
+  it('a murtad anak laki-laki does not block ayah-as-ashabah or saudara the way a real son would', () => {
+    const { results } = calcWaris({
+      hasSuami: false, jumlahIstri: 0, anakLaki: 0, anakPerempuan: 0, hasAyah: false, hasIbu: false,
+      saudaraLaki: 1, anakLakiMurtad: 1, totalHarta: 1_000_000,
+    });
+    expect(results.find((r) => r.label.includes('Saudara Laki-laki')).fraction).toBeCloseTo(1);
+  });
 });
