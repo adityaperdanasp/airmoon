@@ -67,9 +67,9 @@ function ManualTransferSection({ donation, user, amounts }) {
     return (
       <button
         onClick={() => setOpen(true)}
-        style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: 11.5, textDecoration: 'underline', cursor: 'pointer', padding: 0 }}
+        style={{ background: 'none', border: 'none', color: 'var(--primary)', fontSize: 12, fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer', padding: 0, textAlign: 'left' }}
       >
-        atau transfer manual (GoPay/Mandiri)
+        Atau transfer manual (GoPay/Mandiri) ›
       </button>
     );
   }
@@ -208,9 +208,9 @@ function UpdatesAndGratitude({ donation, user }) {
     return (
       <button
         onClick={() => setOpen(true)}
-        style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: 11.5, textDecoration: 'underline', cursor: 'pointer', padding: 0 }}
+        style={{ background: 'none', border: 'none', color: 'var(--primary)', fontSize: 12, fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer', padding: 0, textAlign: 'left' }}
       >
-        Update & Ucapan Masjid
+        Update & ucapan masjid ›
       </button>
     );
   }
@@ -322,14 +322,14 @@ export default function DonationCard({ donation, amounts = [10000, 25000, 50000]
   }
 
   return (
-    <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 13, padding: 18 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: 18, borderRadius: 24, background: 'var(--card)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <div style={{ width: 42, height: 42, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: 'var(--cream)' }}>
-          <svg width="19" height="19" viewBox="0 0 24 24" fill="var(--gold-ink)" stroke="none"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z" /></svg>
+        <div style={{ width: 46, height: 46, borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: 'linear-gradient(145deg, #f6e3b0, #e8b84b)' }}>
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="#6b4a12" stroke="none"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z" /></svg>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <span style={{ fontSize: 14, fontWeight: 700 }}>{donation.title}</span>
-          <span style={{ fontSize: 11, color: 'var(--muted)' }}>#PLN-{donation.plnId} · Connect ke PLN Mobile</span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+          <span style={{ fontSize: 15, fontWeight: 800, lineHeight: 1.25 }}>{donation.title}</span>
+          <span style={{ fontSize: 11.5, color: 'var(--muted)' }}>#PLN-{donation.plnId} · Connect ke PLN Mobile</span>
         </div>
       </div>
 
@@ -342,18 +342,19 @@ export default function DonationCard({ donation, amounts = [10000, 25000, 50000]
           signal instead, shown on all of them equally, honestly
           reflecting what's actually true rather than implying a filter
           that doesn't exist. */}
-      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, alignSelf: 'flex-start', fontSize: 10, fontWeight: 700, color: 'var(--success)' }}>
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, alignSelf: 'flex-start', fontSize: 10.5, fontWeight: 700, color: 'var(--success)', background: 'var(--mint-soft)', padding: '5px 10px', borderRadius: 999 }}>
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m4 12 5 5L20 6" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" /></svg>
         Direview Tim airmoon
       </span>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <div style={{ width: '100%', height: 7, borderRadius: 999, overflow: 'hidden', background: 'var(--mint)' }}>
-          <div style={{ width: `${pct}%`, height: '100%', background: 'var(--accent)' }} />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}>
+          <span style={{ fontSize: 20, fontWeight: 800, letterSpacing: '-0.01em' }}>{formatRupiah(donation.collected)}</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--primary)' }}>{pct}%</span>
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--muted)' }}>
-          <span><strong style={{ color: 'var(--ink)' }}>{formatRupiah(donation.collected)}</strong> terkumpul</span>
-          <span>dari {formatRupiah(donation.target)}</span>
+        <div style={{ width: '100%', height: 8, borderRadius: 999, overflow: 'hidden', background: 'var(--border)' }}>
+          <div style={{ width: `${pct}%`, height: '100%', borderRadius: 999, background: 'linear-gradient(90deg, var(--primary), #e8b84b)', transition: 'width var(--dur-3) var(--ease)' }} />
         </div>
+        <div style={{ fontSize: 11.5, color: 'var(--muted)' }}>terkumpul dari {formatRupiah(donation.target)}</div>
         {donation.deadline && (() => {
           const daysLeft = Math.ceil((new Date(donation.deadline) - Date.now()) / 86400000);
           // Urgency only kicks in inside a real, close window (≤7 days,
@@ -374,8 +375,7 @@ export default function DonationCard({ donation, amounts = [10000, 25000, 50000]
         {amounts.map((amt) => (
           <button
             key={amt}
-            className="btn-outline"
-            style={{ flex: 1, padding: '11px 0', fontSize: 12, opacity: paying ? 0.6 : 1 }}
+            style={{ flex: 1, padding: '13px 0', fontSize: 13, fontWeight: 800, fontFamily: 'inherit', border: 'none', borderRadius: 999, background: 'var(--mint)', color: 'var(--primary)', cursor: 'pointer', opacity: paying ? 0.6 : 1 }}
             disabled={paying}
             onClick={() => handleGive(amt)}
           >
