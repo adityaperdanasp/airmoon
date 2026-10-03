@@ -12,6 +12,7 @@ export default function PrayerStrip({ timings, nextKey }) {
       onMouseEnter={() => import('../pages/JadwalSholat')}
       onTouchStart={() => import('../pages/JadwalSholat')}
       aria-label="Jadwal sholat"
+      className="prayer-strip"
       style={{ position: 'relative', display: 'flex', margin: '-46px 20px 0', padding: '14px 8px', borderRadius: 24, background: 'var(--card)', color: 'var(--ink)', textDecoration: 'none', border: '1px solid var(--border)', boxShadow: '0 12px 32px rgba(10,40,36,0.14)' }}
     >
       {ORDER.map(([key, label]) => {

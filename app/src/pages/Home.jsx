@@ -20,6 +20,7 @@ import ShortcutPickerSheet from '../components/ShortcutPickerSheet';
 import { getHomeShortcuts, saveHomeShortcuts, resetHomeShortcuts } from '../lib/homeShortcuts';
 import PrayerStrip from '../components/PrayerStrip';
 import HariIniCard from '../components/HariIniCard';
+import '../styles/homeBento.css';
 import { SkeletonCard } from '../components/Skeleton';
 import InstallAppCard from '../components/InstallAppCard';
 import EmptyState from '../components/EmptyState';
@@ -43,6 +44,10 @@ import { shouldShowChangelogSpotlight, markChangelogSpotlightSeen } from '../lib
 
 const dateFmt = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
+// One-line hint under the two wide Jelajahi tiles, for the shortcuts that
+// have one (the user can pick any features, most have no subtitle).
+const FEATURE_SUB = { '/quran': 'Baca & dengarkan', '/lainnya/kiblat': "Arah ke Ka'bah" };
+
 export default function Home() {
   const { user } = useAuth();
   const { t, lang } = useLang();
@@ -59,6 +64,12 @@ export default function Home() {
   const [lastReadAyat, setLastReadAyat] = useState(null);
   const [lastReadMushaf, setLastReadMushaf] = useState(null);
   const [searchParams] = useSearchParams();
+  // Marks <html> while Home is on screen: styles/homeBento.css scopes the
+  // glass/mesh look (and the portalled bottom nav's glass) to this screen.
+  useEffect(() => {
+    document.documentElement.dataset.screen = 'home';
+    return () => { delete document.documentElement.dataset.screen; };
+  }, []);
   const [highlightAmalan, setHighlightAmalan] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(() => !hasSeenOnboarding());
   // Only ever offered to signed-in users — submitFeedback() needs a uid,
@@ -251,9 +262,10 @@ export default function Home() {
       to: it.to,
       label: it.key ? t(it.key) : it.label,
       icon: it.node,
+      bg: it.bg,
       prefetch: it.prefetch,
     })),
-    { to: '/lainnya', label: 'Semua', icon: <span style={{ fontSize: 22, color: 'var(--primary)', fontWeight: 800, lineHeight: 1 }}>⋯</span> },
+    { to: '/lainnya', label: 'Semua', bg: 'var(--mint-soft)', icon: <span style={{ fontSize: 22, color: 'var(--primary)', fontWeight: 800, lineHeight: 1 }}>⋯</span> },
   ];
 
   const sectionTitle = { margin: 0, fontSize: 17, fontWeight: 800 };
@@ -261,6 +273,7 @@ export default function Home() {
 
   return (
     <div className="screen">
+      <div className="home-glow" aria-hidden="true" />
       <div className="screen-content" style={{ padding: 0, gap: 0, paddingBottom: 'calc(130px + env(safe-area-inset-bottom))' }}>
       <PullToRefresh onRefresh={handlePullRefresh}>
         <HomeHero
@@ -317,27 +330,31 @@ export default function Home() {
             </div>
           )}
 
-          {user && <HariIniCard uid={user.uid} forceOpen={highlightAmalan} timings={prayerData?.timings} />}
-
-          <section>
-            <h2 style={{ ...sectionTitle, marginBottom: 12 }}>Lanjutkan</h2>
-            <div className="hide-scrollbar" style={{ display: 'flex', gap: 12, overflowX: 'auto', margin: '0 -20px', padding: '0 20px' }}>
-              {lanjutkan.map((c) => (
-                <Link key={c.key} to={c.to} state={c.state} onMouseEnter={c.prefetch} onTouchStart={c.prefetch} style={{ flexShrink: 0, width: 150, borderRadius: 22, background: c.bg, padding: 14, display: 'flex', flexDirection: 'column', gap: 18, textDecoration: 'none', color: 'var(--ink)' }}>
-                  {c.icon}
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: 14, fontWeight: 800 }}>{c.title}</div>
-                    <div style={{ fontSize: 11.5, color: 'var(--muted)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.sub}</div>
+          {/* Bento: Hari ini + Lanjutkan cells (an odd last cell spans the row),
+              then Berbagi and Jelajahi. Styles live in styles/homeBento.css. */}
+          <div className="bento">
+            {user && <HariIniCard uid={user.uid} forceOpen={highlightAmalan} timings={prayerData?.timings} />}
+            {lanjutkan.map((c, i) => {
+              const cells = lanjutkan.length + 1; // + the Hari ini card
+              const last = i === lanjutkan.length - 1;
+              const wide = cells % 2 === 1 && last;
+              return (
+                <Link key={c.key} to={c.to} state={c.state} onMouseEnter={c.prefetch} onTouchStart={c.prefetch} className={`glass b-card b-card-link${wide ? ' b-card-wide' : ''}`}>
+                  <div className="j-plate" style={{ '--plate': c.bg }}>{c.icon}</div>
+                  <div>
+                    <div className="b-eyebrow">Lanjutkan</div>
+                    <div className="b-title">{c.title}</div>
+                    <div className="b-sub">{c.sub}</div>
                   </div>
                 </Link>
-              ))}
-            </div>
-          </section>
+              );
+            })}
+          </div>
 
           <section>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
-              <h2 style={sectionTitle}>Berbagi</h2>
-              <button onClick={() => setShowSedekahHistory((v) => !v)} aria-expanded={showSedekahHistory} style={{ background: 'none', border: 'none', padding: 0, fontSize: 12, fontFamily: 'inherit', color: 'var(--primary)', fontWeight: 700, cursor: 'pointer' }}>
+              <h2 className="h-sec" style={sectionTitle}>Berbagi</h2>
+              <button className="h-pill" onClick={() => setShowSedekahHistory((v) => !v)} aria-expanded={showSedekahHistory} style={{ background: 'none', border: 'none', padding: 0, fontSize: 12, fontFamily: 'inherit', color: 'var(--primary)', fontWeight: 700, cursor: 'pointer' }}>
                 Sedekahmu <CountUp value={mySedekahTotal} formatter={formatRupiah} /> · {showSedekahHistory ? 'Tutup' : 'Rincian'}
               </button>
             </div>
@@ -347,7 +364,7 @@ export default function Home() {
                   <EmptyState icon="💝" title="Belum ada riwayat sedekah" subtitle="Yuk mulai sedekah hari ini, sekecil apapun." actionLabel="Lihat Campaign" actionTo="/donasi" />
                 ) : (
                   myContributions.map((c) => (
-                    <div key={c.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', borderRadius: 14, background: 'var(--card)' }}>
+                    <div key={c.id} className="glass" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', borderRadius: 18 }}>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                         <span style={{ fontSize: 13, fontWeight: 700 }}>{c.donationTitle}</span>
                         <span style={{ fontSize: 11, color: 'var(--muted)' }}>{c.createdAt ? dateFmt.format(c.createdAt.toDate()) : 'Baru saja'}</span>
@@ -372,21 +389,36 @@ export default function Home() {
 
           <section>
             <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 12 }}>
-              <h2 style={sectionTitle}>Jelajahi</h2>
-              <button
-                onClick={() => setShowShortcutPicker(true)}
-                style={{ background: 'none', border: 'none', padding: '4px 0', fontSize: 12, fontWeight: 700, color: 'var(--primary)', cursor: 'pointer', fontFamily: 'inherit' }}
-              >
+              <h2 className="h-sec" style={sectionTitle}>Jelajahi</h2>
+              <button className="h-pill" onClick={() => setShowShortcutPicker(true)} style={{ background: 'none', border: 'none', padding: '4px 0', fontSize: 12, fontWeight: 700, color: 'var(--primary)', cursor: 'pointer', fontFamily: 'inherit' }}>
                 Atur
               </button>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 10 }}>
-              {jelajahi.map((j) => (
-                <Link key={j.to} to={j.to} onMouseEnter={j.prefetch} onTouchStart={j.prefetch} style={{ background: 'var(--card)', borderRadius: 20, padding: '14px 4px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, textDecoration: 'none', color: 'var(--ink)' }}>
-                  <div style={{ height: 30, display: 'flex', alignItems: 'center', position: 'relative' }}>{j.icon}{j.to === '/doa' && hasNewDoa && <span aria-hidden="true" className="unseen-dot" style={{ position: 'absolute', top: -2, right: -8, width: 8, height: 8, borderRadius: '50%', background: 'var(--danger)', border: '1.5px solid var(--card)' }} />}</div>
-                  <span style={{ fontSize: 11, fontWeight: 700, textAlign: 'center', lineHeight: 1.2 }}>{j.label}</span>
-                </Link>
-              ))}
+            <div className="b-jel">
+              {jelajahi.map((j, i) => {
+                const feat = i < 2; // first two are wider, icon beside text
+                // 6-column base: wide = 3, small = 2 (three per row). A short
+                // last row stretches its tiles so there is never a gap.
+                const small = jelajahi.length - 2;
+                const rem = small % 3;
+                const idxSmall = i - 2;
+                let span = feat ? 3 : 2;
+                if (!feat && rem === 1 && idxSmall === small - 1) span = 6;
+                if (!feat && rem === 2 && idxSmall >= small - 2) span = 3;
+                const sub = feat ? FEATURE_SUB[j.to] : null;
+                return (
+                  <Link key={j.to} to={j.to} onMouseEnter={j.prefetch} onTouchStart={j.prefetch} className={`glass b-tile${feat ? ' b-tile-feat' : ''}${span > 2 && !feat ? ' b-tile-stretch' : ''}`} style={{ gridColumn: `span ${span}` }}>
+                    <div className="j-plate" style={{ '--plate': j.bg, position: 'relative' }}>
+                      {j.icon}
+                      {j.to === '/doa' && hasNewDoa && <span aria-hidden="true" className="unseen-dot" style={{ position: 'absolute', top: -3, right: -3, width: 9, height: 9, borderRadius: '50%', background: 'var(--danger)', border: '1.5px solid var(--card)' }} />}
+                    </div>
+                    <span className="b-label">
+                      {j.label}
+                      {sub && <span className="b-sub" style={{ display: 'block', fontWeight: 500 }}>{sub}</span>}
+                    </span>
+                  </Link>
+                );
+              })}
             </div>
           </section>
 

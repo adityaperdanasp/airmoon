@@ -66,6 +66,7 @@ function ManualTransferSection({ donation, user, amounts }) {
   if (!open) {
     return (
       <button
+        className="don-link"
         onClick={() => setOpen(true)}
         style={{ background: 'none', border: 'none', color: 'var(--primary)', fontSize: 12, fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer', padding: 0, textAlign: 'left' }}
       >
@@ -207,6 +208,7 @@ function UpdatesAndGratitude({ donation, user }) {
   if (!open) {
     return (
       <button
+        className="don-link"
         onClick={() => setOpen(true)}
         style={{ background: 'none', border: 'none', color: 'var(--primary)', fontSize: 12, fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer', padding: 0, textAlign: 'left' }}
       >
@@ -322,14 +324,15 @@ export default function DonationCard({ donation, amounts = [10000, 25000, 50000]
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: 18, borderRadius: 24, background: 'var(--card)' }}>
+    <div className="don-card" style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: 18, borderRadius: 24, background: 'var(--card)' }}>
+      <div className="don-photo" aria-hidden="true" style={{ backgroundImage: 'url(/photos/page-cari-masjid.jpg)' }} />
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <div style={{ width: 46, height: 46, borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: 'linear-gradient(145deg, #f6e3b0, #e8b84b)' }}>
           <svg width="21" height="21" viewBox="0 0 24 24" fill="#6b4a12" stroke="none"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z" /></svg>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
-          <span style={{ fontSize: 15, fontWeight: 800, lineHeight: 1.25 }}>{donation.title}</span>
-          <span style={{ fontSize: 11.5, color: 'var(--muted)' }}>#PLN-{donation.plnId} · Connect ke PLN Mobile</span>
+          <span className="don-title" style={{ fontSize: 15, fontWeight: 800, lineHeight: 1.25 }}>{donation.title}</span>
+          <span className="don-sub" style={{ fontSize: 11.5, color: 'var(--muted)' }}>#PLN-{donation.plnId} · Connect ke PLN Mobile</span>
         </div>
       </div>
 
@@ -348,13 +351,13 @@ export default function DonationCard({ donation, amounts = [10000, 25000, 50000]
       </span>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}>
-          <span style={{ fontSize: 20, fontWeight: 800, letterSpacing: '-0.01em' }}>{formatRupiah(donation.collected)}</span>
-          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--primary)' }}>{pct}%</span>
+          <span className="don-amount" style={{ fontSize: 20, fontWeight: 800, letterSpacing: '-0.01em' }}>{formatRupiah(donation.collected)}</span>
+          <span className="don-pct" style={{ fontSize: 12, fontWeight: 700, color: 'var(--primary)' }}>{pct}%</span>
         </div>
-        <div style={{ width: '100%', height: 8, borderRadius: 999, overflow: 'hidden', background: 'var(--border)' }}>
+        <div className="don-bar" style={{ width: '100%', height: 8, borderRadius: 999, overflow: 'hidden', background: 'var(--border)' }}>
           <div style={{ width: `${pct}%`, height: '100%', borderRadius: 999, background: 'linear-gradient(90deg, var(--primary), #e8b84b)', transition: 'width var(--dur-3) var(--ease)' }} />
         </div>
-        <div style={{ fontSize: 11.5, color: 'var(--muted)' }}>terkumpul dari {formatRupiah(donation.target)}</div>
+        <div className="don-meta" style={{ fontSize: 11.5, color: 'var(--muted)' }}>terkumpul dari {formatRupiah(donation.target)}</div>
         {donation.deadline && (() => {
           const daysLeft = Math.ceil((new Date(donation.deadline) - Date.now()) / 86400000);
           // Urgency only kicks in inside a real, close window (≤7 days,
@@ -363,7 +366,7 @@ export default function DonationCard({ donation, amounts = [10000, 25000, 50000]
           // entirely (not this card's job to handle).
           const urgent = daysLeft >= 0 && daysLeft <= 7;
           return (
-            <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 10.5, fontWeight: urgent ? 700 : 400, color: urgent ? 'var(--danger)' : 'var(--muted)' }}>
+            <span className="don-meta" style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 10.5, fontWeight: urgent ? 700 : 400, color: urgent ? 'var(--danger)' : 'var(--muted)' }}>
               {urgent && <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--danger)', flexShrink: 0 }} />}
               Batas waktu {dateFmt.format(new Date(donation.deadline))}
               {urgent && ` · ${daysLeft === 0 ? 'hari ini!' : `${daysLeft} hari lagi`}`}
@@ -375,6 +378,7 @@ export default function DonationCard({ donation, amounts = [10000, 25000, 50000]
         {amounts.map((amt) => (
           <button
             key={amt}
+            className="don-chip"
             style={{ flex: 1, padding: '13px 0', fontSize: 13, fontWeight: 800, fontFamily: 'inherit', border: 'none', borderRadius: 999, background: 'var(--mint)', color: 'var(--primary)', cursor: 'pointer', opacity: paying ? 0.6 : 1 }}
             disabled={paying}
             onClick={() => handleGive(amt)}

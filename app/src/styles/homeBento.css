@@ -1,0 +1,105 @@
+/* Home, bento + glass (2026-10-03).
+   Scoped by <html data-screen="home">, which Home sets while it is mounted
+   (the bottom nav and donation card are shared with other screens, so their
+   Home look hangs off that attribute instead of a wrapper class).
+   Type scale used throughout: eyebrow 10.5 / title 18 / label 12 / body
+   12.5 / caption 11.5. Display numbers and titles are weight 700. */
+
+.don-photo, .home-glow { display: none; }
+
+html[data-screen='home'] {
+  --b-text2: color-mix(in srgb, var(--ink) 70%, transparent);
+  --b-text3: color-mix(in srgb, var(--ink) 52%, transparent);
+}
+
+/* ---- Mesh background -------------------------------------------------- */
+html[data-screen='home'] .screen { position: relative; }
+html[data-screen='home'] .screen-content { position: relative; z-index: 1; }
+html[data-screen='home'] .home-glow {
+  display: block; position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
+  background:
+    radial-gradient(460px 380px at 95% 30%, rgba(214,160,70,.42), transparent 68%),
+    radial-gradient(420px 360px at -5% 52%, rgba(34,140,118,.40), transparent 68%),
+    radial-gradient(440px 380px at 85% 72%, rgba(112,76,190,.34), transparent 68%),
+    radial-gradient(420px 340px at 5% 92%, rgba(214,160,70,.28), transparent 68%);
+}
+
+/* ---- Glass surface ---------------------------------------------------- */
+.glass { border-radius: 30px; }
+html[data-screen='home'] .glass,
+html[data-screen='home'] .don-card,
+html[data-screen='home'] .prayer-strip {
+  background: color-mix(in srgb, var(--ink) 8%, transparent) !important;
+  -webkit-backdrop-filter: blur(22px) saturate(150%); backdrop-filter: blur(22px) saturate(150%);
+  border: 1px solid color-mix(in srgb, var(--ink) 15%, transparent) !important;
+  box-shadow: 0 12px 34px rgba(0,0,0,.28), inset 0 1px 0 color-mix(in srgb, #fff 16%, transparent);
+}
+/* The prayer strip straddles the sky and the page: a see-through fill let
+   the sky wash the times out, so it gets a firmer surface. */
+html[data-screen='home'] .prayer-strip { background: color-mix(in srgb, var(--bg) 78%, transparent) !important; }
+html[data-screen='home'] .bottomnav {
+  background: color-mix(in srgb, var(--bg) 45%, transparent) !important;
+  -webkit-backdrop-filter: blur(26px) saturate(160%); backdrop-filter: blur(26px) saturate(160%);
+  border: 1px solid color-mix(in srgb, var(--ink) 16%, transparent) !important;
+}
+
+/* ---- Type ------------------------------------------------------------- */
+.b-eyebrow { font-size: 10.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--b-text3, var(--muted)); line-height: 1; }
+.b-num { font-size: 52px; line-height: 1; font-weight: 700; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+.b-num-unit { font-size: 18px; font-weight: 600; margin-left: 5px; color: var(--b-text3, var(--muted)); }
+.b-title { display: block; font-size: 18px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.2; margin-top: 8px; text-wrap: balance; }
+.b-sub { font-size: 12px; font-weight: 500; line-height: 1.4; color: var(--b-text2, var(--muted)); margin-top: 3px; }
+.b-label { font-size: 12px; font-weight: 600; line-height: 1.25; text-wrap: balance; }
+html[data-screen='home'] .h-sec { font-size: 19px !important; font-weight: 700 !important; letter-spacing: -0.01em !important; }
+html[data-screen='home'] .h-pill { padding: 5px 12px !important; border-radius: 999px; font-size: 11.5px !important; font-weight: 600 !important; color: var(--b-text2) !important; background: color-mix(in srgb, var(--ink) 10%, transparent) !important; }
+
+/* ---- Icon plate ------------------------------------------------------- */
+.j-plate { display: flex; align-items: center; justify-content: center; flex-shrink: 0; border-radius: 14px; background: var(--plate); box-shadow: inset 0 1px 0 rgba(255,255,255,.3), 0 6px 14px rgba(0,0,0,.22); }
+
+/* ---- Bento cells (Hari ini + Lanjutkan) ------------------------------- */
+.bento { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.b-card { padding: 18px; min-height: 172px; display: flex; flex-direction: column; gap: 12px; }
+.b-card-link { justify-content: space-between; gap: 14px; text-decoration: none; color: var(--ink); }
+.b-card-link .j-plate { width: 48px; height: 48px; border-radius: 16px; }
+.b-card-wide { grid-column: span 2; min-height: 0; flex-direction: row; align-items: center; justify-content: flex-start; gap: 14px; }
+.b-card-wide .b-title { margin-top: 6px; }
+.b-more { background: none; border: none; padding: 0; font: inherit; font-size: 11.5px; font-weight: 600; color: var(--b-text2); cursor: pointer; }
+.b-bar { height: 7px; border-radius: 999px; background: color-mix(in srgb, var(--ink) 12%, transparent); overflow: hidden; }
+.b-bar > div { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--primary), #f0cd7b); box-shadow: 0 0 12px rgba(232,184,75,.6); transition: width var(--dur-3) var(--ease); }
+.b-dot { width: 28px; height: 28px; border-radius: 50%; padding: 0; font-family: inherit; font-size: 11px; font-weight: 700; }
+
+/* ---- Donation card (Home only) ---------------------------------------- */
+html[data-screen='home'] .don-card { border-radius: 30px !important; position: relative; overflow: hidden; padding-top: 0 !important; gap: 14px !important; padding-bottom: 18px !important; }
+html[data-screen='home'] .don-photo {
+  display: block; height: 100px; margin: 0 -18px; background-size: cover; background-position: center 35%;
+  -webkit-mask-image: linear-gradient(#000 45%, transparent); mask-image: linear-gradient(#000 45%, transparent);
+}
+/* Dark theme gets the dusk photo; the daylight one is a bright blue block there. */
+html[data-theme='dark'][data-screen='home'] .don-photo { background-image: url(/photos/home-dark-1.jpg) !important; }
+html[data-screen='home'] .don-title { font-size: 16px !important; font-weight: 700 !important; letter-spacing: -0.01em; }
+html[data-screen='home'] .don-sub { font-size: 11.5px !important; color: var(--b-text3) !important; }
+html[data-screen='home'] .don-amount { font-size: 30px !important; font-weight: 700 !important; letter-spacing: -0.03em !important; font-variant-numeric: tabular-nums; }
+html[data-screen='home'] .don-bar { height: 12px !important; box-shadow: 0 0 18px rgba(232,184,75,.5); }
+html[data-screen='home'] .don-pct { font-size: 11.5px !important; font-weight: 700 !important; padding: 4px 10px; border-radius: 999px; background: color-mix(in srgb, var(--gold-ink) 22%, transparent); color: var(--gold-ink) !important; align-self: center; }
+html[data-screen='home'] .don-meta { font-size: 11.5px !important; color: var(--b-text2) !important; line-height: 1.4; }
+html[data-screen='home'] .don-meta + .don-meta { color: var(--b-text3) !important; }
+html[data-screen='home'] .don-chip { background: color-mix(in srgb, var(--ink) 10%, transparent) !important; color: var(--ink) !important; border: 1px solid color-mix(in srgb, var(--ink) 16%, transparent) !important; font-size: 13px !important; font-weight: 600 !important; padding: 12px 0 !important; }
+html[data-screen='home'] .don-link {
+  width: 100%; display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 14px !important; border-radius: 16px;
+  background: color-mix(in srgb, var(--ink) 6%, transparent) !important;
+  color: var(--b-text2) !important; font-size: 12px !important; font-weight: 600 !important;
+}
+html[data-screen='home'] .don-link + .don-link { margin-top: -4px; }
+
+/* ---- Jelajahi: two wide tiles, then a plain grid ----------------------
+   6-column base (wide = 3, small = 2); Home stretches a short last row.
+   Colour comes only from the icon plate, never from the tile surface. */
+.b-jel { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; }
+.b-tile { border-radius: 24px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 9px; padding: 14px 4px 12px; min-height: 96px; text-align: center; text-decoration: none; color: var(--ink); }
+.b-tile .j-plate { width: 44px; height: 44px; }
+.b-tile .b-label { font-size: 11.5px; font-weight: 600; }
+.b-tile-feat, .b-tile-stretch { flex-direction: row; justify-content: flex-start; gap: 12px; padding: 14px; min-height: 76px; text-align: left; }
+.b-tile-feat .b-label { font-size: 14px; font-weight: 700; letter-spacing: -0.01em; }
+.b-tile-feat .b-sub { font-size: 11.5px; margin-top: 2px; }
+.b-tile-stretch .b-label { font-size: 13px; font-weight: 700; }

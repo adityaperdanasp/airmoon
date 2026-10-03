@@ -6,22 +6,14 @@ import AmalanHarianCard from './AmalanHarianCard';
 import MoodCheckIn from './MoodCheckIn';
 import AmalanHeatmap from './AmalanHeatmap';
 
-function Ring({ value, max }) {
-  const r = 30;
-  const c = 2 * Math.PI * r;
-  return (
-    <svg width="76" height="76" viewBox="0 0 76 76" aria-label={`${value} dari ${max} selesai`}>
-      <circle cx="38" cy="38" r={r} fill="none" stroke="var(--border)" strokeWidth="7" />
-      <circle cx="38" cy="38" r={r} fill="none" stroke="var(--primary)" strokeWidth="7" strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - value / max)} transform="rotate(-90 38 38)" style={{ transition: 'stroke-dashoffset var(--dur-3) var(--ease)' }} />
-      <text x="38" y="43" textAnchor="middle" fontSize="17" fontWeight="800" fill="var(--ink)">{value}/{max}</text>
-    </svg>
-  );
-}
+const INITIAL = { subuh: 'S', dzuhur: 'D', ashar: 'A', maghrib: 'M', isya: 'I' };
 
-// "Hari ini": today's ibadah as one ring + the five sholat as tappable
-// chips. "Lihat semua" opens the full Amalan Harian card (tilawah, dzikir,
-// share, badges) plus the mood check-in and the 5-week heatmap — they
-// moved in here from Home's main column, nothing was removed.
+// "Hari ini": today's ibadah as one big number, a progress bar and the
+// five sholat as tappable dots, sized as a cell of Home's bento grid.
+// "Lihat semua" opens the full Amalan Harian card (tilawah, dzikir, share,
+// badges) plus the mood check-in and the 5-week heatmap as a full-width
+// block at the end of the grid (`order: 99`), so nothing was removed.
+// A sholat whose time is over is locked and dimmed (lib/ibadahWindows.js).
 export default function HariIniCard({ uid, forceOpen, timings }) {
   const [amalan, setAmalan] = useState({ sholat: {}, tilawah: false });
   const [open, setOpen] = useState(false);
@@ -33,52 +25,64 @@ export default function HariIniCard({ uid, forceOpen, timings }) {
   const now = useMinuteTick();
   const locks = ibadahLocks(timings, now);
   const score = scoreForDay(amalan);
-  const left = DAILY_POINTS_MAX - score;
 
   return (
-    <section id="amalan-harian">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
-        <h2 style={{ margin: 0, fontSize: 17, fontWeight: 800 }}>Hari ini</h2>
-        <button onClick={() => setOpen((v) => !v)} aria-expanded={open} style={{ background: 'none', border: 'none', padding: 0, fontSize: 12, fontFamily: 'inherit', color: 'var(--primary)', fontWeight: 700, cursor: 'pointer' }}>
-          {open ? 'Tutup' : 'Lihat semua'}
-        </button>
-      </div>
-      <div style={{ background: 'var(--card)', borderRadius: 24, padding: 18, display: 'flex', gap: 16, alignItems: 'center' }}>
-        <Ring value={score} max={DAILY_POINTS_MAX} />
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 14.5, fontWeight: 700, lineHeight: 1.35 }}>{left === 0 ? 'Alhamdulillah, semua beres hari ini' : `Tinggal ${left} lagi, lanjut yuk`}</div>
-          <div style={{ display: 'flex', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
-            {SHOLAT_KEYS.map((k) => {
-              const done = !!amalan.sholat?.[k];
-              // Time over: can't be toggled any more. A prayer already
-              // ticked stays as a record; one that was missed is dimmed.
-              const locked = locks[k];
-              return (
-                <button
-                  key={k}
-                  aria-pressed={done}
-                  disabled={locked}
-                  title={locked ? LOCK_HINT[k] : undefined}
-                  onClick={() => {
-                    hapticTick();
-                    setSholatDone(uid, k, !done);
-                  }}
-                  style={{ fontSize: 10.5, fontFamily: 'inherit', fontWeight: 700, padding: '4px 9px', borderRadius: 999, cursor: locked ? 'not-allowed' : 'pointer', opacity: locked && !done ? 0.4 : 1, background: done ? 'var(--mint-soft)' : 'transparent', color: done ? 'var(--primary)' : 'var(--muted)', border: done ? '1px solid transparent' : '1px dashed var(--border)' }}
-                >
-                  {done ? '✓ ' : ''}{SHOLAT_LABELS[k]}
-                </button>
-              );
-            })}
-          </div>
+    <>
+      <section id="amalan-harian" className="glass b-card">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span className="b-eyebrow">Hari ini</span>
+          <button
+            className="b-more"
+            onClick={() => setOpen((v) => !v)}
+            aria-expanded={open}
+          >
+            {open ? 'Tutup' : 'Lihat semua'}
+          </button>
         </div>
-      </div>
+        <div style={{ display: 'flex', alignItems: 'baseline' }}>
+          <span className="b-num">{score}</span>
+          <span className="b-num-unit">/{DAILY_POINTS_MAX}</span>
+        </div>
+        <div className="b-bar" role="progressbar" aria-valuenow={score} aria-valuemax={DAILY_POINTS_MAX} aria-label="Progress ibadah hari ini">
+          <div style={{ width: `${(score / DAILY_POINTS_MAX) * 100}%` }} />
+        </div>
+        <div style={{ display: 'flex', gap: 6, marginTop: 'auto' }}>
+          {SHOLAT_KEYS.map((k) => {
+            const done = !!amalan.sholat?.[k];
+            const locked = locks[k];
+            return (
+              <button
+                key={k}
+                className="b-dot"
+                aria-pressed={done}
+                aria-label={SHOLAT_LABELS[k]}
+                disabled={locked}
+                title={locked ? LOCK_HINT[k] : SHOLAT_LABELS[k]}
+                onClick={() => {
+                  hapticTick();
+                  setSholatDone(uid, k, !done);
+                }}
+                style={{
+                  border: done ? 'none' : '1px dashed var(--border)',
+                  background: done ? 'var(--primary)' : 'transparent',
+                  color: done ? 'var(--on-primary)' : 'var(--muted)',
+                  opacity: locked && !done ? 0.35 : 1,
+                  cursor: locked ? 'not-allowed' : 'pointer',
+                }}
+              >
+                {done ? '✓' : INITIAL[k]}
+              </button>
+            );
+          })}
+        </div>
+      </section>
       {open && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 14 }}>
+        <div style={{ gridColumn: '1 / -1', order: 99, display: 'flex', flexDirection: 'column', gap: 14 }}>
           <AmalanHarianCard uid={uid} locks={locks} />
           <MoodCheckIn uid={uid} />
           <AmalanHeatmap uid={uid} />
         </div>
       )}
-    </section>
+    </>
   );
 }
