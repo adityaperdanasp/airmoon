@@ -8,8 +8,6 @@ export const JENAZAH_BUDGET_ITEMS = [
   { key: 'ambulans', label: 'Ambulans Jenazah', default: 500000 },
   { key: 'penggaliKubur', label: 'Jasa Penggalian Kubur', default: 500000 },
   { key: 'lahanMakam', label: 'Lahan Makam (kalau bukan tanah wakaf/keluarga)', default: 1500000 },
-  { key: 'tendaDuka', label: 'Tenda & Kursi Rumah Duka (opsional)', default: 400000 },
-  { key: 'konsumsi', label: 'Konsumsi Tahlilan/Takziyah (opsional)', default: 500000 },
 ];
 
 export function totalJenazahBudget(amounts) {

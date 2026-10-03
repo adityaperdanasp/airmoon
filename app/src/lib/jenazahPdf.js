@@ -55,7 +55,7 @@ export function exportJenazahPdf({ checklist, kafanResult }) {
   ${stepsHtml}
   ${checklistHtml ? `<h2>Checklist Perlengkapan</h2>${checklistHtml}` : ''}
   ${kafanHtml}
-  <p class="footer">Panduan umum sesuai pendapat mayoritas mazhab Sunni — praktik detail bisa beda tipis antar daerah/ormas. Kalau ada kasus khusus, tetep konsultasi ke ustadz/DKM setempat.</p>
+  <p class="footer">Disusun mengikuti Al-Qur'an dan sunnah yang shahih menurut pemahaman salaf (rujukan: Muslim.or.id, Al-Manhaj, Rumaysho, Yufid). Untuk kasus khusus, tanyakan ke ustadz sunnah setempat.</p>
   <script>window.onload = () => { window.print(); };</script>
 </body>
 </html>`);

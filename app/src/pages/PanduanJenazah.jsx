@@ -5,11 +5,10 @@ import ToggleSwitch from '../components/ToggleSwitch';
 import { useLang } from '../context/LangContext';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { JENAZAH_STEPS, JENAZAH_KASUS_KHUSUS } from '../data/jenazahGuide';
+import { JENAZAH_STEPS, JENAZAH_KASUS_KHUSUS, JENAZAH_HINDARI } from '../data/jenazahGuide';
 import { JENAZAH_CHECKLIST_GROUPS, loadJenazahChecklist, toggleJenazahChecklistItem, loadJenazahStepProgress, toggleJenazahStepDone } from '../lib/jenazahChecklist';
 import { calcKebutuhanKafan } from '../lib/kafanCalc';
 import { hapticTick, hapticSuccess } from '../lib/haptics';
-import { watchTahlilanReminder, setTahlilanReminder, clearTahlilanReminder, hariKeTahlilan } from '../lib/tahlilanReminder';
 import { loadWasiatCatatan, saveWasiatCatatan } from '../lib/wasiatCatatan';
 import { JENAZAH_BUDGET_ITEMS, totalJenazahBudget, defaultJenazahBudgetAmounts } from '../lib/jenazahBudget';
 import { exportJenazahPdf } from '../lib/jenazahPdf';
@@ -39,9 +38,7 @@ import { formatRupiah } from '../lib/zakat';
 // is active.
 //
 // Extended again, same day (2nd "gas kerjain smua" batch), with 5 more:
-// Pengingat Tahlilan (7/40/100 hari — sets a field on users/{uid},
-// checked by a new daily-cron function in api/check-campaign-
-// deadlines.js), Catatan Wasiat & Preferensi Pemakaman (a plain personal
+// Catatan Wasiat & Preferensi Pemakaman (a plain personal
 // note field, NOT a legal document), Kalkulator Estimasi Biaya (editable
 // line items with sensible defaults, clearly not fixed pricing), Panduan
 // Kasus Khusus (bayi/anak, kecelakaan, luar kota/negeri — static content
@@ -62,11 +59,6 @@ export default function PanduanJenazah() {
   const [tinggiCm, setTinggiCm] = useState('165');
   const [gender, setGender] = useState('pria');
 
-  const [showTahlilan, setShowTahlilan] = useState(false);
-  const [tahlilan, setTahlilanState] = useState(null);
-  const [tanggalWafatInput, setTanggalWafatInput] = useState('');
-  const [namaInput, setNamaInput] = useState('');
-
   const [showWasiat, setShowWasiat] = useState(false);
   const [wasiatText, setWasiatText] = useState('');
   const [wasiatSaving, setWasiatSaving] = useState(false);
@@ -75,24 +67,13 @@ export default function PanduanJenazah() {
   const [biayaAmounts, setBiayaAmounts] = useState(defaultJenazahBudgetAmounts);
 
   const [showKasusKhusus, setShowKasusKhusus] = useState(false);
+  const [showHindari, setShowHindari] = useState(false);
 
   const current = JENAZAH_STEPS[step];
   const isFirst = step === 0;
   const isLast = step === JENAZAH_STEPS.length - 1;
   const stepDone = !!progress[step];
   const doneCount = Object.values(progress).filter(Boolean).length;
-
-  useEffect(() => {
-    if (!user) return;
-    const unsub = watchTahlilanReminder(user.uid, (data) => {
-      setTahlilanState(data);
-      if (data) {
-        setTanggalWafatInput(data.tanggalWafat);
-        setNamaInput(data.nama);
-      }
-    });
-    return unsub;
-  }, [user]);
 
   useEffect(() => {
     if (!user) return;
@@ -110,20 +91,6 @@ export default function PanduanJenazah() {
     hapticTick();
   }
 
-  async function handleSaveTahlilan() {
-    if (!user || !tanggalWafatInput) return;
-    await setTahlilanReminder(user.uid, { tanggalWafat: tanggalWafatInput, nama: namaInput });
-    showToast('Pengingat tahlilan disimpan.');
-  }
-
-  async function handleClearTahlilan() {
-    if (!user) return;
-    await clearTahlilanReminder(user.uid);
-    setTanggalWafatInput('');
-    setNamaInput('');
-    showToast('Pengingat tahlilan dihapus.');
-  }
-
   async function handleSaveWasiat() {
     if (!user) return;
     setWasiatSaving(true);
@@ -139,7 +106,6 @@ export default function PanduanJenazah() {
   const checklistTotal = JENAZAH_CHECKLIST_GROUPS.reduce((sum, g) => sum + g.items.length, 0);
   const checklistDone = Object.values(checklist).filter(Boolean).length;
   const biayaTotal = totalJenazahBudget(biayaAmounts);
-  const hariKe = tahlilan ? hariKeTahlilan(tahlilan.tanggalWafat) : null;
 
   function handleExportPdf() {
     const ok = exportJenazahPdf({ checklist: JENAZAH_CHECKLIST_GROUPS, kafanResult });
@@ -217,6 +183,9 @@ export default function PanduanJenazah() {
               allowFullScreen
             />
           </div>
+          {current.videoSource && (
+            <span style={{ fontSize: 10.5, color: 'var(--muted-soft)', lineHeight: 1.5, marginTop: -6 }}>Video: {current.videoSource}</span>
+          )}
 
           {current.takbir && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -240,6 +209,9 @@ export default function PanduanJenazah() {
               <li key={i} style={{ fontSize: 12.5, lineHeight: 1.6, color: 'var(--ink)' }}>{p}</li>
             ))}
           </ol>
+          {current.sumber && (
+            <span style={{ fontSize: 10.5, color: 'var(--muted-soft)', lineHeight: 1.5 }}>Dalil/rujukan: {current.sumber}</span>
+          )}
 
           <button
             onClick={handleToggleStepDone}
@@ -323,21 +295,17 @@ export default function PanduanJenazah() {
                 style={{ padding: '12px 14px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--ink)', fontSize: 15, fontWeight: 700 }}
               />
             </div>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button
-                onClick={() => setGender('pria')}
-                className={gender === 'pria' ? 'btn' : 'btn-outline'}
-                style={{ flex: 1, padding: '9px', fontSize: 12 }}
-              >
-                {t('panduan_jenazah_kafan_pria')}
-              </button>
-              <button
-                onClick={() => setGender('wanita')}
-                className={gender === 'wanita' ? 'btn' : 'btn-outline'}
-                style={{ flex: 1, padding: '9px', fontSize: 12 }}
-              >
-                {t('panduan_jenazah_kafan_wanita')}
-              </button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {[['pria', 'panduan_jenazah_kafan_pria'], ['wanita', 'panduan_jenazah_kafan_wanita'], ['wanita5', 'panduan_jenazah_kafan_wanita5']].map(([key, label]) => (
+                <button
+                  key={key}
+                  onClick={() => setGender(key)}
+                  className={gender === key ? 'btn' : 'btn-outline'}
+                  style={{ padding: '9px', fontSize: 12 }}
+                >
+                  {t(label)}
+                </button>
+              ))}
             </div>
             <div style={{ padding: '12px 14px', borderRadius: 14, background: 'var(--mint-soft)', display: 'flex', flexDirection: 'column', gap: 4 }}>
               <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)' }}>{t('panduan_jenazah_kafan_hasil')}</span>
@@ -349,67 +317,6 @@ export default function PanduanJenazah() {
               </span>
             </div>
             <span style={{ fontSize: 10, color: 'var(--muted-soft)', lineHeight: 1.5 }}>{t('panduan_jenazah_kafan_catatan')}</span>
-          </div>
-        )}
-
-        <button
-          onClick={() => setShowTahlilan((v) => !v)}
-          aria-expanded={showTahlilan}
-          className="card"
-          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '13px 16px', border: 'none', cursor: 'pointer', fontFamily: 'inherit', color: 'var(--ink)' }}
-        >
-          <span style={{ fontSize: 12, fontWeight: 800, letterSpacing: '0.03em', textTransform: 'uppercase', color: 'var(--muted)' }}>
-            🤲 Pengingat Tahlilan
-          </span>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" style={{ transform: showTahlilan ? 'rotate(180deg)' : 'none', transition: 'transform var(--dur-1) var(--ease)' }}>
-            <path d="m6 9 6 6 6-6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
-
-        {showTahlilan && (
-          <div className="card" style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {!user ? (
-              <span style={{ fontSize: 11.5, color: 'var(--muted)' }}>Masuk dulu buat pakai pengingat tahlilan.</span>
-            ) : (
-              <>
-                {tahlilan && hariKe !== null && (
-                  <div style={{ padding: '10px 14px', borderRadius: 12, background: 'var(--mint-soft)', fontSize: 12, color: 'var(--primary)', fontWeight: 700 }}>
-                    Hari ke-{hariKe} sejak {tahlilan.tanggalWafat}{tahlilan.nama ? ` (${tahlilan.nama})` : ''}
-                  </div>
-                )}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--muted)' }}>Tanggal Wafat</span>
-                  <input
-                    type="date"
-                    value={tanggalWafatInput}
-                    onChange={(e) => setTanggalWafatInput(e.target.value)}
-                    style={{ padding: '12px 14px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--ink)', fontSize: 14 }}
-                  />
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--muted)' }}>Nama Almarhum/Almarhumah (opsional)</span>
-                  <input
-                    value={namaInput}
-                    onChange={(e) => setNamaInput(e.target.value)}
-                    placeholder="Misal: Bapak Ahmad"
-                    style={{ padding: '12px 14px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--ink)', fontSize: 13 }}
-                  />
-                </div>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <button className="btn" style={{ flex: 1, fontSize: 12.5 }} disabled={!tanggalWafatInput} onClick={handleSaveTahlilan}>
-                    Simpan Pengingat
-                  </button>
-                  {tahlilan && (
-                    <button className="btn-outline" style={{ flex: 1, fontSize: 12.5 }} onClick={handleClearTahlilan}>
-                      Hapus
-                    </button>
-                  )}
-                </div>
-                <span style={{ fontSize: 10, color: 'var(--muted-soft)', lineHeight: 1.5 }}>
-                  Notifikasi dikirim di hari ke-7, ke-40, dan ke-100 — ikut pengaturan "Pengingat Ibadah" di Preferensi Notifikasi.
-                </span>
-              </>
-            )}
           </div>
         )}
 
@@ -434,7 +341,7 @@ export default function PanduanJenazah() {
             ) : (
               <>
                 <span style={{ fontSize: 10.5, color: 'var(--muted-soft)', lineHeight: 1.5 }}>
-                  Catatan personal — bukan dokumen hukum/wasiat syar'i yang mengikat, cuma pesan/preferensi buat keluarga.
+                  Catatan personal — bukan dokumen hukum/wasiat syar'i yang mengikat, cuma pesan/preferensi buat keluarga. Boleh dipakai untuk berpesan agar jenazahmu diurus sesuai sunnah.
                 </span>
                 <textarea
                   value={wasiatText}
@@ -517,6 +424,36 @@ export default function PanduanJenazah() {
                 </ul>
               </div>
             ))}
+          </div>
+        )}
+
+        <button
+          onClick={() => setShowHindari((v) => !v)}
+          aria-expanded={showHindari}
+          className="card"
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '13px 16px', border: 'none', cursor: 'pointer', fontFamily: 'inherit', color: 'var(--ink)' }}
+        >
+          <span style={{ fontSize: 12, fontWeight: 800, letterSpacing: '0.03em', textTransform: 'uppercase', color: 'var(--muted)' }}>
+            🚫 {JENAZAH_HINDARI.title}
+          </span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" style={{ transform: showHindari ? 'rotate(180deg)' : 'none', transition: 'transform var(--dur-1) var(--ease)' }}>
+            <path d="m6 9 6 6 6-6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+
+        {showHindari && (
+          <div className="card" style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <p style={{ margin: 0, fontSize: 12, lineHeight: 1.6, color: 'var(--muted)' }}>{JENAZAH_HINDARI.intro}</p>
+            <ul style={{ margin: 0, paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {JENAZAH_HINDARI.items.map((it) => (
+                <li key={it} style={{ fontSize: 12, lineHeight: 1.6, color: 'var(--ink)' }}>{it}</li>
+              ))}
+            </ul>
+            <div style={{ padding: '10px 12px', borderRadius: 12, background: 'var(--mint-soft)', display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <span style={{ fontSize: 11.5, fontWeight: 800, color: 'var(--primary)' }}>{JENAZAH_HINDARI.sunnahTitle}</span>
+              <span style={{ fontSize: 11.5, lineHeight: 1.55, color: 'var(--primary)' }}>{JENAZAH_HINDARI.sunnah}</span>
+            </div>
+            <span style={{ fontSize: 10.5, color: 'var(--muted-soft)', lineHeight: 1.5 }}>Rujukan: {JENAZAH_HINDARI.sumber}</span>
           </div>
         )}
 

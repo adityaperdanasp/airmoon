@@ -22,10 +22,10 @@ export const JENAZAH_CHECKLIST_GROUPS = [
   {
     title: 'Kain Kafan & Pengikat',
     items: [
-      'Kain kafan putih (3 lapis pria / 5 lapis wanita)',
+      'Kain kafan putih (3 lembar)',
       'Tali pengikat kafan',
       'Kapas tambahan untuk menyumbat',
-      'Wewangian (kapur barus / minyak wangi non-alkohol)',
+      'Wewangian untuk kain kafan (bukhur/dupa atau minyak wangi)',
     ],
   },
   {

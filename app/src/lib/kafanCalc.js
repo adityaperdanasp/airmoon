@@ -5,7 +5,11 @@
 // sudah cukup (~110-120cm) buat membungkus badan tanpa disambung, jadi
 // yang dihitung di sini cuma panjangnya.
 const TAMBAHAN_IKATAN_CM = 60; // ruang lebih di kedua ujung buat dilipat & diikat
-const LAPIS = { pria: 3, wanita: 5 };
+// Laki-laki 3 lembar (HR. Bukhari-Muslim). Perempuan: tidak ada dalil
+// shahih yang membedakan, jadi 3 lembar; 5 lembar adalah pendapat sebagian
+// ulama (haditsnya dinilai lemah oleh sebagian ahli hadits) — tersedia
+// sebagai opsi, bukan default.
+const LAPIS = { pria: 3, wanita: 3, wanita5: 5 };
 
 export function calcKebutuhanKafan({ tinggiCm, gender }) {
   const tinggi = Number(tinggiCm) || 0;
