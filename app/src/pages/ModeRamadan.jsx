@@ -116,7 +116,10 @@ export default function ModeRamadan() {
   let imsakBukaLabel = null;
   let imsakBukaCountdown = null;
   if (inRamadan && data) {
-    const imsak = parseTimeToday(data.timings.Imsak);
+    // Sahur ends when Fajr (Subuh) appears (QS. Al-Baqarah: 187) — the
+    // "imsak" 10 minutes earlier has no basis in the sunnah, so the
+    // countdown and card run to Subuh itself.
+    const imsak = parseTimeToday(data.timings.Fajr);
     const maghrib = parseTimeToday(data.timings.Maghrib);
     if (now < imsak) {
       imsakBukaLabel = t('ramadan_menuju_imsak');
@@ -184,7 +187,7 @@ export default function ModeRamadan() {
             <div style={{ display: 'flex', gap: 10 }}>
               <div className="card" style={{ flex: 1, padding: 14, textAlign: 'center' }}>
                 <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>{t('imsak')}</div>
-                <div style={{ fontSize: 20, fontWeight: 800, marginTop: 4 }}>{data.timings.Imsak}</div>
+                <div style={{ fontSize: 20, fontWeight: 800, marginTop: 4 }}>{data.timings.Fajr}</div>
               </div>
               <div className="card" style={{ flex: 1, padding: 14, textAlign: 'center' }}>
                 <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>{t('buka_puasa')}</div>

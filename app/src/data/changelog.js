@@ -6,9 +6,21 @@
 // internal fix. `version` just needs to increase; CURRENT_VERSION below
 // is what Pengaturan.jsx/Lainnya.jsx compare against to show an unseen
 // dot, same pattern as lib/unseenBadges.js/lib/notificationLog.js.
-export const CURRENT_VERSION = 6;
+export const CURRENT_VERSION = 7;
 
 export const CHANGELOG = [
+  {
+    version: 7,
+    date: '2026-10-03',
+    title: 'Satu Kalender Puasa Sunnah, pintasan Jelajahi sendiri, dan pengecekan dalil',
+    items: [
+      'Kalender Hijriah, Kalender Ibadah, dan Puasa Sunnah digabung jadi satu: Kalender Puasa Sunnah — ada tanggal Hijriah, warna ibadah, hari puasa sunnah, hari yang dilarang puasa, dan dalilnya.',
+      'Pintasan "Jelajahi" di Home sekarang bisa kamu atur sendiri lewat tombol "Atur".',
+      'Panduan Sholat dilengkapi: doa istiftah, tasyahud lengkap, shalawat Ibrahimiyyah, dan dalil tiap langkah. Niat tidak lagi dilafalkan, mengikuti tuntunan Nabi ﷺ.',
+      'Pengingat Maulid Nabi dan ucapan Tahun Baru Hijriah dihapus; diganti pengingat puasa Muharram, Tasu\'a, Asyura, dan Arafah.',
+      'Catatan fiqih & dalil ditambahkan di Kalkulator Zakat, Asmaul Husna, dan tafsir.',
+    ],
+  },
   {
     version: 6,
     date: '2026-09-04',

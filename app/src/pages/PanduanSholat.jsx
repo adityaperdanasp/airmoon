@@ -34,13 +34,17 @@ export default function PanduanSholat() {
           <span style={{ fontSize: 20, fontWeight: 800 }}>{current.title}</span>
           <p style={{ margin: 0, fontSize: 13, lineHeight: 1.6, color: 'var(--muted)' }}>{current.gerakan}</p>
 
-          <div style={{ padding: '14px 16px', borderRadius: 14, background: 'var(--bg)', display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <div style={{ fontFamily: "'Amiri', serif", fontSize: 20, lineHeight: 2, direction: 'rtl', textAlign: 'right' }}>
-              {current.arabic}
+          {current.arabic ? (
+            <div style={{ padding: '14px 16px', borderRadius: 14, background: 'var(--bg)', display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ fontFamily: "'Amiri', serif", fontSize: 20, lineHeight: 2, direction: 'rtl', textAlign: 'right' }}>
+                {current.arabic}
+              </div>
+              <p style={{ margin: 0, fontSize: 11.5, lineHeight: 1.55, color: 'var(--muted-soft)', fontStyle: 'italic' }}>{current.latin}</p>
+              <p style={{ margin: 0, fontSize: 12, lineHeight: 1.55, color: 'var(--muted)' }}>{current.translation}</p>
             </div>
-            <p style={{ margin: 0, fontSize: 11.5, lineHeight: 1.55, color: 'var(--muted-soft)', fontStyle: 'italic' }}>{current.latin}</p>
-            <p style={{ margin: 0, fontSize: 12, lineHeight: 1.55, color: 'var(--muted)' }}>{current.translation}</p>
-          </div>
+          ) : (
+            <p style={{ margin: 0, padding: '14px 16px', borderRadius: 14, background: 'var(--bg)', fontSize: 12, lineHeight: 1.55, color: 'var(--muted)' }}>{current.translation}</p>
+          )}
         </div>
 
         <div style={{ display: 'flex', gap: 8 }}>

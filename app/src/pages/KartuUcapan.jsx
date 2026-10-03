@@ -22,16 +22,16 @@ const historySavedAtFmt = new Intl.DateTimeFormat('id-ID', { day: 'numeric', mon
 // since color choice and wording are already independently editable —
 // picking one just re-seeds a different starting gradient to tweak from.
 const TEMPLATES = [
-  { id: 0, colors: ['#0d4d47', '#0a3630'], title: 'Selamat Idul Fitri', sub: 'Mohon maaf lahir & batin' },
-  { id: 1, colors: ['#a9761f', '#6b4a12'], title: 'Selamat Menunaikan Ibadah Puasa', sub: 'Marhaban Ya Ramadhan' },
-  { id: 2, colors: ['#3f5c68', '#23343b'], title: "Jumat Berkah", sub: 'Semoga Allah limpahkan rahmat-Nya' },
+  { id: 0, colors: ['#0d4d47', '#0a3630'], title: 'Selamat Idul Fitri', sub: 'Taqabbalallahu minna wa minkum' },
+  { id: 1, colors: ['#a9761f', '#6b4a12'], title: 'Selamat Menunaikan Ibadah Puasa', sub: 'Semoga Allah menerima puasa & amal kita' },
+  { id: 2, colors: ['#3f5c68', '#23343b'], title: 'Hari Jumat', sub: 'Perbanyak sholawat kepada Nabi ﷺ' },
   { id: 3, colors: ['#a9622f', '#6b3d1c'], title: 'Selamat Idul Adha', sub: 'Taqabbalallahu minna wa minkum' },
-  { id: 4, colors: ['#1f6b4d', '#0f3d2b'], title: 'Selamat Idul Fitri', sub: 'Mohon maaf lahir & batin' },
-  { id: 5, colors: ['#7a1f3d', '#3d0f1e'], title: "Jumat Berkah", sub: 'Semoga Allah limpahkan rahmat-Nya' },
-  { id: 6, colors: ['#1e3a5f', '#0d1b2e'], title: 'Selamat Menunaikan Ibadah Puasa', sub: 'Marhaban Ya Ramadhan' },
+  { id: 4, colors: ['#1f6b4d', '#0f3d2b'], title: 'Selamat Idul Fitri', sub: 'Taqabbalallahu minna wa minkum' },
+  { id: 5, colors: ['#7a1f3d', '#3d0f1e'], title: 'Hari Jumat', sub: 'Perbanyak sholawat kepada Nabi ﷺ' },
+  { id: 6, colors: ['#1e3a5f', '#0d1b2e'], title: 'Selamat Menunaikan Ibadah Puasa', sub: 'Semoga Allah menerima puasa & amal kita' },
   { id: 7, colors: ['#5b3a8f', '#2e1c4a'], title: 'Selamat Idul Adha', sub: 'Taqabbalallahu minna wa minkum' },
-  { id: 8, colors: ['#b8895a', '#6b4a2f'], title: 'Selamat Idul Fitri', sub: 'Mohon maaf lahir & batin' },
-  { id: 9, colors: ['#20201f', '#0a0a09'], title: "Jumat Berkah", sub: 'Semoga Allah limpahkan rahmat-Nya' },
+  { id: 8, colors: ['#b8895a', '#6b4a2f'], title: 'Selamat Idul Fitri', sub: 'Taqabbalallahu minna wa minkum' },
+  { id: 9, colors: ['#20201f', '#0a0a09'], title: 'Hari Jumat', sub: 'Perbanyak sholawat kepada Nabi ﷺ' },
 ];
 
 function loadImage(src) {
@@ -356,7 +356,7 @@ export default function KartuUcapan() {
           <input
             value={sub}
             onChange={(e) => setSub(e.target.value)}
-            placeholder={titleArabic ? 'مثال: كل عام وأنتم بخير' : "Sub-judul, misal 'Mohon maaf lahir & batin'"}
+            placeholder={titleArabic ? 'مثال: كل عام وأنتم بخير' : "Sub-judul, misal 'Taqabbalallahu minna wa minkum'"}
             maxLength={80}
             dir={titleArabic ? 'rtl' : 'ltr'}
             style={{

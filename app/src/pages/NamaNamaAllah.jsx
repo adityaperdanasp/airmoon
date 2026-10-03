@@ -16,6 +16,9 @@ export default function NamaNamaAllah() {
     <div className="screen">
       <div className="screen-content">
         <TopBar title="Asmaul Husna" subtitle={t('asmaul_husna_subtitle')} />
+        <div style={{ padding: '13px 14px', borderRadius: 14, background: 'var(--card)', fontSize: 11, lineHeight: 1.6, color: 'var(--muted)' }}>
+          <b style={{ color: 'var(--ink)' }}>Dalil &amp; catatan.</b> "Sesungguhnya Allah memiliki 99 nama; siapa yang menghafalnya (dan memahami serta mengamalkan maknanya) masuk surga." (HR. Bukhari no. 2736, Muslim no. 2677). Nama Allah tidak terbatas pada 99 (HR. Ahmad dalam doa "...aku memohon kepada-Mu dengan setiap nama milik-Mu..."; dishahihkan Al-Albani). Rincian daftar 99 nama di bawah mengikuti riwayat At-Tirmidzi, yang menurut banyak ulama hadits (di antaranya Ibnu Taimiyyah, Ibnu Utsaimin, Al-Albani) bukan bagian dari sabda Nabi ﷺ. Karena itu sebagian nama dalam daftar ini perlu dikaji lagi, dan Allah hanya dinamai dengan nama yang datang dari Al-Qur'an dan sunnah yang shahih.
+        </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
           {list.map((n) => (
             <div key={n.no} className="card" style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 6, padding: 14 }}>

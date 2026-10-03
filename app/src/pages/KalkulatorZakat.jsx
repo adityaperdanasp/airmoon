@@ -299,6 +299,10 @@ export default function KalkulatorZakat() {
               Membuka situs resmi BAZNAS — airmoon belum punya integrasi pembayaran zakat langsung.
             </span>
 
+            <div style={{ padding: '13px 14px', borderRadius: 14, background: 'var(--card)', fontSize: 11, lineHeight: 1.6, color: 'var(--muted)' }}>
+              <b style={{ color: 'var(--ink)' }}>Catatan fiqih.</b> Zakat penghasilan diperselisihkan ulama. Sebagian mewajibkan 2,5% setiap gaji diterima bila mencapai nisab (85 gram emas). Sebagian ulama lain, termasuk Lajnah Da'imah dan Syaikh Ibnu Baz, berpendapat gaji digabung ke harta dan zakatnya 2,5% dikeluarkan dari yang tersimpan setelah mencapai nisab dan haul (satu tahun hijriah). Dalil zakat harta: HR. Abu Dawud no. 1573 (dishahihkan Al-Albani). Tanyakan ke ustadz setempat mana yang kamu ikuti.
+            </div>
+
             {user && (
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '12px 14px', borderRadius: 14, background: 'var(--card)' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -421,6 +425,10 @@ export default function KalkulatorZakat() {
                 <input inputMode="numeric" value={ricePricePerKgN.toLocaleString('id-ID')} onChange={(e) => setRicePricePerKg(e.target.value)} />
               </div>
               <span style={{ fontSize: 10.5, color: 'var(--muted)' }}>Standar: {RICE_KG_PER_PERSON} kg beras per jiwa</span>
+            </div>
+
+            <div style={{ padding: '13px 14px', borderRadius: 14, background: 'var(--card)', fontSize: 11, lineHeight: 1.6, color: 'var(--muted)' }}>
+              <b style={{ color: 'var(--ink)' }}>Catatan fiqih.</b> Zakat fitrah wajib satu sha' makanan pokok (±2,5–3 kg) per jiwa, ditunaikan sebelum sholat Id (HR. Bukhari no. 1503). Menurut pendapat yang lebih kuat di kalangan ulama Ahlus Sunnah (Lajnah Da'imah, Ibnu Baz, Ibnu Utsaimin) zakat fitrah dibayar dengan makanan pokok, bukan uang; sebagian ulama membolehkan uang. Angka rupiah di bawah dipakai sebagai patokan belanja beras.
             </div>
 
             <div style={{ borderRadius: 20, padding: 20, textAlign: 'center', background: `linear-gradient(135deg, var(--primary), var(--primary-dark))` }}>

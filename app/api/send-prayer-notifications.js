@@ -309,8 +309,8 @@ export default async function handler(req, res) {
               tokens,
               data: {
                 tag: 'imsak',
-                title: '🌙 Waktu Imsak',
-                body: 'Waktu sahur segera berakhir — siap-siap untuk Subuh.',
+                title: '🌙 Sahur Segera Berakhir',
+                body: 'Sahur berakhir ketika terbit fajar / adzan Subuh (QS. Al-Baqarah: 187). Segera selesaikan sahurmu.',
               },
             });
             await docSnap.ref.update({ lastNotified: { date: dateKey, prayer: 'Imsak' } });

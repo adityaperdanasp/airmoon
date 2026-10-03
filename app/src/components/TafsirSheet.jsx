@@ -44,6 +44,11 @@ export default function TafsirSheet({ title, loading, text, onClose }) {
             ) : (
               text || 'Tafsir belum tersedia untuk ayat ini.'
             )}
+            {!loading && text && (
+              <div style={{ marginTop: 16, paddingTop: 12, borderTop: '1px solid var(--border)', fontSize: 10.5, lineHeight: 1.6, color: 'var(--muted)' }}>
+                Tafsir ringkas Kemenag RI, bukan tafsir salaf. Untuk ayat tentang sifat-sifat Allah dan perkara akidah, rujuklah tafsir ulama Ahlus Sunnah seperti Ibnu Katsir, As-Sa'di, dan Ibnu Utsaimin.
+              </div>
+            )}
           </div>
         </div>
       </div>

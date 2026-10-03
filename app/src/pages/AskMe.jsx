@@ -21,7 +21,7 @@ const WELCOME_MESSAGE = { role: 'assistant', content: 'Assalamu\'alaikum! Saya U
 // who wants to try this out but doesn't know what's reasonable to ask an
 // AI about Islam. Tapping one sends it immediately, not just fills the box.
 const SUGGESTED_QUESTIONS = [
-  'Bagaimana niat sholat witir?',
+  'Bagaimana cara sholat witir?',
   'Apa syarat wajib zakat?',
   'Doa buka puasa yang benar?',
   'Rukun umrah apa saja?',

@@ -14,7 +14,7 @@ const FAQS = [
   },
   {
     q: 'Kalkulator Zakat & Waris di sini bisa dipakai sebagai patokan resmi?',
-    a: 'Kalkulator ini bantu ngitung berdasarkan rumus fiqih umum (2.5% zakat penghasilan/maal, ilmu Faraidh buat Waris) — bagus buat perkiraan awal, tapi kasus yang rumit (misal Waris dengan ahli waris banyak & kombinasi jarang) sebaiknya tetap dikonsultasikan ke ustadz/lembaga amil zakat resmi seperti BAZNAS.',
+    a: 'Kalkulator ini bantu ngitung berdasarkan rumus fiqih umum (2.5% untuk zakat maal; zakat penghasilan ada perbedaan pendapat ulama, dijelaskan di halamannya; ilmu Faraidh buat Waris) — bagus buat perkiraan awal, tapi kasus yang rumit (misal Waris dengan ahli waris banyak & kombinasi jarang) sebaiknya tetap dikonsultasikan ke ustadz/lembaga amil zakat resmi seperti BAZNAS.',
   },
   {
     q: 'Notifikasi adzan/pengingat saya kadang gak muncul.',

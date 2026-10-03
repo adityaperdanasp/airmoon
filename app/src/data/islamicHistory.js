@@ -15,7 +15,7 @@
 export const ISLAMIC_HISTORY = [
   { title: 'Hijrah Nabi Muhammad ﷺ', year: '1 H', text: 'Nabi Muhammad ﷺ berhijrah dari Makkah ke Madinah bersama Abu Bakar ash-Shiddiq, menandai titik awal penanggalan Hijriah dan berdirinya masyarakat Muslim pertama di Madinah.' },
   { title: 'Perang Badar', year: '2 H', text: 'Pertempuran besar pertama umat Islam melawan kaum Quraisy Makkah di dekat sumur Badar — kemenangan yang disebut Al-Qur\'an sebagai "Yaumul Furqan", hari pembeda antara yang haq dan batil.' },
-  { title: 'Peristiwa Isra Mi\'raj', year: '~1-2 H sebelum Hijrah', text: 'Perjalanan malam Nabi Muhammad ﷺ dari Masjidil Haram ke Masjidil Aqsa, lalu naik ke langit — peristiwa inilah asal-usul kewajiban sholat lima waktu.' },
+  { title: 'Peristiwa Isra Mi\'raj', year: 'Sebelum Hijrah', text: 'Perjalanan malam Nabi Muhammad ﷺ dari Masjidil Haram ke Masjidil Aqsa, lalu naik ke langit (QS. Al-Isra: 1) — di peristiwa inilah sholat lima waktu diwajibkan. Waktu persisnya diperselisihkan ulama, dan tidak ada dalil yang menetapkan tanggal 27 Rajab maupun perayaan tertentu untuknya.' },
   { title: 'Perang Uhud', year: '3 H', text: 'Pertempuran di kaki Bukit Uhud, Madinah — sarat pelajaran tentang disiplin dan ketaatan, setelah sebagian pasukan pemanah meninggalkan pos yang sudah ditentukan Nabi ﷺ.' },
   { title: 'Perang Khandaq (Ahzab)', year: '5 H', text: 'Madinah dikepung koalisi besar suku-suku Arab dan Yahudi. Atas usul Salman Al-Farisi, umat Islam menggali parit (khandaq) mengelilingi kota — strategi yang belum pernah dipakai bangsa Arab sebelumnya.' },
   { title: 'Perjanjian Hudaibiyah', year: '6 H', text: 'Perjanjian damai antara Nabi ﷺ dan kaum Quraisy yang secara lahiriah tampak merugikan umat Islam, namun oleh Al-Qur\'an disebut sebagai "kemenangan yang nyata" (fathan mubina) karena membuka jalan dakwah lebih luas.' },
@@ -47,13 +47,13 @@ export const ISLAMIC_HISTORY = [
   { title: 'Al-Khawarizmi mengembangkan aljabar', year: '~200 H', text: 'Ilmuwan Muslim Al-Khawarizmi menulis Al-Jabr wal-Muqabalah, karya yang menjadi dasar ilmu aljabar modern — kata "algoritma" sendiri diambil dari namanya.' },
   { title: 'Ibnu Sina menyusun Al-Qanun fi ath-Thibb', year: '~400 H', text: 'Ibnu Sina (Avicenna) menulis Al-Qanun fi ath-Thibb, ensiklopedia kedokteran yang menjadi rujukan utama di dunia Islam dan Eropa selama berabad-abad.' },
   { title: 'Perang Salib pertama dimulai', year: '490 H', text: 'Pasukan Salib dari Eropa memulai serangan ke wilayah Muslim di Syam, mengawali rangkaian perang Salib yang berlangsung hampir 2 abad.' },
-  { title: 'Imam Al-Ghazali wafat', year: '505 H', text: 'Wafatnya Imam Abu Hamid Al-Ghazali, penulis Ihya\' Ulumuddin, salah satu ulama paling berpengaruh dalam sejarah pemikiran dan tasawuf Islam.' },
+  { title: 'Imam Al-Ghazali wafat', year: '505 H', text: 'Wafatnya Imam Abu Hamid Al-Ghazali, penulis Ihya\' Ulumuddin, salah satu ulama paling berpengaruh dalam sejarah pemikiran Islam. Para ulama menilai Ihya\' memuat cukup banyak hadits lemah dan ajaran tasawuf yang perlu dikritisi, jadi dibaca dengan hati-hati.' },
   { title: 'Pembebasan kembali Baitul Maqdis oleh Shalahuddin', year: '583 H', text: 'Sultan Shalahuddin Al-Ayyubi merebut kembali Yerusalem dari pasukan Salib setelah hampir 90 tahun, dengan sikap pengampunan yang dikenang luas, berbeda dari penaklukan Salib sebelumnya.' },
   { title: 'Kejatuhan Baghdad', year: '656 H', text: 'Pasukan Mongol di bawah Hulagu Khan menghancurkan Baghdad, mengakhiri Dinasti Abbasiyah dan menandai salah satu masa paling kelam dalam sejarah peradaban Islam klasik.' },
   { title: 'Berdirinya Kesultanan Utsmaniyah', year: '699 H', text: 'Utsman bin Ertugrul mendirikan kerajaan kecil di Anatolia yang kelak berkembang menjadi Kesultanan Utsmaniyah (Ottoman), salah satu kekhalifahan terlama dalam sejarah Islam.' },
   { title: 'Penaklukan Konstantinopel', year: '857 H', text: 'Sultan Muhammad Al-Fatih menaklukkan Konstantinopel, mengakhiri Kekaisaran Romawi Timur dan menggenapi kabar gembira yang disampaikan Nabi ﷺ berabad-abad sebelumnya.' },
   { title: 'Runtuhnya Kesultanan Utsmaniyah', year: '1342 H / 1924 M', text: 'Kekhalifahan Utsmaniyah resmi dibubarkan, mengakhiri era kekhalifahan sebagai institusi politik yang telah berlangsung sejak masa Khulafaur Rasyidin.' },
-  { title: 'Wali Songo menyebarkan Islam di Nusantara', year: '~800-900 H', text: 'Para wali (Wali Songo) berdakwah di tanah Jawa dengan pendekatan budaya dan akulturasi, menjadikan Islam berkembang pesat dan berakar kuat di Nusantara.' },
+  { title: 'Wali Songo menyebarkan Islam di Nusantara', year: '~800-900 H', text: 'Para da\'i dan ulama (di antaranya dikenal sebagai Wali Songo) berdakwah di tanah Jawa hingga Islam berkembang di Nusantara. Sebagian kisah tentang mereka bercampur dengan legenda, jadi rujuklah catatan sejarah yang valid.' },
 ];
 
 export function todaysHistoryIndex() {
