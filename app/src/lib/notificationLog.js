@@ -178,7 +178,9 @@ export function routeForTag(tag = '') {
   if (tag === 'poin-login') return '/';
   if (tag.startsWith('sholat-belum-')) return '/?focus=amalan';
   if (tag === 'rekap-mingguan') return '/lainnya/ringkasan-ibadah';
-  if (tag === 'maulid-nabi' || tag === 'tahun-baru-hijriah' || tag === 'idul-adha') return '/lainnya/kalender-hijriah';
+  // puasa-muharram/tasua/asyura/arafah are the seasonal sunnah-fasting pushes; the
+  // last 3 old tags are kept so entries already in someone's log still route.
+  if (tag.startsWith('puasa-') || tag === 'maulid-nabi' || tag === 'tahun-baru-hijriah' || tag === 'idul-adha') return '/lainnya/puasa-sunnah';
   if (tag === 'supporter-anniversary') return '/pengaturan';
   return '/jadwal-sholat'; // adzan-* and any unrecognized tag
 }
@@ -197,5 +199,5 @@ export function categoryForTag(tag = '') {
   if (tag === 'kutipan-harian' || tag === 'rekap-mingguan') return 'konten';
   if (tag === 'imsak' || tag.startsWith('adzan-')) return 'adzan';
   if (tag === 'test-notification') return 'lainnya';
-  return 'pengingat'; // zakat-haul, jumat-al-kahf, dzikir-streak, amalan-belum-selesai, puasa-sunnah, zakat-fitrah, zakat-penghasilan, target-baca, maulid-nabi, tahun-baru-hijriah, idul-adha
+  return 'pengingat'; // zakat-haul, jumat-al-kahf, dzikir-streak, amalan-belum-selesai, puasa-*, zakat-fitrah, zakat-penghasilan, target-baca
 }

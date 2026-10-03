@@ -26,7 +26,7 @@ export default function TafsirSheet({ title, loading, text, onClose }) {
             maxHeight: '75vh',
             display: 'flex',
             flexDirection: 'column',
-            background: 'var(--card)',
+            background: 'var(--sheet)',
             borderRadius: '20px 20px 0 0',
             transform: `translateY(${dragY}px)`,
             transition: dragging ? 'none' : 'transform var(--dur-2) var(--ease)',

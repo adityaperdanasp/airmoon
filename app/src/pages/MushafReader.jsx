@@ -321,7 +321,7 @@ function AyahActionSheet({ verse, chapterName, isBookmarked, onClose, onBookmark
       <div
         onClick={(e) => e.stopPropagation()}
         {...handlers}
-        style={{ width: '100%', maxWidth: 480, margin: '0 auto', background: 'var(--card)', borderRadius: '20px 20px 0 0', paddingBottom: 12, transform: `translateY(${dragY}px)`, transition: dragging ? 'none' : 'transform var(--dur-2) var(--ease)' }}
+        style={{ width: '100%', maxWidth: 480, margin: '0 auto', background: 'var(--sheet)', borderRadius: '20px 20px 0 0', paddingBottom: 12, transform: `translateY(${dragY}px)`, transition: dragging ? 'none' : 'transform var(--dur-2) var(--ease)' }}
       >
         <div style={{ width: 36, height: 4, borderRadius: 999, background: 'var(--border)', margin: '10px auto 12px' }} />
         <div style={{ padding: '0 20px 14px', textAlign: 'center', fontSize: 12.5, fontWeight: 700, color: 'var(--gold-ink)' }}>

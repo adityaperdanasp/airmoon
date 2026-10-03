@@ -14,8 +14,10 @@ import { getMustajabWindow } from '../lib/mustajabTime';
 import { formatRupiah } from '../lib/zakat';
 import BottomNav from '../components/BottomNav';
 import DonationCard from '../components/DonationCard';
-import { IconMoon } from '../components/icons';
-import { QiblaCompassIcon, QuranBookIcon, MosqueIcon, CalculatorIcon, TasbihIcon, CuppedHandsIcon, LanternIcon } from '../components/serviceIcons';
+import { QuranBookIcon, CuppedHandsIcon } from '../components/serviceIcons';
+import { ALL_SHORTCUT_ITEMS } from '../components/featureCatalog';
+import ShortcutPickerSheet from '../components/ShortcutPickerSheet';
+import { getHomeShortcuts, saveHomeShortcuts, resetHomeShortcuts } from '../lib/homeShortcuts';
 import PrayerStrip from '../components/PrayerStrip';
 import HariIniCard from '../components/HariIniCard';
 import { SkeletonCard } from '../components/Skeleton';
@@ -49,6 +51,8 @@ export default function Home() {
   const [myContributions, setMyContributions] = useState([]);
   const [showSedekahHistory, setShowSedekahHistory] = useState(false);
   const [hasNewDoa, setHasNewDoa] = useState(false);
+  const [shortcutPaths, setShortcutPaths] = useState(getHomeShortcuts);
+  const [showShortcutPicker, setShowShortcutPicker] = useState(false);
   const [avatarColor, setAvatarColor] = useState(null);
   const [avatarPhoto, setAvatarPhoto] = useState(null);
   const [interestTag, setInterestTagState] = useState(null);
@@ -240,14 +244,15 @@ export default function Home() {
   }
   lanjutkan.push({ key: 'dzikir', to: '/lainnya/doa-harian', state: { activeId: dzikirTab }, title: dzikirTab === 'pagi' ? 'Dzikir pagi' : 'Dzikir petang', sub: 'Doa harian', bg: lanjutkan.length ? 'var(--mint-soft)' : 'var(--cream)', icon: <CuppedHandsIcon size={34} /> });
 
+  // Jelajahi is whatever the user picked (lib/homeShortcuts.js), resolved
+  // against the shared feature catalog; "Semua" is always the last tile.
   const jelajahi = [
-    { to: '/quran', label: "Qur'an", icon: <QuranBookIcon size={30} /> },
-    { to: '/lainnya/kiblat', label: 'Kiblat', icon: <QiblaCompassIcon size={30} /> },
-    { to: '/lainnya/kalkulator-zakat', label: 'Zakat', icon: <CalculatorIcon size={30} /> },
-    { to: '/lainnya/cari-masjid', label: 'Masjid', icon: <MosqueIcon size={30} /> },
-    { to: '/ask-me', label: 'Ust. Rewin', icon: <IconMoon width="26" height="26" style={{ color: 'var(--primary)' }} /> },
-    { to: '/doa', label: 'Doa & Aminkan', icon: <LanternIcon size={30} /> },
-    { to: '/lainnya/tasbih', label: 'Tasbih', icon: <TasbihIcon size={30} /> },
+    ...shortcutPaths.map((to) => ALL_SHORTCUT_ITEMS.find((it) => it.to === to)).filter(Boolean).map((it) => ({
+      to: it.to,
+      label: it.key ? t(it.key) : it.label,
+      icon: it.node,
+      prefetch: it.prefetch,
+    })),
     { to: '/lainnya', label: 'Semua', icon: <span style={{ fontSize: 22, color: 'var(--primary)', fontWeight: 800, lineHeight: 1 }}>⋯</span> },
   ];
 
@@ -366,10 +371,18 @@ export default function Home() {
           </section>
 
           <section>
-            <h2 style={{ ...sectionTitle, marginBottom: 12 }}>Jelajahi</h2>
+            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 12 }}>
+              <h2 style={sectionTitle}>Jelajahi</h2>
+              <button
+                onClick={() => setShowShortcutPicker(true)}
+                style={{ background: 'none', border: 'none', padding: '4px 0', fontSize: 12, fontWeight: 700, color: 'var(--primary)', cursor: 'pointer', fontFamily: 'inherit' }}
+              >
+                Atur
+              </button>
+            </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 10 }}>
               {jelajahi.map((j) => (
-                <Link key={j.to} to={j.to} style={{ background: 'var(--card)', borderRadius: 20, padding: '14px 4px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, textDecoration: 'none', color: 'var(--ink)' }}>
+                <Link key={j.to} to={j.to} onMouseEnter={j.prefetch} onTouchStart={j.prefetch} style={{ background: 'var(--card)', borderRadius: 20, padding: '14px 4px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, textDecoration: 'none', color: 'var(--ink)' }}>
                   <div style={{ height: 30, display: 'flex', alignItems: 'center', position: 'relative' }}>{j.icon}{j.to === '/doa' && hasNewDoa && <span aria-hidden="true" className="unseen-dot" style={{ position: 'absolute', top: -2, right: -8, width: 8, height: 8, borderRadius: '50%', background: 'var(--danger)', border: '1.5px solid var(--card)' }} />}</div>
                   <span style={{ fontSize: 11, fontWeight: 700, textAlign: 'center', lineHeight: 1.2 }}>{j.label}</span>
                 </Link>
@@ -382,6 +395,18 @@ export default function Home() {
       </PullToRefresh>
       </div>
       <BottomNav />
+
+      {showShortcutPicker && (
+        <ShortcutPickerSheet
+          initial={shortcutPaths}
+          onReset={resetHomeShortcuts}
+          onSave={(list) => {
+            setShortcutPaths(saveHomeShortcuts(list));
+            setShowShortcutPicker(false);
+          }}
+          onClose={() => setShowShortcutPicker(false)}
+        />
+      )}
 
       {showOnboarding && (
         <OnboardingTour

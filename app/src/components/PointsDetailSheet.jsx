@@ -29,7 +29,7 @@ export default function PointsDetailSheet({ points, tier, next, recentDays, mont
             width: '100%',
             maxWidth: 480,
             margin: '0 auto',
-            background: 'var(--card)',
+            background: 'var(--sheet)',
             borderRadius: '20px 20px 0 0',
             padding: '0 20px 20px',
             transform: `translateY(${dragY}px)`,

@@ -11,7 +11,7 @@
 // campaignRequests/umrohLeads/supportRequests submissions, (12) a weekly
 // (Sunday) personal recap push combining streaks + this-week's sedekah,
 // (13) 3 more Islamic-calendar moments (Maulid Nabi, 1 Muharram, Hari
-// Arafah) that previously got no reminder at all, and (14) a daily
+// Arafah — Maulid/new-year greeting removed 2026-10-03, see checkSeasonalReminders) that previously got no reminder at all, and (14) a daily
 // referral-leaderboard snapshot (all 2026-09-12) — everything but (1),
 // (11), and (14) is a real FCM push to the user themselves, (11) is a
 // Telegram alert to the founder, (14) writes a small public Firestore
@@ -777,12 +777,19 @@ async function checkWeeklyRecapPush(db) {
   return { notified, errors };
 }
 
-// Kalender kampanye musiman (2026-09-12) — Ramadan already gets its own
-// dedicated Imsak/Zakat-Fitrah treatment; this covers 3 more Islamic-
-// calendar moments the app previously said nothing about at all: Maulid
-// Nabi (12 Rabiul Awal), 1 Muharram (Islamic New Year), and Hari Arafah
-// (9 Dzulhijjah, the day before Idul Adha). Same fetchTodayHijri +
-// per-Hijri-year idempotency shape as checkZakatFitrahReminder above.
+// Pengingat puasa sunnah musiman. Ramadan already gets its own dedicated
+// Imsak/Zakat-Fitrah treatment; this covers the sunnah fasting days that
+// fall on a fixed Hijri date: 1 Muharram (bulan Muharram, HR. Muslim
+// 1163), 9 Muharram (Tasu'a, HR. Muslim 1134), 10 Muharram (Asyura, HR.
+// Muslim 1162) and 9 Dzulhijjah (Arafah, HR. Muslim 1162). Same
+// fetchTodayHijri + per-Hijri-year idempotency shape as
+// checkZakatFitrahReminder above.
+//
+// Audit 2026-10-03: this used to also send "Maulid Nabi" and "Selamat
+// Tahun Baru Hijriah" pushes. Neither the sahabat nor the salaf marked
+// those days (Maulid has no basis in the Qur'an, the sunnah or the
+// practice of the generations of salaf; greeting/celebrating the Hijri
+// new year likewise), so they were removed rather than reworded.
 async function checkSeasonalReminders(db) {
   const { dateKey } = todayInJakarta();
   let hijri;
@@ -797,12 +804,14 @@ async function checkSeasonalReminders(db) {
   const hijriYear = hijri.year;
 
   let occasion = null;
-  if (month === 3 && day === 12) {
-    occasion = { key: 'maulid-nabi', title: '🌙 Maulid Nabi Muhammad ﷺ', body: 'Hari ini 12 Rabiul Awal — perbanyak sholawat & kenang perjalanan hidup Rasulullah ﷺ.' };
-  } else if (month === 1 && day === 1) {
-    occasion = { key: 'tahun-baru-hijriah', title: '🌙 Selamat Tahun Baru Hijriah', body: `Memasuki 1 Muharram ${hijriYear} H — momen baik buat muhasabah & niat baru.` };
+  if (month === 1 && day === 1) {
+    occasion = { key: 'puasa-muharram', title: '🌙 Memasuki Bulan Muharram', body: 'Puasa yang paling utama setelah Ramadhan adalah puasa di bulan Allah, Muharram (HR. Muslim 1163). Yuk perbanyak puasa sunnah bulan ini.' };
+  } else if (month === 1 && day === 9) {
+    occasion = { key: 'puasa-tasua', title: "🌙 Hari Ini Tasu'a (9 Muharram)", body: "Rasulullah ﷺ bertekad berpuasa tanggal 9 Muharram (HR. Muslim 1134). Besok Asyura — puasalah keduanya." };
+  } else if (month === 1 && day === 10) {
+    occasion = { key: 'puasa-asyura', title: '🌙 Hari Asyura (10 Muharram)', body: 'Puasa Asyura menghapus dosa setahun yang lalu (HR. Muslim 1162).' };
   } else if (month === 12 && day === 9) {
-    occasion = { key: 'idul-adha', title: '🕋 Hari Arafah', body: 'Besok Idul Adha — hari ini puasa Arafah sangat dianjurkan buat yang tidak berhaji.' };
+    occasion = { key: 'puasa-arafah', title: '🕋 Hari Arafah', body: 'Hari ini puasa Arafah — menghapus dosa setahun sebelum dan sesudahnya (HR. Muslim 1162), bagi yang tidak sedang berhaji.' };
   }
   if (!occasion) return { skipped: 'not-in-window' };
 

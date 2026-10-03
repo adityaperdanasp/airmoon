@@ -25,7 +25,7 @@ export default function DoaCategoryPickerSheet({ categories, activeId, favoriteI
             width: '100%',
             maxWidth: 480,
             margin: '0 auto',
-            background: 'var(--card)',
+            background: 'var(--sheet)',
             borderRadius: '20px 20px 0 0',
             paddingBottom: 16,
             maxHeight: '75vh',

@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import ProtectedRoute from './components/ProtectedRoute';
 import Logo from './components/Logo';
 import NotificationForegroundListener from './components/NotificationForegroundListener';
@@ -33,7 +33,6 @@ const UmrohTabungan = lazy(() => import('./pages/UmrohTabungan'));
 const Pengaturan = lazy(() => import('./pages/Pengaturan'));
 const Lainnya = lazy(() => import('./pages/Lainnya'));
 const NamaNamaAllah = lazy(() => import('./pages/NamaNamaAllah'));
-const KalenderHijriah = lazy(() => import('./pages/KalenderHijriah'));
 const KalkulatorZakat = lazy(() => import('./pages/KalkulatorZakat'));
 const KartuUcapan = lazy(() => import('./pages/KartuUcapan'));
 const DoaHarian = lazy(() => import('./pages/DoaHarian'));
@@ -52,7 +51,6 @@ const Changelog = lazy(() => import('./pages/Changelog'));
 const SejarahIslam = lazy(() => import('./pages/SejarahIslam'));
 const PuasaSunnah = lazy(() => import('./pages/PuasaSunnah'));
 const RingkasanIbadah = lazy(() => import('./pages/RingkasanIbadah'));
-const KalenderIbadah = lazy(() => import('./pages/KalenderIbadah'));
 const DesignSystem = lazy(() => import('./pages/DesignSystem'));
 const UsulanFitur = lazy(() => import('./pages/UsulanFitur'));
 const Bantuan = lazy(() => import('./pages/Bantuan'));
@@ -160,7 +158,8 @@ export default function App() {
 
         <Route path="/lainnya" element={<P><Lainnya /></P>} />
         <Route path="/lainnya/asmaul-husna" element={<P><NamaNamaAllah /></P>} />
-        <Route path="/lainnya/kalender-hijriah" element={<P><KalenderHijriah /></P>} />
+        {/* Kalender Hijriah and Kalender Ibadah were folded into Kalender Puasa Sunnah — old links keep working. */}
+        <Route path="/lainnya/kalender-hijriah" element={<Navigate to="/lainnya/puasa-sunnah" replace />} />
         <Route path="/lainnya/kalkulator-zakat" element={<P><KalkulatorZakat /></P>} />
         <Route path="/lainnya/kartu-ucapan" element={<P><KartuUcapan /></P>} />
         <Route path="/lainnya/doa-harian" element={<P><DoaHarian /></P>} />
@@ -178,7 +177,7 @@ export default function App() {
         <Route path="/lainnya/sejarah-islam" element={<P><SejarahIslam /></P>} />
         <Route path="/lainnya/puasa-sunnah" element={<P><PuasaSunnah /></P>} />
         <Route path="/lainnya/ringkasan-ibadah" element={<P><RingkasanIbadah /></P>} />
-        <Route path="/lainnya/kalender-ibadah" element={<P><KalenderIbadah /></P>} />
+        <Route path="/lainnya/kalender-ibadah" element={<Navigate to="/lainnya/puasa-sunnah" replace />} />
         <Route path="/lainnya/usulan-fitur" element={<P><UsulanFitur /></P>} />
         <Route path="/lainnya/bantuan" element={<P><Bantuan /></P>} />
         <Route path="/lainnya/ajukan-masjid" element={<P><AjukanMasjid /></P>} />
