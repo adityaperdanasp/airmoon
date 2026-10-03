@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { DAILY_POINTS_MAX, SHOLAT_KEYS, SHOLAT_LABELS, scoreForDay, watchAmalanHarian, setSholatDone } from '../lib/amalanHarian';
 import { hapticTick } from '../lib/haptics';
+import { ibadahLocks, useMinuteTick, LOCK_HINT } from '../lib/ibadahWindows';
 import AmalanHarianCard from './AmalanHarianCard';
 import MoodCheckIn from './MoodCheckIn';
 import AmalanHeatmap from './AmalanHeatmap';
@@ -21,7 +22,7 @@ function Ring({ value, max }) {
 // chips. "Lihat semua" opens the full Amalan Harian card (tilawah, dzikir,
 // share, badges) plus the mood check-in and the 5-week heatmap — they
 // moved in here from Home's main column, nothing was removed.
-export default function HariIniCard({ uid, forceOpen }) {
+export default function HariIniCard({ uid, forceOpen, timings }) {
   const [amalan, setAmalan] = useState({ sholat: {}, tilawah: false });
   const [open, setOpen] = useState(false);
   useEffect(() => watchAmalanHarian(uid, setAmalan), [uid]);
@@ -29,6 +30,8 @@ export default function HariIniCard({ uid, forceOpen }) {
     if (forceOpen) setOpen(true);
   }, [forceOpen]);
 
+  const now = useMinuteTick();
+  const locks = ibadahLocks(timings, now);
   const score = scoreForDay(amalan);
   const left = DAILY_POINTS_MAX - score;
 
@@ -47,15 +50,20 @@ export default function HariIniCard({ uid, forceOpen }) {
           <div style={{ display: 'flex', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
             {SHOLAT_KEYS.map((k) => {
               const done = !!amalan.sholat?.[k];
+              // Time over: can't be toggled any more. A prayer already
+              // ticked stays as a record; one that was missed is dimmed.
+              const locked = locks[k];
               return (
                 <button
                   key={k}
                   aria-pressed={done}
+                  disabled={locked}
+                  title={locked ? LOCK_HINT[k] : undefined}
                   onClick={() => {
                     hapticTick();
                     setSholatDone(uid, k, !done);
                   }}
-                  style={{ fontSize: 10.5, fontFamily: 'inherit', fontWeight: 700, padding: '4px 9px', borderRadius: 999, cursor: 'pointer', background: done ? 'var(--mint-soft)' : 'transparent', color: done ? 'var(--primary)' : 'var(--muted)', border: done ? '1px solid transparent' : '1px dashed var(--border)' }}
+                  style={{ fontSize: 10.5, fontFamily: 'inherit', fontWeight: 700, padding: '4px 9px', borderRadius: 999, cursor: locked ? 'not-allowed' : 'pointer', opacity: locked && !done ? 0.4 : 1, background: done ? 'var(--mint-soft)' : 'transparent', color: done ? 'var(--primary)' : 'var(--muted)', border: done ? '1px solid transparent' : '1px dashed var(--border)' }}
                 >
                   {done ? '✓ ' : ''}{SHOLAT_LABELS[k]}
                 </button>
@@ -66,7 +74,7 @@ export default function HariIniCard({ uid, forceOpen }) {
       </div>
       {open && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 14 }}>
-          <AmalanHarianCard uid={uid} />
+          <AmalanHarianCard uid={uid} locks={locks} />
           <MoodCheckIn uid={uid} />
           <AmalanHeatmap uid={uid} />
         </div>

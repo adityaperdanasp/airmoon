@@ -317,7 +317,7 @@ export default function Home() {
             </div>
           )}
 
-          {user && <HariIniCard uid={user.uid} forceOpen={highlightAmalan} />}
+          {user && <HariIniCard uid={user.uid} forceOpen={highlightAmalan} timings={prayerData?.timings} />}
 
           <section>
             <h2 style={{ ...sectionTitle, marginBottom: 12 }}>Lanjutkan</h2>

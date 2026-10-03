@@ -4,6 +4,7 @@ import { watchDzikirStreak, markDzikirDone, isDoneToday } from '../lib/dzikirStr
 import { highestTier } from '../lib/badges';
 import { usePopAnimation } from '../lib/usePopAnimation';
 import { hapticTick, hapticSuccess } from '../lib/haptics';
+import { LOCK_HINT } from '../lib/ibadahWindows';
 import AmalanShareModal from './AmalanShareModal';
 import Confetti from './Confetti';
 
@@ -14,7 +15,7 @@ const BADGE_CELEBRATED_KEY = 'airmoon-badge-celebrated-days';
 // once, right when someone actually taps a chip to complete it — not
 // every time this card mounts/re-renders showing already-done items from
 // earlier today.
-function Chip({ done, label, onClick, disabled }) {
+function Chip({ done, label, onClick, disabled, locked, lockHint }) {
   const [justChecked, setJustChecked] = useState(false);
   const [wasDone, setWasDone] = useState(done);
   const [popStyle, triggerPop] = usePopAnimation();
@@ -37,7 +38,8 @@ function Chip({ done, label, onClick, disabled }) {
         hapticTick();
         onClick();
       }}
-      disabled={disabled}
+      disabled={disabled || locked}
+      title={locked ? lockHint : undefined}
       style={{
         display: 'flex',
         alignItems: 'center',
@@ -46,7 +48,8 @@ function Chip({ done, label, onClick, disabled }) {
         borderRadius: 999,
         fontSize: 11.5,
         fontWeight: 700,
-        cursor: disabled ? 'default' : 'pointer',
+        cursor: locked ? 'not-allowed' : disabled ? 'default' : 'pointer',
+        opacity: locked && !done ? 0.4 : 1,
         border: done ? 'none' : '1px solid var(--border)',
         color: done ? 'var(--on-primary)' : 'var(--ink)',
         background: done ? 'var(--primary)' : 'var(--card)',
@@ -69,7 +72,7 @@ function Chip({ done, label, onClick, disabled }) {
 // dzikirStreak.js's existing tracking directly — not a separate signal)
 // into one glanceable card, instead of someone having to remember to
 // check 3 different pages to know whether today's ibadah is done.
-export default function AmalanHarianCard({ uid }) {
+export default function AmalanHarianCard({ uid, locks = {} }) {
   const [amalan, setAmalan] = useState({ sholat: {}, tilawah: false });
   const [streaks, setStreaks] = useState({});
   const [showShare, setShowShare] = useState(false);
@@ -170,6 +173,8 @@ export default function AmalanHarianCard({ uid }) {
               key={k}
               done={done}
               label={SHOLAT_LABELS[k]}
+              locked={!!locks[k]}
+              lockHint={LOCK_HINT[k]}
               onClick={() => uid && setSholatDone(uid, k, !done)}
             />
           );
@@ -178,6 +183,8 @@ export default function AmalanHarianCard({ uid }) {
           done={dzikirPagiDone}
           label="Dzikir Pagi"
           disabled={dzikirPagiDone}
+          locked={!!locks.dzikirPagi}
+          lockHint={LOCK_HINT.dzikirPagi}
           onClick={() => uid && markDzikirDone(uid, 'pagi')}
         />
         <Chip
