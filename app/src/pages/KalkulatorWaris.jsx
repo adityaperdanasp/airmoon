@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { calcWaris } from '../lib/warisCalc';
+import { DEFAULT_HEIRS, HEIR_GROUPS, hasAnyHeir, toCalcParams, normalizeInputs } from '../lib/warisHeirs';
+import WarisKnowledge from '../components/WarisKnowledge';
+import ToggleSwitch from '../components/ToggleSwitch';
 import { formatRupiah } from '../lib/zakat';
 import PageHeaderPhoto from '../components/PageHeaderPhoto';
 import { PAGE_PHOTOS } from '../data/photos';
@@ -49,14 +52,30 @@ function ToggleRow({ label, value, onChange }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
       <span style={{ fontSize: 13, fontWeight: 700 }}>{label}</span>
-      <div
-        onClick={() => onChange(!value)}
-        style={{ width: 46, height: 26, borderRadius: 999, background: value ? 'var(--primary)' : 'var(--border)', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 3 }}
-      >
-        <div style={{ width: 20, height: 20, borderRadius: '50%', background: '#fff', transform: value ? 'translateX(20px)' : 'translateX(0)', transition: 'transform var(--dur-1) var(--ease)' }} />
-      </div>
+      <ToggleSwitch checked={value} onChange={onChange} />
     </div>
   );
+}
+
+// Hutang/biaya/wasiat come off the gross estate BEFORE any heir is
+// computed (QS. An-Nisa 11): biaya jenazah first, then utang, then wasiat
+// capped at one third of what is left. Shared by the live calculator and
+// saved-scenario recomputation so the two can never drift.
+function netEstate(harta, biaya, hutang, wasiat) {
+  const num = (v) => Number(String(v ?? '0').replace(/\D/g, '')) || 0;
+  const gross = num(harta);
+  const biayaN = num(biaya);
+  const hutangN = num(hutang);
+  const wasiatN = num(wasiat);
+  const setelahBiaya = Math.max(0, gross - biayaN);
+  const setelahHutang = Math.max(0, setelahBiaya - hutangN);
+  const wasiatMaks = setelahHutang / 3;
+  const wasiatEfektif = Math.min(wasiatN, wasiatMaks);
+  return {
+    gross, biayaN, hutangN, wasiatN, wasiatMaks, wasiatEfektif,
+    wasiatDibatasi: wasiatN > wasiatMaks + 0.0001,
+    net: Math.max(0, setelahHutang - wasiatEfektif),
+  };
 }
 
 const WARNING_TEXT = {
@@ -64,6 +83,9 @@ const WARNING_TEXT = {
   radd: '⚠️ Total bagian fardh tidak mencapai keseluruhan harta dan tidak ada ahli waris ashabah yang menghabiskan sisanya — sisa sudah dikembalikan (radd) secara proporsional ke ahli waris fardh yang ada (selain suami/istri), sesuai ketentuan fiqh.',
   raddNoRecipient: '⚠️ Total bagian fardh tidak mencapai keseluruhan harta dan tidak ada ahli waris lain (selain suami/istri) untuk menerima pengembalian sisa (radd) — kasus ini butuh konsultasi ke ahli faraidh/ulama.',
   anakMurtad: 'ℹ️ Anak yang murtad (keluar dari Islam) terhalang menerima warisan (mani\' al-irts: beda agama) — dihitung Rp 0, dan menurut pendapat jumhur dia dianggap tidak ada sehingga tidak mengubah bagian ahli waris lain. Cucu dari garis anak murtad tidak dihitung di sini; kalau ada kasus itu, konsultasikan ke ahli faraidh/ulama.',
+  mahjub: 'ℹ️ Ahli waris yang tampil "Mahjub" terhalang oleh ahli waris yang lebih dekat atau lebih kuat (hijab), jadi tidak mendapat bagian. Lihat "Pengetahuan Waris" di atas untuk tabel alasannya.',
+  tidakAdaSisa: 'ℹ️ Harta sudah habis dibagi ke ahli waris pemilik fardh, jadi penerima sisa (ashabah) tidak kebagian.',
+  musytarakah: '⚠️ Kasus musytarakah: saudara kandung tidak kebagian karena fardh sudah menghabiskan harta (suami, ibu, dan dua saudara seibu atau lebih). Mengikuti tabel yang dipakai di sini mereka tidak mendapat bagian; sebagian mazhab justru menyertakan mereka berbagi sepertiga bersama saudara seibu. Konsultasikan ke ahli faraidh/ulama sesuai mazhab setempat.',
   ahliWarisPengganti: 'ℹ️ Cucu di atas menggantikan posisi anak laki-laki yang telah wafat (ahli waris pengganti) — mengikuti pandangan yang juga dipakai Kompilasi Hukum Islam (KHI) di Indonesia; sebagian mazhab fiqih klasik punya pandangan berbeda soal ini. Kalkulator ini menggabungkan semua cucu pengganti jadi satu kelompok — kalau ada lebih dari satu anak laki-laki yang wafat dengan cucu masing-masing berbeda jumlah, konsultasikan ke ahli faraidh untuk presisi penuh.',
 };
 
@@ -74,32 +96,16 @@ const WARNING_TEXT = {
 export default function KalkulatorWaris() {
   const { showToast } = useToast();
   const navigate = useNavigate();
-  const [hasSuami, setHasSuami] = useState(false);
-  const [jumlahIstri, setJumlahIstri] = useState(0);
-  const [anakLaki, setAnakLaki] = useState(0);
-  const [anakPerempuan, setAnakPerempuan] = useState(0);
-  const [hasAyah, setHasAyah] = useState(false);
-  const [hasIbu, setHasIbu] = useState(false);
-  const [hasKakek, setHasKakek] = useState(false);
-  const [hasNenek, setHasNenek] = useState(false);
-  const [saudaraLaki, setSaudaraLaki] = useState(0);
-  const [saudaraPerempuan, setSaudaraPerempuan] = useState(0);
-  const [anakLakiMurtad, setAnakLakiMurtad] = useState(0);
-  const [anakPerempuanMurtad, setAnakPerempuanMurtad] = useState(0);
-  const [anakLakiWafatPengganti, setAnakLakiWafatPengganti] = useState(false);
-  const [cucuLakiPengganti, setCucuLakiPengganti] = useState(0);
-  const [cucuPerempuanPengganti, setCucuPerempuanPengganti] = useState(0);
+  // One object for every heir (lib/warisHeirs.js) instead of 20 useStates.
+  const [heirs, setHeirs] = useState(DEFAULT_HEIRS);
+  const setHeir = (key, value) => setHeirs((h) => ({ ...h, [key]: value }));
+  const [showJauh, setShowJauh] = useState(false);
   const [harta, setHarta] = useState('500000000');
+  const [biayaJenazah, setBiayaJenazah] = useState('0');
   const [hutang, setHutang] = useState('0');
   const [wasiat, setWasiat] = useState('0');
-  const hartaN = Number(digitsOnly(harta)) || 0;
-  const hutangN = Number(digitsOnly(hutang)) || 0;
-  const wasiatN = Number(digitsOnly(wasiat)) || 0;
-  const hartaSetelahHutang = Math.max(0, hartaN - hutangN);
-  const wasiatMaks = hartaSetelahHutang / 3;
-  const wasiatEfektif = Math.min(wasiatN, wasiatMaks);
-  const wasiatDibatasi = wasiatN > wasiatMaks + 0.0001;
-  const hartaUntukWaris = Math.max(0, hartaSetelahHutang - wasiatEfektif);
+  const est = netEstate(harta, biayaJenazah, hutang, wasiat);
+  const hartaUntukWaris = est.net;
   const [showShare, setShowShare] = useState(false);
   const [scenarios, setScenarios] = useState(loadWarisScenarios);
   const [scenarioName, setScenarioName] = useState('');
@@ -116,49 +122,28 @@ export default function KalkulatorWaris() {
   const [deleteHistoryId, setDeleteHistoryId] = useState(null);
 
   function applyScenario(s) {
-    setHasSuami(s.inputs.hasSuami);
-    setJumlahIstri(s.inputs.jumlahIstri);
-    setAnakLaki(s.inputs.anakLaki);
-    setAnakPerempuan(s.inputs.anakPerempuan);
-    setHasAyah(s.inputs.hasAyah);
-    setHasIbu(s.inputs.hasIbu);
-    // ?? false / ?? 0 — scenarios saved before kakek/nenek/saudara/
-    // hutang/wasiat/pengganti existed won't have these fields at all;
-    // treat a missing field as "not present" rather than crashing on
-    // undefined.
-    setHasKakek(s.inputs.hasKakek ?? false);
-    setHasNenek(s.inputs.hasNenek ?? false);
-    setSaudaraLaki(s.inputs.saudaraLaki ?? 0);
-    setSaudaraPerempuan(s.inputs.saudaraPerempuan ?? 0);
-    setAnakLakiMurtad(s.inputs.anakLakiMurtad ?? 0);
-    setAnakPerempuanMurtad(s.inputs.anakPerempuanMurtad ?? 0);
-    setAnakLakiWafatPengganti(s.inputs.anakLakiWafatPengganti ?? false);
-    setCucuLakiPengganti(s.inputs.cucuLakiPengganti ?? 0);
-    setCucuPerempuanPengganti(s.inputs.cucuPerempuanPengganti ?? 0);
+    // normalizeInputs handles every saved shape (flat fields from before
+    // kakek/saudara/pengganti existed, the pengganti fields, and the
+    // current heirs fields) — missing means "not present".
+    setHeirs(normalizeInputs(s.inputs));
     setHarta(s.inputs.harta);
+    setBiayaJenazah(s.inputs.biayaJenazah ?? '0');
     setHutang(s.inputs.hutang ?? '0');
     setWasiat(s.inputs.wasiat ?? '0');
   }
 
   function handleSaveScenario() {
     const name = scenarioName.trim() || `Skenario ${scenarios.length + 1}`;
-    setScenarios(saveWarisScenario(name, {
-      hasSuami, jumlahIstri, anakLaki, anakPerempuan, hasAyah, hasIbu, hasKakek, hasNenek, saudaraLaki, saudaraPerempuan,
-      anakLakiWafatPengganti, cucuLakiPengganti, cucuPerempuanPengganti, anakLakiMurtad, anakPerempuanMurtad, harta, hutang, wasiat,
-    }));
+    setScenarios(saveWarisScenario(name, { ...heirs, harta, biayaJenazah, hutang, wasiat }));
     setScenarioName('');
     setShowSaveScenario(false);
   }
 
-  const hasPenggantiInput = anakLakiWafatPengganti && (cucuLakiPengganti > 0 || cucuPerempuanPengganti > 0);
-  const noHeirs = !hasSuami && jumlahIstri === 0 && anakLaki === 0 && anakPerempuan === 0 && !hasAyah && !hasIbu
-    && !hasKakek && !hasNenek && saudaraLaki === 0 && saudaraPerempuan === 0 && !hasPenggantiInput;
+  const noHeirs = !hasAnyHeir(heirs);
+  const calcParams = toCalcParams(heirs);
   const { results, warnings } = noHeirs
     ? { results: [], warnings: [] }
-    : calcWaris({
-        hasSuami, jumlahIstri, anakLaki, anakPerempuan, hasAyah, hasIbu, hasKakek, hasNenek, saudaraLaki, saudaraPerempuan,
-        anakLakiWafatPengganti, cucuLakiPengganti, cucuPerempuanPengganti, anakLakiMurtad, anakPerempuanMurtad, totalHarta: hartaUntukWaris,
-      });
+    : calcWaris({ ...calcParams, totalHarta: hartaUntukWaris });
 
   // Riwayat Perhitungan Otomatis (2026-10-01) — tersimpan otomatis tiap
   // kali hasil berubah, beda dari Skenario Tersimpan yang butuh tekan
@@ -166,68 +151,41 @@ export default function KalkulatorWaris() {
   // keystroke/toggle, dan saveWarisHistoryEntry sendiri dedup terhadap
   // entry paling baru.
   const historyTimerRef = useRef(null);
+  const heirsSignature = JSON.stringify(heirs);
   useEffect(() => {
     if (noHeirs) return;
     clearTimeout(historyTimerRef.current);
     historyTimerRef.current = setTimeout(() => {
-      setHistory(saveWarisHistoryEntry(
-        { hasSuami, jumlahIstri, anakLaki, anakPerempuan, hasAyah, hasIbu, hasKakek, hasNenek, saudaraLaki, saudaraPerempuan, anakLakiWafatPengganti, cucuLakiPengganti, cucuPerempuanPengganti, anakLakiMurtad, anakPerempuanMurtad },
-        hartaUntukWaris,
-        results
-      ));
+      setHistory(saveWarisHistoryEntry(calcParams, hartaUntukWaris, results));
     }, 1500);
     return () => clearTimeout(historyTimerRef.current);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- results is derived from the same inputs already listed; including it too would just re-run this identically
-  }, [hasSuami, jumlahIstri, anakLaki, anakPerempuan, hasAyah, hasIbu, hasKakek, hasNenek, saudaraLaki, saudaraPerempuan, anakLakiWafatPengganti, cucuLakiPengganti, cucuPerempuanPengganti, anakLakiMurtad, anakPerempuanMurtad, hartaUntukWaris, noHeirs]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- calcParams/results are derived from heirsSignature + hartaUntukWaris, already listed
+  }, [heirsSignature, hartaUntukWaris, noHeirs]);
 
-  // Bandingkan 2 Skenario Berdampingan — previously scenarios could only
-  // be applied one at a time, overwriting the form; comparing two meant
-  // manually remembering the first result while looking at the second.
-  // This computes both results fresh from the saved inputs, side by side,
-  // without touching the live form state above at all.
+  // Bandingkan 2 Skenario Berdampingan — computes both results fresh from
+  // the saved inputs, side by side, without touching the live form.
   function scenarioResult(s) {
     if (!s) return null;
-    const { hasSuami: hs, jumlahIstri: ji, anakLaki: al, anakPerempuan: ap, hasAyah: ha, hasIbu: hi, hasKakek: hk, hasNenek: hn, saudaraLaki: sl, saudaraPerempuan: sp, anakLakiWafatPengganti: alwp, cucuLakiPengganti: clp, cucuPerempuanPengganti: cpp, anakLakiMurtad: alm, anakPerempuanMurtad: apm, harta: h, hutang: hu, wasiat: wa } = s.inputs;
-    const grossHarta = Number(digitsOnly(String(h))) || 0;
-    const hutangVal = Number(digitsOnly(String(hu ?? '0'))) || 0;
-    const wasiatVal = Number(digitsOnly(String(wa ?? '0'))) || 0;
-    const sisaSetelahHutang = Math.max(0, grossHarta - hutangVal);
-    const wasiatEff = Math.min(wasiatVal, sisaSetelahHutang / 3);
-    const totalHarta = Math.max(0, sisaSetelahHutang - wasiatEff);
-    const hkEff = hk ?? false; const hnEff = hn ?? false; const slEff = sl ?? 0; const spEff = sp ?? 0;
-    const alwpEff = alwp ?? false; const clpEff = clp ?? 0; const cppEff = cpp ?? 0;
-    const hasPengganti = alwpEff && (clpEff > 0 || cppEff > 0);
-    const noH = !hs && ji === 0 && al === 0 && ap === 0 && !ha && !hi && !hkEff && !hnEff && slEff === 0 && spEff === 0 && !hasPengganti;
-    return noH
-      ? { results: [], warnings: [], totalHarta }
-      : {
-          ...calcWaris({
-            hasSuami: hs, jumlahIstri: ji, anakLaki: al, anakPerempuan: ap, hasAyah: ha, hasIbu: hi, hasKakek: hkEff, hasNenek: hnEff, saudaraLaki: slEff, saudaraPerempuan: spEff,
-            anakLakiWafatPengganti: alwpEff, cucuLakiPengganti: clpEff, cucuPerempuanPengganti: cppEff, anakLakiMurtad: alm ?? 0, anakPerempuanMurtad: apm ?? 0, totalHarta,
-          }),
-          totalHarta,
-        };
+    const sh = normalizeInputs(s.inputs);
+    const e = netEstate(s.inputs.harta, s.inputs.biayaJenazah, s.inputs.hutang, s.inputs.wasiat);
+    return hasAnyHeir(sh)
+      ? { ...calcWaris({ ...toCalcParams(sh), totalHarta: e.net }), totalHarta: e.net }
+      : { results: [], warnings: [], totalHarta: e.net };
   }
 
   // Simulasi Cepat — one-tap +1 chips right where the result already is,
   // so testing "kalau ada anak laki-laki" doesn't mean scrolling back up
-  // to the Stepper every time. Mirrors the exact same setters the form
-  // below already uses — this is a shortcut to them, not a parallel
-  // state.
+  // to the form every time. Same state as the form below, not a copy.
   const QUICK_SIM_CHIPS = [
-    { label: '+ Suami', onTap: () => setHasSuami(true) },
-    { label: '+ Istri', onTap: () => setJumlahIstri((v) => Math.min(4, v + 1)) },
-    { label: '+ Anak L', onTap: () => setAnakLaki((v) => v + 1) },
-    { label: '+ Anak P', onTap: () => setAnakPerempuan((v) => v + 1) },
-    { label: '+ Ayah', onTap: () => setHasAyah(true) },
-    { label: '+ Ibu', onTap: () => setHasIbu(true) },
+    { label: '+ Suami', onTap: () => setHeir('hasSuami', true) },
+    { label: '+ Istri', onTap: () => setHeir('jumlahIstri', Math.min(4, heirs.jumlahIstri + 1)) },
+    { label: '+ Anak L', onTap: () => setHeir('anakLaki', heirs.anakLaki + 1) },
+    { label: '+ Anak P', onTap: () => setHeir('anakPerempuan', heirs.anakPerempuan + 1) },
+    { label: '+ Ayah', onTap: () => setHeir('hasAyah', true) },
+    { label: '+ Ibu', onTap: () => setHeir('hasIbu', true) },
   ];
   function handleResetSimulation() {
-    setHasSuami(false); setJumlahIstri(0); setAnakLaki(0); setAnakPerempuan(0);
-    setHasAyah(false); setHasIbu(false); setHasKakek(false); setHasNenek(false);
-    setSaudaraLaki(0); setSaudaraPerempuan(0);
-    setAnakLakiWafatPengganti(false); setCucuLakiPengganti(0); setCucuPerempuanPengganti(0);
-    setAnakLakiMurtad(0); setAnakPerempuanMurtad(0);
+    setHeirs(DEFAULT_HEIRS);
   }
 
   function handleKonsultasi() {
@@ -283,8 +241,10 @@ export default function KalkulatorWaris() {
         <PageHeaderPhoto title="Kalkulator Waris" photo={PAGE_PHOTOS.zakat} subtitle="Ilmu Faraidh" />
 
         <div style={{ padding: '10px 14px', borderRadius: 12, background: 'var(--cream)', fontSize: 11, color: 'var(--gold-ink-dark)', lineHeight: 1.5 }}>
-          Mengcover suami/istri, anak (termasuk cucu pengganti), ayah/ibu, kakek (ayah dari ayah), nenek (ibu dari ibu), saudara kandung (termasuk 'ashabah ma'al ghair), dan pengurangan hutang/wasiat sebelum pembagian. Kasus lebih kompleks (saudara seayah/seibu, cucu dari anak perempuan, lebih dari satu anak laki-laki yang wafat dengan cucu berbeda jumlah) tidak tercakup — konsultasikan ke ahli faraidh/ulama untuk kasus itu.
+          Mengikuti tabel porsi dan syarat Ilmu Faraidh: pasangan, anak dan cucu dari anak laki-laki, orang tua, kakek/nenek, saudara kandung/seayah/seibu, dan ashabah jauh (paman dan keturunannya), plus biaya jenazah, hutang, dan wasiat. Tidak mencakup mu'tiq, dzawil arham, atau kasus yang sangat rumit — konsultasikan ke ahli faraidh/ulama untuk itu.
         </div>
+
+        <WarisKnowledge />
 
         <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 14, padding: 16 }}>
           <span className="section-label" style={{ color: 'var(--muted)', fontSize: 11.5, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
@@ -298,7 +258,17 @@ export default function KalkulatorWaris() {
           />
 
           <span className="section-label" style={{ color: 'var(--muted)', fontSize: 11.5, letterSpacing: '0.04em', textTransform: 'uppercase', marginTop: 4 }}>
-            Hutang Almarhum (Opsional)
+            1. Biaya Pengurusan Jenazah (Opsional)
+          </span>
+          <input
+            inputMode="numeric"
+            value={Number(biayaJenazah).toLocaleString('id-ID')}
+            onChange={(e) => setBiayaJenazah(digitsOnly(e.target.value))}
+            style={{ padding: '12px 14px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--ink)', fontSize: 15, fontWeight: 700 }}
+          />
+
+          <span className="section-label" style={{ color: 'var(--muted)', fontSize: 11.5, letterSpacing: '0.04em', textTransform: 'uppercase', marginTop: 4 }}>
+            2. Hutang Almarhum (Opsional)
           </span>
           <input
             inputMode="numeric"
@@ -308,7 +278,7 @@ export default function KalkulatorWaris() {
           />
 
           <span className="section-label" style={{ color: 'var(--muted)', fontSize: 11.5, letterSpacing: '0.04em', textTransform: 'uppercase', marginTop: 4 }}>
-            Wasiat (Opsional, Maks. 1/3 Sisa)
+            3. Wasiat (Opsional, Maks. 1/3 Sisa)
           </span>
           <input
             inputMode="numeric"
@@ -316,57 +286,84 @@ export default function KalkulatorWaris() {
             onChange={(e) => setWasiat(digitsOnly(e.target.value))}
             style={{ padding: '12px 14px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--ink)', fontSize: 15, fontWeight: 700 }}
           />
+          <span style={{ fontSize: 10.5, color: 'var(--muted-soft)', lineHeight: 1.5 }}>
+            Wasiat tidak boleh ditujukan untuk kerabat yang menjadi ahli waris (HR. Abu Dawud). Urutan hak atas harta: biaya jenazah, hutang, wasiat, baru warisan.
+          </span>
 
-          {(hutangN > 0 || wasiatN > 0) && (
+          {(est.biayaN > 0 || est.hutangN > 0 || est.wasiatN > 0) && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '10px 12px', borderRadius: 12, background: 'var(--mint-soft)', fontSize: 11.5 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Harta Kotor</span><span style={{ fontWeight: 700 }}>{formatRupiah(hartaN)}</span></div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>− Hutang</span><span style={{ fontWeight: 700 }}>{formatRupiah(hutangN)}</span></div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>− Wasiat (efektif)</span><span style={{ fontWeight: 700 }}>{formatRupiah(wasiatEfektif)}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Harta Kotor</span><span style={{ fontWeight: 700 }}>{formatRupiah(est.gross)}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>− Biaya Jenazah</span><span style={{ fontWeight: 700 }}>{formatRupiah(est.biayaN)}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>− Hutang</span><span style={{ fontWeight: 700 }}>{formatRupiah(est.hutangN)}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>− Wasiat (efektif)</span><span style={{ fontWeight: 700 }}>{formatRupiah(est.wasiatEfektif)}</span></div>
               <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 6, borderTop: '1px solid rgba(0,0,0,0.08)' }}>
                 <span style={{ fontWeight: 800 }}>Harta Waris Bersih</span><span style={{ fontWeight: 800, color: 'var(--primary)' }}>{formatRupiah(hartaUntukWaris)}</span>
               </div>
-              {wasiatDibatasi && (
+              {est.wasiatDibatasi && (
                 <span style={{ fontSize: 10, color: 'var(--gold-ink-dark)', lineHeight: 1.5, marginTop: 2 }}>
-                  ⚠️ Wasiat yang diminta ({formatRupiah(wasiatN)}) melebihi 1/3 sisa harta setelah hutang — dibatasi otomatis ke {formatRupiah(wasiatMaks)} sesuai ketentuan fiqh (maksimal 1/3).
+                  ⚠️ Wasiat yang diminta ({formatRupiah(est.wasiatN)}) melebihi 1/3 sisa harta setelah hutang — dibatasi otomatis ke {formatRupiah(est.wasiatMaks)} sesuai ketentuan fiqh (maksimal 1/3).
                 </span>
               )}
             </div>
           )}
         </div>
 
-        <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: 16 }}>
+        <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 20, padding: 16 }}>
           <span className="section-label" style={{ color: 'var(--muted)', fontSize: 11.5, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
             Ahli Waris
           </span>
-          <ToggleRow label="Suami" value={hasSuami} onChange={setHasSuami} />
-          <Stepper label="Istri" value={jumlahIstri} onChange={setJumlahIstri} max={4} />
-          <Stepper label="Anak Laki-laki" value={anakLaki} onChange={setAnakLaki} />
-          <Stepper label="Anak Perempuan" value={anakPerempuan} onChange={setAnakPerempuan} />
-          <Stepper label="Anak Laki-laki Murtad" value={anakLakiMurtad} onChange={setAnakLakiMurtad} />
-          <Stepper label="Anak Perempuan Murtad" value={anakPerempuanMurtad} onChange={setAnakPerempuanMurtad} />
-          {(anakLakiMurtad > 0 || anakPerempuanMurtad > 0) && (
-            <span style={{ fontSize: 10.5, color: 'var(--muted-soft)', lineHeight: 1.5 }}>
-              Anak murtad tidak mewarisi dan dianggap tidak ada — tidak mengurangi bagian ahli waris lain. Isi di sini HANYA anak yang murtad; anak muslim tetap diisi di baris Anak Laki-laki/Perempuan di atas.
-            </span>
-          )}
-          <ToggleRow label="Ayah" value={hasAyah} onChange={setHasAyah} />
-          <ToggleRow label="Ibu" value={hasIbu} onChange={setHasIbu} />
-          <ToggleRow label="Kakek (Ayah dari Ayah)" value={hasKakek} onChange={setHasKakek} />
-          <ToggleRow label="Nenek (Ibu dari Ibu)" value={hasNenek} onChange={setHasNenek} />
-          <Stepper label="Saudara Laki-laki Kandung" value={saudaraLaki} onChange={setSaudaraLaki} />
-          <Stepper label="Saudara Perempuan Kandung" value={saudaraPerempuan} onChange={setSaudaraPerempuan} />
-          <ToggleRow label="Ada Anak Laki-laki yang Wafat Lebih Dulu?" value={anakLakiWafatPengganti} onChange={setAnakLakiWafatPengganti} />
-          {anakLakiWafatPengganti && (
-            <>
-              <Stepper label="Cucu Laki-laki (Pengganti)" value={cucuLakiPengganti} onChange={setCucuLakiPengganti} />
-              <Stepper label="Cucu Perempuan (Pengganti)" value={cucuPerempuanPengganti} onChange={setCucuPerempuanPengganti} />
-            </>
-          )}
-          {(hasKakek || hasNenek || saudaraLaki > 0 || saudaraPerempuan > 0 || anakLakiWafatPengganti) && (
-            <span style={{ fontSize: 10.5, color: 'var(--muted-soft)', lineHeight: 1.5 }}>
-              Kakek terhijab (tidak dapat bagian) kalau ayah masih ada. Nenek terhijab kalau ibu masih ada. Saudara kandung cuma dapat bagian kalau tidak ada anak (atau cucu pengganti) sama sekali dan tidak ada ayah/kakek. Cucu pengganti menggantikan posisi satu anak laki-laki yang wafat — kalau lebih dari satu anak laki-laki wafat, kalkulator ini menggabungkan semua cucu pengganti jadi satu kelompok.
-            </span>
-          )}
+          {HEIR_GROUPS.map((group) => {
+            const open = !group.collapsed || showJauh;
+            return (
+              <div key={group.id} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                {group.collapsed ? (
+                  <button
+                    onClick={() => setShowJauh((v) => !v)}
+                    aria-expanded={open}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: 0, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', color: 'var(--ink)', textAlign: 'left' }}
+                  >
+                    <span>
+                      <span style={{ display: 'block', fontSize: 13.5, fontWeight: 800 }}>{group.title}</span>
+                      <span style={{ display: 'block', fontSize: 10.5, color: 'var(--muted)', marginTop: 1 }}>{group.hint}</span>
+                    </span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform var(--dur-1) var(--ease)' }}>
+                      <path d="m6 9 6 6 6-6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </button>
+                ) : (
+                  <div>
+                    <span style={{ display: 'block', fontSize: 13.5, fontWeight: 800 }}>{group.title}</span>
+                    <span style={{ display: 'block', fontSize: 10.5, color: 'var(--muted)', marginTop: 1 }}>{group.hint}</span>
+                  </div>
+                )}
+                {open && group.fields.map((f) =>
+                  f.type === 'toggle' ? (
+                    <ToggleRow key={f.key} label={f.label} value={heirs[f.key]} onChange={(v) => setHeir(f.key, v)} />
+                  ) : (
+                    <Stepper key={f.key} label={f.label} value={heirs[f.key]} onChange={(v) => setHeir(f.key, v)} max={f.max} />
+                  )
+                )}
+                {group.id === 'keturunan' && open && (heirs.cucuLakiDariAnakLaki > 0 || heirs.cucuPerempuanDariAnakLaki > 0) && (
+                  <ToggleRow label="Terapkan ahli waris pengganti (KHI)" value={heirs.khiPengganti} onChange={(v) => setHeir('khiPengganti', v)} />
+                )}
+                {group.id === 'keturunan' && (heirs.anakLakiMurtad > 0 || heirs.anakPerempuanMurtad > 0) && (
+                  <span style={{ fontSize: 10.5, color: 'var(--muted-soft)', lineHeight: 1.5 }}>
+                    Anak murtad tidak mewarisi dan dianggap tidak ada. Isi baris murtad HANYA untuk anak yang murtad; anak muslim tetap diisi di Anak Laki-laki/Perempuan.
+                  </span>
+                )}
+                {group.id === 'keturunan' && (heirs.cucuLakiDariAnakLaki > 0 || heirs.cucuPerempuanDariAnakLaki > 0) && (
+                  <span style={{ fontSize: 10.5, color: 'var(--muted-soft)', lineHeight: 1.5 }}>
+                    {heirs.khiPengganti
+                      ? 'Mode KHI: cucu menggantikan SATU anak laki-laki yang sudah wafat dan mengambil porsinya, walau anak-anak lain masih ada.'
+                      : 'Mode klasik: cucu dari anak laki-laki hanya mewarisi kalau tidak ada anak laki-laki (lihat tabel di Pengetahuan Waris).'}
+                  </span>
+                )}
+              </div>
+            );
+          })}
+          <span style={{ fontSize: 10.5, color: 'var(--muted-soft)', lineHeight: 1.5 }}>
+            Ahli waris yang terhalang (mahjub) tetap ditampilkan di hasil dengan bagian Rp 0, lengkap dengan statusnya.
+          </span>
         </div>
 
         {!noHeirs && (

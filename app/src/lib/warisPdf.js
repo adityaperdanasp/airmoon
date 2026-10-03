@@ -50,7 +50,7 @@ export function exportWarisPdf({ totalHarta, results, warningTexts }) {
     <tbody>${rows}</tbody>
   </table>
   ${warnBlock}
-  <p class="footer">Dihasilkan dari Kalkulator Waris airmoon — mengcover kombinasi ahli waris paling umum (suami/istri, anak, ayah/ibu, kakek/nenek, saudara kandung). Kasus di luar itu (saudara seayah/seibu, cucu pengganti, wasiat, hutang jenazah) tidak tercakup. Untuk kebutuhan resmi (notaris, pengadilan agama), tetap konsultasikan ke ahli faraidh/ulama.</p>
+  <p class="footer">Dihasilkan dari Kalkulator Waris airmoon — mengikuti tabel porsi dan syarat Ilmu Faraidh (pasangan, anak dan cucu, orang tua, kakek/nenek, saudara, dan ashabah jauh), setelah biaya jenazah, hutang, dan wasiat. Kasus yang sangat rumit tidak tercakup. Untuk kebutuhan resmi (notaris, pengadilan agama), tetap konsultasikan ke ahli faraidh/ulama.</p>
   <script>window.onload = () => { window.print(); };</script>
 </body>
 </html>`);

@@ -57,7 +57,7 @@ describe('calcWaris', () => {
     const withAyah = calcWaris({
       hasSuami: false, jumlahIstri: 0, anakLaki: 0, anakPerempuan: 0, hasAyah: true, hasIbu: false, hasKakek: true, totalHarta: 1_000_000,
     });
-    expect(withAyah.results.find((r) => r.label.includes('Kakek'))).toBeUndefined();
+    expect(withAyah.results.find((r) => r.label.includes('Kakek')).fraction).toBe(0);
     expect(withAyah.results.find((r) => r.label.includes('Ayah')).fraction).toBeCloseTo(1);
 
     const noAyah = calcWaris({
@@ -70,7 +70,7 @@ describe('calcWaris', () => {
     const withIbu = calcWaris({
       hasSuami: true, jumlahIstri: 0, anakLaki: 1, anakPerempuan: 0, hasAyah: false, hasIbu: true, hasNenek: true, totalHarta: 1_000_000,
     });
-    expect(withIbu.results.find((r) => r.label.includes('Nenek'))).toBeUndefined();
+    expect(withIbu.results.find((r) => r.label.includes('Nenek')).fraction).toBe(0);
 
     const noIbu = calcWaris({
       hasSuami: true, jumlahIstri: 0, anakLaki: 1, anakPerempuan: 0, hasAyah: false, hasIbu: false, hasNenek: true, totalHarta: 1_000_000,
@@ -82,7 +82,7 @@ describe('calcWaris', () => {
     const blocked = calcWaris({
       hasSuami: false, jumlahIstri: 0, anakLaki: 1, anakPerempuan: 0, hasAyah: false, hasIbu: false, saudaraLaki: 1, totalHarta: 1_000_000,
     });
-    expect(blocked.results.some((r) => r.label.includes('Saudara'))).toBe(false);
+    expect(blocked.results.filter((r) => r.label.includes('Saudara')).every((r) => r.fraction === 0)).toBe(true);
 
     const eligible = calcWaris({
       hasSuami: false, jumlahIstri: 0, anakLaki: 0, anakPerempuan: 0, hasAyah: false, hasIbu: false, saudaraLaki: 1, saudaraPerempuan: 1, totalHarta: 900_000,
@@ -145,7 +145,7 @@ describe('calcWaris', () => {
     const { results } = calcWaris({
       hasSuami: false, jumlahIstri: 0, anakLaki: 1, anakPerempuan: 1, hasAyah: false, hasIbu: false, saudaraPerempuan: 1, totalHarta: 1_000_000,
     });
-    expect(results.some((r) => r.label.includes('Saudara'))).toBe(false);
+    expect(results.filter((r) => r.label.includes('Saudara')).every((r) => r.fraction === 0)).toBe(true);
   });
 
   it('redistributes a real radd shortfall proportionally among fardh heirs, never to suami/istri', () => {
@@ -202,7 +202,7 @@ describe('calcWaris', () => {
       hasSuami: false, jumlahIstri: 0, anakLaki: 0, anakPerempuan: 1, hasAyah: false, hasIbu: false,
       anakLakiWafatPengganti: true, cucuPerempuanPengganti: 1, saudaraPerempuan: 1, totalHarta: 1_000_000,
     });
-    expect(results.some((r) => r.label.includes('Saudara'))).toBe(false);
+    expect(results.filter((r) => r.label.includes('Saudara')).every((r) => r.fraction === 0)).toBe(true);
   });
   it('anak murtad gets Rp 0 and is treated as non-existent: no effect on anyone else\'s share', () => {
     const base = { hasSuami: true, jumlahIstri: 0, anakLaki: 0, anakPerempuan: 0, hasAyah: false, hasIbu: true, totalHarta: 1_200_000 };
@@ -224,5 +224,121 @@ describe('calcWaris', () => {
       saudaraLaki: 1, anakLakiMurtad: 1, totalHarta: 1_000_000,
     });
     expect(results.find((r) => r.label.includes('Saudara Laki-laki')).fraction).toBeCloseTo(1);
+  });
+  // ---- Rules transcribed from the Taklim Cipete "Ahli Waris / Porsi / Syarat" tables ----
+  const base = { hasSuami: false, jumlahIstri: 0, anakLaki: 0, anakPerempuan: 0, hasAyah: false, hasIbu: false, totalHarta: 1_200_000 };
+  const fr = (res, label) => res.results.find((r) => r.label === label)?.fraction;
+
+  it('anak perempuan alone gets 1/2 (not the whole estate); ayah then takes 1/6 + the residue as ashabah', () => {
+    const r = calcWaris({ ...base, anakPerempuan: 1, hasAyah: true });
+    expect(fr(r, 'Anak Perempuan')).toBeCloseTo(1 / 2);
+    expect(fr(r, 'Ayah (fardh 1/6)')).toBeCloseTo(1 / 6);
+    expect(fr(r, "Ayah ('ashabah)")).toBeCloseTo(1 / 3);
+  });
+
+  it('two anak perempuan share 2/3 equally', () => {
+    const r = calcWaris({ ...base, anakPerempuan: 2, hasAyah: true, hasIbu: true });
+    expect(fr(r, 'Anak Perempuan 1')).toBeCloseTo(1 / 3);
+    expect(fr(r, 'Anak Perempuan 2')).toBeCloseTo(1 / 3);
+  });
+
+  it('suami + ibu + 1 anak perempuan: shortfall is radd to ibu and anak only, never to suami', () => {
+    const r = calcWaris({ ...base, hasSuami: true, hasIbu: true, anakPerempuan: 1 });
+    expect(fr(r, 'Suami')).toBeCloseTo(12 / 48);
+    expect(fr(r, 'Ibu')).toBeCloseTo(9 / 48);
+    expect(fr(r, 'Anak Perempuan')).toBeCloseTo(27 / 48);
+    expect(r.warnings).toContain('radd');
+  });
+
+  it('cucu perempuan dari anak laki-laki: 1/2 alone, and 1/6 completing 2/3 beside one anak perempuan', () => {
+    const alone = calcWaris({ ...base, cucuPerempuanDariAnakLaki: 1, pamanKandung: 1 });
+    expect(fr(alone, 'Cucu Perempuan (dari anak lk)')).toBeCloseTo(1 / 2);
+    expect(fr(alone, 'Paman Kandung')).toBeCloseTo(1 / 2);
+
+    const withDaughter = calcWaris({ ...base, anakPerempuan: 1, cucuPerempuanDariAnakLaki: 1, pamanKandung: 1 });
+    expect(fr(withDaughter, 'Anak Perempuan')).toBeCloseTo(1 / 2);
+    expect(fr(withDaughter, 'Cucu Perempuan (dari anak lk)')).toBeCloseTo(1 / 6);
+    expect(fr(withDaughter, 'Paman Kandung')).toBeCloseTo(1 / 3);
+  });
+
+  it('cucu perempuan is mahjub by 2+ anak perempuan, unless a cucu laki-laki brings her in as ashabah', () => {
+    const blocked = calcWaris({ ...base, anakPerempuan: 2, cucuPerempuanDariAnakLaki: 1, pamanKandung: 1 });
+    expect(blocked.results.find((r) => r.label.includes('Cucu Perempuan')).label).toContain('Mahjub');
+    expect(fr(blocked, 'Paman Kandung')).toBeCloseTo(1 / 3);
+
+    const withBrother = calcWaris({ ...base, anakPerempuan: 2, cucuLakiDariAnakLaki: 1, cucuPerempuanDariAnakLaki: 1 });
+    expect(fr(withBrother, 'Cucu Laki-laki (dari anak lk)')).toBeCloseTo(2 / 9);
+    expect(fr(withBrother, 'Cucu Perempuan (dari anak lk)')).toBeCloseTo(1 / 9);
+  });
+
+  it('cucu (any) is mahjub by a living anak laki-laki', () => {
+    const r = calcWaris({ ...base, anakLaki: 1, cucuLakiDariAnakLaki: 1, cucuPerempuanDariAnakLaki: 1 });
+    expect(fr(r, 'Anak Laki-laki')).toBeCloseTo(1);
+    expect(r.results.filter((x) => x.label.includes('Cucu')).every((x) => x.fraction === 0 && x.label.includes('Mahjub'))).toBe(true);
+  });
+
+  it('saudari seayah: 1/6 completing 2/3 beside one saudari kandung; mahjub beside two', () => {
+    const one = calcWaris({ ...base, saudaraPerempuan: 1, saudaraPerempuanSeayah: 1, pamanKandung: 1 });
+    expect(fr(one, 'Saudara Perempuan Kandung')).toBeCloseTo(1 / 2);
+    expect(fr(one, 'Saudara Perempuan Seayah')).toBeCloseTo(1 / 6);
+    expect(fr(one, 'Paman Kandung')).toBeCloseTo(1 / 3);
+
+    const two = calcWaris({ ...base, saudaraPerempuan: 2, saudaraPerempuanSeayah: 1, pamanKandung: 1 });
+    expect(two.results.find((r) => r.label.includes('Saudara Perempuan Seayah')).label).toContain('Mahjub');
+  });
+
+  it('saudari seayah alone: 1/2 for one, 2/3 for two+', () => {
+    const one = calcWaris({ ...base, saudaraPerempuanSeayah: 1, pamanKandung: 1 });
+    expect(fr(one, 'Saudara Perempuan Seayah')).toBeCloseTo(1 / 2);
+    const two = calcWaris({ ...base, saudaraPerempuanSeayah: 2, pamanKandung: 1 });
+    expect(fr(two, 'Saudara Perempuan Seayah 1')).toBeCloseTo(1 / 3);
+  });
+
+  it("two saudari kandung + 1 anak perempuan: saudari take the residue as 'ashabah ma'al ghair and saudara seayah are mahjub", () => {
+    const r = calcWaris({ ...base, anakPerempuan: 1, saudaraPerempuan: 2, saudaraLakiSeayah: 1 });
+    expect(fr(r, "Saudara Perempuan Kandung 1 ('ashabah ma'al ghair)")).toBeCloseTo(1 / 4);
+    expect(fr(r, "Saudara Perempuan Kandung 2 ('ashabah ma'al ghair)")).toBeCloseTo(1 / 4);
+    expect(r.results.find((x) => x.label.includes('Seayah')).label).toContain('Mahjub');
+  });
+
+  it('saudara seibu: 1/6 alone, 1/3 shared equally for two+ regardless of gender; mahjub by any keturunan', () => {
+    const one = calcWaris({ ...base, saudaraPerempuanSeibu: 1, pamanKandung: 1 });
+    expect(fr(one, 'Saudara Perempuan Seibu')).toBeCloseTo(1 / 6);
+    const two = calcWaris({ ...base, saudaraLakiSeibu: 1, saudaraPerempuanSeibu: 1, pamanKandung: 1 });
+    expect(fr(two, 'Saudara Laki-laki Seibu')).toBeCloseTo(1 / 6);
+    expect(fr(two, 'Saudara Perempuan Seibu')).toBeCloseTo(1 / 6);
+    const blocked = calcWaris({ ...base, anakPerempuan: 1, saudaraLakiSeibu: 1, pamanKandung: 1 });
+    expect(blocked.results.find((r) => r.label.includes('Seibu')).label).toContain('Mahjub');
+  });
+
+  it('umariyatain: with suami/istri + ayah + ibu (no keturunan), ibu gets 1/3 of what is LEFT after the spouse', () => {
+    const suami = calcWaris({ ...base, hasSuami: true, hasAyah: true, hasIbu: true });
+    expect(fr(suami, 'Suami')).toBeCloseTo(1 / 2);
+    expect(fr(suami, 'Ibu')).toBeCloseTo(1 / 6);
+    expect(fr(suami, "Ayah ('ashabah)")).toBeCloseTo(1 / 3);
+    const istri = calcWaris({ ...base, jumlahIstri: 1, hasAyah: true, hasIbu: true });
+    expect(fr(istri, 'Ibu')).toBeCloseTo(1 / 4);
+    expect(fr(istri, "Ayah ('ashabah)")).toBeCloseTo(1 / 2);
+    // with kakek instead of ayah, ibu keeps the plain 1/3
+    const kakek = calcWaris({ ...base, hasSuami: true, hasKakek: true, hasIbu: true });
+    expect(fr(kakek, 'Ibu')).toBeCloseTo(1 / 3);
+  });
+
+  it("remote 'ashabah follows the classical order: anak saudara kandung before paman", () => {
+    const r = calcWaris({ ...base, anakSaudaraKandung: 1, pamanKandung: 1 });
+    expect(fr(r, 'Anak Laki-laki Saudara Kandung')).toBeCloseTo(1);
+    expect(r.results.find((x) => x.label.startsWith('Paman')).label).toContain('Mahjub');
+  });
+
+  it('mushtarakah: when fardh uses the whole estate, saudara kandung get nothing and the case is flagged', () => {
+    const r = calcWaris({ ...base, hasSuami: true, hasIbu: true, saudaraLakiSeibu: 1, saudaraPerempuanSeibu: 1, saudaraLaki: 1 });
+    expect(r.warnings).toContain('musytarakah');
+    expect(r.results.find((row) => row.label.startsWith('Saudara Laki-laki Kandung')).fraction).toBe(0);
+  });
+
+  it('anak perempuan alone: 1/2 then radd to the whole estate', () => {
+    const r = calcWaris({ ...base, anakPerempuan: 1 });
+    expect(fr(r, 'Anak Perempuan')).toBeCloseTo(1);
+    expect(r.warnings).toContain('radd');
   });
 });
