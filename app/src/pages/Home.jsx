@@ -340,7 +340,7 @@ export default function Home() {
               const wide = cells % 2 === 1 && last;
               return (
                 <Link key={c.key} to={c.to} state={c.state} onMouseEnter={c.prefetch} onTouchStart={c.prefetch} className={`glass b-card b-card-link${wide ? ' b-card-wide' : ''}`}>
-                  <div className="j-plate" style={{ '--plate': c.bg }}>{c.icon}</div>
+                  <div className="j-plate" style={{ '--plate': `var(--tint-${((i + 1) % 6) + 1})` }}>{c.icon}</div>
                   <div>
                     <div className="b-eyebrow">Lanjutkan</div>
                     <div className="b-title">{c.title}</div>
@@ -408,7 +408,7 @@ export default function Home() {
                 const sub = feat ? FEATURE_SUB[j.to] : null;
                 return (
                   <Link key={j.to} to={j.to} onMouseEnter={j.prefetch} onTouchStart={j.prefetch} className={`glass b-tile${feat ? ' b-tile-feat' : ''}${span > 2 && !feat ? ' b-tile-stretch' : ''}`} style={{ gridColumn: `span ${span}` }}>
-                    <div className="j-plate" style={{ '--plate': j.bg, position: 'relative' }}>
+                    <div className="j-plate" style={{ '--plate': `var(--tint-${(i % 6) + 1})`, position: 'relative' }}>
                       {j.icon}
                       {j.to === '/doa' && hasNewDoa && <span aria-hidden="true" className="unseen-dot" style={{ position: 'absolute', top: -3, right: -3, width: 9, height: 9, borderRadius: '50%', background: 'var(--danger)', border: '1.5px solid var(--card)' }} />}
                     </div>

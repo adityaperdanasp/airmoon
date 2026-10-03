@@ -79,15 +79,10 @@ export default function BottomNav() {
         {activeIndex >= 0 && (
           <div
             aria-hidden="true"
+            className="nav-indicator"
             style={{
-              position: 'absolute',
-              top: 6,
-              bottom: 6,
               left: `calc(${(100 / ITEMS.length) * activeIndex}% + 4px)`,
               width: `calc(${100 / ITEMS.length}% - 8px)`,
-              borderRadius: 999,
-              background: 'var(--mint)',
-              transition: 'left var(--dur-2) var(--ease)',
             }}
           />
         )}
@@ -102,7 +97,7 @@ export default function BottomNav() {
             onTouchStart={prefetch}
           >
             <span className="nav-icon" style={{ position: 'relative', display: 'inline-flex' }}>
-              <Icon strokeWidth="1.8" />
+              <Icon strokeWidth={location.pathname === to ? '2.1' : '1.7'} />
               {to === '/' && hasNewDonasi && <Dot />}
               {to === '/donasi' && hasNewDonasi && <Dot />}
             </span>

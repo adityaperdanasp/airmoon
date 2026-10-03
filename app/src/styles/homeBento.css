@@ -37,11 +37,6 @@ html[data-screen='home'] .prayer-strip {
 /* The prayer strip straddles the sky and the page: a see-through fill let
    the sky wash the times out, so it gets a firmer surface. */
 html[data-screen='home'] .prayer-strip { background: color-mix(in srgb, var(--bg) 78%, transparent) !important; }
-html[data-screen='home'] .bottomnav {
-  background: color-mix(in srgb, var(--bg) 45%, transparent) !important;
-  -webkit-backdrop-filter: blur(26px) saturate(160%); backdrop-filter: blur(26px) saturate(160%);
-  border: 1px solid color-mix(in srgb, var(--ink) 16%, transparent) !important;
-}
 
 /* ---- Type ------------------------------------------------------------- */
 .b-eyebrow { font-size: 10.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--b-text3, var(--muted)); line-height: 1; }
@@ -103,3 +98,46 @@ html[data-screen='home'] .don-link + .don-link { margin-top: -4px; }
 .b-tile-feat .b-label { font-size: 14px; font-weight: 700; letter-spacing: -0.01em; }
 .b-tile-feat .b-sub { font-size: 11.5px; margin-top: 2px; }
 .b-tile-stretch .b-label { font-size: 13px; font-weight: 700; }
+
+/* ---- Tinted icon plates ------------------------------------------------
+   Plates cycle through six hues instead of the catalog's one-off tokens
+   (which are dull translucent browns in dark). Home passes var(--tint-N). */
+html[data-screen='home'] { --tint-1: #e2f1ec; --tint-2: #fbf0d9; --tint-3: #f3e3de; --tint-4: #e3e8f6; --tint-5: #ece3f6; --tint-6: #e0f0e1; }
+html[data-theme='dark'][data-screen='home'] {
+  --tint-1: rgba(52,170,140,.34); --tint-2: rgba(232,184,75,.34); --tint-3: rgba(235,110,140,.30);
+  --tint-4: rgba(80,160,235,.30); --tint-5: rgba(150,115,235,.32); --tint-6: rgba(120,200,110,.28);
+}
+
+/* ---- Dark theme: give the glass light to work with ---------------------
+   Light mode reads rich because the mesh shows through bright glass. Dark
+   was flat because both were dim. Brighter, more saturated mesh; glass with
+   a diagonal sheen and a stronger rim; each card tinted by its own glow. */
+html[data-theme='dark'][data-screen='home'] .home-glow {
+  background:
+    radial-gradient(480px 400px at 96% 24%, rgba(232,170,60,.58), transparent 66%),
+    radial-gradient(440px 380px at -6% 46%, rgba(30,170,140,.55), transparent 66%),
+    radial-gradient(460px 400px at 92% 66%, rgba(130,90,230,.50), transparent 66%),
+    radial-gradient(440px 360px at 4% 90%, rgba(232,170,60,.40), transparent 66%),
+    radial-gradient(360px 300px at 50% 40%, rgba(40,120,200,.22), transparent 70%);
+}
+html[data-theme='dark'][data-screen='home'] .glass,
+html[data-theme='dark'][data-screen='home'] .don-card,
+html[data-theme='dark'][data-screen='home'] .prayer-strip {
+  background: linear-gradient(150deg, rgba(255,255,255,.15), rgba(255,255,255,.04) 55%, rgba(255,255,255,.08)) !important;
+  border: 1px solid rgba(255,255,255,.2) !important;
+  box-shadow: 0 16px 40px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.28), inset 0 -1px 0 rgba(255,255,255,.05);
+}
+html[data-theme='dark'][data-screen='home'] .prayer-strip { background: linear-gradient(150deg, rgba(30,34,32,.82), rgba(20,22,21,.78)) !important; }
+html[data-theme='dark'][data-screen='home'] .b-card {
+  background: radial-gradient(260px 200px at 100% 0%, rgba(232,184,75,.30), transparent 70%), linear-gradient(150deg, rgba(255,255,255,.15), rgba(255,255,255,.04) 55%, rgba(255,255,255,.08)) !important;
+}
+html[data-theme='dark'][data-screen='home'] .b-card-link {
+  background: radial-gradient(260px 200px at 100% 0%, rgba(40,190,160,.34), transparent 70%), linear-gradient(150deg, rgba(255,255,255,.15), rgba(255,255,255,.04) 55%, rgba(255,255,255,.08)) !important;
+}
+html[data-theme='dark'][data-screen='home'] .don-card {
+  background: radial-gradient(340px 240px at 100% 100%, rgba(140,100,240,.30), transparent 70%), linear-gradient(150deg, rgba(255,255,255,.14), rgba(255,255,255,.04) 55%, rgba(255,255,255,.07)) !important;
+}
+html[data-theme='dark'][data-screen='home'] .b-bar > div { box-shadow: 0 0 16px rgba(240,205,123,.8); }
+html[data-theme='dark'][data-screen='home'] .b-eyebrow { color: rgba(255,255,255,.62); }
+html[data-theme='dark'][data-screen='home'] .don-chip { background: linear-gradient(150deg, rgba(255,255,255,.16), rgba(255,255,255,.06)) !important; border-color: rgba(255,255,255,.22) !important; }
+html[data-theme='dark'][data-screen='home'] .don-link { background: rgba(255,255,255,.08) !important; }
