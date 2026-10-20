@@ -51,7 +51,7 @@ const FEATURE_SUB = { '/quran': 'Baca & dengarkan', '/lainnya/kiblat': "Arah ke 
 export default function Home() {
   const { user } = useAuth();
   const { t, lang } = useLang();
-  const { next, status: prayerStatus, data: prayerData } = usePrayerTimes();
+  const { next, status: prayerStatus, data: prayerData, override: prayerOverride, method: prayerMethodId } = usePrayerTimes();
   const [donations, setDonations] = useState(null);
   const [myContributions, setMyContributions] = useState([]);
   const [showSedekahHistory, setShowSedekahHistory] = useState(false);
@@ -286,7 +286,7 @@ export default function Home() {
           next={next}
           status={prayerStatus}
         />
-        <PrayerStrip timings={prayerData?.timings} nextKey={next?.key} />
+        <PrayerStrip timings={prayerData?.timings} nextKey={next?.key} location={prayerData?.locationLabel} manual={!!prayerOverride} methodId={prayerMethodId} />
 
         <div style={{ padding: '24px 20px 0', display: 'flex', flexDirection: 'column', gap: 26 }}>
           {hasBanners && (
