@@ -19,6 +19,7 @@ export default function ShareModalShell({
   drawArgs, // object passed to draw() and (if wallpaper) downloadCardWallpaper()
   filename, // e.g. 'sejarah-islam.png'
   shareTitle, // e.g. 'Sejarah Islam - airmoon'
+  shareText = '', // optional text (e.g. a deep link from lib/deepLink.js) sent along with the image
   wallpaper = false, // show the 3rd "Lock Screen HP" button
   wallpaperFilename,
   aspectRatio = '1080 / 1350',
@@ -63,7 +64,7 @@ export default function ShareModalShell({
     setBusy(true);
     try {
       const file = await canvasToFile(canvasRef.current, filename);
-      await shareFile({ file, title: shareTitle, onFallback: handleDownload });
+      await shareFile({ file, title: shareTitle, text: shareText || undefined, onFallback: handleDownload });
     } finally {
       setBusy(false);
     }

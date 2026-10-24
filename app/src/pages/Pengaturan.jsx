@@ -19,6 +19,7 @@ import AchievementShareModal from '../components/AchievementShareModal';
 import { ACCENT_OPTIONS, loadAccentColor, setAccentColor } from '../lib/accentColor';
 import SegButton from '../components/SegButton';
 import DisplayPrefsCard from '../components/DisplayPrefsCard';
+import IqamahCard from '../components/IqamahCard';
 import ToggleSwitch from '../components/ToggleSwitch';
 import { watchEmailOptIn, setEmailOptIn } from '../lib/emailPrefs';
 import SupporterCard from '../components/SupporterCard';
@@ -637,6 +638,8 @@ export default function Pengaturan() {
           </div>
 
           <DisplayPrefsCard />
+
+          <IqamahCard />
 
           {isNativeApp() && <AzanSoundPicker />}
 

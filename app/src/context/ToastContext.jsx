@@ -46,6 +46,8 @@ export function ToastProvider({ children }) {
   // present (5s vs 2.4s) — reading a label and deciding whether to tap it
   // takes longer than just reading a plain confirmation message.
   const showToast = useCallback((message, { type = 'default', icon, duration, actionLabel, onAction } = {}) => {
+    // Mode Fokus Sholat: tidak ada yang boleh mengganggu.
+    if (document.documentElement.dataset.focusMode) return;
     const id = `${Date.now()}-${Math.random()}`;
     const resolvedDuration = duration ?? (actionLabel ? 5000 : 2400);
     setToasts((prev) => [...prev, { id, message, type, icon, actionLabel, onAction }].slice(-MAX_VISIBLE_TOASTS));

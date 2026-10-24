@@ -11,5 +11,9 @@ export function getSeason(hijri, date = new Date()) {
   if (month === 12 && day === 9) return { id: 'arafah', label: 'Hari Arafah · puasa bagi yang tidak berhaji' };
   if (month === 1 && day === 10) return { id: 'asyura', label: 'Hari Asyura · 10 Muharram' };
   if (date.getDay() === 5) return { id: 'jumat', label: 'Hari Jumat · sebaik-baik hari' };
+  // Ayyamul Bidh (13-15 tiap bulan Hijriah, kecuali Ramadhan dan 13 Dzulhijjah/Tasyriq)
+  if (day >= 13 && day <= 15 && month !== 9 && !(month === 12 && day === 13)) return { id: 'sunnah', label: 'Ayyamul Bidh · hari ini puasa sunnah' };
+  if (date.getDay() === 1) return { id: 'sunnah', label: 'Senin · hari puasa sunnah' };
+  if (date.getDay() === 4) return { id: 'sunnah', label: 'Kamis · hari puasa sunnah, besok Jumat' };
   return null;
 }

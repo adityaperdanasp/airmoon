@@ -93,7 +93,7 @@ messaging.onBackgroundMessage((payload) => {
     // (iOS Safari and the native app's own FcmService.kt-built
     // notifications silently ignore this field) — the default full-tap
     // behavior below still opens Jadwal Sholat everywhere as a fallback.
-    ...(tag.startsWith('adzan-') ? { actions: [{ action: 'kiblat', title: '🧭 Kiblat' }] } : {}),
+    ...(tag.startsWith('adzan-') ? { actions: [{ action: 'kiblat', title: '🧭 Kiblat' }, { action: 'sudah', title: '✓ Sudah sholat' }] } : {}),
     // `badge` is the tiny status-bar glyph (Android Chrome tints it) — it
     // must be a monochrome silhouette, not the full-colour app icon,
     // which the OS renders as a white blob. Airmoon crescent, white on
@@ -130,6 +130,15 @@ self.addEventListener('notificationclick', (event) => {
     return;
   }
   const tag = event.notification.tag || '';
+  // "Sudah sholat" (2026-10-24) — opens the app on Home with ?tandai=<waktu>,
+  // which ticks that prayer in Amalan Harian (Home.jsx). A service worker
+  // has no Firebase auth session, so it can't write the checkmark itself.
+  if (event.action === 'sudah') {
+    const map = { Fajr: 'subuh', Dhuhr: 'dzuhur', Asr: 'ashar', Maghrib: 'maghrib', Isha: 'isya' };
+    const key = map[tag.replace('adzan-', '')];
+    event.waitUntil(clients.openWindow(key ? '/?tandai=' + key : '/'));
+    return;
+  }
   let url = '/jadwal-sholat'; // adzan-* and any unrecognized tag
   if (tag.startsWith('doa-')) url = '/doa';
   else if (tag.startsWith('campaign-funded-')) url = '/donasi';

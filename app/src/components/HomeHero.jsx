@@ -103,7 +103,7 @@ export default function HomeHero({ user, avatarPhoto, avatarColor, greeting, set
         />
       </svg>
 
-      {season && <SeasonOrnament id={season.id} />}
+      {season && season.id !== 'sunnah' && <SeasonOrnament id={season.id} />}
       <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
           <div

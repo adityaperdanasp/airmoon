@@ -32,7 +32,9 @@ import { hasSeenOnboarding, markOnboardingSeen } from '../lib/onboarding';
 import RatingPromptModal from '../components/RatingPromptModal';
 import { shouldShowRatingPrompt, markRatingPromptShown, dismissRatingPromptForever } from '../lib/ratingPrompt';
 import { submitFeedback } from '../lib/feedback';
-import { markLoginPoint } from '../lib/amalanHarian';
+import { markLoginPoint, SHOLAT_KEYS, setSholatDone } from '../lib/amalanHarian';
+import { ibadahLocks } from '../lib/ibadahWindows';
+import { useToast } from '../context/ToastContext';
 import HomeHero from '../components/HomeHero';
 import NPSPromptModal from '../components/NPSPromptModal';
 import { shouldShowNpsPrompt, markNpsPromptShown, dismissNpsPromptForever, submitNpsResponse } from '../lib/npsPrompt';
@@ -64,7 +66,8 @@ export default function Home() {
   const [interestTag, setInterestTagState] = useState(null);
   const [lastReadAyat, setLastReadAyat] = useState(null);
   const [lastReadMushaf, setLastReadMushaf] = useState(null);
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { showToast } = useToast();
   // Latar seluruh app ikut sholat yang sedang ditunggu.
   useEffect(() => {
     if (next?.label) applySky(next.label);
@@ -195,6 +198,15 @@ export default function Home() {
     const ayatBookmark = data?.lastReadAyat || data?.lastRead;
     if (ayatBookmark) setLastReadAyat(ayatBookmark);
     if (data?.lastReadMushaf) setLastReadMushaf(data.lastReadMushaf);
+    // Tahan tab Qur'an di navigasi bawah untuk lanjut membaca (BottomNav.jsx).
+    try {
+      const resume = data?.lastReadMushaf
+        ? `/quran/mushaf/${data.lastReadMushaf.page}?ayat=${data.lastReadMushaf.verseKey}`
+        : ayatBookmark ? `/quran/${ayatBookmark.nomor}?ayat=${ayatBookmark.ayat}` : null;
+      if (resume) localStorage.setItem('airmoon-quran-resume', resume);
+    } catch {
+      // ignore
+    }
   }
 
   useEffect(() => {
@@ -203,6 +215,22 @@ export default function Home() {
     // is redefined every render (not memoized); including it here would
     // refire this on every render instead of only when the user changes.
   }, [user]);
+
+  // Tombol "Sudah sholat" di notifikasi adzan membuka Home dengan ?tandai=<waktu>:
+  // centang sholat itu (kalau waktunya belum lewat) lalu bersihkan parameternya.
+  useEffect(() => {
+    const key = searchParams.get('tandai');
+    if (!key || !user?.uid || !SHOLAT_KEYS.includes(key)) return;
+    const locks = ibadahLocks(prayerData?.timings);
+    if (prayerData && locks[key]) {
+      showToast('Waktu sholat itu sudah habis, jadi tidak bisa dicentang lagi.', { type: 'danger' });
+    } else {
+      setSholatDone(user.uid, key, true).then(() => showToast('Alhamdulillah, tercatat ✓'));
+    }
+    const next = new URLSearchParams(searchParams);
+    next.delete('tandai');
+    setSearchParams(next, { replace: true });
+  }, [searchParams, user?.uid, prayerData]);
 
   // "Progress Hari Ini" PWA shortcut (manifest.json) deep-links here with
   // ?focus=amalan since Amalan Harian lives inline on Home rather than its

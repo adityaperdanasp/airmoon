@@ -23,10 +23,11 @@ export async function shareText({ text, title }) {
 // `onFallback` runs when there's no real share target for a file (no
 // Web Share API, or the browser reports it can't share files at all) —
 // callers pass their own download handler.
-export async function shareFile({ file, title, onFallback }) {
+export async function shareFile({ file, title, text, onFallback }) {
   if (navigator.share && navigator.canShare?.({ files: [file] })) {
     try {
-      await navigator.share({ files: [file], title });
+      // `text` carries a deep link (lib/deepLink.js) so whoever receives the image can open the same content in the app.
+      await navigator.share({ files: [file], title, ...(text ? { text } : {}) });
       return 'shared';
     } catch {
       return 'cancelled';

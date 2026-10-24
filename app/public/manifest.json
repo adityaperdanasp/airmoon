@@ -15,31 +15,93 @@
       "name": "Jadwal Sholat",
       "short_name": "Sholat",
       "url": "/jadwal-sholat",
-      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
     },
     {
       "name": "Tasbih Digital",
       "short_name": "Tasbih",
       "url": "/lainnya/tasbih",
-      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
     },
     {
       "name": "Cari Ayat",
       "short_name": "Cari Ayat",
       "url": "/quran/cari",
-      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
     },
     {
       "name": "Progress Hari Ini",
       "short_name": "Progress",
       "url": "/?focus=amalan",
-      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Arah Kiblat",
+      "short_name": "Kiblat",
+      "url": "/lainnya/kiblat",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Mode Fokus Sholat",
+      "short_name": "Fokus",
+      "url": "/lainnya/fokus-sholat",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
     }
   ],
   "icons": [
-    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "/icons/maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
-    { "src": "/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ]
 }

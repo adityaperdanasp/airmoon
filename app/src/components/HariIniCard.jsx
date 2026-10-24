@@ -5,6 +5,7 @@ import { ibadahLocks, useMinuteTick, LOCK_HINT } from '../lib/ibadahWindows';
 import AmalanHarianCard from './AmalanHarianCard';
 import MoodCheckIn from './MoodCheckIn';
 import AmalanHeatmap from './AmalanHeatmap';
+import MiniTasbih from './MiniTasbih';
 
 const INITIAL = { subuh: 'S', dzuhur: 'D', ashar: 'A', maghrib: 'M', isya: 'I' };
 
@@ -79,6 +80,7 @@ export default function HariIniCard({ uid, forceOpen, timings }) {
       {open && (
         <div style={{ gridColumn: '1 / -1', order: 99, display: 'flex', flexDirection: 'column', gap: 14 }}>
           <AmalanHarianCard uid={uid} locks={locks} />
+          <MiniTasbih />
           <MoodCheckIn uid={uid} />
           <AmalanHeatmap uid={uid} />
         </div>

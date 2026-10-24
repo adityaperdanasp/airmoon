@@ -14,6 +14,9 @@ import LocationSearch from '../components/LocationSearch';
 import { PRAYER_METHODS } from '../lib/prayerMethod';
 import { buildPrayerTimesIcs, downloadIcs } from '../lib/icsExport';
 import { checkTraveledFromOverride } from '../lib/travelDetection';
+import JadwalShareModal from '../components/JadwalShareModal';
+import { useTheme } from '../context/ThemeContext';
+import { IconShare } from '../components/icons';
 
 // Background push (works with the app closed) — Firestore's notifEnabled
 // flag is the source of truth, kept live via onSnapshot so a toggle flipped
@@ -58,6 +61,8 @@ function useNotifyToggle(uid, location) {
 export default function JadwalSholat() {
   const { user } = useAuth();
   const { status, data, next, prayerOrder, prayerLabel, override, setOverride, method, setMethod } = usePrayerTimes();
+  const { theme } = useTheme();
+  const [showShare, setShowShare] = useState(false);
   const [methodOpen, setMethodOpen] = useState(false);
   const location = data ? { lat: data.lat, lng: data.lng } : null;
   const { enabled, toggle, busy, error: notifError, leadMinutes } = useNotifyToggle(user?.uid, location);
@@ -111,6 +116,13 @@ export default function JadwalSholat() {
         <PageHeaderPhoto
           title="Jadwal Sholat"
           photo={PAGE_PHOTOS.jadwalSholat}
+          right={
+            data && (
+              <button className="icon-btn" onClick={() => setShowShare(true)} aria-label="Bagikan jadwal sholat hari ini" title="Bagikan jadwal">
+                <IconShare width="16" height="16" />
+              </button>
+            )
+          }
           subtitle={
             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)">
@@ -394,6 +406,18 @@ export default function JadwalSholat() {
           </>
         )}
       </div>
+            {showShare && data && (
+        <JadwalShareModal
+          timings={data.timings}
+          location={data.locationLabel}
+          dateLabel={new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date())}
+          hijriLabel={data.hijri ? `${data.hijri.day} ${data.hijri.month?.en || ''} ${data.hijri.year} H` : ''}
+          methodLabel={PRAYER_METHODS.find((m) => m.id === method)?.label}
+          source={override ? 'Lokasi manual' : 'Sesuai GPS'}
+          theme={theme}
+          onClose={() => setShowShare(false)}
+        />
+      )}
       <BottomNav />
 
       {showPrimer && (

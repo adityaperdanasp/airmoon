@@ -49,6 +49,9 @@ export default function DisplayPrefsCard() {
       <Row title="Kurangi efek" sub="Matikan blur, latar warna-warni, dan animasi. Lebih ringan di HP lama.">
         <ToggleSwitch checked={p.fx === 'reduced'} onChange={(v) => set('fx', v ? 'reduced' : 'full')} />
       </Row>
+      <Row title="Buka ke halaman terakhir" sub="Saat aplikasi dibuka, langsung lanjut ke halaman yang terakhir kamu pakai.">
+        <ToggleSwitch checked={p.resume} onChange={(v) => set('resume', v)} />
+      </Row>
       <Row title="Getar halus" sub="Getaran singkat saat mencentang ibadah.">
         <ToggleSwitch checked={p.haptics} onChange={(v) => set('haptics', v)} />
       </Row>

@@ -9,7 +9,7 @@
 //   sound     boolean                                   (bunyi "tik" halus, default mati)
 // plus `sky`, yang bukan pilihan pengguna: nama sholat yang sedang
 // ditunggu, ditulis Home supaya warna latar seluruh app ikut waktu sholat.
-const KEYS = { fx: 'airmoon-ui-fx', zoom: 'airmoon-ui-zoom', contrast: 'airmoon-ui-contrast', oled: 'airmoon-ui-oled', haptics: 'airmoon-ui-haptics', sound: 'airmoon-ui-sound', sky: 'airmoon-ui-sky' };
+const KEYS = { fx: 'airmoon-ui-fx', zoom: 'airmoon-ui-zoom', contrast: 'airmoon-ui-contrast', oled: 'airmoon-ui-oled', haptics: 'airmoon-ui-haptics', sound: 'airmoon-ui-sound', sky: 'airmoon-ui-sky', resume: 'airmoon-ui-resume', lastRoute: 'airmoon-ui-last-route' };
 
 function read(key, fallback) {
   try {
@@ -36,6 +36,7 @@ export function getUiPrefs() {
     oled: read(KEYS.oled, '0') === '1',
     haptics: read(KEYS.haptics, '1') !== '0',
     sound: read(KEYS.sound, '0') === '1',
+    resume: read(KEYS.resume, '0') === '1',
   };
 }
 
@@ -51,7 +52,7 @@ export function applyUiPrefs(p = getUiPrefs()) {
 }
 
 export function setUiPref(name, value) {
-  const store = { fx: value, zoom: value, contrast: value, oled: value ? '1' : '0', haptics: value ? '1' : '0', sound: value ? '1' : '0' };
+  const store = { fx: value, zoom: value, contrast: value, oled: value ? '1' : '0', haptics: value ? '1' : '0', sound: value ? '1' : '0', resume: value ? '1' : '0' };
   write(KEYS[name], store[name]);
   applyUiPrefs();
 }
@@ -99,4 +100,21 @@ export function softTick() {
   } catch {
     // ignore
   }
+}
+
+// Buka ke aktivitas terakhir (opsional): ingat halaman terakhir yang dibuka,
+// lalu saat aplikasi dibuka di Home sekali per sesi, langsung lompat ke sana.
+export function rememberRoute(pathname) {
+  if (pathname === '/' || pathname.startsWith('/login') || pathname.startsWith('/signup') || pathname.startsWith('/x-')) return;
+  write(KEYS.lastRoute, pathname);
+}
+export function routeToResume() {
+  if (read(KEYS.resume, '0') !== '1') return null;
+  try {
+    if (sessionStorage.getItem('airmoon-resumed')) return null;
+    sessionStorage.setItem('airmoon-resumed', '1');
+  } catch {
+    return null;
+  }
+  return read(KEYS.lastRoute, '') || null;
 }

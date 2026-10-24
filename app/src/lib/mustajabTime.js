@@ -5,6 +5,8 @@
 // specific/rare first) since more than one could technically overlap
 // (e.g. Jumat's pre-Maghrib window and the adzan-Maghrib window itself).
 
+import { getIqamahOffsets } from './iqamah';
+
 function parseTimeToday(hhmm, base = new Date()) {
   const [h, m] = hhmm.split(':').map(Number);
   const d = new Date(base);
@@ -29,13 +31,14 @@ export function getMustajabWindow(timings, now = new Date()) {
     }
   }
 
-  // 2. Antara adzan dan iqamah — approximated as the 10 minutes right
-  // after each adzan time, since this app has no real iqamah time to
-  // read from.
+  // 2. Antara adzan dan iqamah — the gap per prayer is user-set
+  // (lib/iqamah.js, Pengaturan), since this app has no real iqamah time
+  // for each mosque.
+  const offsets = getIqamahOffsets();
   for (const key of ADZAN_ORDER) {
     if (!timings[key]) continue;
     const adzan = parseTimeToday(timings[key], now);
-    const windowEnd = new Date(adzan.getTime() + 10 * 60000);
+    const windowEnd = new Date(adzan.getTime() + (offsets[key] || 10) * 60000);
     if (now >= adzan && now < windowEnd) {
       return { key: 'antara-adzan-iqamah', message: 'Ini waktu mustajab: antara adzan dan iqamah. Yuk sempatkan berdoa sebelum sholat.' };
     }

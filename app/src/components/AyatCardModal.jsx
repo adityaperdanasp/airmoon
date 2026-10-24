@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { drawAyatCard } from '../lib/ayatCardCanvas';
 import { useTheme } from '../context/ThemeContext';
 import ShareModalShell from './ShareModalShell';
+import { appLink } from '../lib/deepLink';
 import CardOverlayPicker from './CardOverlayPicker';
 
 // Bagikan Ayat sebagai gambar — has the "Lock Screen HP" wallpaper option
@@ -18,6 +19,7 @@ export default function AyatCardModal({ ayat, onClose }) {
       filename={`ayat-${ayat.chapter}-${ayat.verse}.png`}
       wallpaperFilename={`ayat-${ayat.chapter}-${ayat.verse}-lockscreen.png`}
       shareTitle="Ayat dari airmoon"
+      shareText={`QS. ${ayat.chapterName} : ${ayat.verse}\n${appLink(`/quran/${ayat.chapter}?ayat=${ayat.verse}`)}`}
       wallpaper
       extra={<CardOverlayPicker value={overlayId} onChange={setOverlayId} />}
       onClose={onClose}
