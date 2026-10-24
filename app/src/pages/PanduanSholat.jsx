@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import TopBar from '../components/TopBar';
 import { useLang } from '../context/LangContext';
 import { SHOLAT_STEPS, PRAYER_RAKAAT_INFO } from '../data/sholatGuide';
+import { fetchSurahDetail } from '../lib/quranApi';
 
 // Panduan Sholat Pemula (2026-09-12) — step-by-step for a muallaf or
 // anyone relearning sholat from scratch. Deliberately linear (prev/next,
@@ -12,6 +13,31 @@ export default function PanduanSholat() {
   const [step, setStep] = useState(0);
   const [showRakaat, setShowRakaat] = useState(false);
   const current = SHOLAT_STEPS[step];
+  // Dengarkan Al-Fatihah lengkap (murottal Misyari Rasyid Al-Afasy) pada
+  // langkah Al-Fatihah, supaya pemula bisa menirukan bacaannya.
+  const audioRef = useRef(null);
+  const [fatihahState, setFatihahState] = useState('idle'); // idle | loading | playing | error
+  async function toggleFatihah() {
+    if (fatihahState === 'playing') {
+      audioRef.current?.pause();
+      setFatihahState('idle');
+      return;
+    }
+    try {
+      setFatihahState('loading');
+      if (!audioRef.current) {
+        const data = await fetchSurahDetail(1);
+        const url = data.audioFull?.['05'];
+        if (!url) throw new Error('no audio');
+        audioRef.current = new Audio(url);
+        audioRef.current.onended = () => setFatihahState('idle');
+      }
+      await audioRef.current.play();
+      setFatihahState('playing');
+    } catch {
+      setFatihahState('error');
+    }
+  }
   const isFirst = step === 0;
   const isLast = step === SHOLAT_STEPS.length - 1;
 
@@ -44,6 +70,11 @@ export default function PanduanSholat() {
             </div>
           ) : (
             <p style={{ margin: 0, padding: '14px 16px', borderRadius: 14, background: 'var(--bg)', fontSize: 12, lineHeight: 1.55, color: 'var(--muted)' }}>{current.translation}</p>
+          )}
+          {current.title === 'Al-Fatihah' && (
+            <button className="btn-outline" onClick={toggleFatihah} disabled={fatihahState === 'loading'} style={{ alignSelf: 'flex-start', width: 'auto', padding: '9px 18px' }}>
+              {fatihahState === 'playing' ? 'Jeda' : fatihahState === 'loading' ? 'Memuat…' : fatihahState === 'error' ? 'Gagal memuat, coba lagi' : 'Dengarkan Al-Fatihah'}
+            </button>
           )}
         </div>
 

@@ -70,7 +70,7 @@ html[data-screen='home'] .don-photo {
   -webkit-mask-image: linear-gradient(#000 45%, transparent); mask-image: linear-gradient(#000 45%, transparent);
 }
 /* Dark theme gets the dusk photo; the daylight one is a bright blue block there. */
-html[data-theme='dark'][data-screen='home'] .don-photo { background-image: url(/photos/home-dark-1.jpg) !important; }
+html[data-theme='dark'][data-screen='home'] .don-photo-default { background-image: url(/photos/home-dark-1.jpg) !important; }
 html[data-screen='home'] .don-title { font-size: 16px !important; font-weight: 700 !important; letter-spacing: -0.01em; }
 html[data-screen='home'] .don-sub { font-size: 11.5px !important; color: var(--b-text3) !important; }
 html[data-screen='home'] .don-amount { font-size: 30px !important; font-weight: 700 !important; letter-spacing: -0.03em !important; font-variant-numeric: tabular-nums; }

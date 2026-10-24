@@ -33,6 +33,7 @@ export default function PrivacyPolicy() {
             <li>Data ibadah &amp; aktivitas di dalam app — poin, riwayat amalan harian, ayat terakhir dibaca, riwayat zakat/waris yang kamu simpan, riwayat donasi.</li>
             <li>Isi percakapan kamu dengan "Ust. Rewin" (fitur tanya-jawab AI) — dikirim ke penyedia AI buat dijawab, gak disimpan permanen di server kami.</li>
             <li>Kalau kamu mengajukan campaign masjid, minat Umroh, usulan fitur, atau menghubungi tim kami lewat form "Bantuan" — isi form itu (termasuk kontak yang kamu tulis) diteruskan ke tim kami buat ditindaklanjuti manual.</li>
+            <li>Statistik penggunaan anonim — hitungan harian fitur/halaman apa yang dibuka (misalnya "Tasbih dibuka 40 kali hari ini"). Tidak berisi siapa kamu, perangkatmu, atau isi yang kamu tulis, dan bisa kamu matikan di Pengaturan → Tampilan Lanjutan.</li>
             <li>Kalau kamu ikut program referral — kode referral yang kamu bagikan cuma berupa ID akun kamu sendiri, bukan data pribadi tambahan.</li>
           </ul>
         </Section>

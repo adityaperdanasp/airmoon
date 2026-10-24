@@ -318,6 +318,22 @@ service cloud.firestore {
       }
     }
 
+    // Statistik penggunaan anonim (2026-10-24) — lib/track.js. One doc per
+    // date holding a map of event-name -> count. Any signed-in client may
+    // write ONLY the `events` map (and updatedAt); nothing is readable by a
+    // client at all, the founder reads it from the console. Counts are
+    // client-asserted, so they are a trend signal, not an audit trail.
+    match /analyticsDaily/{dateKey} {
+      allow read: if false;
+      allow create: if request.auth != null
+        && request.resource.data.keys().hasOnly(['events', 'updatedAt'])
+        && request.resource.data.events.keys().size() <= 60;
+      allow update: if request.auth != null
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['events', 'updatedAt'])
+        && request.resource.data.events.keys().size() <= 120;
+      allow delete: if false;
+    }
+
     // Onboarding funnel telemetry (2026-09-12) — a single shared counter
     // doc, no per-user documents at all (there's nothing to read back
     // per-user, this is aggregate-only and the founder reads it via the

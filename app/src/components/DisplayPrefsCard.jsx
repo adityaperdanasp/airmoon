@@ -52,6 +52,9 @@ export default function DisplayPrefsCard() {
       <Row title="Buka ke halaman terakhir" sub="Saat aplikasi dibuka, langsung lanjut ke halaman yang terakhir kamu pakai.">
         <ToggleSwitch checked={p.resume} onChange={(v) => set('resume', v)} />
       </Row>
+      <Row title="Statistik penggunaan anonim" sub="Hanya hitungan fitur apa yang dipakai (tanpa identitas, tanpa isi), supaya aplikasi bisa diperbaiki ke arah yang tepat.">
+        <ToggleSwitch checked={p.analytics} onChange={(v) => set('analytics', v)} />
+      </Row>
       <Row title="Getar halus" sub="Getaran singkat saat mencentang ibadah.">
         <ToggleSwitch checked={p.haptics} onChange={(v) => set('haptics', v)} />
       </Row>

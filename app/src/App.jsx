@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { rememberRoute, routeToResume } from './lib/uiPrefs';
+import { trackPageView, trackAppOpenOncePerDay } from './lib/track';
 import ProtectedRoute from './components/ProtectedRoute';
 import Logo from './components/Logo';
 import NotificationForegroundListener from './components/NotificationForegroundListener';
@@ -65,6 +66,9 @@ const JumatChecklist = lazy(() => import('./pages/JumatChecklist'));
 const PanduanSholat = lazy(() => import('./pages/PanduanSholat'));
 const FokusSholat = lazy(() => import('./pages/FokusSholat'));
 const Muhasabah = lazy(() => import('./pages/Muhasabah'));
+const KuisHarian = lazy(() => import('./pages/KuisHarian'));
+const Hijaiyah = lazy(() => import('./pages/Hijaiyah'));
+const TajwidDasar = lazy(() => import('./pages/TajwidDasar'));
 const PanduanJenazah = lazy(() => import('./pages/PanduanJenazah'));
 const ForumKomunitas = lazy(() => import('./pages/ForumKomunitas'));
 const TantanganTeman = lazy(() => import('./pages/TantanganTeman'));
@@ -132,6 +136,8 @@ function RouteMemory() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   useEffect(() => {
+    trackPageView(pathname);
+    trackAppOpenOncePerDay();
     if (pathname === '/') {
       const target = routeToResume();
       if (target) navigate(target, { replace: true });
@@ -209,6 +215,9 @@ export default function App() {
         <Route path="/lainnya/panduan-sholat" element={<P><PanduanSholat /></P>} />
         <Route path="/lainnya/fokus-sholat" element={<P><FokusSholat /></P>} />
         <Route path="/lainnya/muhasabah" element={<P><Muhasabah /></P>} />
+        <Route path="/lainnya/kuis" element={<P><KuisHarian /></P>} />
+        <Route path="/lainnya/hijaiyah" element={<P><Hijaiyah /></P>} />
+        <Route path="/lainnya/tajwid" element={<P><TajwidDasar /></P>} />
         <Route path="/lainnya/panduan-jenazah" element={<P><PanduanJenazah /></P>} />
         <Route path="/lainnya/forum" element={<P><ForumKomunitas /></P>} />
         <Route path="/lainnya/tantangan-teman" element={<P><TantanganTeman /></P>} />

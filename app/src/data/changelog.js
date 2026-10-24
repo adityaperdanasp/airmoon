@@ -6,9 +6,25 @@
 // internal fix. `version` just needs to increase; CURRENT_VERSION below
 // is what Pengaturan.jsx/Lainnya.jsx compare against to show an unseen
 // dot, same pattern as lib/unseenBadges.js/lib/notificationLog.js.
-export const CURRENT_VERSION = 7;
+export const CURRENT_VERSION = 8;
 
 export const CHANGELOG = [
+  {
+    version: 8,
+    date: '2026-10-24',
+    title: 'Tampilan kaca di seluruh aplikasi, Mode Fokus Sholat, dan banyak fitur baru',
+    items: [
+      'Seluruh aplikasi kini bergaya kaca dengan latar warna yang ikut waktu sholat. Bisa diatur ukuran, kontras, hitam pekat, dan "kurangi efek" di Pengaturan.',
+      'Notifikasi adzan punya tombol "Sudah sholat" dan "Kiblat". Sholat yang waktunya habis tidak bisa dicentang lagi.',
+      'Mode Fokus Sholat: layar tenang dengan arah kiblat dan timer.',
+      'Muhasabah Malam, Rapor Ibadah bulanan, dan streak sholat lengkap.',
+      'Ringkasan Pagi (opsional): jadwal hari ini dan ajakan dzikir pagi dalam satu notifikasi.',
+      'Kuis Agama Harian, Huruf Hijaiyah untuk anak, dan Tajwid Dasar.',
+      'Murottal bisa diatur kecepatan dan timer tidur. Mode malam hangat untuk membaca.',
+      'Bagikan jadwal sholat sebagai kartu. Geser kiri-kanan antar tab, tahan tab Qur\'an untuk lanjut membaca.',
+      'Target Ramadan, tasbih cepat di Home, dan jeda adzan ke iqamah yang bisa disesuaikan.',
+    ],
+  },
   {
     version: 7,
     date: '2026-10-03',

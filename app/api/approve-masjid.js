@@ -72,6 +72,8 @@ export default async function handler(req, res) {
     if (body.waPic) docData.waPic = String(body.waPic);
     if (body.submissionRow) docData.submissionRow = body.submissionRow; // for tracing back to the Sheet row
     if (body.lokasi) docData.lokasi = String(body.lokasi).trim(); // e.g. "Kota Bandung, Jawa Barat" — for the location filter
+    // Foto masjid (opsional) untuk kartu donasi di Home. Hanya https:// (bukan data: atau javascript:).
+    if (body.photoUrl && /^https:\/\//i.test(String(body.photoUrl).trim())) docData.photoUrl = String(body.photoUrl).trim().slice(0, 600);
     if (body.submitterUid) docData.submitterUid = String(body.submitterUid).trim(); // lets that uid post "Update dari Masjid" later
 
     const ref = await db.collection('donations').add(docData);

@@ -141,16 +141,19 @@ export default function DesignSystem() {
 
         <Block title="Radius & elevasi">
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-            <div style={{ flex: 1, minWidth: 90, height: 70, borderRadius: 12, background: 'var(--card)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: 'var(--muted)' }}>
-              12 · tile
-            </div>
-            <div style={{ flex: 1, minWidth: 90, height: 70, borderRadius: 20, background: 'var(--card)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: 'var(--muted)' }}>
-              20 · .card
-            </div>
-            <div style={{ flex: 1, minWidth: 90, height: 70, borderRadius: 999, background: 'var(--card)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-pill)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: 'var(--muted)' }}>
+            {[['--r-sm', 14, 'chip, input'], ['--r-md', 20, 'baris, kartu dalam'], ['--r-lg', 26, '.card'], ['--r-xl', 30, 'hero, bento, sheet']].map(([tok, px, use]) => (
+              <div key={tok} style={{ flex: 1, minWidth: 110, height: 76, borderRadius: `var(${tok})`, background: 'var(--card)', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, fontSize: 10, color: 'var(--muted)', textAlign: 'center' }}>
+                <b style={{ color: 'var(--ink)' }}>{px} · {tok}</b>
+                {use}
+              </div>
+            ))}
+            <div style={{ flex: 1, minWidth: 110, height: 76, borderRadius: 999, background: 'var(--card)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-pill)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: 'var(--muted)' }}>
               999 · pill
             </div>
           </div>
+          <p style={{ margin: '10px 0 0', fontSize: 11, color: 'var(--muted)', lineHeight: 1.55 }}>
+            Kartu kaca: --card sekarang translusen di atas "mesh" latar (body::before), dengan bayangan lembut dan rim cahaya. Latar mesh ikut warna waktu sholat (html[data-sky]). Kurangi efek mematikan blur dan mesh.
+          </p>
         </Block>
 
         <Block title="Tombol">

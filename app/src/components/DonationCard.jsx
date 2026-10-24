@@ -223,7 +223,17 @@ function UpdatesAndGratitude({ donation, user }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           <span style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Update dari Masjid</span>
           {updates.map((u) => (
-            <p key={u.id} style={{ margin: 0, fontSize: 12, lineHeight: 1.5, padding: '8px 10px', borderRadius: 10, background: 'var(--bg)' }}>{u.text}</p>
+            <div key={u.id} style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '8px 10px', borderRadius: 10, background: 'var(--bg)' }}>
+              {u.type === 'penyaluran' && (
+                <span style={{ alignSelf: 'flex-start', fontSize: 10, fontWeight: 800, padding: '3px 9px', borderRadius: 999, color: 'var(--success)', background: 'var(--success-bg)' }}>
+                  Laporan penyaluran{Number(u.amount) > 0 ? ` · ${formatRupiah(Number(u.amount))}` : ''}
+                </span>
+              )}
+              <p style={{ margin: 0, fontSize: 12, lineHeight: 1.5 }}>{u.text}</p>
+              {typeof u.photoUrl === 'string' && /^https:\/\//i.test(u.photoUrl) && (
+                <img src={u.photoUrl} alt="Bukti penyaluran" loading="lazy" decoding="async" style={{ width: '100%', borderRadius: 10, display: 'block', maxHeight: 220, objectFit: 'cover' }} />
+              )}
+            </div>
           ))}
         </div>
       )}
@@ -325,7 +335,7 @@ export default function DonationCard({ donation, amounts = [10000, 25000, 50000]
 
   return (
     <div className="don-card" style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: 18, borderRadius: 24, background: 'var(--card)' }}>
-      <div className="don-photo" aria-hidden="true" style={{ backgroundImage: 'url(/photos/page-cari-masjid.jpg)' }} />
+      <div className={`don-photo${donation.photoUrl ? '' : ' don-photo-default'}`} aria-hidden="true" style={{ backgroundImage: `url(${donation.photoUrl || '/photos/page-cari-masjid.jpg'})` }} />
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <div style={{ width: 46, height: 46, borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: 'linear-gradient(145deg, #f6e3b0, #e8b84b)' }}>
           <svg width="21" height="21" viewBox="0 0 24 24" fill="#6b4a12" stroke="none"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z" /></svg>
