@@ -43,7 +43,7 @@ export default function Confetti({ onComplete, colors = DEFAULT_COLORS }) {
   if (reduceMotion) return null;
 
   return (
-    <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 5 }}>
+    <div className="confetti" style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 5 }}>
       {particles.map((p, i) => (
         <span
           key={i}

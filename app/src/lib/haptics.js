@@ -3,7 +3,10 @@
 // being just as worth a tactile confirmation (marking an Amalan Harian
 // item done, favoriting an ayat). One shared, feature-detected helper
 // instead of each call site guessing at its own duration/pattern.
+import { hapticsEnabled, softTick } from './uiPrefs';
+
 function vibrate(pattern) {
+  if (!hapticsEnabled()) return;
   if (typeof navigator === 'undefined' || typeof navigator.vibrate !== 'function') return;
   try {
     navigator.vibrate(pattern);
@@ -18,6 +21,7 @@ function vibrate(pattern) {
 // already uses, for a routine "this registered" confirmation (checking
 // off an Amalan item, toggling a favorite).
 export function hapticTick() {
+  softTick();
   vibrate(12);
 }
 

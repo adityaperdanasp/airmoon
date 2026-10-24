@@ -9,7 +9,7 @@
   --muted: #5c6b67;
   --muted-soft: #8a9c99;
   --border: #e5edeb;
-  --card: #f5f8f7;
+  --card: rgba(255, 255, 255, 0.82); /* glass: sits on the page mesh (body::before), no longer a flat grey */
   --sheet: #f5f8f7; /* opaque panel for bottom sheets — dark --card is a translucent overlay and lets the page show through */
   --mint: #e2f1ec;
   --mint-soft: #eef5f3;
@@ -25,6 +25,22 @@
   --on-danger: #ffffff;
   --shadow-card: 0 24px 60px rgba(15, 32, 25, 0.12);
   --shadow-pill: 0 16px 40px rgba(13, 77, 71, 0.16);
+
+  /* Radius scale (2026-10-24) — cards were 20/22/24/26/30 depending on the
+     file. Four steps; new work picks one of these instead of a number. */
+  --r-sm: 14px; /* inputs, chips, small tiles */
+  --r-md: 20px; /* list rows, inner cards */
+  --r-lg: 26px; /* cards */
+  --r-xl: 30px; /* hero / bento cards, sheets */
+
+  /* Page mesh (body::before). Three soft colour blooms; RGB triplets so a
+     prayer-time "sky" (html[data-sky]) can retint them. */
+  --m1: 232 184 75;
+  --m2: 30 150 125;
+  --m3: 130 100 220;
+  --ma1: 0.2;
+  --ma2: 0.14;
+  --ma3: 0.12;
 
   /* Motion tokens (2026-09-10) — one easing curve + a 3-step duration
      scale for the whole app. Animations got added ad hoc across dozens of
@@ -79,6 +95,9 @@
   --border: rgba(255, 255, 255, 0.12);
   --card: rgba(255, 255, 255, 0.06);
   --sheet: #1a1b18;
+  --ma1: 0.3;
+  --ma2: 0.28;
+  --ma3: 0.26;
   --mint: rgba(201, 154, 74, 0.14);
   --mint-soft: rgba(255, 255, 255, 0.07);
   --cream: rgba(240, 205, 123, 0.16);
@@ -129,11 +148,33 @@ a {
   min-height: 100vh;
 }
 
+/* One soft mesh behind every screen so Home's glass look carries through
+   the whole app. Fixed + non-interactive; the body keeps the flat --bg. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgb(var(--m2) / 0.05), rgb(var(--m2) / 0.02) 60%, rgb(var(--m1) / 0.04)),
+    radial-gradient(520px 420px at 100% 6%, rgb(var(--m1) / var(--ma1)), transparent 70%),
+    radial-gradient(480px 420px at 0% 44%, rgb(var(--m2) / var(--ma2)), transparent 70%),
+    radial-gradient(520px 440px at 100% 82%, rgb(var(--m3) / var(--ma3)), transparent 70%);
+}
+
+/* Latar ikut waktu sholat yang sedang ditunggu (ditulis Home via lib/uiPrefs.js). */
+html[data-sky='subuh'] { --m1: 217 138 143; --m2: 70 80 170; --m3: 130 100 220; }
+html[data-sky='dzuhur'] { --m1: 90 175 230; --m2: 30 150 125; --m3: 232 184 75; }
+html[data-sky='ashar'] { --m1: 240 185 107; --m2: 47 111 168; --m3: 232 120 90; }
+html[data-sky='maghrib'] { --m1: 229 104 138; --m2: 138 79 134; --m3: 248 162 79; }
+html[data-sky='isya'] { --m1: 60 90 190; --m2: 30 60 140; --m3: 130 100 220; }
+
 .screen {
   max-width: 480px;
   margin: 0 auto;
   min-height: 100vh;
-  background: var(--bg);
+  background: transparent; /* the page mesh (body::before) shows through */
   display: flex;
   flex-direction: column;
 }
@@ -207,9 +248,13 @@ a {
 }
 
 .card {
-  border-radius: 20px;
+  border-radius: var(--r-lg);
   background: var(--card);
   border: 1px solid var(--border);
+  box-shadow: 0 6px 22px rgba(15, 32, 25, 0.06), inset 0 1px 0 color-mix(in srgb, #fff 22%, transparent);
+}
+[data-theme='dark'] .card {
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.3), inset 0 1px 0 color-mix(in srgb, #fff 12%, transparent);
 }
 
 .btn {
@@ -240,7 +285,7 @@ a {
   font-size: 13.5px;
   cursor: pointer;
   color: var(--ink);
-  background: var(--bg);
+  background: color-mix(in srgb, var(--bg) 55%, transparent);
 }
 
 .btn-google {
@@ -579,7 +624,18 @@ textarea:focus-visible,
 }
 
 .splash-pulse {
-  animation: splash-pulse 1.6s ease-in-out infinite;
+  /* Hilal naik pelan dari bawah, lalu berdenyut lembut. */
+  animation: splash-rise 0.9s var(--ease) both, splash-pulse 1.6s ease-in-out 0.9s infinite;
+}
+@keyframes splash-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 /* First-paint branded splash (App.jsx's RouteFallback) — fades itself in
@@ -741,3 +797,29 @@ textarea:focus-visible,
     transition: none !important;
   }
 }
+
+
+/* ---- Tampilan: pilihan pengguna (lib/uiPrefs.js) ------------------------ */
+
+/* Hitam pekat untuk layar OLED */
+html[data-oled][data-theme='dark'] { --bg: #000; --sheet: #0d0d0c; }
+
+/* Kontras tinggi: teks sekunder dan garis lebih tegas */
+html[data-contrast='high'] { --muted: #3b4944; --muted-soft: #566763; --border: #c3d2cf; }
+html[data-contrast='high'][data-theme='dark'] { --muted: #dcd5c8; --muted-soft: #beb5a6; --border: rgba(255, 255, 255, 0.28); }
+
+/* Kurangi efek: tanpa blur, mesh, atau animasi; kartu kaca jadi permukaan padat */
+html[data-reduce-fx] body::before,
+html[data-reduce-fx] .home-glow { display: none !important; }
+html[data-reduce-fx] * {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+}
+html[data-reduce-fx] .glass,
+html[data-reduce-fx] .don-card,
+html[data-reduce-fx] .prayer-strip,
+html[data-reduce-fx] .bottomnav { background: var(--sheet) !important; }
+html[data-reduce-fx] .confetti { display: none !important; }

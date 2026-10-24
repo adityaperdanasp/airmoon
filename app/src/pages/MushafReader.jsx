@@ -5,7 +5,7 @@ import { db } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
 import { fetchChapters, fetchMushafPage, layoutPage, TOTAL_MUSHAF_PAGES, TAJWEED_COLORS, parseTajweedHtml } from '../lib/mushafApi';
 import { fetchSurahDetail } from '../lib/quranApi';
-import { useNightMode, NIGHT_STYLE_VARS } from '../lib/readingPrefs';
+import { useNightMode, useWarmNight, nightStyle } from '../lib/readingPrefs';
 import { fetchSurahTafsir } from '../lib/tafsirApi';
 import { addFavoriteAyat, removeFavoriteAyat } from '../lib/favoriteAyat';
 import { markPageRead } from '../lib/khatamProgress';
@@ -433,6 +433,7 @@ export default function MushafReader() {
   const [actionSheetVerseKey, setActionSheetVerseKey] = useState(null);
   const [tajwidOn, setTajwidOn] = useState(() => localStorage.getItem('airmoon-mushaf-tajwid') === '1');
   const [night, setNight] = useNightMode();
+  const [warmNight, setWarmNight] = useWarmNight();
   const targetRef = useRef(null);
 
   useEffect(() => {
@@ -560,7 +561,7 @@ export default function MushafReader() {
   const chapterNamesOnPage = chapterIdsOnPage.map((id) => chapterById(id)?.name_simple).filter(Boolean).join(' / ');
 
   return (
-    <div className="screen" style={night ? NIGHT_STYLE_VARS : undefined}>
+    <div className="screen" style={nightStyle(night, warmNight)}>
       <StickyMiniHeader title={chapterNamesOnPage || 'Mushaf'} subtitle={`${juzNumber ? `Juz ${juzNumber} · ` : ''}Halaman ${page}`} />
       <div className="screen-content" style={{ paddingBottom: 'calc(130px + env(safe-area-inset-bottom))' }}>
         <div className="topbar">
@@ -590,10 +591,15 @@ export default function MushafReader() {
             </button>
             <button
               className="icon-btn"
-              onClick={() => setNight((v) => !v)}
-              aria-label="Toggle mode malam"
+              onClick={() => {
+                // Tap cycles: off -> night -> warm night -> off.
+                if (!night) { setNight(true); setWarmNight(false); }
+                else if (!warmNight) setWarmNight(true);
+                else { setNight(false); setWarmNight(false); }
+              }}
+              aria-label="Ganti mode malam (mati, malam, malam hangat)"
               style={{ color: night ? 'var(--primary)' : 'var(--muted)' }}
-              title="Mode malam"
+              title={night ? (warmNight ? 'Mode malam hangat' : 'Mode malam') : 'Mode malam'}
             >
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                 <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z" strokeWidth="1.6" strokeLinejoin="round" />

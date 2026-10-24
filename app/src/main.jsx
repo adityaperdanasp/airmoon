@@ -9,6 +9,7 @@ import { LangProvider } from './context/LangContext';
 import { ToastProvider } from './context/ToastContext';
 import { initRemoteConfig } from './lib/remoteConfig';
 import { initErrorLog } from './lib/errorLog';
+import { applyUiPrefs, applySavedSky } from './lib/uiPrefs';
 
 // [PM 2026-09-12] Fired once at boot, not awaited — a cheap flag-fetch
 // shouldn't gate the app's first paint. Feature checks that read it
@@ -16,6 +17,10 @@ import { initErrorLog } from './lib/errorLog';
 // to the safe defaultConfig in lib/remoteConfig.js until this resolves.
 initRemoteConfig();
 initErrorLog();
+// Tampilan (ukuran, kontras, hitam pekat, kurangi efek, warna sesuai waktu sholat)
+// diterapkan sebelum render pertama supaya tidak ada kedipan.
+applyUiPrefs();
+applySavedSky();
 
 // Registered unconditionally now (not just when someone opts into prayer
 // notifications, see lib/notifications.js) so its offline-caching fetch

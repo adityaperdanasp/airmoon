@@ -95,6 +95,18 @@ export function useAutoNextSurah() {
   return [autoNext, setAutoNext];
 }
 
+// "Hangat": a warm, low-blue variant of the reading night mode (dark brown
+// ground, cream text) for long reading sessions before sleep. Only applies
+// while night mode itself is on.
+const WARM_KEY = 'airmoon-reading-night-warm';
+export function useWarmNight() {
+  const [warm, setWarm] = useState(() => localStorage.getItem(WARM_KEY) === '1');
+  useEffect(() => {
+    localStorage.setItem(WARM_KEY, warm ? '1' : '0');
+  }, [warm]);
+  return [warm, setWarm];
+}
+
 export const NIGHT_STYLE_VARS = {
   '--bg': '#0d0d0d',
   '--ink': '#ececec',
@@ -118,3 +130,24 @@ export const NIGHT_STYLE_VARS = {
   '--primary-dark': '#4fd3b0',
   color: 'var(--ink)',
 };
+
+export const WARM_NIGHT_STYLE_VARS = {
+  ...NIGHT_STYLE_VARS,
+  '--bg': '#14100b',
+  '--ink': '#f0e2cc',
+  '--muted': '#bfae94',
+  '--muted-soft': '#8e7f69',
+  '--card': '#211a12',
+  '--border': '#4a3d2c',
+  '--cream': '#33270f',
+  '--gold-ink': '#f0c978',
+  '--mint': 'rgba(240, 190, 110, 0.4)',
+  '--mint-soft': 'rgba(240, 190, 110, 0.12)',
+  '--primary': '#f0c978',
+  '--primary-dark': '#d9ac55',
+};
+
+export function nightStyle(night, warm) {
+  if (!night) return undefined;
+  return warm ? WARM_NIGHT_STYLE_VARS : NIGHT_STYLE_VARS;
+}

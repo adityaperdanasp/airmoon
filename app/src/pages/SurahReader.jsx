@@ -9,7 +9,7 @@ import { hasWordSync, fetchChapterTiming } from '../lib/quranTimingApi';
 import { fetchWordGloss } from '../lib/wordGlossApi';
 import { watchFavoriteAyat, addFavoriteAyat, removeFavoriteAyat } from '../lib/favoriteAyat';
 import { watchHafalanProgress, markAyatHafal, unmarkAyatHafal } from '../lib/hafalanProgress';
-import { useNightMode, NIGHT_STYLE_VARS, useArabicFontSize, MIN_ARABIC_SIZE, MAX_ARABIC_SIZE, useArabicFont, ARABIC_FONTS, useAutoNextSurah } from '../lib/readingPrefs';
+import { useNightMode, useWarmNight, nightStyle, useArabicFontSize, MIN_ARABIC_SIZE, MAX_ARABIC_SIZE, useArabicFont, ARABIC_FONTS, useAutoNextSurah } from '../lib/readingPrefs';
 import { useFontReady } from '../lib/useFontReady';
 import { fetchSurahTafsir } from '../lib/tafsirApi';
 import { markSurahOpened } from '../lib/readingHistory';
@@ -46,6 +46,7 @@ export default function SurahReader() {
   const [reciterId, setReciterId] = useState(getReciterId());
   const [timing, setTiming] = useState(null); // fetchChapterTiming() result, or null if unavailable
   const [night, setNight] = useNightMode();
+  const [warmNight, setWarmNight] = useWarmNight();
   const [arabicSize, setArabicSize] = useArabicFontSize();
   const [arabicFont, setArabicFont] = useArabicFont();
   // Gate the ayat render on the chosen Arabic font actually being usable
@@ -413,7 +414,7 @@ export default function SurahReader() {
   );
 
   return (
-    <div className="screen" style={night ? NIGHT_STYLE_VARS : undefined}>
+    <div className="screen" style={nightStyle(night, warmNight)}>
       <StickyMiniHeader title={surah.namaLatin} subtitle={`${surah.tempatTurun} · ${surah.jumlahAyat} Ayat`} />
       <div className="screen-content" style={{ paddingBottom: 'calc(110px + env(safe-area-inset-bottom))' }}>
         <TopBar title={surah.namaLatin} subtitle={`${surah.tempatTurun} · ${surah.jumlahAyat} Ayat`} right={topbarActions} />
@@ -458,6 +459,15 @@ export default function SurahReader() {
                   {f.label}
                 </button>
               ))}
+            </div>
+            <div
+              onClick={() => setWarmNight((v) => !v)}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, cursor: 'pointer', padding: '2px 2px' }}
+            >
+              <span style={{ fontSize: 11.5, fontWeight: 700 }}>Mode malam hangat (kurangi cahaya biru)</span>
+              <div style={{ width: 38, height: 22, borderRadius: 999, background: warmNight ? 'var(--primary)' : 'var(--border)', display: 'flex', alignItems: 'center', padding: 3, flexShrink: 0 }}>
+                <div style={{ width: 16, height: 16, borderRadius: '50%', background: '#fff', transform: warmNight ? 'translateX(16px)' : 'translateX(0)', transition: 'transform var(--dur-1) var(--ease)' }} />
+              </div>
             </div>
             <div
               onClick={() => setAutoNextSurah((v) => !v)}

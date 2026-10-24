@@ -13,6 +13,10 @@ export const CARD_OVERLAYS = [
   { id: 'maroon', label: 'Marun', from: 'rgba(84,26,38,0.55)', to: 'rgba(42,12,19,0.92)', swatch: '#541a26' },
   { id: 'navy', label: 'Navy', from: 'rgba(22,42,74,0.55)', to: 'rgba(10,20,40,0.92)', swatch: '#162a4a' },
   { id: 'ink', label: 'Gelap', from: 'rgba(16,18,16,0.5)', to: 'rgba(8,9,8,0.94)', swatch: '#101210' },
+  { id: 'emerald', label: 'Zamrud', from: 'rgba(20,92,60,0.55)', to: 'rgba(8,44,28,0.92)', swatch: '#145c3c' },
+  { id: 'plum', label: 'Ungu', from: 'rgba(70,40,110,0.55)', to: 'rgba(30,16,52,0.92)', swatch: '#46286e' },
+  { id: 'rose', label: 'Mawar', from: 'rgba(120,50,70,0.5)', to: 'rgba(56,22,34,0.92)', swatch: '#783246' },
+  { id: 'dusk', label: 'Senja', from: 'rgba(120,72,40,0.5)', to: 'rgba(52,28,24,0.93)', swatch: '#784828' },
 ];
 
 export function overlayStops(overlayId, theme) {

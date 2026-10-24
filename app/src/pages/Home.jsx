@@ -17,6 +17,7 @@ import DonationCard from '../components/DonationCard';
 import { QuranBookIcon, CuppedHandsIcon } from '../components/serviceIcons';
 import { ALL_SHORTCUT_ITEMS } from '../components/featureCatalog';
 import ShortcutPickerSheet from '../components/ShortcutPickerSheet';
+import { applySky } from '../lib/uiPrefs';
 import { getHomeShortcuts, saveHomeShortcuts, resetHomeShortcuts } from '../lib/homeShortcuts';
 import PrayerStrip from '../components/PrayerStrip';
 import HariIniCard from '../components/HariIniCard';
@@ -64,6 +65,11 @@ export default function Home() {
   const [lastReadAyat, setLastReadAyat] = useState(null);
   const [lastReadMushaf, setLastReadMushaf] = useState(null);
   const [searchParams] = useSearchParams();
+  // Latar seluruh app ikut sholat yang sedang ditunggu.
+  useEffect(() => {
+    if (next?.label) applySky(next.label);
+  }, [next?.label]);
+
   // Marks <html> while Home is on screen: styles/homeBento.css scopes the
   // glass/mesh look (and the portalled bottom nav's glass) to this screen.
   useEffect(() => {
@@ -285,6 +291,7 @@ export default function Home() {
           tip={dailyTip}
           next={next}
           status={prayerStatus}
+          hijri={prayerData?.hijri}
         />
         <PrayerStrip timings={prayerData?.timings} nextKey={next?.key} location={prayerData?.locationLabel} manual={!!prayerOverride} methodId={prayerMethodId} />
 

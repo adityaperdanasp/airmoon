@@ -18,6 +18,7 @@ import { DEFAULT_QUIET_HOURS, watchQuietHours, setQuietHours } from '../lib/quie
 import AchievementShareModal from '../components/AchievementShareModal';
 import { ACCENT_OPTIONS, loadAccentColor, setAccentColor } from '../lib/accentColor';
 import SegButton from '../components/SegButton';
+import DisplayPrefsCard from '../components/DisplayPrefsCard';
 import ToggleSwitch from '../components/ToggleSwitch';
 import { watchEmailOptIn, setEmailOptIn } from '../lib/emailPrefs';
 import SupporterCard from '../components/SupporterCard';
@@ -634,6 +635,8 @@ export default function Pengaturan() {
               )}
             </div>
           </div>
+
+          <DisplayPrefsCard />
 
           {isNativeApp() && <AzanSoundPicker />}
 
