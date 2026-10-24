@@ -161,6 +161,8 @@ self.addEventListener('notificationclick', (event) => {
   else if (tag === 'rekap-mingguan') url = '/lainnya/ringkasan-ibadah';
   else if (tag.startsWith('puasa-') || tag === 'maulid-nabi' || tag === 'tahun-baru-hijriah' || tag === 'idul-adha') url = '/lainnya/puasa-sunnah';
   else if (tag === 'supporter-anniversary') url = '/pengaturan';
+  else if (tag === 'ringkasan-pagi') url = '/';
+  else if (tag === 'baca-biasa') url = '/quran';
   event.waitUntil(clients.openWindow(url));
 });
 

@@ -11,6 +11,8 @@ import { highestTier, highestHafalanTier, HAFALAN_TIERS, nextTierNudge } from '.
 import { watchHafalanProgress } from '../lib/hafalanProgress';
 import { formatRupiah } from '../lib/zakat';
 import { fetchRecentAmalanHarian } from '../lib/amalanHarian';
+import { fetchAmalanAll, computeSholatStreak, computeMonthReport } from '../lib/ibadahReport';
+import RaporBulananShareModal from '../components/RaporBulananShareModal';
 import PageHeaderPhoto from '../components/PageHeaderPhoto';
 import { PAGE_PHOTOS } from '../data/photos';
 import CountUp from '../components/CountUp';
@@ -40,6 +42,8 @@ export default function RingkasanIbadah() {
   const { user } = useAuth();
   const { theme } = useTheme();
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showRapor, setShowRapor] = useState(false);
+  const [amalanAll, setAmalanAll] = useState(null);
   const [khatam, setKhatam] = useState({ pages: [], juz: [] });
   const [streaks, setStreaks] = useState({});
   const [contributions, setContributions] = useState([]);
@@ -64,6 +68,10 @@ export default function RingkasanIbadah() {
   const markLoaded = (key) => setLoaded((prev) => (prev[key] ? prev : { ...prev, [key]: true }));
   const allLoaded = Object.values(loaded).every(Boolean);
 
+  useEffect(() => {
+    if (!user?.uid) return;
+    fetchAmalanAll(user.uid).then(setAmalanAll).catch(() => setAmalanAll(new Map()));
+  }, [user?.uid]);
   useEffect(() => watchKhatamProgress(user?.uid, (v) => { setKhatam(v); markLoaded('khatam'); }), [user?.uid]);
   useEffect(() => watchDzikirStreak(user?.uid, (v) => { setStreaks(v); markLoaded('streaks'); }), [user?.uid]);
   useEffect(() => {
@@ -196,6 +204,7 @@ export default function RingkasanIbadah() {
           />
           <StatCard icon="💝" label="Total Sedekah" value={<CountUp value={totalSedekah} formatter={formatRupiah} />} sub={`${contributions.length} kali berdonasi`} />
           <StatCard icon="🌙" label="Puasa Sunnah" value={puasaDates === null ? '…' : <CountUp value={puasaDates.length} formatter={(v) => `${v}x`} />} sub="Senin/Kamis & Ayyamul Bidh" />
+          <StatCard icon="🕌" label="Sholat Lengkap Beruntun" value={amalanAll === null ? '…' : `${computeSholatStreak(amalanAll).current} hari`} sub={amalanAll === null ? '' : `Rekor ${computeSholatStreak(amalanAll).best} hari · 5 waktu tercentang`} />
           <StatCard icon="📚" label="Streak Baca Qur'an" value={<CountUp value={readingStreak.current} formatter={(v) => `${v} hari`} />} sub={readingStreak.best > readingStreak.current ? `Rekor ${readingStreak.best} hari` : 'Buka Qur\'an tiap hari buat jaga streak'} />
           <StatCard
             icon="🧠"
@@ -235,6 +244,12 @@ export default function RingkasanIbadah() {
         </>
         )}
 
+        {amalanAll !== null && amalanAll.size > 0 && (
+          <button className="btn-outline" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }} onClick={() => setShowRapor(true)}>
+            Bagikan Rapor Bulan Ini
+          </button>
+        )}
+
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '13px 14px', borderRadius: 14, background: 'var(--card)' }}>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" style={{ flexShrink: 0, marginTop: 1 }}>
             <circle cx="12" cy="12" r="9" strokeWidth="1.6" /><path d="M12 11v5.5M12 8v.01" strokeWidth="1.8" strokeLinecap="round" />
@@ -245,6 +260,19 @@ export default function RingkasanIbadah() {
         </div>
       </div>
 
+      {showRapor && amalanAll && (() => {
+        const now = new Date();
+        return (
+          <RaporBulananShareModal
+            monthLabel={new Intl.DateTimeFormat('id-ID', { month: 'long', year: 'numeric' }).format(now)}
+            report={computeMonthReport(amalanAll, now.getFullYear(), now.getMonth())}
+            sholatStreak={computeSholatStreak(amalanAll)}
+            puasaCount={(puasaDates || []).filter((d) => d.startsWith(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`)).length}
+            theme={theme}
+            onClose={() => setShowRapor(false)}
+          />
+        );
+      })()}
       {showShareModal && (
         <RingkasanIbadahShareModal
           displayName={user.displayName || 'Sahabat airmoon'}

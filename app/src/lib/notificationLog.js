@@ -182,6 +182,8 @@ export function routeForTag(tag = '') {
   // last 3 old tags are kept so entries already in someone's log still route.
   if (tag.startsWith('puasa-') || tag === 'maulid-nabi' || tag === 'tahun-baru-hijriah' || tag === 'idul-adha') return '/lainnya/puasa-sunnah';
   if (tag === 'supporter-anniversary') return '/pengaturan';
+  if (tag === 'ringkasan-pagi') return '/';
+  if (tag === 'baca-biasa') return '/quran';
   return '/jadwal-sholat'; // adzan-* and any unrecognized tag
 }
 

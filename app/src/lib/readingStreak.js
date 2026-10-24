@@ -7,6 +7,7 @@
 // resets) and lib/readingGoal.js (a daily PAGE-COUNT target) — this is
 // just "did you open the Qur'an at all today", the simplest possible
 // signal, same spirit as the dzikir streaks.
+import { recordReadingHour } from './readingHours';
 import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
 import { db } from './firebase';
 import { daysBetween, tryConsumeStreakFreeze } from './streakFreeze';
@@ -42,6 +43,7 @@ export function watchReadingStreak(uid, callback) {
 // either mode counts, this doesn't care which.
 export async function markReadingDone(uid) {
   if (!uid) return;
+  recordReadingHour(uid); // jam biasa membaca, lihat lib/readingHours.js
   const ref = doc(db, 'users', uid);
   const snap = await getDoc(ref);
   const userData = snap.exists() ? snap.data() : {};

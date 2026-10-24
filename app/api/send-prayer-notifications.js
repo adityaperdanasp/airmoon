@@ -502,6 +502,60 @@ export default async function handler(req, res) {
             }
           }
         }
+
+        // Ringkasan pagi (2026-10-24) — one opt-in push with today's five
+        // prayer times and a nudge toward dzikir pagi. Time is user-chosen
+        // (sesudah Subuh / 06:00 / 07:00); sent once per local date.
+        if (u.morningDigest?.enabled && pengingatActiveNow && timings.Fajr) {
+          const mode = u.morningDigest.mode;
+          const target = mode === '07:00' ? 420 : mode === '06:00' ? 360 : minutesSinceMidnight(timings.Fajr) + 35;
+          const due = nowMin >= target && nowMin < target + WINDOW_MINUTES;
+          if (due && u.lastMorningDigestDate !== dateKey) {
+            await docSnap.ref.update({ lastMorningDigestDate: dateKey });
+            const t5 = (k) => String(timings[k] || '--:--').slice(0, 5);
+            const result = await messaging.sendEachForMulticast({
+              tokens,
+              data: {
+                tag: 'ringkasan-pagi',
+                title: '☀️ Ringkasan Pagi',
+                body: `Subuh ${t5('Fajr')} · Dzuhur ${t5('Dhuhr')} · Ashar ${t5('Asr')} · Maghrib ${t5('Maghrib')} · Isya ${t5('Isha')}. Mulai harimu dengan dzikir pagi.`,
+              },
+            });
+            await pruneDeadTokens(docSnap.ref, tokens, result);
+            sent.push({ uid: docSnap.id, prayer: 'MorningDigest', successCount: result.successCount });
+          }
+        }
+
+        // Jam biasa membaca Qur'an (2026-10-24) — the app notes which local
+        // hour you usually read in (users/{uid}.readingHours, written by the
+        // reader pages). At that hour, if you have not read today, a gentle
+        // nudge. Needs at least 5 recorded sessions before it ever fires.
+        if (pengingatActiveNow && u.readingHours && u.readingStreak?.lastDate !== dateKey && u.lastReadingHourNudgeDate !== dateKey) {
+          let total = 0;
+          let peak = -1;
+          let peakCount = 0;
+          for (let h = 0; h < 24; h++) {
+            const c = Number(u.readingHours[`h${h}`]) || 0;
+            total += c;
+            if (c > peakCount) {
+              peakCount = c;
+              peak = h;
+            }
+          }
+          if (total >= 5 && peak >= 0 && nowMin >= peak * 60 && nowMin < peak * 60 + WINDOW_MINUTES) {
+            await docSnap.ref.update({ lastReadingHourNudgeDate: dateKey });
+            const result = await messaging.sendEachForMulticast({
+              tokens,
+              data: {
+                tag: 'baca-biasa',
+                title: '📖 Waktu Biasa Kamu Membaca',
+                body: "Biasanya jam segini kamu membaca Qur'an. Lima menit saja sudah baik.",
+              },
+            });
+            await pruneDeadTokens(docSnap.ref, tokens, result);
+            sent.push({ uid: docSnap.id, prayer: 'ReadingHourNudge', successCount: result.successCount });
+          }
+        }
       } catch (err) {
         errors.push({ uid: docSnap.id, error: err.message });
       }

@@ -20,6 +20,7 @@ import { ACCENT_OPTIONS, loadAccentColor, setAccentColor } from '../lib/accentCo
 import SegButton from '../components/SegButton';
 import DisplayPrefsCard from '../components/DisplayPrefsCard';
 import IqamahCard from '../components/IqamahCard';
+import MorningDigestCard from '../components/MorningDigestCard';
 import ToggleSwitch from '../components/ToggleSwitch';
 import { watchEmailOptIn, setEmailOptIn } from '../lib/emailPrefs';
 import SupporterCard from '../components/SupporterCard';
@@ -644,6 +645,8 @@ export default function Pengaturan() {
           {isNativeApp() && <AzanSoundPicker />}
 
           {user && <NotifPrefsCard user={user} />}
+
+          {user && <MorningDigestCard uid={user.uid} />}
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>

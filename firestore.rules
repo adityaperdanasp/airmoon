@@ -39,6 +39,11 @@ service cloud.firestore {
         allow read, write: if request.auth != null && request.auth.uid == uid;
       }
 
+      // Muhasabah Malam (2026-10-24) — one private note per date. Owner-only.
+      match /muhasabah/{dateKey} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+      }
+
       // Catatan Puasa Sunnah — one doc per fasted date, id = "YYYY-MM-DD".
       // Pairs with the existing push reminder in
       // check-campaign-deadlines.js (Senin/Kamis, Ayyamul Bidh), which

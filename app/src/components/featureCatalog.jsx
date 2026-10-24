@@ -54,6 +54,7 @@ export const SECTIONS = [
     title: 'Ibadah Harian',
     items: [
       { to: '/lainnya/puasa-sunnah', label: 'Kalender Puasa Sunnah', bg: 'var(--blue-gray)', node: <PuasaSunnahIcon size={30} />, prefetch: () => import('../pages/PuasaSunnah') },
+      { to: '/lainnya/muhasabah', label: 'Muhasabah Malam', bg: 'var(--blue-gray)', node: <LanternIcon size={30} />, prefetch: () => import('../pages/Muhasabah') },
       { to: '/lainnya/doa-harian', key: 'item_doa_harian', bg: 'var(--mint)', node: <CuppedHandsIcon size={30} />, prefetch: () => import('../pages/DoaHarian') },
       { to: '/lainnya/tasbih', key: 'item_tasbih', bg: 'var(--peach)', node: <TasbihCounterIcon size={30} />, prefetch: () => import('../pages/Tasbih') },
       { to: '/lainnya/ayat-favorit', key: 'item_ayat_favorit', bg: 'var(--cream)', node: <FavoriteAyatIcon size={30} />, prefetch: () => import('../pages/AyatFavorit') },

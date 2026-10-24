@@ -55,6 +55,39 @@ export default function SurahReader() {
   // in (Google Fonts' `display=swap`). See lib/useFontReady.js.
   const arabicFontReady = useFontReady(`400 24px '${arabicFont}'`);
   const [autoNextSurah, setAutoNextSurah] = useAutoNextSurah();
+  // Terapkan kecepatan ke elemen audio (juga untuk sumber audio berikutnya).
+  useEffect(() => {
+    try {
+      localStorage.setItem('airmoon-audio-rate', String(rate));
+    } catch {
+      // ignore
+    }
+    if (audioRef.current) {
+      audioRef.current.defaultPlaybackRate = rate;
+      audioRef.current.playbackRate = rate;
+    }
+  }, [rate]);
+
+  // Timer tidur: jeda murottal setelah N menit. Tidak ada efek kalau 0.
+  useEffect(() => {
+    if (!sleepMin) {
+      setSleepLeft(null);
+      return undefined;
+    }
+    const endsAt = Date.now() + sleepMin * 60000;
+    const id = setInterval(() => {
+      const left = Math.round((endsAt - Date.now()) / 1000);
+      if (left <= 0) {
+        audioRef.current?.pause();
+        setSleepMin(0);
+        setSleepLeft(null);
+      } else {
+        setSleepLeft(left);
+      }
+    }, 1000);
+    return () => clearInterval(id);
+  }, [sleepMin]);
+
   // Cari di Dalam Surah (2026-09-05) — CariAyat.jsx already searches the
   // whole Qur'an via a network call; this is a plain local filter over
   // the surah already loaded in memory, for "which ayat in THIS surah
@@ -81,6 +114,11 @@ export default function SurahReader() {
     localStorage.setItem('airmoon-latin-toggle', latinOn ? '1' : '0');
   }, [latinOn]);
   const audioRef = useRef(null);
+  // Kecepatan murottal dan timer tidur (2026-10-24). Disimpan per perangkat.
+  const [rate, setRate] = useState(() => Number(localStorage.getItem('airmoon-audio-rate')) || 1);
+  const [sleepMin, setSleepMin] = useState(0); // 0 = mati
+  const [sleepLeft, setSleepLeft] = useState(null); // detik tersisa, untuk tampilan
+
   const reciter = RECITERS.find((r) => r.id === reciterId) || RECITERS[4];
   // Word-sync only actually applies once the timing data has loaded — a
   // fetch failure (or a reciter with no Quran.com match at all) falls back
@@ -460,6 +498,28 @@ export default function SurahReader() {
                 </button>
               ))}
             </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <span style={{ fontSize: 11.5, fontWeight: 700 }}>Kecepatan murottal</span>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {[0.75, 1, 1.25, 1.5].map((r) => (
+                  <button key={r} onClick={() => setRate(r)} aria-pressed={rate === r} style={{ padding: '6px 12px', borderRadius: 999, border: 'none', fontFamily: 'inherit', fontSize: 11.5, fontWeight: 700, cursor: 'pointer', background: rate === r ? 'var(--primary)' : 'var(--mint-soft)', color: rate === r ? 'var(--on-primary)' : 'var(--ink)' }}>
+                    {r}x
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <span style={{ fontSize: 11.5, fontWeight: 700 }}>
+                Timer tidur{sleepLeft !== null ? ` · berhenti dalam ${Math.floor(sleepLeft / 60)}:${String(sleepLeft % 60).padStart(2, '0')}` : ''}
+              </span>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {[0, 15, 30, 60].map((m) => (
+                  <button key={m} onClick={() => setSleepMin(m)} aria-pressed={sleepMin === m} style={{ padding: '6px 12px', borderRadius: 999, border: 'none', fontFamily: 'inherit', fontSize: 11.5, fontWeight: 700, cursor: 'pointer', background: sleepMin === m ? 'var(--primary)' : 'var(--mint-soft)', color: sleepMin === m ? 'var(--on-primary)' : 'var(--ink)' }}>
+                    {m === 0 ? 'Mati' : `${m} menit`}
+                  </button>
+                ))}
+              </div>
+            </div>
             <div
               onClick={() => setWarmNight((v) => !v)}
               style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, cursor: 'pointer', padding: '2px 2px' }}
@@ -707,7 +767,7 @@ export default function SurahReader() {
         </div>
       </div>
 
-      <audio ref={audioRef} onEnded={handleEnded} onTimeUpdate={handleTimeUpdate} style={{ display: 'none' }} />
+      <audio ref={audioRef} onEnded={handleEnded} onTimeUpdate={handleTimeUpdate} onLoadedMetadata={(e) => { e.currentTarget.playbackRate = rate; }} style={{ display: 'none' }} />
 
       {playing && (
         <Portal>

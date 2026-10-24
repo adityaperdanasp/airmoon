@@ -64,6 +64,7 @@ const DoaBersama = lazy(() => import('./pages/DoaBersama'));
 const JumatChecklist = lazy(() => import('./pages/JumatChecklist'));
 const PanduanSholat = lazy(() => import('./pages/PanduanSholat'));
 const FokusSholat = lazy(() => import('./pages/FokusSholat'));
+const Muhasabah = lazy(() => import('./pages/Muhasabah'));
 const PanduanJenazah = lazy(() => import('./pages/PanduanJenazah'));
 const ForumKomunitas = lazy(() => import('./pages/ForumKomunitas'));
 const TantanganTeman = lazy(() => import('./pages/TantanganTeman'));
@@ -207,6 +208,7 @@ export default function App() {
         <Route path="/lainnya/jumat-checklist" element={<P><JumatChecklist /></P>} />
         <Route path="/lainnya/panduan-sholat" element={<P><PanduanSholat /></P>} />
         <Route path="/lainnya/fokus-sholat" element={<P><FokusSholat /></P>} />
+        <Route path="/lainnya/muhasabah" element={<P><Muhasabah /></P>} />
         <Route path="/lainnya/panduan-jenazah" element={<P><PanduanJenazah /></P>} />
         <Route path="/lainnya/forum" element={<P><ForumKomunitas /></P>} />
         <Route path="/lainnya/tantangan-teman" element={<P><TantanganTeman /></P>} />

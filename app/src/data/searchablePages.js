@@ -11,6 +11,7 @@
 export const SEARCHABLE_PAGES = [
   { to: '/lainnya/doa-harian', label: "Do'a Harian" },
   { to: '/lainnya/tasbih', label: 'Tasbih Digital' },
+  { to: '/lainnya/muhasabah', label: 'Muhasabah Malam' },
   { to: '/lainnya/ayat-favorit', label: 'Ayat Favorit' },
   { to: '/lainnya/puasa-sunnah', label: 'Kalender Puasa Sunnah (Hijriah, Ibadah)' },
   { to: '/lainnya/jumat-checklist', label: 'Checklist Sunnah Jumat' },

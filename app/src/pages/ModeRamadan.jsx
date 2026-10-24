@@ -1,3 +1,4 @@
+import RamadanTargetCard from '../components/RamadanTargetCard';
 import { useEffect, useState } from 'react';
 import { useLang } from '../context/LangContext';
 import { useAuth } from '../context/AuthContext';
@@ -146,6 +147,8 @@ export default function ModeRamadan() {
     <div className="screen">
       <div className="screen-content">
         <PageHeaderPhoto title={t('ramadan_title')} photo={PAGE_PHOTOS.modeRamadan} />
+
+        <RamadanTargetCard />
 
         {status === 'loading' && (
           <>
