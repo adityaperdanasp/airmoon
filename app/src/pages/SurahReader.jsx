@@ -55,6 +55,12 @@ export default function SurahReader() {
   // in (Google Fonts' `display=swap`). See lib/useFontReady.js.
   const arabicFontReady = useFontReady(`400 24px '${arabicFont}'`);
   const [autoNextSurah, setAutoNextSurah] = useAutoNextSurah();
+  const audioRef = useRef(null);
+  // Kecepatan murottal dan timer tidur (2026-10-24). Disimpan per perangkat.
+  const [rate, setRate] = useState(() => Number(localStorage.getItem('airmoon-audio-rate')) || 1);
+  const [sleepMin, setSleepMin] = useState(0); // 0 = mati
+  const [sleepLeft, setSleepLeft] = useState(null); // detik tersisa, untuk tampilan
+
   // Terapkan kecepatan ke elemen audio (juga untuk sumber audio berikutnya).
   useEffect(() => {
     try {
@@ -113,11 +119,6 @@ export default function SurahReader() {
   useEffect(() => {
     localStorage.setItem('airmoon-latin-toggle', latinOn ? '1' : '0');
   }, [latinOn]);
-  const audioRef = useRef(null);
-  // Kecepatan murottal dan timer tidur (2026-10-24). Disimpan per perangkat.
-  const [rate, setRate] = useState(() => Number(localStorage.getItem('airmoon-audio-rate')) || 1);
-  const [sleepMin, setSleepMin] = useState(0); // 0 = mati
-  const [sleepLeft, setSleepLeft] = useState(null); // detik tersisa, untuk tampilan
 
   const reciter = RECITERS.find((r) => r.id === reciterId) || RECITERS[4];
   // Word-sync only actually applies once the timing data has loaded — a
